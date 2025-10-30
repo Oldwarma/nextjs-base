@@ -1,0 +1,141 @@
+# Cursor 项目规则配置
+
+## Git Commit 规则
+
+### Commit Message 语言
+- **使用中文**编写 commit message
+- 遵循简洁明了的原则
+- 描述清楚做了什么改动
+
+### Commit Message 格式
+
+```
+<类型>: <简短描述>
+
+[可选的详细说明]
+```
+
+### 类型（Type）
+
+- ✨ **feat** (功能): 新增功能
+- 🐛 **fix** (修复): 修复 bug
+- 📝 **docs** (文档): 文档相关的改动
+- 💄 **style** (样式): 代码格式调整（不影响代码逻辑）
+- ♻️ **refactor** (重构): 代码重构（既不是新功能也不是修复 bug）
+- ⚡️ **perf** (性能): 性能优化
+- ✅ **test** (测试): 添加或修改测试
+- 🔧 **chore** (构建): 构建工具、依赖、配置文件等改动
+- 🎨 **ui** (界面): UI/UX 相关改动
+- 🌐 **i18n** (国际化): 多语言相关改动
+- 🔒 **security** (安全): 安全相关改动
+
+### Commit Message 示例
+
+**✅ 好的示例：**
+
+```
+feat: 添加用户积分系统
+
+- 实现积分充值功能
+- 添加积分消费记录
+- 支持积分过期机制
+```
+
+```
+fix: 修复图片生成时积分扣除错误
+
+当用户积分不足时，现在会正确显示错误提示
+```
+
+```
+docs: 更新多语言配置文档
+
+添加了路由结构说明和使用示例
+```
+
+```
+refactor: 优化 MongoDB 连接池管理
+
+移除重复代码，统一 ObjectId 处理逻辑
+```
+
+```
+i18n: 完成前端界面中英日三语翻译
+
+- 添加 250+ 条翻译
+- 配置 next-intl
+- 创建语言切换组件
+```
+
+**❌ 不好的示例：**
+
+```
+update files
+```
+
+```
+fix bug
+```
+
+```
+修改了一些东西
+```
+
+### 提交频率建议
+
+- 每完成一个小功能就提交
+- 修复一个 bug 就提交
+- 不要累积太多改动才提交
+- 保持每次提交的改动相对独立
+
+## 代码风格
+
+### JavaScript/JSX
+- 使用 Tab 缩进
+- 使用单引号 `'` 而不是双引号 `"`
+- 组件名使用 PascalCase
+- 函数名使用 camelCase
+- 常量使用 UPPER_SNAKE_CASE
+
+### 注释
+- 重要函数添加 JSDoc 注释
+- 复杂逻辑添加中文注释说明
+- Server Actions 必须添加功能说明注释
+
+### 文件组织
+- 前端页面放在 `app/(client)/[locale]/`
+- 管理后台放在 `app/(admin)/admin/`
+- 前端 Server Actions 放在 `app/(client)/actions/`
+- 管理员 Server Actions 放在 `app/(admin)/actions/`
+- 工具函数放在 `lib/`
+- 可复用组件放在 `components/`
+
+## 项目特定规则
+
+### 多语言
+- 前端页面必须使用 `useTranslations` 获取翻译
+- Server Actions 使用 `getTranslations`
+- 管理后台不使用多语言，直接用英文
+
+### 权限控制
+- 所有 Server Actions 必须验证用户身份
+- 管理员 Actions 必须调用 `checkAdmin()`
+- 用户 Actions 必须使用 `session.user.id` 确保只操作自己的数据
+
+### 数据库操作
+- 统一使用 `lib/mongodb.js` 中的工具函数
+- 使用 `fromObjectId` 处理 ObjectId 转换
+- 使用 `findWithPagination` 处理分页查询
+
+### 错误处理
+- Server Actions 返回 `{ success: boolean, data?, error? }` 格式
+- 错误消息使用翻译键，不要硬编码
+- 捕获所有异常并返回友好的错误信息
+
+## 文档规范
+
+- 新增功能必须更新相关文档
+- 文档使用中文编写
+- 代码示例要清晰完整
+- 保持文档和代码同步更新
+
