@@ -5,6 +5,9 @@
 	},
 	"nav": {
 		"home": "Home",
+		"image": "Image",
+		"video": "Video",
+		"audio": "Audio",
 		"generate": "Generate",
 		"dashboard": "Dashboard",
 		"credits": "Credits",

@@ -5,6 +5,9 @@
 	},
 	"nav": {
 		"home": "ホーム",
+		"image": "画像",
+		"video": "ビデオ",
+		"audio": "オーディオ",
 		"generate": "生成",
 		"dashboard": "ダッシュボード",
 		"credits": "クレジット",

@@ -5,6 +5,9 @@
 	},
 	"nav": {
 		"home": "首页",
+		"image": "图片",
+		"video": "视频",
+		"audio": "音频",
 		"generate": "生成",
 		"dashboard": "仪表盘",
 		"credits": "积分",

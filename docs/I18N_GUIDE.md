@@ -3,9 +3,10 @@
 ## 概述
 
 本项目使用 **next-intl** 实现多语言支持，目前支持：
-- 🇺🇸 英语 (en)
-- 🇨🇳 简体中文 (zh)
-- 🇯🇵 日语 (ja)
+
+-   🇺🇸 英语 (en)
+-   🇨🇳 简体中文 (zh)
+-   🇯🇵 日语 (ja)
 
 ## 项目结构
 
@@ -36,14 +37,14 @@ jimeng-saas/
 import { useTranslations } from 'next-intl';
 
 export default function Page() {
-  const t = useTranslations('generate');
-  
-  return (
-    <div>
-      <h1>{t('title')}</h1>
-      <p>{t('description')}</p>
-    </div>
-  );
+	const t = useTranslations('generate');
+
+	return (
+		<div>
+			<h1>{t('title')}</h1>
+			<p>{t('description')}</p>
+		</div>
+	);
 }
 ```
 
@@ -55,9 +56,9 @@ export default function Page() {
 import { useTranslations } from 'next-intl';
 
 export default function MyComponent() {
-  const t = useTranslations('common');
-  
-  return <button>{t('save')}</button>;
+	const t = useTranslations('common');
+
+	return <button>{t('save')}</button>;
 }
 ```
 
@@ -69,12 +70,12 @@ export default function MyComponent() {
 import { getTranslations } from 'next-intl/server';
 
 export async function someAction() {
-  const t = await getTranslations('errors');
-  
-  return {
-    success: false,
-    error: t('insufficientCredits')
-  };
+	const t = await getTranslations('errors');
+
+	return {
+		success: false,
+		error: t('insufficientCredits'),
+	};
 }
 ```
 
@@ -84,20 +85,20 @@ export async function someAction() {
 
 ```json
 {
-  "nav": {
-    "home": "Home",
-    "generate": "Generate",
-    "dashboard": "Dashboard"
-  },
-  "generate": {
-    "title": "Generate Image",
-    "prompt": "Prompt",
-    "promptPlaceholder": "Describe the image..."
-  },
-  "errors": {
-    "unauthorized": "Please login first",
-    "insufficientCredits": "Insufficient credits"
-  }
+	"nav": {
+		"home": "Home",
+		"generate": "Generate",
+		"dashboard": "Dashboard"
+	},
+	"generate": {
+		"title": "Generate Image",
+		"prompt": "Prompt",
+		"promptPlaceholder": "Describe the image..."
+	},
+	"errors": {
+		"unauthorized": "Please login first",
+		"insufficientCredits": "Insufficient credits"
+	}
 }
 ```
 
@@ -106,11 +107,11 @@ export async function someAction() {
 ```javascript
 const t = useTranslations('nav');
 
-t('home')        // "Home"
-t('generate')    // "Generate"
+t('home'); // "Home"
+t('generate'); // "Generate"
 
 const tGen = useTranslations('generate');
-tGen('title')    // "Generate Image"
+tGen('title'); // "Generate Image"
 ```
 
 ## 带变量的翻译
@@ -119,10 +120,10 @@ tGen('title')    // "Generate Image"
 
 ```json
 {
-  "generate": {
-    "creditsUsed": "Credits used: {amount}",
-    "welcomeBack": "Welcome back, {name}!"
-  }
+	"generate": {
+		"creditsUsed": "Credits used: {amount}",
+		"welcomeBack": "Welcome back, {name}!"
+	}
 }
 ```
 
@@ -131,8 +132,8 @@ tGen('title')    // "Generate Image"
 ```javascript
 const t = useTranslations('generate');
 
-t('creditsUsed', { amount: 10 })           // "Credits used: 10"
-t('welcomeBack', { name: 'John' })         // "Welcome back, John!"
+t('creditsUsed', { amount: 10 }); // "Credits used: 10"
+t('welcomeBack', { name: 'John' }); // "Welcome back, John!"
 ```
 
 ## 语言切换
@@ -143,11 +144,11 @@ t('welcomeBack', { name: 'John' })         // "Welcome back, John!"
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function Header() {
-  return (
-    <header>
-      <LanguageSwitcher />
-    </header>
-  );
+	return (
+		<header>
+			<LanguageSwitcher />
+		</header>
+	);
 }
 ```
 
@@ -157,11 +158,11 @@ export default function Header() {
 import LanguageSwitcherSimple from '@/components/LanguageSwitcherSimple';
 
 export default function Header() {
-  return (
-    <header>
-      <LanguageSwitcherSimple />
-    </header>
-  );
+	return (
+		<header>
+			<LanguageSwitcherSimple />
+		</header>
+	);
 }
 ```
 
@@ -186,14 +187,14 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 
 export default function Navigation() {
-  const locale = useLocale();
-  
-  return (
-    <nav>
-      <Link href={`/${locale}/generate`}>Generate</Link>
-      <Link href={`/${locale}/dashboard`}>Dashboard</Link>
-    </nav>
-  );
+	const locale = useLocale();
+
+	return (
+		<nav>
+			<Link href={`/${locale}/generate`}>Generate</Link>
+			<Link href={`/${locale}/dashboard`}>Dashboard</Link>
+		</nav>
+	);
 }
 ```
 
@@ -206,14 +207,14 @@ import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 
 export default function MyComponent() {
-  const router = useRouter();
-  const locale = useLocale();
-  
-  const handleClick = () => {
-    router.push(`/${locale}/dashboard`);
-  };
-  
-  return <button onClick={handleClick}>Go to Dashboard</button>;
+	const router = useRouter();
+	const locale = useLocale();
+
+	const handleClick = () => {
+		router.push(`/${locale}/dashboard`);
+	};
+
+	return <button onClick={handleClick}>Go to Dashboard</button>;
 }
 ```
 
@@ -224,22 +225,20 @@ export default function MyComponent() {
 ```javascript
 // app/[locale]/layout.js
 export async function generateMetadata({ params }) {
-  const { locale } = await params;
-  
-  return {
-    title: locale === 'zh' ? 'AI 图片生成' : 'AI Image Generation',
-    description: locale === 'zh' 
-      ? '使用 AI 创建精美图片' 
-      : 'Create stunning images with AI',
-    alternates: {
-      canonical: `/${locale}`,
-      languages: {
-        en: '/en',
-        zh: '/zh',
-        ja: '/ja',
-      },
-    },
-  };
+	const { locale } = await params;
+
+	return {
+		title: locale === 'zh' ? 'AI 图片生成' : 'AI Image Generation',
+		description: locale === 'zh' ? '使用 AI 创建精美图片' : 'Create stunning images with AI',
+		alternates: {
+			canonical: `/${locale}`,
+			languages: {
+				en: '/en',
+				zh: '/zh',
+				ja: '/ja',
+			},
+		},
+	};
 }
 ```
 
@@ -249,13 +248,13 @@ export async function generateMetadata({ params }) {
 import { getTranslations } from 'next-intl/server';
 
 export async function generateMetadata({ params }) {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'metadata' });
-  
-  return {
-    title: t('title'),
-    description: t('description'),
-  };
+	const { locale } = await params;
+	const t = await getTranslations({ locale, namespace: 'metadata' });
+
+	return {
+		title: t('title'),
+		description: t('description'),
+	};
 }
 ```
 
@@ -267,15 +266,15 @@ export async function generateMetadata({ params }) {
 import { useLocale } from 'next-intl';
 
 export default function DateDisplay({ date }) {
-  const locale = useLocale();
-  
-  const formatted = new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(date);
-  
-  return <span>{formatted}</span>;
+	const locale = useLocale();
+
+	const formatted = new Intl.DateTimeFormat(locale, {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+	}).format(date);
+
+	return <span>{formatted}</span>;
 }
 ```
 
@@ -285,17 +284,17 @@ export default function DateDisplay({ date }) {
 import { useFormatter } from 'next-intl';
 
 export default function DateDisplay({ date }) {
-  const format = useFormatter();
-  
-  return (
-    <span>
-      {format.dateTime(date, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })}
-    </span>
-  );
+	const format = useFormatter();
+
+	return (
+		<span>
+			{format.dateTime(date, {
+				year: 'numeric',
+				month: 'long',
+				day: 'numeric',
+			})}
+		</span>
+	);
 }
 ```
 
@@ -307,16 +306,16 @@ export default function DateDisplay({ date }) {
 import { useFormatter } from 'next-intl';
 
 export default function PriceDisplay({ amount }) {
-  const format = useFormatter();
-  
-  return (
-    <span>
-      {format.number(amount, {
-        style: 'currency',
-        currency: 'USD'
-      })}
-    </span>
-  );
+	const format = useFormatter();
+
+	return (
+		<span>
+			{format.number(amount, {
+				style: 'currency',
+				currency: 'USD',
+			})}
+		</span>
+	);
 }
 ```
 
@@ -325,8 +324,8 @@ export default function PriceDisplay({ amount }) {
 ```javascript
 const format = useFormatter();
 
-format.number(1234.56)                    // "1,234.56" (en) / "1,234.56" (zh)
-format.number(0.95, { style: 'percent' }) // "95%" (所有语言)
+format.number(1234.56); // "1,234.56" (en) / "1,234.56" (zh)
+format.number(0.95, { style: 'percent' }); // "95%" (所有语言)
 ```
 
 ## 添加新语言
@@ -338,10 +337,13 @@ format.number(0.95, { style: 'percent' }) // "95%" (所有语言)
 export const locales = ['en', 'zh', 'ja', 'ko']; // 添加韩语
 
 export const localeNames = {
-  en: 'English',
-  zh: '简体中文',
-  ja: '日本語',
-  ko: '한국어', // 新增
+	en: {
+		name: 'English',
+		shortName: 'EN',
+		flag: '🇺🇸',
+	},
+	zh: { name: '简体中文', shortName: 'CN', flag: '🇨🇳' },
+	ja: { name: '日本語', shortName: 'JP', flag: '🇯🇵' },
 };
 ```
 
@@ -384,14 +386,14 @@ export const localeNames = {
 import { useLocale } from 'next-intl';
 
 export default function PackageCard({ package }) {
-  const locale = useLocale();
-  
-  return (
-    <div>
-      <h3>{package.nameTranslations[locale]}</h3>
-      <p>{package.descriptionTranslations[locale]}</p>
-    </div>
-  );
+	const locale = useLocale();
+
+	return (
+		<div>
+			<h3>{package.nameTranslations[locale]}</h3>
+			<p>{package.descriptionTranslations[locale]}</p>
+		</div>
+	);
 }
 ```
 
@@ -404,7 +406,7 @@ export default function PackageCard({ package }) {
  * 获取翻译字段，如果当前语言不存在则回退到英语
  */
 export function getTranslatedField(translations, locale) {
-  return translations[locale] || translations['en'] || '';
+	return translations[locale] || translations['en'] || '';
 }
 
 // 使用
@@ -427,9 +429,9 @@ A: 修改 `middleware.js`：
 
 ```javascript
 export default createMiddleware({
-  locales,
-  defaultLocale,
-  localePrefix: 'as-needed', // 默认语言不显示前缀
+	locales,
+	defaultLocale,
+	localePrefix: 'as-needed', // 默认语言不显示前缀
 });
 ```
 
@@ -439,17 +441,17 @@ A: next-intl 会自动回退显示键名。可以在 `i18n/request.js` 中配置
 
 ```javascript
 export default getRequestConfig(async ({ requestLocale }) => {
-  // ...
-  return {
-    locale,
-    messages,
-    onError: (error) => {
-      console.error('Translation error:', error);
-    },
-    getMessageFallback: ({ namespace, key }) => {
-      return `${namespace}.${key}`; // 或返回默认值
-    }
-  };
+	// ...
+	return {
+		locale,
+		messages,
+		onError: (error) => {
+			console.error('Translation error:', error);
+		},
+		getMessageFallback: ({ namespace, key }) => {
+			return `${namespace}.${key}`; // 或返回默认值
+		},
+	};
 });
 ```
 
@@ -461,8 +463,8 @@ A: 使用 `headers()` 和 `getLocale()`：
 import { getLocale } from 'next-intl/server';
 
 export async function someAction() {
-  const locale = await getLocale();
-  // 使用 locale
+	const locale = await getLocale();
+	// 使用 locale
 }
 ```
 
@@ -473,10 +475,7 @@ A: next-intl 自动使用 Cookie 保存，也可以存储到数据库：
 ```javascript
 // 在用户更改语言时
 export async function updateUserLanguage(userId, locale) {
-  await db.collection('users').updateOne(
-    { id: userId },
-    { $set: { preferredLanguage: locale } }
-  );
+	await db.collection('users').updateOne({ id: userId }, { $set: { preferredLanguage: locale } });
 }
 ```
 
@@ -485,40 +484,50 @@ export async function updateUserLanguage(userId, locale) {
 ### 1. 翻译文件组织
 
 ✅ **按功能模块组织**
+
 ```json
 {
-  "nav": { /* 导航相关 */ },
-  "generate": { /* 生成页面相关 */ },
-  "credits": { /* 积分相关 */ }
+	"nav": {
+		/* 导航相关 */
+	},
+	"generate": {
+		/* 生成页面相关 */
+	},
+	"credits": {
+		/* 积分相关 */
+	}
 }
 ```
 
 ❌ **不要全部放在一起**
+
 ```json
 {
-  "home": "Home",
-  "generate": "Generate",
-  "save": "Save"
+	"home": "Home",
+	"generate": "Generate",
+	"save": "Save"
 }
 ```
 
 ### 2. 命名规范
 
 ✅ **使用描述性键名**
+
 ```json
 {
-  "generate": {
-    "promptPlaceholder": "Describe the image...",
-    "generatingProgress": "Generating..."
-  }
+	"generate": {
+		"promptPlaceholder": "Describe the image...",
+		"generatingProgress": "Generating..."
+	}
 }
 ```
 
 ❌ **不要使用模糊的键名**
+
 ```json
 {
-  "text1": "Describe...",
-  "msg": "Generating..."
+	"text1": "Describe...",
+	"msg": "Generating..."
 }
 ```
 
@@ -543,11 +552,11 @@ export async function updateUserLanguage(userId, locale) {
 ```javascript
 // ✅ 好的做法
 const t = useTranslations('generate');
-t('title')
+t('title');
 
 // ❌ 避免这样
 const t = useTranslations();
-t('generate.title')
+t('generate.title');
 ```
 
 ## 性能优化
@@ -558,13 +567,12 @@ t('generate.title')
 
 ## 总结
 
-- ✅ 使用 `useTranslations` 在组件中获取翻译
-- ✅ 使用 `getTranslations` 在 Server Actions 中获取翻译
-- ✅ 翻译文件按功能模块组织
-- ✅ 支持变量插值 `{variable}`
-- ✅ 自动路由处理 `/[locale]/...`
-- ✅ SEO 友好的 alternate links
-- ✅ 数据库内容使用多语言字段
+-   ✅ 使用 `useTranslations` 在组件中获取翻译
+-   ✅ 使用 `getTranslations` 在 Server Actions 中获取翻译
+-   ✅ 翻译文件按功能模块组织
+-   ✅ 支持变量插值 `{variable}`
+-   ✅ 自动路由处理 `/[locale]/...`
+-   ✅ SEO 友好的 alternate links
+-   ✅ 数据库内容使用多语言字段
 
 有问题？查看 [next-intl 官方文档](https://next-intl-docs.vercel.app/)
-

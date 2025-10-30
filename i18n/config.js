@@ -10,9 +10,13 @@ export const defaultLocale = 'en';
 
 // 语言名称（用于语言切换器）
 export const localeNames = {
-	en: 'English',
-	zh: '简体中文',
-	ja: '日本語',
+	en: {
+		name: 'English',
+		shortName: 'EN',
+		flag: '🇺🇸',
+	},
+	zh: { name: '简体中文', shortName: 'CN', flag: '🇨🇳' },
+	ja: { name: '日本語', shortName: 'JP', flag: '🇯🇵' },
 };
 
 // 语言方向（从左到右 ltr / 从右到左 rtl）
@@ -21,4 +25,3 @@ export const localeDirections = {
 	zh: 'ltr',
 	ja: 'ltr',
 };
-
