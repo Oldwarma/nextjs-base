@@ -6,6 +6,11 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.js');
 const nextConfig = {
 	/* config options here */
 
+	// 明确指定项目根目录
+	turbopack: {
+		root: import.meta.dirname,
+	},
+
 	images: {
 		remotePatterns: [
 			{

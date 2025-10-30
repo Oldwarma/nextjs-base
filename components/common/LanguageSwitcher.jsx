@@ -3,8 +3,10 @@
 import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { locales, localeNames } from '@/i18n/config';
-
-export default function LanguageSwitcher() {
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Check, Languages } from 'lucide-react';
+import { cn } from '@/lib/utils';
+export default function LanguageSwitcher({ iconClassName = '', side = 'right' }) {
 	const locale = useLocale();
 	const router = useRouter();
 	const pathname = usePathname();
@@ -18,31 +20,34 @@ export default function LanguageSwitcher() {
 	};
 
 	return (
-		<div className='relative inline-block'>
-			<select
-				value={locale}
-				onChange={(e) => handleChange(e.target.value)}
-				className='appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer'
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<button className='flex flex-col items-center justify-center cursor-pointer group outline-none'>
+					<Languages className={cn('size-6 text-zinc-500 group-hover:text-zinc-300 transition-colors', iconClassName)} />
+				</button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent
+				side={side}
+				align='center'
+				sideOffset={24}
+				className='bg-[#1a1a1d] border-zinc-800 min-w-[100px]'
 			>
 				{locales.map((loc) => (
-					<option
+					<DropdownMenuItem
 						key={loc}
-						value={loc}
+						onClick={() => handleChange(loc)}
+						className={`flex items-center gap-2 p-2 cursor-pointer ${
+							locale === loc
+								? 'bg-zinc-800/50 text-white focus:text-white focus:bg-zinc-800'
+								: ' text-zinc-400 focus:text-white focus:bg-zinc-800'
+						}`}
 					>
-						{localeNames[loc].flag}
-						{localeNames[loc].name}
-					</option>
+						<span className='text-base'>{localeNames[loc].flag}</span>
+						<span className='flex-1 text-sm'>{localeNames[loc].name}</span>
+						{locale === loc && <Check className='size-3.5 text-cyan-400' />}
+					</DropdownMenuItem>
 				))}
-			</select>
-			<div className='pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300'>
-				<svg
-					className='fill-current h-4 w-4'
-					xmlns='http://www.w3.org/2000/svg'
-					viewBox='0 0 20 20'
-				>
-					<path d='M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z' />
-				</svg>
-			</div>
-		</div>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	);
 }

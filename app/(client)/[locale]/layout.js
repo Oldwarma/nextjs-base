@@ -1,18 +1,31 @@
-import { Geist, Geist_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { locales } from '@/i18n/config';	
+import { locales } from '@/i18n/config';
 import '@/app/globals.css';
 
-const geistSans = Geist({
-	variable: '--font-geist-sans',
-	subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-	variable: '--font-geist-mono',
-	subsets: ['latin'],
+// 使用本地 HarmonyOS Sans 字体（多字重）
+const harmonyOS = localFont({
+	src: [
+		{
+			path: '../../../public/fonts/HarmonyOS_Sans_SC_Medium.ttf',
+			weight: '500',
+			style: 'normal',
+		},
+		{
+			path: '../../../public/fonts/HarmonyOS_Sans_SC_Bold.ttf',
+			weight: '700',
+			style: 'normal',
+		},
+		{
+			path: '../../../public/fonts/HarmonyOS_Sans_SC_Black.ttf',
+			weight: '900',
+			style: 'normal',
+		},
+	],
+	variable: '--font-harmony-os',
+	display: 'swap',
 });
 
 export function generateStaticParams() {
@@ -49,10 +62,11 @@ export default async function LocaleLayout({ children, params }) {
 
 	return (
 		<html lang={locale}>
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-				<NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+			<body className={`${harmonyOS.variable} antialiased`}>
+				<NextIntlClientProvider messages={messages}>
+					<div className='min-h-svh bg-[#0f0f12]'>{children}</div>
+				</NextIntlClientProvider>
 			</body>
 		</html>
 	);
 }
-

@@ -1,7 +1,7 @@
 {
 	"home": {
-		"title": "AI Image Generation Platform",
-		"description": "Create stunning images with AI"
+		"title": "Generate All, Powered by AI",
+		"description": "Create stunning images, videos, and audio with AI"
 	},
 	"nav": {
 		"home": "Home",
@@ -16,7 +16,8 @@
 		"admin": "Admin",
 		"login": "Login",
 		"logout": "Logout",
-		"signup": "Sign Up"
+		"signup": "Sign Up",
+		"getstarted": "Get Started"
 	},
 	"common": {
 		"loading": "Loading...",
@@ -63,7 +64,6 @@
 	},
 	"credits": {
 		"title": "My Credits",
-		"balance": "Credit Balance",
 		"current": "{amount} Credits",
 		"available": "Available Credits",
 		"totalEarned": "Total Earned",

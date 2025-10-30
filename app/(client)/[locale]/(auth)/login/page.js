@@ -1,5 +1,5 @@
 import { LoginForm } from './login-form';
-import Prism from './prism-bg';
+import Prism from '@/components/motion/prism-bg';
 
 export default function LoginPage() {
 	return (

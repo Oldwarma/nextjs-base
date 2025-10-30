@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Bell, Menu } from 'lucide-react';
-import LanguageSwitcherSidebar from '@/components/common/LanguageSwitcherSidebar';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { UserMenu } from './user-menu';
 import { NavMenu } from './nav-menu';
 import { useRouter } from 'next/navigation';
@@ -59,7 +59,7 @@ export function AppSidebar({ user }) {
 					</Link>
 				)}
 
-				<LanguageSwitcherSidebar />
+				<LanguageSwitcher />
 
 				{/* Menu */}
 				<Link

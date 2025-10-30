@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Renderer, Triangle, Program, Mesh } from 'ogl';
 
 const Prism = ({
@@ -16,14 +16,25 @@ const Prism = ({
 	hoverStrength = 2,
 	inertia = 0.05,
 	bloom = 1,
-	suspendWhenOffscreen = false,
+	suspendWhenOffscreen = true, // 默认开启离屏暂停
 	timeScale = 0.5,
+	throttleFPS = 30, // 限制帧率，默认30fps
+	lazyLoad = false, // 延迟加载
 }) => {
 	const containerRef = useRef(null);
+	const [shouldRender, setShouldRender] = useState(!lazyLoad);
+
+	// 延迟加载：组件挂载后再初始化 WebGL
+	useEffect(() => {
+		if (lazyLoad) {
+			const timer = setTimeout(() => setShouldRender(true), 100);
+			return () => clearTimeout(timer);
+		}
+	}, [lazyLoad]);
 
 	useEffect(() => {
 		const container = containerRef.current;
-		if (!container) return;
+		if (!container || !shouldRender) return;
 
 		const H = Math.max(0.001, height);
 		const BW = Math.max(0.001, baseWidth);
@@ -44,11 +55,13 @@ const Prism = ({
 		const HOVSTR = Math.max(0, hoverStrength || 1);
 		const INERT = Math.max(0, Math.min(1, inertia || 0.12));
 
-		const dpr = Math.min(2, window.devicePixelRatio || 1);
+		// 性能优化：降低 DPR，减少渲染像素
+		const dpr = Math.min(1.5, window.devicePixelRatio || 1);
 		const renderer = new Renderer({
 			dpr,
 			alpha: transparent,
 			antialias: false,
+			powerPreference: 'low-power', // 优先使用低功耗GPU
 		});
 		const gl = renderer.gl;
 		gl.disable(gl.DEPTH_TEST);
@@ -158,7 +171,7 @@ const Prism = ({
           wob = mat2(c0, c1, c2, c0);
         }
 
-        const int STEPS = 100;
+        const int STEPS = 60; // 减少循环次数以提升性能
         for (int i = 0; i < STEPS; i++) {
           p = vec3(f, z);
           p.xz = p.xz * wob;
@@ -271,6 +284,11 @@ const Prism = ({
 		const NOISE_IS_ZERO = NOISE < 1e-6;
 		let raf = 0;
 		const t0 = performance.now();
+		
+		// 帧率限制
+		const frameInterval = 1000 / throttleFPS;
+		let lastFrameTime = t0;
+		
 		const startRAF = () => {
 			if (raf) return;
 			raf = requestAnimationFrame(render);
@@ -296,16 +314,23 @@ const Prism = ({
 		const lerp = (a, b, t) => a + (b - a) * t;
 
 		const pointer = { x: 0, y: 0, inside: true };
+		
+		// 节流：减少鼠标移动事件处理频率
+		let moveTimeout = null;
 		const onMove = (e) => {
-			const ww = Math.max(1, window.innerWidth);
-			const wh = Math.max(1, window.innerHeight);
-			const cx = ww * 0.5;
-			const cy = wh * 0.5;
-			const nx = (e.clientX - cx) / (ww * 0.5);
-			const ny = (e.clientY - cy) / (wh * 0.5);
-			pointer.x = Math.max(-1, Math.min(1, nx));
-			pointer.y = Math.max(-1, Math.min(1, ny));
-			pointer.inside = true;
+			if (moveTimeout) return;
+			moveTimeout = setTimeout(() => {
+				const ww = Math.max(1, window.innerWidth);
+				const wh = Math.max(1, window.innerHeight);
+				const cx = ww * 0.5;
+				const cy = wh * 0.5;
+				const nx = (e.clientX - cx) / (ww * 0.5);
+				const ny = (e.clientY - cy) / (wh * 0.5);
+				pointer.x = Math.max(-1, Math.min(1, nx));
+				pointer.y = Math.max(-1, Math.min(1, ny));
+				pointer.inside = true;
+				moveTimeout = null;
+			}, 16); // ~60fps 限制
 		};
 		const onLeave = () => {
 			pointer.inside = false;
@@ -331,6 +356,14 @@ const Prism = ({
 		}
 
 		const render = (t) => {
+			// 帧率限制：跳过过快的帧
+			const elapsed = t - lastFrameTime;
+			if (elapsed < frameInterval) {
+				raf = requestAnimationFrame(render);
+				return;
+			}
+			lastFrameTime = t - (elapsed % frameInterval);
+
 			const time = (t - t0) * 0.001;
 			program.uniforms.iTime.value = time;
 
@@ -427,14 +460,51 @@ const Prism = ({
 		inertia,
 		bloom,
 		suspendWhenOffscreen,
+		throttleFPS,
+		shouldRender,
 	]);
 
 	return (
 		<div
 			className='w-full h-full relative'
 			ref={containerRef}
+			style={{ willChange: shouldRender ? 'auto' : 'transform' }}
 		/>
 	);
+};
+
+// 性能优化配置预设
+export const PrismPresets = {
+	// 高性能模式（推荐用于移动端或低端设备）
+	performance: {
+		suspendWhenOffscreen: true,
+		throttleFPS: 24,
+		lazyLoad: true,
+		scale: 4,
+		noise: 0.3,
+		glow: 0.8,
+		bloom: 0.8,
+	},
+	// 平衡模式（默认）
+	balanced: {
+		suspendWhenOffscreen: true,
+		throttleFPS: 30,
+		lazyLoad: true,
+		scale: 3.6,
+		noise: 0.5,
+		glow: 1,
+		bloom: 1,
+	},
+	// 高质量模式（仅用于高端设备）
+	quality: {
+		suspendWhenOffscreen: false,
+		throttleFPS: 60,
+		lazyLoad: false,
+		scale: 3,
+		noise: 0.5,
+		glow: 1.2,
+		bloom: 1.2,
+	},
 };
 
 export default Prism;

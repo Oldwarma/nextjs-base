@@ -1,7 +1,7 @@
 {
 	"home": {
-		"title": "AI 图片生成平台",
-		"description": "使用 AI 创建精美图片"
+		"title": "Generate All, Powered by AI",
+		"description": "使用 AI 创建精美图片、视频、音频"
 	},
 	"nav": {
 		"home": "首页",
@@ -16,7 +16,8 @@
 		"admin": "管理后台",
 		"login": "登录",
 		"logout": "退出",
-		"signup": "注册"
+		"signup": "注册",
+		"getstarted": "开始使用"
 	},
 	"common": {
 		"loading": "加载中...",
@@ -63,7 +64,6 @@
 	},
 	"credits": {
 		"title": "我的积分",
-		"balance": "积分余额",
 		"current": "{amount} 积分",
 		"available": "可用积分",
 		"totalEarned": "累计获得",
