@@ -3,6 +3,17 @@
  * 导出所有客户端可用的 Server Actions
  */
 
+// 认证相关
+export {
+	signInWithEmailAction,
+	signUpWithEmailAction,
+	getGoogleAuthUrlAction,
+	getGithubAuthUrlAction,
+	signOutAction,
+	getSessionAction,
+	checkAndInitUserAction,
+} from './auth';
+
 // 用户相关
 export { getUserProfileAction, updateUserProfileAction, getUserStatisticsAction } from './user';
 
