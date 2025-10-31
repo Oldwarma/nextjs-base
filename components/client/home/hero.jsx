@@ -1,14 +1,21 @@
+'use client';
 import { useTranslations } from 'next-intl';
 import Prism from '@/components/motion/prism-bg';
 import SplitText from '@/components/motion/split-text';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+
 export default function Hero() {
 	const t = useTranslations('home');
+
+
+
 	return (
 		<div className='flex min-h-svh flex-col items-center justify-center p-6 md:p-10'>
 			<div className='w-full max-w-5xl z-10 text-center'>
 				<SplitText
 					text={t('title')}
-					className='text-[10rem] italic tracking-[-0.05em] leading-none font-extrabold text-zinc-50 text-center'
+					className='text-[9rem] italic tracking-[-0.05em] leading-none font-extrabold text-zinc-50 text-center'
 					delay={100}
 					duration={1}
 					ease='power3.out'

@@ -3,6 +3,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { locales } from '@/i18n/config';
+import { ThemeProvider } from '@/components/common/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 import '@/app/globals.css';
 
 // 使用本地 HarmonyOS Sans 字体（多字重）
@@ -51,7 +53,6 @@ export async function generateMetadata({ params }) {
 
 export default async function LocaleLayout({ children, params }) {
 	const { locale } = await params;
-
 	// 验证语言是否支持
 	if (!locales.includes(locale)) {
 		notFound();
@@ -61,11 +62,19 @@ export default async function LocaleLayout({ children, params }) {
 	const messages = await getMessages();
 
 	return (
-		<html lang={locale}>
+		<html lang={locale} suppressHydrationWarning>
 			<body className={`${harmonyOS.variable} antialiased`}>
-				<NextIntlClientProvider messages={messages}>
-					<div className='min-h-svh bg-[#0f0f12]'>{children}</div>
-				</NextIntlClientProvider>
+				<ThemeProvider
+					attribute='class'
+					defaultTheme='dark'
+					enableSystem
+					disableTransitionOnChange
+				>
+					<NextIntlClientProvider messages={messages}>
+						<div className='min-h-svh bg-[#0f0f12]'>{children}</div>
+						<Toaster />
+					</NextIntlClientProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);
