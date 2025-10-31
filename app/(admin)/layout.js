@@ -1,6 +1,8 @@
 import localFont from 'next/font/local';
 import { checkAdmin } from '@/lib/admin-auth';
 import { Toaster } from '@/components/ui/sonner';
+import { AntdRegistry } from '@ant-design/nextjs-registry';
+import AdminLayout from '@/components/admin/admin-layout';
 import '../globals.css';
 
 // 使用本地 HarmonyOS Sans 字体
@@ -32,19 +34,22 @@ export const metadata = {
 };
 
 /**
- * Admin Layout - 不使用多语言
+ * Admin Layout Root - 不使用多语言
  * 管理后台始终使用英文界面
  * 需要管理员权限才能访问
  */
-export default async function AdminLayout({ children }) {
+export default async function AdminLayoutRoot({ children }) {
 	// 验证管理员权限
-	await checkAdmin();
+	const session = await checkAdmin();
 
 	return (
 		<html lang='en'>
 			<body className={`${harmonyOS.variable} antialiased`}>
-				{/* 管理后台内容 */}
-				{children}
+				<AntdRegistry>
+					<AdminLayout user={session?.user}>
+						{children}
+					</AdminLayout>
+				</AntdRegistry>
 				<Toaster />
 			</body>
 		</html>
