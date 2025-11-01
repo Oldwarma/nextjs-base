@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { ProTable, ModalForm, ProFormText, ProFormSelect, ProFormDigit, DrawerForm, ProDescriptions } from '@ant-design/pro-components';
-import { Button, message, Modal, Tag, Space, Avatar, Dropdown } from 'antd';
+import { Button, Modal, Tag, Space, Avatar, Dropdown } from 'antd';
 import {
 	PlusOutlined,
 	EditOutlined,
@@ -12,13 +12,14 @@ import {
 	UserOutlined,
 	MoreOutlined,
 } from '@ant-design/icons';
+import { toast } from 'sonner';
 import {
-	getUserListAction,
-	updateUserInfoAction,
-	deleteUserAction,
-	getUserDetailAction,
-	batchUpdateUsersAction,
-} from '@/app/(admin)/actions';
+	getUserListAction as getList,
+	updateUserInfoAction as updateInfo,
+	deleteUserAction as deleteItem,
+	getUserDetailAction as getItem,
+	batchUpdateUsersAction as batchUpdateItems,
+} from '@/app/(admin)/actions/admin-users';
 
 export default function UsersManagementPage() {
 	const [editModalVisible, setEditModalVisible] = useState(false);
@@ -190,7 +191,7 @@ export default function UsersManagementPage() {
 								okText: 'Delete',
 								okType: 'danger',
 								cancelText: 'Cancel',
-								onOk: () => handleDelete(record.id),
+								onOk: () => handleDelete(record._id),
 							});
 						},
 					},
@@ -215,7 +216,7 @@ export default function UsersManagementPage() {
 	// 获取数据
 	const request = async (params, sort) => {
 		try {
-			const result = await getUserListAction({
+			const result = await getList({
 				pageIndex: params.current,
 				pageSize: params.pageSize,
 				role: params.role,
@@ -223,7 +224,7 @@ export default function UsersManagementPage() {
 			});
 
 			if (!result.success) {
-				message.error(result.error);
+				toast.error(result.error);
 				return { data: [], success: false, total: 0 };
 			}
 
@@ -233,7 +234,7 @@ export default function UsersManagementPage() {
 				total: result.total || 0,
 			};
 		} catch (error) {
-			message.error('Failed to fetch user list');
+			toast.error('Failed to fetch user list');
 			return { data: [], success: false, total: 0 };
 		}
 	};
@@ -254,36 +255,36 @@ export default function UsersManagementPage() {
 	// 删除
 	const handleDelete = async (userId) => {
 		try {
-			const result = await deleteUserAction(userId);
+			const result = await deleteItem(userId);
 
 			if (result.success) {
-				message.success('User deleted successfully');
+				toast.success('User deleted successfully');
 				actionRef.current?.reload();
 			} else {
-				message.error(result.error);
+				toast.error(result.error);
 			}
 		} catch (error) {
-			message.error('Failed to delete user');
+			toast.error('Failed to delete user');
 		}
 	};
 
 	// 保存
 	const handleSave = async (values) => {
 		try {
-			const result = await updateUserInfoAction(currentRow.id, values);
+			const result = await updateInfo(currentRow._id, values);
 
 			if (result.success) {
-				message.success('User updated successfully');
+				toast.success('User updated successfully');
 				setEditModalVisible(false);
 				setCurrentRow(null);
 				actionRef.current?.reload();
 				return true;
 			} else {
-				message.error(result.error);
+				toast.error(result.error);
 				return false;
 			}
 		} catch (error) {
-			message.error('Failed to update user');
+			toast.error('Failed to update user');
 			return false;
 		}
 	};
@@ -291,22 +292,22 @@ export default function UsersManagementPage() {
 	// 批量操作
 	const handleBatchUpdate = async (updates) => {
 		if (selectedRowKeys.length === 0) {
-			message.warning('Please select users first');
+			toast.warning('Please select users first');
 			return;
 		}
 
 		try {
-			const result = await batchUpdateUsersAction(selectedRowKeys, updates);
+			const result = await batchUpdateItems(selectedRowKeys, updates);
 
 			if (result.success) {
-				message.success(result.message);
+				toast.success(result.message);
 				setSelectedRowKeys([]);
 				actionRef.current?.reload();
 			} else {
-				message.error(result.error);
+				toast.error(result.error);
 			}
 		} catch (error) {
-			message.error('Failed to update users');
+			toast.error('Failed to update users');
 		}
 	};
 
@@ -316,7 +317,7 @@ export default function UsersManagementPage() {
 				columns={columns}
 				actionRef={actionRef}
 				request={request}
-				rowKey='id'
+				rowKey='_id'
 				pagination={{
 					pageSize: 20,
 					showSizeChanger: true,
@@ -425,16 +426,15 @@ export default function UsersManagementPage() {
 					fieldProps={{ precision: 0 }}
 				/>
 
-				<ProFormSelect
-					name='emailVerified'
-					label='Email Verified'
-					valueEnum={{
-						true: 'Verified',
-						false: 'Unverified',
-					}}
-					rules={[{ required: true, message: 'Please select verification status' }]}
-					transform={(value) => ({ emailVerified: value === 'true' })}
-				/>
+			<ProFormSelect
+				name='emailVerified'
+				label='Email Verified'
+				options={[
+					{ label: 'Verified', value: true },
+					{ label: 'Unverified', value: false },
+				]}
+				rules={[{ required: true, message: 'Please select verification status' }]}
+			/>
 			</ModalForm>
 
 			{/* 详情抽屉 */}

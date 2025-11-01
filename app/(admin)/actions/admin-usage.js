@@ -1,18 +1,10 @@
 'use server';
 
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { checkAdminAction } from '@/lib/admin-auth';
 import { getUserUsageLogs, getSystemStatistics } from '@/lib/usage-logs';
 
-async function checkAdmin() {
-	const session = await auth.api.getSession({ headers: await headers() });
-	if (!session) return { isAdmin: false, error: 'Unauthorized' };
-	if (session.user.role !== 'admin') return { isAdmin: false, error: 'Forbidden: Admin access required' };
-	return { isAdmin: true, userId: session.user.id };
-}
-
 export async function getAdminUsageLogsAction(userId, options = {}) {
-	const adminCheck = await checkAdmin();
+	const adminCheck = await checkAdminAction();
 	if (!adminCheck.isAdmin) {
 		return { success: false, error: adminCheck.error };
 	}
@@ -26,7 +18,7 @@ export async function getAdminUsageLogsAction(userId, options = {}) {
 }
 
 export async function getSystemStatisticsAction(options = {}) {
-	const adminCheck = await checkAdmin();
+	const adminCheck = await checkAdminAction();
 	if (!adminCheck.isAdmin) {
 		return { success: false, error: adminCheck.error };
 	}

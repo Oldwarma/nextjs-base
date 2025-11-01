@@ -2,7 +2,7 @@ import localFont from 'next/font/local';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { locales } from '@/i18n/config';
+import { locales } from '@/i18n/config';	
 import { ThemeProvider } from '@/components/common/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import '@/app/globals.css';
@@ -70,10 +70,10 @@ export default async function LocaleLayout({ children, params }) {
 					enableSystem
 					disableTransitionOnChange
 				>
-					<NextIntlClientProvider messages={messages}>
+				<NextIntlClientProvider messages={messages}>
 						<div className='min-h-svh bg-[#0f0f12]'>{children}</div>
 						<Toaster />
-					</NextIntlClientProvider>
+				</NextIntlClientProvider>
 				</ThemeProvider>
 			</body>
 		</html>

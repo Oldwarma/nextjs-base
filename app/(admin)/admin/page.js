@@ -168,7 +168,7 @@ export default function AdminDashboard() {
 						<li>📊 <strong>Usage Statistics</strong> - Monitor platform usage</li>
 						<li>⚙️ <strong>Settings</strong> - Configure system settings</li>
 					</ul>
-				</div>
+			</div>
 			</ProCard>
 		</div>
 	);

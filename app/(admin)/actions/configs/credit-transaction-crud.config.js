@@ -1,0 +1,72 @@
+/**
+ * Credit Transaction CRUD 配置
+ * 积分交易记录的查询配置
+ * 
+ * 注意：积分交易记录是只读的，不支持创建、更新、删除
+ * 积分的增减通过专门的 Server Actions 处理
+ */
+
+export const creditTransactionCrudConfig = {
+	collectionName: 'credit_transactions',
+	primaryKey: '_id',
+
+	// 字段配置
+	fields: {
+		// 积分交易记录不允许直接创建
+		creatable: [],
+		// 积分交易记录不允许更新
+		updatable: [],
+		// 可搜索的字段
+		searchable: ['userId', 'reason', 'relatedId'],
+	},
+
+	// 无验证规则（不支持创建/更新）
+	validation: {},
+
+	// 查询配置
+	query: {
+		defaultSort: { createdAt: -1 }, // 按创建时间倒序
+		defaultPageSize: 20,
+		baseFilter: {}, // 管理员可以看到所有交易记录
+	},
+
+	// 生命周期钩子
+	hooks: {
+		beforeCreate: async (data) => {
+			throw new Error('Credit transactions cannot be created directly. Use credit management actions instead.');
+		},
+		beforeUpdate: async (id, data, existing) => {
+			throw new Error('Credit transactions cannot be updated');
+		},
+		beforeDelete: async (id, existing) => {
+			throw new Error('Credit transactions cannot be deleted');
+		},
+	},
+
+	// 数据转换
+	transforms: {
+		output: (data) => {
+			// 格式化输出
+			return {
+				...data,
+				// 确保 type 有可读的显示
+				typeLabel:
+					data.type === 'earn'
+						? 'Earned'
+						: data.type === 'spend'
+							? 'Spent'
+							: data.type === 'refund'
+								? 'Refunded'
+								: data.type === 'expire'
+									? 'Expired'
+									: data.type === 'admin_adjust'
+										? 'Admin Adjusted'
+										: data.type,
+			};
+		},
+	},
+
+	// 不使用软删除
+	softDelete: false,
+};
+

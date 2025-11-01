@@ -1,205 +1,108 @@
 'use server';
 
+import { createCrudActions } from '@/app/(admin)/actions/dao/base';
+import { userCrudConfig } from '@/app/(admin)/actions/configs/user-crud.config';
 import { checkAdminAction } from '@/lib/admin-auth';
-import { getUserList, updateUserRole, getUserStatistics, updateUserProfile } from '@/lib/user-profile';
-import { getCollection } from '@/lib/mongodb';
+import { getUserStatistics } from '@/lib/user-profile';
+
+// 创建用户 CRUD Actions
+const userCrud = createCrudActions(userCrudConfig);
 
 /**
  * 获取用户列表（管理员）
+ * @param {Object} params - 查询参数
+ * @returns {Promise<Object>} 用户列表结果
  */
 export async function getUserListAction({ pageIndex = 1, pageSize = 20, role, search } = {}) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
-	try {
-		const result = await getUserList({
-			pageIndex,
-			pageSize,
-			role,
-			search,
-		});
-
-		// findWithPagination 返回的是 rows 字段，需要转换为 data
-		return {
-			success: true,
-			data: result.rows || result.data || [],
-			total: result.total || 0,
-			pageIndex: result.pageIndex,
-			pageSize: result.pageSize,
-			totalPages: result.totalPages,
-		};
-	} catch (error) {
-		console.error('getUserListAction error:', error);
-		return {
-			success: false,
-			error: error.message,
-		};
-	}
+	return await userCrud.getList({
+		pageIndex,
+		pageSize,
+		search,
+		filters: role ? { role } : {},
+	});
 }
 
 /**
- * 更新用户角色（管理员）
+ * 获取用户详细信息（管理员）
+ * @param {String} userId - 用户ID
+ * @returns {Promise<Object>} 用户详情
  */
-export async function updateUserRoleAction(userId, role) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
-	try {
-		await updateUserRole(userId, role);
-		return {
-			success: true,
-			message: 'User role updated successfully',
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
-	}
+export async function getUserDetailAction(userId) {
+	return await userCrud.getDetail(userId);
 }
 
 /**
  * 更新用户信息（管理员）
+ * @param {String} userId - 用户ID
+ * @param {Object} data - 更新数据
+ * @returns {Promise<Object>} 更新结果
  */
 export async function updateUserInfoAction(userId, data) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
-	try {
-		const usersCollection = await getCollection('users');
-		const updateData = {};
-
-		// 允许管理员更新的字段
-		if (data.name !== undefined) updateData.name = data.name;
-		if (data.email !== undefined) updateData.email = data.email.toLowerCase();
-		if (data.username !== undefined) updateData.username = data.username.toLowerCase();
-		if (data.role !== undefined) updateData.role = data.role;
-		if (data.credits !== undefined) updateData.credits = Number(data.credits);
-		if (data.emailVerified !== undefined) updateData.emailVerified = data.emailVerified;
-
-		updateData.updatedAt = new Date();
-
-		const result = await usersCollection.updateOne({ id: userId }, { $set: updateData });
-
-		if (result.modifiedCount === 0) {
-			throw new Error('User not found or no changes made');
-		}
-
-		return {
-			success: true,
-			message: 'User information updated successfully',
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
-	}
+	return await userCrud.update(userId, data);
 }
 
 /**
  * 删除用户（管理员）- 软删除
+ * @param {String} userId - 用户ID
+ * @returns {Promise<Object>} 删除结果
  */
 export async function deleteUserAction(userId) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
 	// 防止删除管理员自己
-	if (adminCheck.userId === userId) {
+	const adminCheck = await checkAdminAction();
+	if (adminCheck.isAdmin && adminCheck.userId === userId) {
 		return {
 			success: false,
 			error: 'Cannot delete your own account',
 		};
 	}
 
-	try {
-		const usersCollection = await getCollection('users');
-
-		// 软删除：标记为已删除
-		const result = await usersCollection.updateOne(
-			{ id: userId },
-			{
-				$set: {
-					deletedAt: new Date(),
-					email: `deleted_${userId}@deleted.com`, // 防止邮箱冲突
-					updatedAt: new Date(),
-				},
-			}
-		);
-
-		if (result.modifiedCount === 0) {
-			throw new Error('User not found');
-		}
-
-		return {
-			success: true,
-			message: 'User deleted successfully',
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
-	}
+	return await userCrud.delete(userId);
 }
 
 /**
- * 获取用户详细信息（管理员）
+ * 批量更新用户状态（管理员）
+ * @param {Array} userIds - 用户ID数组
+ * @param {Object} updates - 更新数据
+ * @returns {Promise<Object>} 更新结果
  */
-export async function getUserDetailAction(userId) {
+export async function batchUpdateUsersAction(userIds, updates) {
+	return await userCrud.batchUpdate(userIds, updates);
+}
+
+/**
+ * 批量删除用户（管理员）
+ * @param {Array} userIds - 用户ID数组
+ * @returns {Promise<Object>} 删除结果
+ */
+export async function batchDeleteUsersAction(userIds) {
+	// 防止删除管理员自己
 	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
+	if (adminCheck.isAdmin && userIds.includes(adminCheck.userId)) {
 		return {
 			success: false,
-			error: adminCheck.error,
+			error: 'Cannot delete your own account',
 		};
 	}
 
-	try {
-		const usersCollection = await getCollection('users');
-		const user = await usersCollection.findOne({ id: userId });
+	return await userCrud.batchDelete(userIds);
+}
 
-		if (!user) {
-			throw new Error('User not found');
-		}
-
-		// 移除敏感信息
-		const { password, ...userInfo } = user;
-
-		return {
-			success: true,
-			data: userInfo,
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
-	}
+/**
+ * 更新用户角色（管理员）
+ * 这是一个便捷方法，专门用于更新角色
+ * @param {String} userId - 用户ID
+ * @param {String} role - 新角色
+ * @returns {Promise<Object>} 更新结果
+ */
+export async function updateUserRoleAction(userId, role) {
+	return await userCrud.update(userId, { role });
 }
 
 /**
  * 获取用户统计信息（管理员）
+ * 这个方法不使用 BaseDAO，因为它需要复杂的聚合查询
+ * @param {String} userId - 用户ID
+ * @returns {Promise<Object>} 统计信息
  */
 export async function getUserStatisticsAdminAction(userId) {
 	const adminCheck = await checkAdminAction();
@@ -215,41 +118,6 @@ export async function getUserStatisticsAdminAction(userId) {
 		return {
 			success: true,
 			data: stats,
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
-	}
-}
-
-/**
- * 批量更新用户状态（管理员）
- */
-export async function batchUpdateUsersAction(userIds, updates) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
-	try {
-		const usersCollection = await getCollection('users');
-
-		const updateData = {
-			...updates,
-			updatedAt: new Date(),
-		};
-
-		const result = await usersCollection.updateMany({ id: { $in: userIds } }, { $set: updateData });
-
-		return {
-			success: true,
-			message: `Updated ${result.modifiedCount} users`,
-			count: result.modifiedCount,
 		};
 	} catch (error) {
 		return {
