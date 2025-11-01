@@ -43,7 +43,7 @@ export default async function AdminLayoutRoot({ children }) {
 	const session = await checkAdmin();
 
 	return (
-		<html lang='en'>
+		<html lang='en' suppressHydrationWarning>
 			<body className={`${harmonyOS.variable} antialiased`}>
 				<AntdRegistry>
 					<AdminLayout user={session?.user}>

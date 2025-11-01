@@ -1,235 +1,323 @@
+/**
+ * 智能 CRUD 页面模板
+ * 
+ * 基于 vk-unicloud 万能表格/表单思想
+ * 通过统一的字段配置自动生成表格、表单、搜索
+ * 
+ * 使用步骤:
+ * 1. 复制此文件到目标目录
+ * 2. 配置 fieldsConfig (统一字段配置)
+ * 3. 配置 actions (Server Actions)
+ * 4. 调整其他选项 (可选)
+ * 
+ * 优势:
+ * - 只需维护一份字段配置
+ * - 表格、表单、搜索自动同步
+ * - 减少 80% 代码量
+ * - 类型安全、易于扩展
+ */
+
 'use client';
 
-import { ProFormText, ProFormSelect, ProFormDigit, ProFormDatePicker } from '@ant-design/pro-components';
-import { Tag } from 'antd';
-
-// 引入通用 CRUD 页面组件
-import CrudPage from '@/components/admin/crud-page';
-
-/**
- * CRUD 页面模板
- * 
- * 使用步骤：
- * 1. 复制此文件到目标目录（如 app/(admin)/admin/products/page.js）
- * 2. 修改 Actions 导入路径
- * 3. 配置 columns（表格列）
- * 4. 配置 formFields（表单字段）
- * 5. 配置其他选项（可选）
- * 6. 删除不需要的部分
- */
+// 引入智能 CRUD 页面组件
+import SmartCrudPage from '@/components/admin/smart-crud-page';
 
 // ============================================
 // 1. 导入 Server Actions
 // ============================================
 import {
 	// TODO: 修改为实际的 Action 名称
-	getDataListAction as getList,        // 必需：获取列表
-	updateDataAction as update,          // 必需（如果启用编辑）
-	deleteDataAction as deleteItem,      // 必需（如果启用删除）
-	createDataAction as create,          // 可选（如果启用创建）
-	batchUpdateDataAction as batchUpdate, // 可选（如果需要批量操作）
+	getDataListAction as getList,
+	updateDataAction as update,
+	deleteDataAction as deleteItem,
+	createDataAction as create, // 可选
 } from '@/app/(admin)/actions';
 
-export default function DataManagementPage() {
+export default function SmartDataManagementPage() {
 	// ============================================
-	// 2. 定义表格列（必需）
+	// 2. 定义统一的字段配置 (核心)
 	// ============================================
-	const columns = [
+	const fieldsConfig = [
+		// 字段 1: ID
 		{
+			key: '_id',
 			title: 'ID',
-			dataIndex: '_id',
-			search: false,
-			width: 100,
-			ellipsis: true,
-			copyable: true,
-		},
-		{
-			title: 'Name',
-			dataIndex: 'name',
-			width: 150,
-			ellipsis: true,
-			// 可搜索
-		},
-		{
-			title: 'Status',
-			dataIndex: 'status',
-			valueType: 'select',
-			width: 120,
-			valueEnum: {
-				active: { text: 'Active', status: 'Success' },
-				inactive: { text: 'Inactive', status: 'Default' },
+			type: 'text',
+			
+			// 表格配置
+			table: {
+				width: 100,
+				copyable: true,
+				ellipsis: true,
 			},
-			render: (_, record) => (
-				<Tag color={record.status === 'active' ? 'green' : 'default'}>
-					{record.status === 'active' ? 'Active' : 'Inactive'}
-				</Tag>
-			),
+			
+			// 不在表单中显示
+			form: false,
+			
+			// 不可搜索
+			search: false,
 		},
+		
+		// 字段 2: 名称
 		{
+			key: 'name',
+			title: 'Name',
+			type: 'text',
+			
+			// 表格配置
+			table: {
+				width: 150,
+				ellipsis: true,
+				sorter: true,
+			},
+			
+			// 表单配置
+			form: {
+				required: true,
+				placeholder: 'Enter name',
+				minLength: 2,
+				maxLength: 50,
+			},
+			
+			// 搜索配置
+			search: {
+				enabled: true,
+				mode: 'like', // 模糊搜索
+			},
+		},
+		
+		// 字段 3: 状态
+		{
+			key: 'status',
+			title: 'Status',
+			type: 'select',
+			
+			// 选项配置
+			options: [
+				{ label: 'Active', value: 'active', color: 'green' },
+				{ label: 'Inactive', value: 'inactive', color: 'default' },
+			],
+			
+			// 表格配置
+			table: {
+				width: 120,
+			},
+			
+			// 表单配置
+			form: {
+				required: true,
+			},
+			
+			// 搜索配置
+			search: {
+				enabled: true,
+				mode: 'exact', // 精确搜索
+			},
+		},
+		
+		// 字段 4: 数量
+		{
+			key: 'count',
+			title: 'Count',
+			type: 'number',
+			
+			// 表格配置
+			table: {
+				width: 100,
+			},
+			
+			// 表单配置
+			form: {
+				precision: 0,
+				min: 0,
+			},
+			
+			// 搜索配置
+			search: {
+				enabled: true,
+				mode: 'exact',
+			},
+		},
+		
+		// 字段 5: 价格
+		{
+			key: 'price',
+			title: 'Price',
+			type: 'money',
+			
+			// 表格配置
+			table: {
+				width: 120,
+				precision: 2,
+				symbol: '$',
+			},
+			
+			// 表单配置
+			form: {
+				precision: 2,
+				min: 0,
+				prefix: '$',
+			},
+			
+			// 不可搜索
+			search: false,
+		},
+		
+		// 字段 6: 描述
+		{
+			key: 'description',
+			title: 'Description',
+			type: 'textarea',
+			
+			// 不在表格中显示
+			table: false,
+			
+			// 表单配置
+			form: {
+				placeholder: 'Enter description',
+				maxLength: 500,
+			},
+		},
+		
+		// 字段 7: 启用开关
+		{
+			key: 'enabled',
+			title: 'Enabled',
+			type: 'switch',
+			
+			// 表格配置
+			table: {
+				width: 100,
+				trueText: 'Yes',
+				falseText: 'No',
+			},
+			
+			// 表单配置
+			form: {},
+			
+			// 搜索配置
+			search: {
+				enabled: true,
+				mode: 'exact',
+				trueText: 'Enabled',
+				falseText: 'Disabled',
+			},
+		},
+		
+		// 字段 8: 日期
+		{
+			key: 'date',
+			title: 'Date',
+			type: 'date',
+			
+			// 表格配置
+			table: {
+				width: 120,
+				format: 'YYYY-MM-DD',
+			},
+			
+			// 表单配置
+			form: {
+				format: 'YYYY-MM-DD',
+			},
+		},
+		
+		// 字段 9: 创建时间
+		{
+			key: 'createdAt',
 			title: 'Created At',
-			dataIndex: 'createdAt',
-			valueType: 'dateTime',
+			type: 'datetime',
+			
+			// 表格配置
+			table: {
+				width: 180,
+				sorter: true,
+				defaultSort: 'desc', // 默认降序
+			},
+			
+			// 不在表单中显示
+			form: false,
+			
+			// 不可搜索 (使用日期范围搜索)
 			search: false,
-			width: 180,
-			sorter: true,
 		},
+		
+		// 字段 10: 创建时间范围搜索
 		{
-			title: 'Updated At',
-			dataIndex: 'updatedAt',
-			valueType: 'dateTime',
-			search: false,
-			hideInTable: true, // 只在详情中显示
+			key: 'createdAt',
+			title: 'Created Date Range',
+			type: 'datetimerange',
+			
+			// 不在表格中显示
+			table: false,
+			
+			// 不在表单中显示
+			form: false,
+			
+			// 仅用于搜索
+			search: {
+				enabled: true,
+				mode: 'range',
+			},
 		},
-		// TODO: 添加更多列...
+		
+		// TODO: 添加更多字段...
 	];
-
+	
 	// ============================================
-	// 3. 定义表单字段（必需）
-	// ============================================
-	const formFields = (
-		<>
-			<ProFormText
-				name='name'
-				label='Name'
-				placeholder='Enter name'
-				rules={[{ required: true, message: 'Please enter name' }]}
-			/>
-
-			<ProFormSelect
-				name='status'
-				label='Status'
-				valueEnum={{
-					active: 'Active',
-					inactive: 'Inactive',
-				}}
-				rules={[{ required: true, message: 'Please select status' }]}
-			/>
-
-			<ProFormDigit
-				name='count'
-				label='Count'
-				placeholder='Enter count'
-				fieldProps={{ precision: 0 }}
-			/>
-
-			<ProFormDatePicker
-				name='date'
-				label='Date'
-			/>
-
-			{/* TODO: 添加更多字段... */}
-		</>
-	);
-
-	// ============================================
-	// 4. 定义 Actions（必需）
+	// 3. 定义 Actions (必需)
 	// ============================================
 	const actions = {
-		getList,                    // 必需
-		update,                     // 必需（如果 enableEdit=true）
-		delete: deleteItem,         // 必需（如果 enableDelete=true）
-		// create,                  // 可选：取消注释以启用创建
-		// batchUpdate,             // 可选：取消注释以启用批量更新
+		getList,              // 必需
+		update,               // 必需 (如果 enableEdit=true)
+		delete: deleteItem,   // 必需 (如果 enableDelete=true)
+		// create,            // 可选: 取消注释以启用创建
 	};
-
+	
 	// ============================================
-	// 5. 配置搜索（可选）
-	// ============================================
-	const searchConfig = {
-		// 转换 ProTable 的搜索参数为 getList 参数
-		transform: (params) => ({
-			// 示例：将多个搜索字段合并为一个 search 参数
-			search: params.name,
-			status: params.status,
-			// TODO: 根据实际需求调整
-		}),
-	};
-
-	// ============================================
-	// 6. 配置批量操作（可选）
+	// 4. 配置批量操作 (可选)
 	// ============================================
 	const batchActions = [
-		// 示例：批量激活
+		// 示例: 批量激活
 		// {
 		// 	key: 'activate',
 		// 	label: 'Activate',
 		// 	action: batchUpdate,
 		// 	params: { status: 'active' },
 		// },
-		// 示例：批量停用
-		// {
-		// 	key: 'deactivate',
-		// 	label: 'Deactivate',
-		// 	action: batchUpdate,
-		// 	params: { status: 'inactive' },
-		// },
-		// TODO: 添加更多批量操作...
 	];
-
+	
 	// ============================================
-	// 7. 钩子函数（可选）
+	// 5. 钩子函数 (可选)
 	// ============================================
 	
-	// 编辑前回调
 	const beforeEdit = async (record) => {
-		// 示例：检查权限
-		// if (record.locked) {
-		// 	toast.error('This record is locked');
-		// 	return false;
-		// }
-		
-		// 示例：数据转换
-		// return {
-		// 	...record,
-		// 	date: record.date ? moment(record.date) : null,
-		// };
-		
+		// 编辑前处理
 		return record;
 	};
-
-	// 删除前回调
+	
 	const beforeDelete = async (id) => {
-		// 示例：检查关联数据
-		// const hasRelated = await checkRelated(id);
-		// if (hasRelated) {
-		// 	toast.error('Cannot delete, has related data');
-		// 	return false;
-		// }
-		
+		// 删除前验证
 		return true;
 	};
-
-	// ============================================
-	// 8. 自定义详情头部（可选）
-	// ============================================
-	const renderDetailHeader = (record) => {
-		// 示例：显示标题和描述
-		// return (
-		// 	<div style={{ marginBottom: 24 }}>
-		// 		<h2>{record.name}</h2>
-		// 		<p style={{ color: '#999' }}>{record.description}</p>
-		// 	</div>
-		// );
-		
-		return null; // 不显示自定义头部
+	
+	const beforeCreate = async (values) => {
+		// 创建前处理
+		return values;
 	};
-
+	
 	// ============================================
-	// 9. 返回 CrudPage 组件
+	// 6. 返回 SmartCrudPage 组件
 	// ============================================
 	return (
-		<CrudPage
-			// 必需配置
-			columns={columns}
-			formFields={formFields}
-			actions={actions}
+		<SmartCrudPage
+			// 核心配置
+			fieldsConfig={fieldsConfig}  // 统一的字段配置
+			actions={actions}            // Server Actions
 			
 			// 基础配置
-			rowKey='_id'                    // MongoDB 默认主键
-			title='Data Management'         // TODO: 修改页面标题
-			
-			// 搜索配置
-			searchConfig={searchConfig}
+			title='Data Management'      // TODO: 修改页面标题
+			rowKey='_id'                 // MongoDB 主键
 			
 			// 批量操作
 			batchActions={batchActions}
@@ -237,24 +325,20 @@ export default function DataManagementPage() {
 			// 钩子函数
 			beforeEdit={beforeEdit}
 			beforeDelete={beforeDelete}
-			
-			// 自定义渲染
-			renderDetailHeader={renderDetailHeader}
+			beforeCreate={beforeCreate}
 			
 			// 功能开关
-			enableCreate={false}            // TODO: 是否启用创建
-			enableDetail={true}             // 是否启用查看详情
-			enableEdit={true}               // 是否启用编辑
-			enableDelete={true}             // 是否启用删除
+			enableCreate={false}         // TODO: 是否启用创建
+			enableDetail={true}          // 是否启用查看详情
+			enableEdit={true}            // 是否启用编辑
+			enableDelete={true}          // 是否启用删除
 			
-			// 额外配置（可选）
+			// 额外配置 (可选)
 			tableProps={{
-				scroll: { x: 1400 },        // 表格横向滚动
-				// size: 'small',           // 表格大小
+				scroll: { x: 1400 },
 			}}
 			formProps={{
-				width: 600,                 // 表单宽度
-				// grid: true,              // 启用栅格布局
+				width: 600,
 			}}
 		/>
 	);
@@ -262,126 +346,123 @@ export default function DataManagementPage() {
 
 /**
  * ============================================
- * 常用字段配置示例
+ * 字段类型参考
  * ============================================
+ * 
+ * 支持的字段类型:
+ * - text: 单行文本
+ * - textarea: 多行文本
+ * - number: 数字
+ * - money: 金额
+ * - percentage: 百分比
+ * - date: 日期
+ * - datetime: 日期时间
+ * - daterange: 日期范围 (仅搜索)
+ * - datetimerange: 日期时间范围 (仅搜索)
+ * - select: 下拉选择
+ * - radio: 单选
+ * - checkbox: 多选
+ * - switch: 开关
+ * - image: 图片
+ * - file: 文件
+ * - json: JSON
  */
-
-// 文本字段
-// {
-// 	title: 'Description',
-// 	dataIndex: 'description',
-// 	ellipsis: true,
-// 	width: 200,
-// }
-
-// 数字字段
-// {
-// 	title: 'Price',
-// 	dataIndex: 'price',
-// 	valueType: 'money',
-// 	search: false,
-// }
-
-// 日期字段
-// {
-// 	title: 'Date',
-// 	dataIndex: 'date',
-// 	valueType: 'date',
-// 	search: false,
-// }
-
-// 标签字段
-// {
-// 	title: 'Tags',
-// 	dataIndex: 'tags',
-// 	search: false,
-// 	render: (tags) => (
-// 		<>
-// 			{tags?.map((tag) => (
-// 				<Tag key={tag}>{tag}</Tag>
-// 			))}
-// 		</>
-// 	),
-// }
-
-// 图片字段
-// {
-// 	title: 'Image',
-// 	dataIndex: 'image',
-// 	search: false,
-// 	render: (image) => (
-// 		<Image src={image} width={50} height={50} alt='image' />
-// 	),
-// }
-
-// 布尔字段
-// {
-// 	title: 'Enabled',
-// 	dataIndex: 'enabled',
-// 	valueType: 'select',
-// 	valueEnum: {
-// 		true: { text: 'Yes', status: 'Success' },
-// 		false: { text: 'No', status: 'Default' },
-// 	},
-// }
 
 /**
  * ============================================
- * 常用表单字段示例
+ * 搜索模式参考
+ * ============================================
+ * 
+ * 支持的搜索模式:
+ * - like / %%: 模糊搜索 (包含)
+ * - likeLeft / %=: 左模糊搜索 (以...结尾)
+ * - likeRight / =%: 右模糊搜索 (以...开头)
+ * - exact / ==: 精确搜索
+ * - range / []: 范围搜索
+ * - in: 包含 (用于多选)
+ * - gt / >: 大于
+ * - gte / >=: 大于等于
+ * - lt / <: 小于
+ * - lte / <=: 小于等于
+ * - ne / !=: 不等于
+ */
+
+/**
+ * ============================================
+ * 完整字段配置示例
  * ============================================
  */
 
-// 文本域
-// <ProFormTextArea
-// 	name='description'
-// 	label='Description'
-// 	placeholder='Enter description'
-// />
+// 示例 1: 标签字段
+// {
+// 	key: 'tags',
+// 	title: 'Tags',
+// 	type: 'checkbox',
+// 	options: [
+// 		{ label: 'Tag 1', value: 'tag1' },
+// 		{ label: 'Tag 2', value: 'tag2' },
+// 		{ label: 'Tag 3', value: 'tag3' },
+// 	],
+// 	table: {
+// 		width: 200,
+// 	},
+// 	form: {},
+// 	search: {
+// 		enabled: true,
+// 		mode: 'in',
+// 	},
+// }
 
-// 数字（小数）
-// <ProFormDigit
-// 	name='price'
-// 	label='Price'
-// 	fieldProps={{ precision: 2, prefix: '$' }}
-// />
+// 示例 2: 图片字段
+// {
+// 	key: 'image',
+// 	title: 'Image',
+// 	type: 'image',
+// 	table: {
+// 		width: 100,
+// 		height: 80,
+// 	},
+// 	form: {
+// 		max: 1,
+// 	},
+// 	search: false,
+// }
 
-// 开关
-// <ProFormSwitch
-// 	name='enabled'
-// 	label='Enabled'
-// />
+// 示例 3: 自定义渲染
+// {
+// 	key: 'custom',
+// 	title: 'Custom Field',
+// 	type: 'text',
+// 	table: {
+// 		width: 150,
+// 		render: (value, record) => {
+// 			return <Tag color='blue'>{value}</Tag>;
+// 		},
+// 	},
+// 	form: {
+// 		render: (field) => {
+// 			return (
+// 				<ProFormText
+// 					name={field.key}
+// 					label={field.title}
+// 					// 自定义逻辑
+// 				/>
+// 			);
+// 		},
+// 	},
+// }
 
-// 日期范围
-// <ProFormDateRangePicker
-// 	name='dateRange'
-// 	label='Date Range'
-// />
-
-// 单选
-// <ProFormRadio.Group
-// 	name='type'
-// 	label='Type'
-// 	options={[
-// 		{ label: 'Type A', value: 'a' },
-// 		{ label: 'Type B', value: 'b' },
-// 	]}
-// />
-
-// 多选
-// <ProFormCheckbox.Group
-// 	name='features'
-// 	label='Features'
-// 	options={[
-// 		{ label: 'Feature 1', value: 'f1' },
-// 		{ label: 'Feature 2', value: 'f2' },
-// 	]}
-// />
-
-// 文件上传
-// <ProFormUpload
-// 	name='file'
-// 	label='File'
-// 	action='/api/upload'
-// 	fieldProps={{ listType: 'picture-card' }}
-// />
+// 示例 4: 百分比字段
+// {
+// 	key: 'discount',
+// 	title: 'Discount',
+// 	type: 'percentage',
+// 	table: {
+// 		width: 100,
+// 		precision: 1,
+// 	},
+// 	form: {
+// 		precision: 1,
+// 	},
+// }
 
