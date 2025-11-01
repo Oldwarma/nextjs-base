@@ -7,7 +7,11 @@
 export {
 	getUserListAction,
 	updateUserRoleAction,
+	updateUserInfoAction,
+	deleteUserAction,
+	getUserDetailAction,
 	getUserStatisticsAdminAction,
+	batchUpdateUsersAction,
 } from './admin-users';
 
 // 积分管理
