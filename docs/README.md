@@ -64,6 +64,43 @@
 
 ---
 
+### 💾 数据库 API (Database)
+
+统一的数据库操作接口层：
+
+1. **[Database API 文档中心](./database/README.md)** 🏠 入口
+   - 文档导航和索引
+   - 学习路径
+   - 快速查找指南
+
+2. **[快速参考卡片](./database/QUICK_REFERENCE.md)** ⚡ 推荐优先阅读
+   - 常用操作速查
+   - 代码模板
+   - 常见问题
+
+3. **[Database API 完整指南](./database/DB_API_GUIDE.md)**
+   - 完整 API 参考
+   - 详细参数说明
+   - 最佳实践
+
+4. **[Database API 实战示例](./database/DB_API_EXAMPLES.md)**
+   - 用户管理示例
+   - 积分系统示例
+   - 订单系统示例
+   - 数据统计示例
+
+5. **[DB API vs BaseDAO](./database/DB_API_VS_BASEDAO.md)** 📊 必读
+   - 功能对比
+   - 使用场景
+   - 选择指南
+
+6. **[重构总结](./database/REFACTORING_SUMMARY.md)**
+   - 重构范围
+   - 代码对比
+   - 效果统计
+
+---
+
 ## 🚀 快速开始
 
 ### 客户端开发
@@ -114,6 +151,15 @@ cp app/(admin)/admin/_template/page.js app/(admin)/admin/entity/page.js
 ```
 docs/
 ├── README.md                      # 本文档
+│
+├── database/                      # 数据库 API 文档
+│   ├── README.md                  # 文档中心（入口）
+│   ├── QUICK_REFERENCE.md         # 快速参考卡片
+│   ├── DB_API_GUIDE.md            # 完整 API 指南
+│   ├── DB_API_EXAMPLES.md         # 实战示例
+│   ├── DB_API_VS_BASEDAO.md       # 对比分析
+│   ├── DATABASE_SUMMARY.md        # 系统总结
+│   └── REFACTORING_SUMMARY.md     # 重构总结
 │
 ├── client/                        # 客户端文档
 │   ├── AUTH.md                    # 认证系统
