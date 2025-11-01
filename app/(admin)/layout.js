@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import AdminLayout from '@/components/admin/admin-layout';
 import '../globals.css';
+import './admin-styles.css';
 
 // 使用本地 HarmonyOS Sans 字体
 const harmonyOS = localFont({

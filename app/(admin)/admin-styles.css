@@ -1,0 +1,209 @@
+/**
+ * Admin Panel Custom Styles
+ * 管理后台自定义样式
+ */
+
+/* ============================================
+ * 美化滚动条
+ * ============================================ */
+
+/* 全局滚动条样式 */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: #f1f1f1;
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #c1c1c1;
+	border-radius: 4px;
+	transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #a8a8a8;
+}
+
+/* 表单弹窗内的滚动条（更细更优雅）*/
+.ant-modal-body::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+.ant-modal-body::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.ant-modal-body::-webkit-scrollbar-thumb {
+	background: #d9d9d9;
+	border-radius: 3px;
+}
+
+.ant-modal-body::-webkit-scrollbar-thumb:hover {
+	background: #bfbfbf;
+}
+
+/* ============================================
+ * 全屏模态框样式
+ * ============================================ */
+
+.fullscreen-modal .ant-modal {
+	max-width: 100vw !important;
+	width: 100vw !important;
+	height: 100vh !important;
+	margin: 0 !important;
+	top: 0 !important;
+	padding: 0 !important;
+}
+
+.fullscreen-modal .ant-modal-content {
+	height: 100vh;
+	border-radius: 0 !important;  /* 去掉圆角 */
+	box-shadow: none !important;  /* 去掉阴影 */
+}
+
+.fullscreen-modal .ant-modal-header {
+	border-radius: 0 !important;  /* 标题栏去掉圆角 */
+}
+
+.fullscreen-modal .ant-modal-footer {
+	border-radius: 0 !important;  /* 底部去掉圆角 */
+}
+
+.fullscreen-modal .ant-modal-body {
+	height: calc(100vh - 110px);
+	max-height: calc(100vh - 110px);
+}
+
+/* ============================================
+ * 表单内容边距优化
+ * ============================================ */
+
+.ant-modal-body {
+	padding: 24px 32px !important;
+}
+
+/* ============================================
+ * 标题栏边框
+ * ============================================ */
+
+.ant-modal-header {
+	border-bottom: 1px solid #f0f0f0 !important;
+	padding: 16px 24px !important;
+}
+
+/* ============================================
+ * 表单按钮区域样式
+ * ============================================ */
+
+.ant-modal-footer {
+	border-top: 1px solid #f0f0f0 !important;
+	padding: 16px 24px !important;
+}
+
+/* 全屏按钮样式 */
+.ant-modal-footer button[type="text"] {
+	color: #595959;
+}
+
+.ant-modal-footer button[type="text"]:hover {
+	color: #1890ff;
+	background: #f5f5f5;
+}
+
+/* ============================================
+ * Markdown 编辑器优化
+ * ============================================ */
+
+.w-md-editor {
+	border-radius: 6px;
+	border: 1px solid #d9d9d9;
+	transition: border-color 0.3s;
+}
+
+.w-md-editor:hover {
+	border-color: #40a9ff;
+}
+
+.w-md-editor-toolbar {
+	background: #fafafa;
+	border-bottom: 1px solid #e8e8e8;
+}
+
+/* ============================================
+ * ProTable 优化
+ * ============================================ */
+
+.ant-pro-table-list-toolbar {
+	padding: 16px 0;
+}
+
+/* ============================================
+ * ProFormGroup 布局优化
+ * ============================================ */
+
+/* ProFormGroup 占满整行 */
+.ant-pro-form-group {
+	width: 100% !important;
+}
+
+/* ProFormGroup 内部的 Space 容器 */
+.ant-pro-form-group-container {
+	width: 100% !important;
+	display: flex !important;
+	flex-wrap: wrap !important;
+}
+
+/* ProFormGroup 内部每个字段的宽度控制 */
+.ant-pro-form-group-container .ant-space-item {
+	flex: 0 0 auto;
+}
+
+/* 为不同 span 值设置宽度（通过 data 属性） */
+.ant-pro-form-group-container .ant-space-item:has(> div[data-span="12"]) {
+	width: calc(50% - 16px) !important;
+}
+
+.ant-pro-form-group-container .ant-space-item:has(> div[data-span="8"]) {
+	width: calc(33.333% - 16px) !important;
+}
+
+.ant-pro-form-group-container .ant-space-item:has(> div[data-span="6"]) {
+	width: calc(25% - 16px) !important;
+}
+
+.ant-pro-form-group-container .ant-space-item:has(> div[data-span="24"]) {
+	width: calc(100% - 16px) !important;
+}
+
+.ant-pro-form-group-container .ant-space-item:has(> div[data-span="16"]) {
+	width: calc(66.666% - 16px) !important;
+}
+
+.ant-pro-form-group-container .ant-space-item:has(> div[data-span="18"]) {
+	width: calc(75% - 16px) !important;
+}
+
+/* 同时设置内部 div 的宽度 */
+.ant-pro-form-group-container .ant-space-item > div[data-span] {
+	width: 100% !important;
+}
+
+/* ============================================
+ * 响应式优化
+ * ============================================ */
+
+@media (max-width: 768px) {
+	.ant-modal-body {
+		padding: 16px !important;
+	}
+	
+	::-webkit-scrollbar {
+		width: 4px;
+		height: 4px;
+	}
+}

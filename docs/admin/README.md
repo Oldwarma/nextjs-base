@@ -6,9 +6,10 @@
 
 - 🚀 **Smart CRUD 系统** - 统一字段配置，自动生成表格/表单/搜索（减少 50%+ 代码）
 - 🎯 **BaseDAO** - 通用数据访问层，配置化开发
-- 📊 **16 种字段类型** - 覆盖 95% 业务场景
+- 📊 **26 种字段类型** - 覆盖 95% 业务场景（90% 覆盖率 vs vk-unicloud）
 - 🔍 **11 种搜索模式** - 自动转换为 MongoDB 查询
 - 🛠️ **高度可扩展** - 支持自定义渲染、钩子函数、工具栏按钮
+- ✨ **VK 特性** - showRule、disabled、watch、tips、clearable
 
 ---
 
@@ -18,13 +19,18 @@
 1. **[SMART_CRUD_README.md](./SMART_CRUD_README.md)** - 系统总览⭐
 2. **[SMART_CRUD.md](./SMART_CRUD.md)** - 完整使用指南⭐
 3. **[SMART_CRUD_QUICKSTART.md](./SMART_CRUD_QUICKSTART.md)** - 快速参考
-4. **[SMART_CRUD_FINAL_SUMMARY.md](./SMART_CRUD_FINAL_SUMMARY.md)** - 系统总结与最佳实践
-5. **[CHANGELOG.md](./CHANGELOG.md)** - 更新日志
+4. **[SMART_CRUD_VK_FEATURES.md](./SMART_CRUD_VK_FEATURES.md)** - VK 特性 (v1.1.0)
+5. **[SMART_CRUD_NEW_COMPONENTS.md](./SMART_CRUD_NEW_COMPONENTS.md)** - 新增组件 (v1.2.0)
+6. **[SMART_CRUD_ADVANCED_COMPONENTS.md](./SMART_CRUD_ADVANCED_COMPONENTS.md)** - 高级组件 (v1.3.0)
+7. **[MARKDOWN_EDITOR_GUIDE.md](./MARKDOWN_EDITOR_GUIDE.md)** - Markdown 编辑器指南 🆕
+8. **[EXAMPLE_PAGE_GUIDE.md](./EXAMPLE_PAGE_GUIDE.md)** - 示例页面使用指南 🆕
+9. **[SMART_CRUD_FINAL_SUMMARY.md](./SMART_CRUD_FINAL_SUMMARY.md)** - 系统总结与最佳实践
+10. **[CHANGELOG.md](./CHANGELOG.md)** - 更新日志
 
 ### 其他文档
-6. **[README.md](./README.md)** - 本文档（总览和快速开始）
-7. **[BASE_DAO.md](./BASE_DAO.md)** - BaseDAO 完整文档
-8. **[CRUD_GUIDE.md](./CRUD_GUIDE.md)** - CRUD 开发指南（参考）
+11. **[README.md](./README.md)** - 本文档（总览和快速开始）
+12. **[BASE_DAO.md](./BASE_DAO.md)** - BaseDAO 完整文档
+13. **[CRUD_GUIDE.md](./CRUD_GUIDE.md)** - CRUD 开发指南（参考）
 
 ---
 

@@ -20,18 +20,20 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { ProTable, ModalForm, DrawerForm, ProDescriptions } from '@ant-design/pro-components';
 import { Button, Modal, Space, Dropdown } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, ReloadOutlined, MoreOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, ReloadOutlined, MoreOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 import { toast } from 'sonner';
 
 // 导入字段生成器
 import {
 	generateTableColumns,
-	generateFormFields,
 	generateDetailColumns,
 	generateSearchConfig,
 	generateSearchTransform,
 	validateFieldsConfig,
 } from '@/lib/admin/crud/field-generator';
+
+// 导入动态表单字段组件
+import DynamicFormFields from '@/components/admin/dynamic-form-fields';
 
 /**
  * SmartCrudPage 组件参数
@@ -48,6 +50,7 @@ import {
  * @param {String} rowKey - 主键字段 (默认 '_id')
  * @param {Object} tableProps - ProTable 额外属性
  * @param {Object} formProps - ModalForm 额外属性
+ * @param {Number} formProps.width - 表单弹窗宽度 (默认 800，全屏时为 100vw)
  * @param {Array} batchActions - 批量操作按钮配置
  * @param {Function} beforeEdit - 编辑前回调
  * @param {Function} beforeDelete - 删除前回调
@@ -95,7 +98,13 @@ export default function SmartCrudPage({
 	const [detailDrawerVisible, setDetailDrawerVisible] = useState(false);
 	const [currentRow, setCurrentRow] = useState(null);
 	const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+	const [editModalFullscreen, setEditModalFullscreen] = useState(false);
+	const [createModalFullscreen, setCreateModalFullscreen] = useState(false);
 	const actionRef = useRef();
+	
+	// 表单实例引用（用于动态表单字段）
+	const editFormRef = useRef(null);
+	const createFormRef = useRef(null);
 	
 	// 当 actionRef 准备好时，通知父组件
 	useMemo(() => {
@@ -117,16 +126,6 @@ export default function SmartCrudPage({
 	// 自动生成搜索转换函数
 	const searchTransform = useMemo(() => {
 		return generateSearchTransform(fieldsConfig);
-	}, [fieldsConfig]);
-
-	// 自动生成编辑表单字段
-	const editFormFields = useMemo(() => {
-		return generateFormFields(fieldsConfig, { isCreate: false });
-	}, [fieldsConfig]);
-
-	// 自动生成创建表单字段
-	const createFormFields = useMemo(() => {
-		return generateFormFields(fieldsConfig, { isCreate: true });
 	}, [fieldsConfig]);
 
 	// 自动生成详情列
@@ -476,36 +475,110 @@ export default function SmartCrudPage({
 				{...tableProps}
 			/>
 
-			{/* 编辑表单 */}
+		{/* 编辑表单 */}
+		<ModalForm
+			title={
+				<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingRight: 48 }}>
+					<span>Edit</span>
+					<Button
+						type="text"
+						size="small"
+						icon={editModalFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+						onClick={() => setEditModalFullscreen(!editModalFullscreen)}
+						style={{ marginRight: -20, marginTop: -5, color: '#666' }}
+					/>
+				</div>
+			}
+			open={editModalVisible}
+			onOpenChange={(visible) => {
+				setEditModalVisible(visible);
+				if (!visible) setEditModalFullscreen(false);
+			}}
+			initialValues={currentRow}
+			onFinish={handleSave}
+			width={editModalFullscreen ? '100vw' : (formProps.width || 800)}
+			formRef={editFormRef}
+			grid={false}
+			modalProps={{
+				centered: !editModalFullscreen,
+				wrapClassName: editModalFullscreen ? 'fullscreen-modal' : '',
+				style: editModalFullscreen ? {
+					top: 0,
+					maxWidth: '100vw',
+					height: '100vh',
+					margin: 0,
+					paddingBottom: 0,
+				} : {},
+				bodyStyle: {
+					maxHeight: editModalFullscreen ? 'calc(100vh - 110px)' : 'calc(90vh - 110px)',
+					overflowY: 'auto',
+					overflowX: 'hidden',
+					paddingLeft: 32,
+					paddingRight: 32,
+				},
+				destroyOnClose: true,
+			}}
+			{...formProps}
+		>
+			<DynamicFormFields 
+				fieldsConfig={fieldsConfig} 
+				formInstance={editFormRef.current}
+				isCreate={false}
+			/>
+		</ModalForm>
+
+		{/* 创建表单 */}
+		{enableCreate && actions.create && (
 			<ModalForm
-				title='Edit'
-				open={editModalVisible}
-				onOpenChange={setEditModalVisible}
-				initialValues={currentRow}
-				onFinish={handleSave}
-				width={formProps.width || 600}
+				title={
+					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingRight: 48 }}>
+						<span>Create</span>
+						<Button
+							type="text"
+							size="small"
+							icon={createModalFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+							onClick={() => setCreateModalFullscreen(!createModalFullscreen)}
+							style={{ marginRight: -20, marginTop: -5, color: '#666' }}
+						/>
+					</div>
+				}
+				open={createModalVisible}
+				onOpenChange={(visible) => {
+					setCreateModalVisible(visible);
+					if (!visible) setCreateModalFullscreen(false);
+				}}
+				onFinish={handleCreate}
+			width={createModalFullscreen ? '100vw' : (formProps.width || 800)}
+			formRef={createFormRef}
+			grid={false}
+			modalProps={{
+					centered: !createModalFullscreen,
+					wrapClassName: createModalFullscreen ? 'fullscreen-modal' : '',
+					style: createModalFullscreen ? {
+						top: 0,
+						maxWidth: '100vw',
+						height: '100vh',
+						margin: 0,
+						paddingBottom: 0,
+					} : {},
+					bodyStyle: {
+						maxHeight: createModalFullscreen ? 'calc(100vh - 110px)' : 'calc(90vh - 110px)',
+						overflowY: 'auto',
+						overflowX: 'hidden',
+						paddingLeft: 32,
+						paddingRight: 32,
+					},
+					destroyOnClose: true,
+				}}
 				{...formProps}
 			>
-				{editFormFields.map((field) => (
-					<React.Fragment key={field.key}>{field.component}</React.Fragment>
-				))}
+				<DynamicFormFields 
+					fieldsConfig={fieldsConfig} 
+					formInstance={createFormRef.current}
+					isCreate={true}
+				/>
 			</ModalForm>
-
-			{/* 创建表单 */}
-			{enableCreate && actions.create && (
-				<ModalForm
-					title='Create'
-					open={createModalVisible}
-					onOpenChange={setCreateModalVisible}
-					onFinish={handleCreate}
-					width={formProps.width || 600}
-					{...formProps}
-				>
-					{createFormFields.map((field) => (
-						<React.Fragment key={field.key}>{field.component}</React.Fragment>
-					))}
-				</ModalForm>
-			)}
+		)}
 
 			{/* 详情抽屉 */}
 			{enableDetail && (
