@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
@@ -13,12 +13,28 @@ import { FaGithub } from 'react-icons/fa';
 import { signInWithEmailAction, checkAndInitUserAction } from '@/app/(client)/actions';
 import { authClient } from '@/lib/auth-client';
 
-export function LoginForm({ className, ...props }) {
+export function LoginForm({ className, callbackUrl, ...props }) {
 	const t = useTranslations();
 	const router = useRouter();
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState('');
 	const { data: session } = authClient.useSession();
+
+	// 获取登录后的重定向地址，默认为 dashboard
+	const getRedirectUrl = useCallback(() => {
+		if (callbackUrl) {
+			// 验证 callbackUrl 是否安全（同源检查）
+			try {
+				// 如果是相对路径，直接使用
+				if (callbackUrl.startsWith('/')) {
+					return callbackUrl;
+				}
+			} catch (err) {
+				console.error('Invalid callbackUrl:', err);
+			}
+		}
+		return '/dashboard';
+	}, [callbackUrl]);
 
 	// 检查是否有 session（三方登录回调后）并初始化用户
 	useEffect(() => {
@@ -26,11 +42,11 @@ export function LoginForm({ className, ...props }) {
 			const initUser = async () => {
 				// 有 session，初始化用户并跳转
 				await checkAndInitUserAction();
-				router.push('/dashboard');
+				router.push(getRedirectUrl());
 			};
 			initUser();
 		}
-	}, [session, router]);
+	}, [session, router, getRedirectUrl]);
 
 	// 邮箱密码登录（仅用于已有账号）
 	const handleEmailLogin = async (e) => {
@@ -59,8 +75,8 @@ export function LoginForm({ className, ...props }) {
 			const result = await signInWithEmailAction({ email, password });
 
 			if (result.success) {
-				// 登录成功，跳转到 dashboard
-				router.push('/dashboard');
+				// 登录成功，跳转到 callbackUrl 或 dashboard
+				router.push(getRedirectUrl());
 			} else {
 				setError(result.error || t('auth.loginFailed'));
 			}
@@ -79,9 +95,15 @@ export function LoginForm({ className, ...props }) {
 			setError('');
 			
 			// 使用 authClient 的方法进行 Google 登录
+			// 注意：三方登录的回调URL需要包含完整的路径（包括 callbackUrl 参数）
+			// 将 callbackUrl 编码后附加到登录页URL，这样回调后还能获取到
+			const loginUrl = callbackUrl 
+				? `${window.location.pathname}?callbackUrl=${encodeURIComponent(callbackUrl)}`
+				: window.location.pathname;
+			
 			await authClient.signIn.social({
 				provider: 'google',
-				callbackURL: '/dashboard',
+				callbackURL: loginUrl,
 			});
 		} catch (err) {
 			console.error('Google login error:', err);
@@ -97,9 +119,14 @@ export function LoginForm({ className, ...props }) {
 			setError('');
 			
 			// 使用 authClient 的方法进行 GitHub 登录
+			// 注意：三方登录的回调URL需要包含完整的路径（包括 callbackUrl 参数）
+			const loginUrl = callbackUrl 
+				? `${window.location.pathname}?callbackUrl=${encodeURIComponent(callbackUrl)}`
+				: window.location.pathname;
+			
 			await authClient.signIn.social({
 				provider: 'github',
-				callbackURL: '/dashboard',
+				callbackURL: loginUrl,
 			});
 		} catch (err) {
 			console.error('GitHub login error:', err);

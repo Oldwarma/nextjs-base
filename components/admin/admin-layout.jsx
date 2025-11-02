@@ -15,6 +15,7 @@ import {
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { signOutAction } from '@/app/(client)/actions';
 
 /**
  * 管理后台布局组件 - 使用 Pro Components
@@ -22,6 +23,14 @@ import Link from 'next/link';
 export default function AdminLayout({ children, user }) {
 	const [pathname, setPathname] = useState(usePathname());
 	const router = useRouter();
+
+	// 登出处理函数
+	const handleLogout = async () => {
+		const result = await signOutAction();
+		if (result.success) {
+			router.push('/en/login');
+		}
+	};
 
 	// 路由配置
 	const route = {
@@ -81,7 +90,7 @@ export default function AdminLayout({ children, user }) {
 			key: 'logout',
 			icon: <LogoutOutlined />,
 			label: 'Logout',
-			onClick: () => router.push('/api/auth/sign-out'),
+			onClick: handleLogout,
 			danger: true,
 		},
 	];
