@@ -3,6 +3,7 @@ import { checkAdmin } from '@/lib/admin-auth';
 import { Toaster } from '@/components/ui/sonner';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import AdminLayout from '@/components/admin/admin-layout';
+import AntdConfigProvider from '@/components/admin/antd-config-provider';
 import '../globals.css';
 import './admin-styles.css';
 
@@ -47,9 +48,11 @@ export default async function AdminLayoutRoot({ children }) {
 		<html lang='en' suppressHydrationWarning>
 			<body className={`${harmonyOS.variable} antialiased`}>
 				<AntdRegistry>
-					<AdminLayout user={session?.user}>
-						{children}
-					</AdminLayout>
+					<AntdConfigProvider>
+						<AdminLayout user={session?.user}>
+							{children}
+						</AdminLayout>
+					</AntdConfigProvider>
 				</AntdRegistry>
 				<Toaster />
 			</body>

@@ -573,7 +573,7 @@ export default function ExamplePage() {
 				rating: Math.floor(Math.random() * 5) + 1,
 				satisfaction: Math.floor(Math.random() * 100),
 				brandColor: '#1890ff',
-				icon: ['HomeOutlined', 'UserOutlined', 'SettingOutlined'][Math.floor(Math.random() * 3)],
+				icon: ['HomeOutlined', 'UserOutlined', 'SettingOutlined', 'StarOutlined', 'HeartOutlined', 'SearchOutlined'][Math.floor(Math.random() * 6)],
 				metadata: JSON.stringify({ version: '1.0', author: 'Admin' }),
 				keywords: ['keyword1', 'keyword2', 'keyword3'],
 			}));
