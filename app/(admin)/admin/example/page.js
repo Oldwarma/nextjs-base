@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { PageContainer } from '@ant-design/pro-components';
 
 // 动态导入 SmartCrudPage，禁用 SSR
 const SmartCrudPage = dynamic(
@@ -615,23 +614,15 @@ export default function ExamplePage() {
 	};
 
 	return (
-		<PageContainer
-			title="Example Page"
-			subTitle="Demonstration of all 26 field types"
-			breadcrumb={{
-				items: [
-					{ title: 'Admin' },
-					{ title: 'Example' },
-				],
-			}}
-		>
 		<SmartCrudPage
 			fieldsConfig={fieldsConfig}
 			actions={actions}
-			pageTitle="Smart CRUD Example"
+			title="Example Page"
 			rowKey="_id"
 			// 表格配置
-			scroll={{ x: 2500 }}
+			tableProps={{
+				scroll: { x: 2500 },
+			}}
 			// 表单配置
 			formProps={{
 				width: 900, // 表单弹窗宽度（全屏按钮可切换到 100vw）
@@ -641,9 +632,7 @@ export default function ExamplePage() {
 			enableEdit={true}
 			enableDelete={true}
 			enableDetail={true}
-			enableExport={false} // 导出功能需要后端支持
 		/>
-		</PageContainer>
 	);
 }
 

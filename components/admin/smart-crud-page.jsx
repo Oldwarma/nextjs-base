@@ -509,14 +509,16 @@ export default function SmartCrudPage({
 					margin: 0,
 					paddingBottom: 0,
 				} : {},
-				bodyStyle: {
-					maxHeight: editModalFullscreen ? 'calc(100vh - 110px)' : 'calc(90vh - 110px)',
-					overflowY: 'auto',
-					overflowX: 'hidden',
-					paddingLeft: 32,
-					paddingRight: 32,
+				styles: {
+					body: {
+						maxHeight: editModalFullscreen ? 'calc(100vh - 110px)' : 'calc(90vh - 110px)',
+						overflowY: 'auto',
+						overflowX: 'hidden',
+						paddingLeft: 32,
+						paddingRight: 32,
+					},
 				},
-				destroyOnClose: true,
+				destroyOnHidden: true,
 			}}
 			{...formProps}
 		>
@@ -561,14 +563,16 @@ export default function SmartCrudPage({
 						margin: 0,
 						paddingBottom: 0,
 					} : {},
-					bodyStyle: {
-						maxHeight: createModalFullscreen ? 'calc(100vh - 110px)' : 'calc(90vh - 110px)',
-						overflowY: 'auto',
-						overflowX: 'hidden',
-						paddingLeft: 32,
-						paddingRight: 32,
+					styles: {
+						body: {
+							maxHeight: createModalFullscreen ? 'calc(100vh - 110px)' : 'calc(90vh - 110px)',
+							overflowY: 'auto',
+							overflowX: 'hidden',
+							paddingLeft: 32,
+							paddingRight: 32,
+						},
 					},
-					destroyOnClose: true,
+					destroyOnHidden: true,
 				}}
 				{...formProps}
 			>

@@ -2,6 +2,13 @@
  * Admin Panel Custom Styles
  * 管理后台自定义样式
  */
+/* ============================================
+ * 美化内部区
+ * ============================================ */
+
+ .ant-pro-layout .ant-pro-layout-content{
+	padding: 20px!important;
+ }
 
 /* ============================================
  * 美化滚动条
@@ -191,6 +198,28 @@
 /* 同时设置内部 div 的宽度 */
 .ant-pro-form-group-container .ant-space-item > div[data-span] {
 	width: 100% !important;
+}
+
+/* ============================================
+ * 隐藏菜单区域中的折叠按钮
+ * ============================================ */
+
+/* 隐藏侧边栏的折叠按钮 */
+.ant-pro-sider-collapsed-button {
+	display: none !important;
+}
+
+/* 隐藏菜单项右侧的折叠按钮和额外元素 */
+.ant-pro-layout .ant-menu-item button,
+.ant-pro-layout .ant-menu-item .ant-menu-item-collapse,
+.ant-pro-layout .ant-menu-item .ant-menu-item-extra,
+.ant-pro-layout .ant-menu-horizontal .ant-menu-item button,
+.ant-pro-layout .ant-menu-vertical .ant-menu-item button,
+/* 隐藏 ProLayout mix 布局顶部菜单区域的折叠按钮 */
+.ant-pro-layout-header .ant-menu-horizontal .ant-menu-item > button,
+.ant-pro-layout-header .ant-menu-horizontal .ant-menu-item > .ant-menu-item-collapse-button,
+.ant-pro-layout-header .ant-menu-horizontal .ant-menu-item > span[class*="collapse"] {
+	display: none !important;
 }
 
 /* ============================================

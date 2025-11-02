@@ -1,9 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { ProLayout } from '@ant-design/pro-components';
-import { Avatar, Dropdown } from 'antd';
+import { useState, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+import { Avatar, Dropdown, Breadcrumb, Button } from 'antd';
+import { RightOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+
+// 动态导入 ProLayout，只在客户端渲染，避免 hydration 不匹配
+const ProLayout = dynamic(
+	() => import('@ant-design/pro-components').then((mod) => mod.ProLayout),
+	{ ssr: false }
+);
 import {
+	
 	DashboardOutlined,
 	UserOutlined,
 	CreditCardOutlined,
@@ -22,6 +30,7 @@ import { signOutAction } from '@/app/(client)/actions';
  */
 export default function AdminLayout({ children, user }) {
 	const [pathname, setPathname] = useState(usePathname());
+	const [collapsed, setCollapsed] = useState(false);
 	const router = useRouter();
 
 	// 登出处理函数
@@ -95,7 +104,68 @@ export default function AdminLayout({ children, user }) {
 		},
 	];
 
-	return (
+	// 根据当前路径生成面包屑
+	const breadcrumbItems = useMemo(() => {
+		const items = [];
+
+		// 路径映射
+		const pathMap = {
+			'/admin': 'Dashboard',
+			'/admin/users': 'User Management',
+			'/admin/packages': 'Packages',
+			'/admin/credits': 'Credits',
+			'/admin/usage': 'Usage Statistics',
+			'/admin/settings': 'Settings',
+			'/admin/example': 'Example',
+		};
+
+		// 如果不是首页，显示 Dashboard 链接
+		if (pathname && pathname !== '/admin') {
+			items.push({
+				title: (
+					<Link 
+						href="/admin" 
+						style={{ 
+							color: '#8c8c8c',
+							fontSize: '14px',
+							transition: 'color 0.2s ease',
+							textDecoration: 'none'
+						}}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = '#1890ff';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = '#8c8c8c';
+						}}
+					>
+						Dashboard
+					</Link>
+				),
+			});
+		}
+
+		// 添加当前页面的面包屑
+		if (pathname) {
+			const currentPageName = pathMap[pathname] || pathname.split('/').pop() || '';
+			if (currentPageName) {
+				items.push({
+					title: (
+						<span style={{ 
+							color: '#262626',
+							fontSize: '14px',
+							fontWeight: 500
+						}}>
+							{currentPageName}
+						</span>
+					),
+				});
+			}
+		}
+
+		return items;
+	}, [pathname]);
+
+		return (
 		<ProLayout
 			title='Jimeng Admin'
 			logo='/logo.png'
@@ -103,6 +173,10 @@ export default function AdminLayout({ children, user }) {
 			splitMenus={false}
 			route={route}
 			location={{ pathname }}
+			collapsed={collapsed}
+			onCollapse={setCollapsed}
+			collapseButtonRender={false}
+			menuExtraRender={false}
 			fixSiderbar
 			fixedHeader
 			contentWidth='Fluid'
@@ -132,10 +206,65 @@ export default function AdminLayout({ children, user }) {
 			}}
 			actionsRender={() => []}
 			headerTitleRender={(logo, title) => (
-				<Link href='/admin' style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-					{logo}
-					{title}
-				</Link>
+				<div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+					<Link 
+						href='/admin' 
+						style={{ 
+							display: 'flex', 
+							alignItems: 'center', 
+							gap: 8,
+							textDecoration: 'none',
+							color: 'inherit'
+						}}
+					>
+						{logo}
+						{title}
+					</Link>
+					<Button
+						type="text"
+						icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+						onClick={() => setCollapsed(!collapsed)}
+						style={{
+							marginLeft: 16,
+							color: '#595959',
+							fontSize: '16px',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							width: 32,
+							height: 32,
+							padding: 0
+						}}
+					/>
+					{breadcrumbItems.length > 0 && (
+						<>
+							<div 
+								style={{ 
+									width: 1, 
+									height: 16, 
+									background: '#e8e8e8', 
+									margin: '0 16px',
+									flexShrink: 0
+								}} 
+							/>
+							<Breadcrumb
+								items={breadcrumbItems}
+								separator={
+									<span style={{ 
+										color: '#d9d9d9',
+										margin: '0px',
+										fontSize: '8px'
+									}}>
+										<RightOutlined />
+									</span>
+								}
+								style={{ 
+									flex: 'none'
+								}}
+							/>
+						</>
+					)}
+				</div>
 			)}
 			menuProps={{
 				style: { paddingTop: 8 },
@@ -156,11 +285,11 @@ export default function AdminLayout({ children, user }) {
 					colorBgMenuItemSelected: '#e6f4ff',
 					colorBgMenuItemHover: '#f5f5f5',
 				},
-				pageContainer: {
-					paddingBlockPageContainerContent: 24,
-					paddingInlinePageContainerContent: 24,
-					colorBgPageContainer: '#f5f5f5',
-				},
+				// pageContainer: {
+				// 	paddingBlockPageContainerContent: 24,
+				// 	paddingInlinePageContainerContent: 24,
+				// 	colorBgPageContainer: '#f5f5f5',
+				// },
 			}}
 			style={{
 				height: '100vh',
