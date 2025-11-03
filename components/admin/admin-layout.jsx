@@ -248,7 +248,7 @@ export default function AdminLayout({ children, user }) {
 					<Dropdown menu={{ items: userMenuItems }} placement='bottomRight'>
 						<div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
 							{dom}
-							<span style={{ fontWeight: 500 }}>{user?.name || 'Admin'}</span>
+							{/* <span style={{ fontWeight: 500 }}>{user?.name || 'Admin'}</span> */}
 						</div>
 					</Dropdown>
 				),
