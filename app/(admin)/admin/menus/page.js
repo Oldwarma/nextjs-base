@@ -1,0 +1,366 @@
+/**
+ * 菜单管理页面
+ *
+ * 功能：
+ * - 树形表格展示菜单
+ * - 支持新增、编辑、删除菜单
+ * - 父级菜单树形选择
+ * - 图标选择器
+ * - 排序功能
+ */
+
+'use client';
+
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
+import { Tag } from 'antd';
+import { CheckCircleOutlined, CloseCircleOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+
+// 动态导入 SmartCrudPage
+const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
+	ssr: false,
+	loading: () => <div style={{ padding: 24, textAlign: 'center' }}>Loading...</div>,
+});
+
+// 导入图标渲染函数
+import { renderIcon } from '@/components/admin/icon-picker';
+
+// Server Actions
+import {
+	getMenuListAction as getList,
+	createMenuAction as create,
+	updateMenuAction as update,
+	deleteMenuAction as deleteItem,
+	getMenuTreeAction,
+} from '@/app/(admin)/actions/admin-menus';
+
+export default function MenusManagementPage() {
+	const [menuTree, setMenuTree] = useState([]);
+
+	// 加载菜单树（用于父级选择）
+	const loadMenuTree = useCallback(async () => {
+		const result = await getMenuTreeAction();
+		if (result.success) {
+			setMenuTree(result.data);
+		}
+	}, []);
+
+	useEffect(() => {
+		loadMenuTree();
+	}, [loadMenuTree]);
+
+	// 使用 useMemo 缓存字段配置，避免无限循环
+	const fieldsConfig = useMemo(
+		() => [
+			// ID
+			{
+				key: '_id',
+				title: 'ID',
+				type: 'text',
+				table: false,
+				form: false,
+				search: false,
+			},
+
+			// 菜单标识
+			{
+				key: 'key',
+				title: 'Menu Key',
+				type: 'text',
+				// table: {
+				// 	width: 150,
+				// 	copyable: true,
+				// },
+				table: false,
+				form: {
+					required: true,
+					placeholder: 'e.g., dashboard, users, settings',
+					fieldProps: {
+						showCount: true,
+						maxLength: 50,
+					},
+					tips: 'Unique identifier for the menu item (alphanumeric and underscore)',
+				},
+				search: false,
+			},
+
+			// 菜单名称
+			{
+				key: 'name',
+				title: 'Menu Name',
+				type: 'text',
+				table: {
+					width: 200,
+					ellipsis: true,
+				},
+				form: {
+					required: true,
+					placeholder: 'Enter menu name',
+					fieldProps: {
+						showCount: true,
+						maxLength: 50,
+					},
+				},
+				search: {
+					fieldProps: {
+						placeholder: 'Search by name',
+					},
+				},
+			},
+
+			// 图标
+			{
+				key: 'icon',
+				title: 'Icon',
+				type: 'icon',
+				table: {
+					width: 80,
+					align: 'center',
+					render: (icon) => {
+						if (!icon) return '-';
+						const IconComponent = renderIcon(icon, { style: { fontSize: 18 } });
+						return IconComponent || <span>{icon}</span>;
+					},
+				},
+				form: {
+					placeholder: 'Select an icon',
+					tips: 'Icon is only for top-level menus. Sub-menu items do not display icons.',
+					// 依赖 parentId 字段，当 parentId 有值时禁用图标选择
+					dependencies: ['parentId'],
+					fieldProps: (form) => {
+						const parentId = form?.getFieldValue('parentId');
+						return {
+							disabled: !!parentId, // 有父级菜单时禁用图标选择
+						};
+					},
+				},
+				search: false,
+			},
+
+			// URL
+			{
+				key: 'url',
+				title: 'URL',
+				type: 'text',
+				table: {
+					width: 200,
+					ellipsis: true,
+					copyable: true,
+				},
+				form: {
+					placeholder: 'e.g., /admin/users or https://example.com',
+					fieldProps: {
+						addonBefore: '🔗',
+					},
+					tips: 'Internal URLs start with "/" (e.g., /admin/users). External URLs start with "http"',
+				},
+				search: false,
+			},
+
+			// 排序值
+			{
+				key: 'sortOrder',
+				title: 'Sort Order',
+				type: 'number',
+				table: {
+					width: 100,
+					align: 'center',
+					sorter: true,
+				},
+				form: {
+					required: true,
+					placeholder: '0',
+					fieldProps: {
+						min: 0,
+						max: 9999,
+						step: 1,
+						precision: 0,
+					},
+					tips: 'Lower numbers appear first (ascending order)',
+				},
+				search: false,
+			},
+
+			// 父级菜单
+			{
+				key: 'parentId',
+				title: 'Parent Menu',
+				type: 'tree-select',
+				data: menuTree,
+				table: false,
+				form: {
+					placeholder: 'Select parent menu (leave empty for root)',
+					fieldProps: (form) => ({
+						treeData: menuTree,
+						showSearch: true,
+						treeDefaultExpandAll: false,
+						allowClear: true,
+						placeholder: 'Select parent menu or leave empty for root level',
+						// 当选择父级菜单时，清空图标字段
+						onChange: (value) => {
+							if (value) {
+								// 选择了父级菜单，清空图标
+								form?.setFieldValue('icon', null);
+							}
+						},
+					}),
+					tips: 'Sub-menus do not display icons. Selecting a parent will clear the icon field.',
+				},
+				search: false,
+			},
+
+			// 备注
+			{
+				key: 'remark',
+				title: 'Remark',
+				type: 'textarea',
+				table: false,
+				form: {
+					placeholder: 'Optional description or notes',
+					fieldProps: {
+						rows: 3,
+						showCount: true,
+						maxLength: 200,
+					},
+				},
+				search: false,
+			},
+
+			// 是否启用
+			{
+				key: 'enabled',
+				title: 'Enabled',
+				type: 'switch',
+				table: {
+					width: 100,
+					align: 'center',
+					render: (enabled) => {
+						return enabled ? (
+							<Tag
+								icon={<CheckCircleOutlined />}
+								color='success'
+							>
+								Enabled
+							</Tag>
+						) : (
+							<Tag
+								icon={<CloseCircleOutlined />}
+								color='default'
+							>
+								Disabled
+							</Tag>
+						);
+					},
+				},
+				form: {
+					fieldProps: {
+						checkedChildren: 'Enabled',
+						unCheckedChildren: 'Disabled',
+					},
+					tips: 'Disabled menus will not appear in the navigation',
+				},
+				search: {
+					fieldProps: {
+						placeholder: 'Filter by status',
+					},
+				},
+			},
+
+			// 是否隐藏
+			{
+				key: 'hidden',
+				title: 'Hidden',
+				type: 'switch',
+				table: {
+					width: 100,
+					align: 'center',
+					render: (hidden) => {
+						return hidden ? (
+							<Tag
+								icon={<EyeInvisibleOutlined />}
+								color='warning'
+							>
+								Hidden
+							</Tag>
+						) : (
+							<Tag
+								icon={<EyeOutlined />}
+								color='default'
+							>
+								Visible
+							</Tag>
+						);
+					},
+				},
+				form: {
+					fieldProps: {
+						checkedChildren: 'Hidden',
+						unCheckedChildren: 'Visible',
+					},
+					tips: 'Hidden menus are enabled but not shown in the navigation (useful for direct access pages)',
+				},
+				search: false,
+			},
+
+			// 创建时间
+			{
+				key: 'createdAt',
+				title: 'Created At',
+				type: 'datetime',
+				table: {
+					width: 180,
+					sorter: true,
+				},
+				form: false,
+				search: false,
+			},
+
+			// 更新时间
+			{
+				key: 'updatedAt',
+				title: 'Updated At',
+				type: 'datetime',
+				table: {
+					width: 180,
+					sorter: true,
+				},
+				form: false,
+				search: false,
+			},
+		],
+		[menuTree]
+	); // ✅ 添加 menuTree 作为依赖
+
+	// 创建/编辑回调 - 不需要重新加载菜单树
+	// 因为 menuTree 已经在组件初始化时加载了
+	// 如果需要最新数据，应该在创建/更新成功后刷新，而不是打开表单时
+
+	return (
+		<SmartCrudPage
+			fieldsConfig={fieldsConfig}
+			actions={{
+				getList,
+				create,
+				update,
+				delete: deleteItem,
+			}}
+			title='Menu Management'
+			enableCreate={true}
+			enableEdit={true}
+			enableDelete={true}
+			enableDetail={true}
+			tableProps={{
+				// 启用树形表格
+				expandable: {
+					defaultExpandAllRows: true,
+					// 可以通过 indentSize 调整缩进
+					indentSize: 24,
+				},
+				pagination: false, // 树形表格通常不需要分页
+			}}
+			formProps={{
+				width: 800,
+			}}
+		/>
+	);
+}

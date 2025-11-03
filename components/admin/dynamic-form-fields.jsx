@@ -27,7 +27,14 @@ export default function DynamicFormFields({ fieldsConfig, formInstance, isCreate
 	const [formData, setFormData] = useState({});
 	
 	// 使用 Form.useWatch 监听所有字段变化
-	const watchedValues = Form.useWatch([], formInstance) || {};
+	// 如果 formInstance 为 null，传入 undefined 让 useWatch 使用最近的 Form context
+	let watchedValues = {};
+	try {
+		watchedValues = Form.useWatch([], formInstance || undefined) || {};
+	} catch (error) {
+		// 如果 useWatch 失败（比如没有 Form context），使用空对象
+		watchedValues = {};
+	}
 	
 	useEffect(() => {
 		setFormData(watchedValues);

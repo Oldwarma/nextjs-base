@@ -18,10 +18,9 @@
 'use client';
 
 import React, { useState, useRef, useMemo } from 'react';
-import { ProTable, ModalForm, DrawerForm, ProDescriptions } from '@ant-design/pro-components';
-import { Button, Modal, Space, Dropdown } from 'antd';
+import { ProTable, ModalForm, DrawerForm } from '@ant-design/pro-components';
+import { Button, Modal, Space, Dropdown, notification, Descriptions } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, ReloadOutlined, MoreOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
-import { toast } from 'sonner';
 
 // 导入字段生成器
 import {
@@ -82,15 +81,22 @@ export default function SmartCrudPage({
 	enableDelete = true,
 	baseQuery = {},
 }) {
+	// 使用 Ant Design notification hooks
+	const [api, contextHolder] = notification.useNotification();
+	
 	// 验证字段配置
 	useMemo(() => {
 		try {
 			validateFieldsConfig(fieldsConfig);
 		} catch (error) {
 			console.error('Invalid fieldsConfig:', error);
-			toast.error(`Configuration error: ${error.message}`);
+			api.error({
+				message: 'Configuration Error',
+				description: error.message,
+				placement: 'topRight',
+			});
 		}
-	}, [fieldsConfig]);
+	}, [fieldsConfig, api]);
 
 	// 状态管理
 	const [editModalVisible, setEditModalVisible] = useState(false);
@@ -223,7 +229,11 @@ export default function SmartCrudPage({
 			});
 
 			if (!result.success) {
-				toast.error(result.error);
+				api.error({
+					message: 'Failed to Fetch Data',
+					description: result.error || 'Failed to fetch data',
+					placement: 'topRight',
+				});
 				return { data: [], success: false, total: 0 };
 			}
 
@@ -234,7 +244,11 @@ export default function SmartCrudPage({
 			};
 		} catch (error) {
 			console.error('Failed to fetch data:', error);
-			toast.error('Failed to fetch data');
+			api.error({
+				message: 'Failed to Fetch Data',
+				description: 'An unexpected error occurred',
+				placement: 'topRight',
+			});
 			return { data: [], success: false, total: 0 };
 		}
 	};
@@ -247,11 +261,19 @@ export default function SmartCrudPage({
 				if (result.success) {
 					setCurrentRow(result.data);
 				} else {
-					toast.error(result.error);
+					api.error({
+						message: 'Failed to Fetch Detail',
+						description: result.error || 'Failed to fetch detail',
+						placement: 'topRight',
+					});
 					return;
 				}
 			} catch (error) {
-				toast.error('Failed to fetch detail');
+				api.error({
+					message: 'Failed to Fetch Detail',
+					description: 'An unexpected error occurred',
+					placement: 'topRight',
+				});
 				return;
 			}
 		} else {
@@ -283,13 +305,25 @@ export default function SmartCrudPage({
 			const result = await actions.delete(id);
 
 			if (result.success) {
-				toast.success('Deleted successfully');
+				api.success({
+					message: 'Success',
+					description: result.message || 'Deleted successfully',
+					placement: 'topRight',
+				});
 				actionRef.current?.reload();
 			} else {
-				toast.error(result.error);
+				api.error({
+					message: 'Failed to Delete',
+					description: result.error || 'Failed to delete',
+					placement: 'topRight',
+				});
 			}
 		} catch (error) {
-			toast.error('Failed to delete');
+			api.error({
+				message: 'Failed to Delete',
+				description: 'An unexpected error occurred',
+				placement: 'topRight',
+			});
 		}
 	};
 
@@ -307,18 +341,30 @@ export default function SmartCrudPage({
 			const result = await actions.update(currentRow[rowKey], processedValues);
 
 			if (result.success) {
-				toast.success('Updated successfully');
+				api.success({
+					message: 'Success',
+					description: result.message || 'Updated successfully',
+					placement: 'topRight',
+				});
 				setEditModalVisible(false);
 				setCurrentRow(null);
 				actionRef.current?.reload();
 				return true;
 			} else {
-				toast.error(result.error);
+				api.error({
+					message: 'Failed to Update',
+					description: result.error || 'Failed to update',
+					placement: 'topRight',
+				});
 				return false;
 			}
 		} catch (error) {
 			console.error('Failed to update:', error);
-			toast.error('Failed to update');
+			api.error({
+				message: 'Failed to Update',
+				description: 'An unexpected error occurred',
+				placement: 'topRight',
+			});
 			return false;
 		}
 	};
@@ -326,7 +372,11 @@ export default function SmartCrudPage({
 	// 创建
 	const handleCreate = async (values) => {
 		if (!actions.create) {
-			toast.error('Create action not provided');
+			api.error({
+				message: 'Action Not Available',
+				description: 'Create action not provided',
+				placement: 'topRight',
+			});
 			return false;
 		}
 
@@ -341,17 +391,29 @@ export default function SmartCrudPage({
 			const result = await actions.create(values);
 
 			if (result.success) {
-				toast.success('Created successfully');
+				api.success({
+					message: 'Success',
+					description: result.message || 'Created successfully',
+					placement: 'topRight',
+				});
 				setCreateModalVisible(false);
 				actionRef.current?.reload();
 				return true;
 			} else {
-				toast.error(result.error);
+				api.error({
+					message: 'Failed to Create',
+					description: result.error || 'Failed to create',
+					placement: 'topRight',
+				});
 				return false;
 			}
 		} catch (error) {
 			console.error('Failed to create:', error);
-			toast.error('Failed to create');
+			api.error({
+				message: 'Failed to Create',
+				description: 'An unexpected error occurred',
+				placement: 'topRight',
+			});
 			return false;
 		}
 	};
@@ -359,7 +421,11 @@ export default function SmartCrudPage({
 	// 批量操作
 	const handleBatchAction = async (action, params) => {
 		if (selectedRowKeys.length === 0) {
-			toast.warning('Please select items first');
+			api.warning({
+				message: 'No Selection',
+				description: 'Please select items first',
+				placement: 'topRight',
+			});
 			return;
 		}
 
@@ -367,14 +433,26 @@ export default function SmartCrudPage({
 			const result = await action(selectedRowKeys, params);
 
 			if (result.success) {
-				toast.success(result.message || 'Operation completed successfully');
+				api.success({
+					message: 'Success',
+					description: result.message || 'Operation completed successfully',
+					placement: 'topRight',
+				});
 				setSelectedRowKeys([]);
 				actionRef.current?.reload();
 			} else {
-				toast.error(result.error);
+				api.error({
+					message: 'Operation Failed',
+					description: result.error || 'Operation failed',
+					placement: 'topRight',
+				});
 			}
 		} catch (error) {
-			toast.error('Operation failed');
+			api.error({
+				message: 'Operation Failed',
+				description: 'An unexpected error occurred',
+				placement: 'topRight',
+			});
 		}
 	};
 
@@ -417,6 +495,7 @@ export default function SmartCrudPage({
 
 	return (
 		<>
+			{contextHolder}
 			<ProTable
 				columns={columnsWithActions}
 				actionRef={actionRef}
@@ -585,28 +664,35 @@ export default function SmartCrudPage({
 		)}
 
 			{/* 详情抽屉 */}
-			{enableDetail && (
 				<DrawerForm
 					title='Details'
-					open={detailDrawerVisible}
-					onOpenChange={setDetailDrawerVisible}
+			open={enableDetail && detailDrawerVisible}
+			onOpenChange={(visible) => {
+				if (enableDetail) {
+					setDetailDrawerVisible(visible);
+				}
+			}}
 					submitter={false}
 					width={700}
 				>
 					{currentRow && (
-						<>
+				<div>
 							{renderDetailHeader && renderDetailHeader(currentRow)}
 
-							<ProDescriptions
+					<Descriptions
 								column={1}
 								bordered
-								dataSource={currentRow}
-								columns={detailColumns}
+						items={detailColumns.map(col => ({
+							key: col.key,
+							label: col.title,
+							children: col.render 
+								? col.render(currentRow[col.dataIndex], currentRow)
+								: currentRow[col.dataIndex],
+						}))}
 							/>
-						</>
+				</div>
 					)}
 				</DrawerForm>
-			)}
 		</>
 	);
 }

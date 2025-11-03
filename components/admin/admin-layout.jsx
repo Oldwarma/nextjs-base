@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Avatar, Dropdown, Breadcrumb, Button } from 'antd';
+import { Avatar, Dropdown, Breadcrumb, Button, Spin } from 'antd';
 import { RightOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 
 // 动态导入 ProLayout，只在客户端渲染，避免 hydration 不匹配
@@ -10,20 +10,12 @@ const ProLayout = dynamic(
 	() => import('@ant-design/pro-components').then((mod) => mod.ProLayout),
 	{ ssr: false }
 );
-import {
-	
-	DashboardOutlined,
-	UserOutlined,
-	CreditCardOutlined,
-	GiftOutlined,
-	BarChartOutlined,
-	SettingOutlined,
-	LogoutOutlined,
-	HomeOutlined,
-} from '@ant-design/icons';
+import * as Icons from '@ant-design/icons';
+import { UserOutlined, HomeOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { signOutAction } from '@/app/(client)/actions';
+import { getMenuListAction } from '@/app/(admin)/actions/admin-menus';
 
 /**
  * 管理后台布局组件 - 使用 Pro Components
@@ -31,7 +23,30 @@ import { signOutAction } from '@/app/(client)/actions';
 export default function AdminLayout({ children, user }) {
 	const [pathname, setPathname] = useState(usePathname());
 	const [collapsed, setCollapsed] = useState(false);
+	const [menuData, setMenuData] = useState([]);
+	const [menuLoading, setMenuLoading] = useState(true);
 	const router = useRouter();
+
+	// 加载菜单数据
+	useEffect(() => {
+		const loadMenus = async () => {
+			setMenuLoading(true);
+			try {
+				const result = await getMenuListAction({});
+				if (result.success) {
+					setMenuData(result.data || []);
+				} else {
+					console.error('Failed to load menus:', result.error);
+				}
+			} catch (error) {
+				console.error('Error loading menus:', error);
+			} finally {
+				setMenuLoading(false);
+			}
+		};
+
+		loadMenus();
+	}, []);
 
 	// 登出处理函数
 	const handleLogout = async () => {
@@ -41,42 +56,49 @@ export default function AdminLayout({ children, user }) {
 		}
 	};
 
-	// 路由配置
-	const route = {
-		path: '/admin',
-		routes: [
-			{
-				path: '/admin',
-				name: 'Dashboard',
-				icon: <DashboardOutlined />,
-			},
-			{
-				path: '/admin/users',
-				name: 'User Management',
-				icon: <UserOutlined />,
-			},
-			{
-				path: '/admin/packages',
-				name: 'Packages',
-				icon: <GiftOutlined />,
-			},
-			{
-				path: '/admin/credits',
-				name: 'Credits',
-				icon: <CreditCardOutlined />,
-			},
-			{
-				path: '/admin/usage',
-				name: 'Usage Statistics',
-				icon: <BarChartOutlined />,
-			},
-			{
-				path: '/admin/settings',
-				name: 'Settings',
-				icon: <SettingOutlined />,
-			},
-		],
+	// 将数据库菜单转换为 ProLayout 路由配置
+	const convertMenuToRoute = (menu) => {
+		// 获取图标组件
+		const IconComponent = menu.icon && Icons[menu.icon] ? Icons[menu.icon] : null;
+
+		// 使用 url 字段作为跳转路径
+		const menuPath = menu.url || `/admin/${menu.key}`;
+
+		const route = {
+			path: menuPath,
+			name: menu.name,
+			key: menu.key || menu._id,
+			icon: IconComponent ? <IconComponent /> : null,
+		};
+
+		// 递归处理子菜单
+		if (menu.children && menu.children.length > 0) {
+			route.routes = menu.children
+				.filter(child => child.enabled && !child.hidden)
+				.map(convertMenuToRoute);
+		}
+
+		return route;
 	};
+
+	// 路由配置（从数据库菜单生成）
+	const route = useMemo(() => {
+		if (!menuData || menuData.length === 0) {
+			return {
+				path: '/admin',
+				routes: [],
+			};
+		}
+
+		const routes = menuData
+			.filter(menu => menu.enabled && !menu.hidden)
+			.map(convertMenuToRoute);
+
+		return {
+			path: '/admin',
+			routes,
+		};
+	}, [menuData]);
 
 	// 用户下拉菜单
 	const userMenuItems = [
@@ -104,20 +126,24 @@ export default function AdminLayout({ children, user }) {
 		},
 	];
 
+	// 根据当前路径从菜单数据中查找菜单名称
+	const findMenuByPath = (menus, path) => {
+		for (const menu of menus) {
+			const menuPath = menu.url || `/admin/${menu.key}`;
+			if (menuPath === path) {
+				return menu;
+			}
+			if (menu.children && menu.children.length > 0) {
+				const found = findMenuByPath(menu.children, path);
+				if (found) return found;
+			}
+		}
+		return null;
+	};
+
 	// 根据当前路径生成面包屑
 	const breadcrumbItems = useMemo(() => {
 		const items = [];
-
-		// 路径映射
-		const pathMap = {
-			'/admin': 'Dashboard',
-			'/admin/users': 'User Management',
-			'/admin/packages': 'Packages',
-			'/admin/credits': 'Credits',
-			'/admin/usage': 'Usage Statistics',
-			'/admin/settings': 'Settings',
-			'/admin/example': 'Example',
-		};
 
 		// 如果不是首页，显示 Dashboard 链接
 		if (pathname && pathname !== '/admin') {
@@ -144,9 +170,11 @@ export default function AdminLayout({ children, user }) {
 			});
 		}
 
-		// 添加当前页面的面包屑
-		if (pathname) {
-			const currentPageName = pathMap[pathname] || pathname.split('/').pop() || '';
+		// 从菜单数据中查找当前页面的名称
+		if (pathname && menuData.length > 0) {
+			const currentMenu = findMenuByPath(menuData, pathname);
+			const currentPageName = currentMenu?.name || pathname.split('/').pop() || '';
+			
 			if (currentPageName) {
 				items.push({
 					title: (
@@ -163,33 +191,54 @@ export default function AdminLayout({ children, user }) {
 		}
 
 		return items;
-	}, [pathname]);
+	}, [pathname, menuData]);
 
+		// 如果菜单正在加载，显示加载指示器
+	if (menuLoading) {
 		return (
+			<div style={{ 
+				display: 'flex', 
+				justifyContent: 'center', 
+				alignItems: 'center', 
+				height: '100vh',
+				background: '#f5f5f5'
+			}}>
+				<Spin size="large" spinning={true} tip="">
+					<div style={{ minHeight: 100 }} />
+				</Spin>
+			</div>
+		);
+	}
+
+	return (
 		<ProLayout
-			title='Jimeng Admin'
-			logo='/logo.png'
-			layout='mix'
-			splitMenus={false}
-			route={route}
-			location={{ pathname }}
-			collapsed={collapsed}
-			onCollapse={setCollapsed}
-			collapseButtonRender={false}
-			menuExtraRender={false}
-			fixSiderbar
-			fixedHeader
-			contentWidth='Fluid'
-			navTheme='light'
-			colorPrimary='#1890ff'
-			menuItemRender={(item, dom) => (
-				<Link
-					href={item.path || '/admin'}
-					onClick={() => setPathname(item.path || '/admin')}
-				>
-					{dom}
-				</Link>
-			)}
+				title='Jimeng Admin'
+				logo='/logo.png'
+				layout='mix'
+				splitMenus={false}
+				route={route}
+				location={{ pathname }}
+				collapsed={collapsed}
+				onCollapse={setCollapsed}
+				collapseButtonRender={false}
+				menuExtraRender={false}
+				fixSiderbar
+				fixedHeader
+				contentWidth='Fluid'
+				navTheme='light'
+				colorPrimary='#1890ff'
+			menuItemRender={(item, dom) => {
+				// item.path 已经是数据库中的 url 字段（在 convertMenuToRoute 中设置）
+				const linkPath = item.path || '/admin';
+				return (
+					<Link
+						href={linkPath}
+						onClick={() => setPathname(linkPath)}
+					>
+						{dom}
+					</Link>
+				);
+			}}
 			avatarProps={{
 				src: user?.image,
 				icon: <UserOutlined />,
