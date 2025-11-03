@@ -527,6 +527,206 @@ export class BaseDAO {
 			count: result.modifiedCount || result.deletedCount,
 		};
 	}
+
+	// ==================== 聚合统计方法 ====================
+
+	/**
+	 * 统计记录数量
+	 * @param {Object} whereJson - 查询条件
+	 * @returns {Promise<number>} 记录数量
+	 */
+	async count(whereJson = {}) {
+		await this.checkPermission();
+
+		const collection = await getCollection(this.config.collectionName);
+
+		// 合并基础过滤条件（软删除等）
+		const query = {
+			...this.config.query.baseFilter,
+			...whereJson,
+		};
+
+		const count = await collection.countDocuments(query);
+		return count;
+	}
+
+	/**
+	 * 字段求和
+	 * @param {String} fieldName - 字段名
+	 * @param {Object} whereJson - 查询条件
+	 * @returns {Promise<number>} 求和结果
+	 */
+	async sum(fieldName, whereJson = {}) {
+		await this.checkPermission();
+
+		if (!fieldName) {
+			throw new Error('Field name is required for sum operation');
+		}
+
+		const collection = await getCollection(this.config.collectionName);
+
+		// 合并基础过滤条件
+		const matchQuery = {
+			...this.config.query.baseFilter,
+			...whereJson,
+		};
+
+		const result = await collection.aggregate([{ $match: matchQuery }, { $group: { _id: null, total: { $sum: `$${fieldName}` } } }]);
+
+		return result[0]?.total || 0;
+	}
+
+	/**
+	 * 获取字段最大值
+	 * @param {String} fieldName - 字段名
+	 * @param {Object} whereJson - 查询条件
+	 * @returns {Promise<any>} 最大值
+	 */
+	async max(fieldName, whereJson = {}) {
+		await this.checkPermission();
+
+		if (!fieldName) {
+			throw new Error('Field name is required for max operation');
+		}
+
+		const collection = await getCollection(this.config.collectionName);
+
+		const matchQuery = {
+			...this.config.query.baseFilter,
+			...whereJson,
+		};
+
+		const result = await collection.aggregate([{ $match: matchQuery }, { $group: { _id: null, maxValue: { $max: `$${fieldName}` } } }]);
+
+		return result[0]?.maxValue || null;
+	}
+
+	/**
+	 * 获取字段最小值
+	 * @param {String} fieldName - 字段名
+	 * @param {Object} whereJson - 查询条件
+	 * @returns {Promise<any>} 最小值
+	 */
+	async min(fieldName, whereJson = {}) {
+		await this.checkPermission();
+
+		if (!fieldName) {
+			throw new Error('Field name is required for min operation');
+		}
+
+		const collection = await getCollection(this.config.collectionName);
+
+		const matchQuery = {
+			...this.config.query.baseFilter,
+			...whereJson,
+		};
+
+		const result = await collection.aggregate([{ $match: matchQuery }, { $group: { _id: null, minValue: { $min: `$${fieldName}` } } }]);
+
+		return result[0]?.minValue || null;
+	}
+
+	/**
+	 * 计算字段平均值
+	 * @param {String} fieldName - 字段名
+	 * @param {Object} whereJson - 查询条件
+	 * @returns {Promise<number>} 平均值
+	 */
+	async avg(fieldName, whereJson = {}) {
+		await this.checkPermission();
+
+		if (!fieldName) {
+			throw new Error('Field name is required for avg operation');
+		}
+
+		const collection = await getCollection(this.config.collectionName);
+
+		const matchQuery = {
+			...this.config.query.baseFilter,
+			...whereJson,
+		};
+
+		const result = await collection.aggregate([{ $match: matchQuery }, { $group: { _id: null, avgValue: { $avg: `$${fieldName}` } } }]);
+
+		return result[0]?.avgValue || 0;
+	}
+
+	/**
+	 * 随机获取 N 条记录
+	 * @param {number} size - 获取数量
+	 * @param {Object} whereJson - 查询条件
+	 * @returns {Promise<Array>} 记录数组
+	 */
+	async sample(size, whereJson = {}) {
+		await this.checkPermission();
+
+		if (!size || size < 1) {
+			throw new Error('Size must be a positive number');
+		}
+
+		const collection = await getCollection(this.config.collectionName);
+
+		const matchQuery = {
+			...this.config.query.baseFilter,
+			...whereJson,
+		};
+
+		const result = await collection.aggregate([{ $match: matchQuery }, { $sample: { size } }]);
+
+		// 输出转换
+		const transform = this.config.transforms?.output;
+		return transform ? result.map(transform) : result;
+	}
+
+	/**
+	 * 自定义聚合查询（高级用户使用）
+	 * @param {Array} pipeline - MongoDB 聚合管道
+	 * @returns {Promise<Array>} 聚合结果
+	 */
+	async aggregate(pipeline) {
+		await this.checkPermission();
+
+		if (!Array.isArray(pipeline)) {
+			throw new Error('Pipeline must be an array');
+		}
+
+		const collection = await getCollection(this.config.collectionName);
+
+		// 自动添加 baseFilter 到 pipeline 开头（如果有的话）
+		if (Object.keys(this.config.query.baseFilter).length > 0) {
+			pipeline.unshift({ $match: this.config.query.baseFilter });
+		}
+
+		const result = await collection.aggregate(pipeline);
+		return result;
+	}
+
+	/**
+	 * 获取所有记录（不分页）
+	 * @param {Object} whereJson - 查询条件
+	 * @param {Object} sortJson - 排序条件
+	 * @returns {Promise<Array>} 记录数组
+	 */
+	async getAll(whereJson = {}, sortJson = null) {
+		await this.checkPermission();
+
+		const collection = await getCollection(this.config.collectionName);
+
+		const query = {
+			...this.config.query.baseFilter,
+			...whereJson,
+		};
+
+		const sortOption = sortJson || this.config.query.defaultSort;
+
+		const records = await collection.find(query, {
+			sort: sortOption,
+		});
+
+		// 输出转换
+		const transform = this.config.transforms?.output;
+		return transform ? records.map(transform) : records;
+	}
 }
 
 /**
