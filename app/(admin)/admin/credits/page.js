@@ -27,8 +27,8 @@ const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page')
 // Server Actions
 import {
 	getCreditTransactionListAction as getList,
-	getCreditTransactionDetailAction as getDetail,
-	adminAdjustCreditsAction as adjustCredits,
+	adminAddCreditsAction as addCredits,
+	adminDeductCreditsAction as deductCredits,
 } from '@/app/(admin)/actions/admin-credits';
 
 export default function CreditsManagementPage() {
@@ -261,8 +261,10 @@ export default function CreditsManagementPage() {
 	// ============================================
 	const handleAdjust = async (values) => {
 		try {
-			const amount = adjustType === 'add' ? values.amount : -values.amount;
-			const result = await adjustCredits(values.userId, amount, values.reason || 'admin_adjustment');
+			// 根据类型调用不同的 action
+			const result = adjustType === 'add' 
+				? await addCredits(values.userId, values.amount, values.reason || 'admin_adjustment')
+				: await deductCredits(values.userId, values.amount, values.reason || 'admin_adjustment');
 
 			if (result.success) {
 				toast.success(adjustType === 'add' ? 'Credits added successfully' : 'Credits deducted successfully');

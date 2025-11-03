@@ -10,7 +10,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSeparator } from 
 import { Input } from '@/components/ui/input';
 import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
-import { signInWithEmailAction, checkAndInitUserAction } from '@/app/(client)/actions';
+import { signInWithEmailAction, checkAndInitUserAction } from '@/app/(client)/actions/auth';
 import { authClient } from '@/lib/auth-client';
 
 export function LoginForm({ className, callbackUrl, ...props }) {

@@ -74,12 +74,18 @@
    - 图标父级联动
    - 最佳实践
 
-7. **[Markdown 编辑器](./admin/MARKDOWN_EDITOR_GUIDE.md)**
+7. **[Server Actions 日志系统](./admin/ACTION_LOGGER.md)** 🆕
+   - 自动日志记录
+   - BaseDAO 集成
+   - 手动日志添加
+   - 调试最佳实践
+
+8. **[Markdown 编辑器](./admin/MARKDOWN_EDITOR_GUIDE.md)**
    - 编辑器配置
    - 使用方法
    - 自定义选项
 
-8. **[权限验证](./admin/AUTH.md)**
+9. **[权限验证](./admin/AUTH.md)**
    - 管理员权限检查
    - Layout 保护
    - Action 保护

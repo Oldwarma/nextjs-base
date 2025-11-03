@@ -9,6 +9,7 @@
 export const creditTransactionCrudConfig = {
 	collectionName: 'credit_transactions',
 	primaryKey: '_id',
+	logCategory: 'admin/credits',
 
 	// 字段配置
 	fields: {

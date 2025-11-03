@@ -4,7 +4,7 @@
 import { useRouter } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Sparkles, UserCircle, CreditCard, Bell, LogOut } from 'lucide-react';
-import { signOutAction } from '@/app/(client)/actions';
+import { signOutAction } from '@/app/(client)/actions/auth';
 
 export function UserMenu({ user }) {
 	const router = useRouter();

@@ -26,12 +26,12 @@ import SmartCrudPage from '@/components/admin/smart-crud-page';
 // 1. 导入 Server Actions
 // ============================================
 import {
-	// TODO: 修改为实际的 Action 名称
+	// TODO: 修改为实际的 Action 名称和导入路径
 	getDataListAction as getList,
 	updateDataAction as update,
 	deleteDataAction as deleteItem,
 	createDataAction as create, // 可选
-} from '@/app/(admin)/actions';
+} from '@/app/(admin)/actions/admin-xxx'; // ← 修改为实际的 action 文件
 
 export default function SmartDataManagementPage() {
 	// ============================================

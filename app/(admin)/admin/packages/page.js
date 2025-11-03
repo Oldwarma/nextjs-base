@@ -20,11 +20,9 @@ const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page')
 // Server Actions
 import {
 	getAllPackagesAdminAction as getList,
-	getPackageDetailAction as getDetail,
 	createPackageAction as create,
 	updatePackageAction as update,
 	deletePackageAction as deleteItem,
-	batchUpdatePackagesAction as batchUpdate,
 } from '@/app/(admin)/actions/admin-packages';
 
 export default function PackagesManagementPage() {

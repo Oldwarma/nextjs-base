@@ -13,16 +13,23 @@
 
 import { getCollection, fromObjectId } from '@/lib/mongodb';
 import { checkAdmin } from '@/lib/admin-auth';
+import { logAction } from '@/lib/action-logger';
 
 /**
  * 获取菜单列表
  */
 export async function getMenuListAction({ pageIndex = 1, pageSize = 1000, ...filters }) {
+	const startTime = Date.now();
+	const requestTime = new Date();
+	const params = { pageIndex, pageSize, ...filters };
+
 	try {
 		// 权限检查
 		const admin = await checkAdmin();
 		if (!admin?.user) {
-			return { success: false, error: 'Unauthorized' };
+			const result = { success: false, error: 'Unauthorized' };
+			logAction('getMenuList', 'admin/menus', startTime, requestTime, params, result, true);
+			return result;
 		}
 
 		const menusCollection = await getCollection('menus');
@@ -53,17 +60,22 @@ export async function getMenuListAction({ pageIndex = 1, pageSize = 1000, ...fil
 		// 构建树形结构
 		const menuTree = buildMenuTree(processedMenus);
 
-		return {
+		const result = {
 			success: true,
 			data: menuTree,
 			total: menuTree.length,
 		};
+
+		logAction('getMenuList', 'admin/menus', startTime, requestTime, params, result, false);
+		return result;
 	} catch (error) {
 		console.error('Failed to get menu list:', error);
-		return {
+		const result = {
 			success: false,
 			error: 'Failed to get menu list',
 		};
+		logAction('getMenuList', 'admin/menus', startTime, requestTime, params, result, true);
+		return result;
 	}
 }
 

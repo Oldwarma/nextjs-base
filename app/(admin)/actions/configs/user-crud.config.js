@@ -12,6 +12,9 @@ export const userCrudConfig = {
 	// 集合名称
 	collectionName: 'users',
 
+	// 日志分类（用于日志输出）
+	logCategory: 'admin/users',
+
 	// 主键字段（MongoDB 使用 _id）
 	primaryKey: '_id',
 

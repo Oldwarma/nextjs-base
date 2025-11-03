@@ -6,6 +6,7 @@
 export const packageCrudConfig = {
 	collectionName: 'packages',
 	primaryKey: '_id',
+	logCategory: 'admin/packages',
 
 	// 字段配置
 	fields: {

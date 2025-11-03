@@ -1,5 +1,6 @@
 import { getCollection } from '@/lib/mongodb';
 import { checkAdminAction } from '@/lib/admin-auth';
+import { logAction } from '@/lib/action-logger';
 
 /**
  * BaseDAO - 通用数据访问对象基类
@@ -535,96 +536,125 @@ export class BaseDAO {
  */
 export function createCrudActions(config) {
 	const dao = new BaseDAO(config);
+	const category = config.logCategory || config.collectionName;
 
 	return {
 		// 获取列表
 		getList: async (params) => {
+			const startTime = Date.now();
+			const requestTime = new Date();
+			
 			try {
-				return await dao.getList(params);
+				const result = await dao.getList(params);
+				logAction('getList', category, startTime, requestTime, params, result, !result.success);
+				return result;
 			} catch (error) {
 				console.error('getList error:', error);
-				return {
-					success: false,
-					error: error.message,
-				};
+				const errorResult = { success: false, error: error.message };
+				logAction('getList', category, startTime, requestTime, params, errorResult, true);
+				return errorResult;
 			}
 		},
 
 		// 获取详情
 		getDetail: async (id) => {
+			const startTime = Date.now();
+			const requestTime = new Date();
+			
 			try {
-				return await dao.getDetail(id);
+				const result = await dao.getDetail(id);
+				logAction('getDetail', category, startTime, requestTime, { id }, result, !result.success);
+				return result;
 			} catch (error) {
 				console.error('getDetail error:', error);
-				return {
-					success: false,
-					error: error.message,
-				};
+				const errorResult = { success: false, error: error.message };
+				logAction('getDetail', category, startTime, requestTime, { id }, errorResult, true);
+				return errorResult;
 			}
 		},
 
 		// 创建
 		create: async (data) => {
+			const startTime = Date.now();
+			const requestTime = new Date();
+			
 			try {
-				return await dao.create(data);
+				const result = await dao.create(data);
+				logAction('create', category, startTime, requestTime, data, result, !result.success);
+				return result;
 			} catch (error) {
 				console.error('create error:', error);
-				return {
-					success: false,
-					error: error.message,
-				};
+				const errorResult = { success: false, error: error.message };
+				logAction('create', category, startTime, requestTime, data, errorResult, true);
+				return errorResult;
 			}
 		},
 
 		// 更新
 		update: async (id, data) => {
+			const startTime = Date.now();
+			const requestTime = new Date();
+			
 			try {
-				return await dao.update(id, data);
+				const result = await dao.update(id, data);
+				logAction('update', category, startTime, requestTime, { id, data }, result, !result.success);
+				return result;
 			} catch (error) {
 				console.error('update error:', error);
-				return {
-					success: false,
-					error: error.message,
-				};
+				const errorResult = { success: false, error: error.message };
+				logAction('update', category, startTime, requestTime, { id, data }, errorResult, true);
+				return errorResult;
 			}
 		},
 
 		// 删除
 		delete: async (id) => {
+			const startTime = Date.now();
+			const requestTime = new Date();
+			
 			try {
-				return await dao.delete(id);
+				const result = await dao.delete(id);
+				logAction('delete', category, startTime, requestTime, { id }, result, !result.success);
+				return result;
 			} catch (error) {
 				console.error('delete error:', error);
-				return {
-					success: false,
-					error: error.message,
-				};
+				const errorResult = { success: false, error: error.message };
+				logAction('delete', category, startTime, requestTime, { id }, errorResult, true);
+				return errorResult;
 			}
 		},
 
 		// 批量更新
 		batchUpdate: async (ids, data) => {
+			const startTime = Date.now();
+			const requestTime = new Date();
+			
 			try {
-				return await dao.batchUpdate(ids, data);
+				const result = await dao.batchUpdate(ids, data);
+				logAction('batchUpdate', category, startTime, requestTime, { ids, data }, result, !result.success);
+				return result;
 			} catch (error) {
 				console.error('batchUpdate error:', error);
-				return {
-					success: false,
-					error: error.message,
-				};
+				const errorResult = { success: false, error: error.message };
+				logAction('batchUpdate', category, startTime, requestTime, { ids, data }, errorResult, true);
+				return errorResult;
 			}
 		},
 
 		// 批量删除
 		batchDelete: async (ids) => {
+			const startTime = Date.now();
+			const requestTime = new Date();
+			
 			try {
-				return await dao.batchDelete(ids);
+				const result = await dao.batchDelete(ids);
+				logAction('batchDelete', category, startTime, requestTime, { ids }, result, !result.success);
+				return result;
 			} catch (error) {
 				console.error('batchDelete error:', error);
-				return {
-					success: false,
-					error: error.message,
-				};
+				const errorResult = { success: false, error: error.message };
+				logAction('batchDelete', category, startTime, requestTime, { ids }, errorResult, true);
+				return errorResult;
 			}
 		},
 

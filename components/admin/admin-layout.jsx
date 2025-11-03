@@ -14,7 +14,7 @@ import * as Icons from '@ant-design/icons';
 import { UserOutlined, HomeOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { signOutAction } from '@/app/(client)/actions';
+import { signOutAction } from '@/app/(client)/actions/auth';
 import { getMenuListAction } from '@/app/(admin)/actions/admin-menus';
 
 /**
