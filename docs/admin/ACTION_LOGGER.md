@@ -42,6 +42,21 @@ MongoDB
 - **Users** (`admin/users`): getList, getDetail, update, delete, batchUpdate, batchDelete
 - **Packages** (`admin/packages`): getList, create, update, delete
 - **Credit Transactions** (`admin/credits`): getList, getDetail
+- **Usage Logs** (`admin/usage`): getList, getDetail, update, delete + 自定义统计方法
+- **Menus** (`admin/menus`): getList, create, update, delete（手动添加日志）
+
+### BaseDAO 聚合统计方法
+
+BaseDAO 现在支持以下聚合统计方法，所有方法都会自动进行权限检查：
+
+- `count(whereJson)` - 统计记录数量
+- `sum(fieldName, whereJson)` - 字段求和
+- `max(fieldName, whereJson)` - 获取最大值
+- `min(fieldName, whereJson)` - 获取最小值
+- `avg(fieldName, whereJson)` - 计算平均值
+- `sample(size, whereJson)` - 随机获取 N 条记录
+- `aggregate(pipeline)` - 自定义聚合查询
+- `getAll(whereJson, sortJson)` - 获取所有记录（不分页）
 
 ---
 
@@ -157,6 +172,64 @@ export const myCustomAction = withActionLog(
 		return { success: true, data };
 	}
 );
+```
+
+### 方法 4: 使用 BaseDAO 聚合统计方法
+
+对于需要统计的业务场景，可以使用 BaseDAO 的聚合方法：
+
+```javascript
+// admin-usage.js 示例
+import { createCrudActions } from './dao/base';
+import { usageCrudConfig } from './configs/usage-crud.config';
+import { logAction } from '@/lib/action-logger';
+
+const crudActions = createCrudActions(usageCrudConfig);
+const { dao } = crudActions; // 获取 DAO 实例
+
+export async function getUsageStatisticsAction(options = {}) {
+	const startTime = Date.now();
+	const requestTime = new Date();
+
+	try {
+		// 使用 BaseDAO 的 getAll 方法获取所有记录
+		const logs = await dao.getAll(whereJson);
+
+		// 使用 JavaScript 进行统计（适合复杂的业务逻辑）
+		const statistics = {
+			total: logs.length,
+			totalCreditsUsed: logs.reduce((sum, log) => sum + log.creditsUsed, 0),
+			// ... 其他统计
+		};
+
+		const result = { success: true, data: statistics };
+		logAction('getUsageStatistics', 'admin/usage', startTime, requestTime, options, result, false);
+		return result;
+	} catch (error) {
+		const result = { success: false, error: error.message };
+		logAction('getUsageStatistics', 'admin/usage', startTime, requestTime, options, result, true);
+		return result;
+	}
+}
+
+// 或者使用 BaseDAO 的聚合方法（适合简单统计）
+export async function getTotalCreditsUsedAction() {
+	const startTime = Date.now();
+	const requestTime = new Date();
+
+	try {
+		// 直接使用 sum 方法
+		const total = await dao.sum('creditsUsed', { status: 'success' });
+		
+		const result = { success: true, data: { total } };
+		logAction('getTotalCreditsUsed', 'admin/usage', startTime, requestTime, {}, result, false);
+		return result;
+	} catch (error) {
+		const result = { success: false, error: error.message };
+		logAction('getTotalCreditsUsed', 'admin/usage', startTime, requestTime, {}, result, true);
+		return result;
+	}
+}
 ```
 
 ---
