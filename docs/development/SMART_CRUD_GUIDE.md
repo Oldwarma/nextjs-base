@@ -14,6 +14,7 @@
 3. [CRUD Config 配置详解](#crud-config-配置详解)
 4. [Server Actions 编写规范](#server-actions-编写规范)
 5. [Page 页面开发规范](#page-页面开发规范)
+   - [操作列配置（Row Actions）](#操作列配置row-actions)
 6. [字段类型完整参考](#字段类型完整参考)
 7. [连表查询配置](#连表查询配置)
 8. [完整示例](#完整示例)
@@ -1122,6 +1123,267 @@ export default function ArticlesManagementPage() {
 5. **自定义按钮**：
    - `showInTable`：根据记录状态显示/隐藏
    - `onClick`：返回 `true` 刷新列表，`false` 不刷新
+
+---
+
+### 操作列配置（Row Actions）
+
+操作列用于显示每行记录的操作按钮，支持平铺显示和"更多"下拉菜单两种方式。
+
+> **设计理念**: 参考 [VK-UniCloud 万能表格](https://vkdoc.fsq.pub/admin/2/table.html) 的设计思想
+
+#### 1. 默认操作按钮
+
+SmartCrudPage 默认提供三个操作按钮：
+
+```javascript
+<SmartCrudPage
+  fieldsConfig={fieldsConfig}
+  actions={actions}
+  // 默认操作按钮（平铺显示）
+  enableDetail={true}   // 查看详情 👁️
+  enableEdit={true}     // 编辑 ✏️
+  enableDelete={true}   // 删除 🗑️（带 Popconfirm 确认）
+/>
+```
+
+**效果**: `[ 👁️ ] [ ✏️ ] [ 🗑️ ]`
+
+---
+
+#### 2. 自定义操作按钮（平铺显示）
+
+通过 `customRowActions` 添加自定义操作，默认平铺显示：
+
+```javascript
+<SmartCrudPage
+  fieldsConfig={fieldsConfig}
+  actions={actions}
+  customRowActions={[
+    {
+      key: 'reset-password',
+      text: 'Reset Password',
+      icon: <KeyOutlined />,
+      onClick: (record) => {
+        // 处理重置密码逻辑
+        console.log('Reset password for:', record);
+      },
+    },
+  ]}
+/>
+```
+
+**效果**: `[ 👁️ ] [ ✏️ ] [ 🗑️ ] [ 🔑 ]`
+
+---
+
+#### 3. 自定义操作按钮（放入更多菜单）
+
+通过 `inMore: true` 将操作放入"更多"下拉菜单：
+
+```javascript
+<SmartCrudPage
+  fieldsConfig={fieldsConfig}
+  actions={actions}
+  customRowActions={[
+    {
+      key: 'export',
+      text: 'Export Data',
+      icon: <ExportOutlined />,
+      inMore: true,  // ✅ 放入更多菜单
+      onClick: (record) => {
+        console.log('Export:', record);
+      },
+    },
+    {
+      key: 'archive',
+      text: 'Archive',
+      icon: <InboxOutlined />,
+      inMore: true,  // ✅ 放入更多菜单
+      danger: true,
+      onClick: (record) => {
+        console.log('Archive:', record);
+      },
+    },
+  ]}
+/>
+```
+
+**效果**: `[ 👁️ ] [ ✏️ ] [ 🗑️ ] [ ••• ]`
+
+点击 `•••` 显示：
+```
+┌──────────────────┐
+│ 📤 Export Data   │
+│ 📦 Archive       │
+└──────────────────┘
+```
+
+---
+
+#### 4. 混合使用（平铺 + 更多菜单）
+
+```javascript
+<SmartCrudPage
+  fieldsConfig={fieldsConfig}
+  actions={actions}
+  customRowActions={[
+    // 平铺显示（常用操作）
+    {
+      key: 'quick-edit',
+      text: 'Quick Edit',
+      icon: <ThunderboltOutlined />,
+      showText: true,  // 显示文字
+      onClick: (record) => {
+        console.log('Quick edit:', record);
+      },
+    },
+    // 放入更多菜单（次要操作）
+    {
+      key: 'export',
+      text: 'Export',
+      icon: <ExportOutlined />,
+      inMore: true,
+      onClick: (record) => {
+        console.log('Export:', record);
+      },
+    },
+    {
+      key: 'archive',
+      text: 'Archive',
+      icon: <InboxOutlined />,
+      inMore: true,
+      danger: true,
+      onClick: (record) => {
+        console.log('Archive:', record);
+      },
+    },
+  ]}
+/>
+```
+
+**效果**: `[ 👁️ ] [ ✏️ ] [ 🗑️ ] [ ⚡ Quick Edit ] [ ••• ]`
+
+---
+
+#### 5. 条件显示/禁用
+
+```javascript
+customRowActions={[
+  {
+    key: 'approve',
+    text: 'Approve',
+    icon: <CheckOutlined />,
+    // ✅ 条件显示：仅当状态为 pending 时显示
+    show: (record) => record.status === 'pending',
+    onClick: (record) => {
+      console.log('Approve:', record);
+    },
+  },
+  {
+    key: 'lock',
+    text: 'Lock',
+    icon: <LockOutlined />,
+    // ✅ 条件禁用：已锁定时禁用
+    disabled: (record) => record.locked === true,
+    onClick: (record) => {
+      console.log('Lock:', record);
+    },
+  },
+]}
+```
+
+---
+
+#### 6. customRowActions 配置参数
+
+| 参数 | 说明 | 类型 | 默认值 | 必填 |
+|------|------|------|--------|------|
+| key | 唯一标识 | string | - | ✅ |
+| text | 按钮文字 | string | - | ✅ |
+| icon | 图标 | ReactNode | - | ❌ |
+| inMore | 是否放入"更多"菜单 | boolean | false | ❌ |
+| showText | 是否显示文字（仅平铺按钮） | boolean | false | ❌ |
+| danger | 危险按钮样式（红色） | boolean | false | ❌ |
+| show | 条件显示函数 | (record) => boolean | - | ❌ |
+| disabled | 条件禁用函数 | (record) => boolean | - | ❌ |
+| onClick | 点击回调 | (record) => void | - | ✅ |
+
+---
+
+#### 7. 操作按钮设计原则
+
+**平铺显示（默认）**：
+- ✅ 常用操作（查看、编辑、删除）
+- ✅ 频繁使用的自定义操作
+- ✅ 需要一眼看到的操作
+
+**放入更多菜单（`inMore: true`）**：
+- ✅ 次要操作（导出、归档、日志）
+- ✅ 不常用的操作
+- ✅ 需要节省空间的操作
+
+**示例优先级**：
+```
+高频操作（平铺）:
+  - 查看详情 👁️
+  - 编辑 ✏️
+  - 删除 🗑️
+  - 审核/发布（业务相关）
+
+低频操作（更多菜单）:
+  - 权限分配
+  - 角色分配
+  - 导出数据
+  - 查看日志
+  - 归档/恢复
+```
+
+---
+
+#### 8. 完整示例
+
+```javascript
+// 角色管理页面
+<SmartCrudPage
+  fieldsConfig={fieldsConfig}
+  actions={actions}
+  // 默认操作
+  enableDetail={true}
+  enableEdit={true}
+  enableDelete={true}
+  // 自定义操作
+  customRowActions={[
+    // 放入更多菜单（次要功能）
+    {
+      key: 'assign-permissions',
+      text: 'Assign Permissions',
+      icon: <KeyOutlined />,
+      inMore: true,  // ✅ 放入更多菜单
+      show: (record) => record.id !== 'admin',  // admin 角色不显示
+      onClick: (record) => {
+        // 打开权限分配弹窗
+        handleAssignPermissions(record);
+      },
+    },
+    {
+      key: 'assign-menus',
+      text: 'Assign Menus',
+      icon: <MenuOutlined />,
+      inMore: true,  // ✅ 放入更多菜单
+      show: (record) => record.id !== 'admin',
+      onClick: (record) => {
+        // 打开菜单分配弹窗
+        handleAssignMenus(record);
+      },
+    },
+  ]}
+/>
+```
+
+**效果**:
+- 普通角色: `[ 👁️ ] [ ✏️ ] [ 🗑️ ] [ ••• ]` （更多菜单包含 2 项）
+- admin 角色: `[ 👁️ ] [ ✏️ ] [ 🗑️ ]` （无更多按钮，因为所有自定义操作被 `show` 隐藏）
 
 ---
 

@@ -30,6 +30,7 @@ import {
 	generateSearchTransform,
 	validateFieldsConfig,
 } from '@/lib/admin/crud/field-generator';
+import { buildSortCondition } from '@/lib/admin/crud/search-transformer';
 
 // 导入动态表单字段组件
 import DynamicFormFields from '@/components/admin/dynamic-form-fields';
@@ -275,17 +276,27 @@ export default function SmartCrudPage({
 	}, [tableColumns, enableDetail, enableEdit, enableDelete, customRowActions, rowKey]);
 
 	// 获取数据
-	const request = async (params, sort) => {
+	const request = async (params, sort, filter) => {
 		try {
 			// 使用自动生成的搜索转换函数转换参数
 			const searchParams = searchTransform(params);
 
-			const result = await actions.getList({
-				pageIndex: params.current,
-				pageSize: params.pageSize,
-				...searchParams,
-				sort,
-			});
+		// 转换排序参数 (ProTable 的 sort 格式 -> MongoDB 的 sortJson 格式)
+		// ProTable: { fieldName: 'ascend' | 'descend' }
+		// MongoDB: { fieldName: 1 | -1 }
+		console.log('[SmartCrudPage] ProTable sort params:', sort);
+		const sortJson = buildSortCondition(sort, fieldsConfig);
+		console.log('[SmartCrudPage] Converted sortJson:', sortJson);
+
+		const requestParams = {
+			pageIndex: params.current,
+			pageSize: params.pageSize,
+			...searchParams,
+			sortJson,  // ✅ 直接传递 sortJson 参数
+		};
+		console.log('[SmartCrudPage] Final request params:', requestParams);
+
+		const result = await actions.getList(requestParams);
 
 			if (!result.success) {
 				messageApi.error(result.error || 'Failed to fetch data');

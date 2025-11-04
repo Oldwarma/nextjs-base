@@ -181,7 +181,7 @@ export class BaseDAO {
 			pageSize = this.config.query.defaultPageSize,
 			search,
 			filters = {},
-			sort,
+			sortJson,  // ✅ 直接接收 sortJson 参数
 			foreignDB, // 连表配置（参数传入）
 		} = params;
 
@@ -209,46 +209,29 @@ export class BaseDAO {
 		const filtersQuery = this.buildFiltersQuery(filters);
 		Object.assign(query, filtersQuery);
 
-		// 排序
-		const sortOption = sort || this.config.query.defaultSort;
+		// 排序：优先使用传入的 sortJson，否则使用 config 中的默认排序
+		const sortOption = sortJson || this.config.query.defaultSort || {};
+		console.log('[BaseDAO] sortJson from params:', sortJson);
+		console.log('[BaseDAO] defaultSort from config:', this.config.query.defaultSort);
+		console.log('[BaseDAO] Final sortOption:', sortOption);
 
 		// 连表配置：优先使用参数传入的，否则使用 config 中配置的
-		const finalForeignDB = foreignDB || this.config.query?.foreignDB;
+		const finalForeignDB = foreignDB || this.config.query?.foreignDB || [];
 
-		// 如果配置了 foreignDB，使用 selects 方法进行连表查询
-		if (Array.isArray(finalForeignDB) && finalForeignDB.length > 0) {
-			const result = await selects({
-				dbName: this.config.collectionName,
-				whereJson: query,
-				sortJson: sortOption,
-				pageIndex,
-				pageSize,
-				getCount: true,
-				foreignDB: finalForeignDB,
-			});
-
-			// 输出转换
-			const transform = this.config.transforms?.output;
-			const data = transform ? result.rows.map(transform) : result.rows;
-
-			return {
-				success: true,
-				data,
-				total: result.total,
-				pageIndex: result.pageIndex,
-				pageSize: result.pageSize,
-				totalPages: result.totalPages,
-			};
-		}
-
-		// 否则使用普通查询
-		const collection = await getCollection(this.config.collectionName);
-		const result = await collection.findWithPagination({
-			query,
+		// ✅ 统一使用 selects 方法（即使没有连表）
+		// 优点：参数统一、逻辑统一、易于维护
+		const selectsParams = {
+			dbName: this.config.collectionName,
+			whereJson: query,
+			sortJson: sortOption,  // ✅ 统一使用 sortJson 参数名
 			pageIndex,
 			pageSize,
-			sort: sortOption,
-		});
+			getCount: true,
+			foreignDB: finalForeignDB,  // 没有连表时为空数组
+		};
+		console.log('[BaseDAO] Calling selects with params:', selectsParams);
+		
+		const result = await selects(selectsParams);
 
 		// 输出转换
 		const transform = this.config.transforms?.output;
