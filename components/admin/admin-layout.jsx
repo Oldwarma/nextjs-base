@@ -21,7 +21,7 @@ import { getMenuListAction } from '@/app/(admin)/actions/rbac/admin-menus';
  * 管理后台布局组件 - 使用 Pro Components
  */
 export default function AdminLayout({ children, user }) {
-	const [pathname, setPathname] = useState(usePathname());
+	const currentPathname = usePathname(); // ✅ 直接使用 usePathname hook
 	const [collapsed, setCollapsed] = useState(false);
 	const [menuData, setMenuData] = useState([]);
 	const [menuLoading, setMenuLoading] = useState(true);
@@ -146,7 +146,7 @@ export default function AdminLayout({ children, user }) {
 		const items = [];
 
 		// 如果不是首页，显示 Dashboard 链接
-		if (pathname && pathname !== '/admin') {
+		if (currentPathname && currentPathname !== '/admin') {
 			items.push({
 				title: (
 					<Link 
@@ -171,9 +171,9 @@ export default function AdminLayout({ children, user }) {
 		}
 
 		// 从菜单数据中查找当前页面的名称
-		if (pathname && menuData.length > 0) {
-			const currentMenu = findMenuByPath(menuData, pathname);
-			const currentPageName = currentMenu?.name || pathname.split('/').pop() || '';
+		if (currentPathname && menuData.length > 0) {
+			const currentMenu = findMenuByPath(menuData, currentPathname);
+			const currentPageName = currentMenu?.name || currentPathname.split('/').pop() || '';
 			
 			if (currentPageName) {
 				items.push({
@@ -191,7 +191,7 @@ export default function AdminLayout({ children, user }) {
 		}
 
 		return items;
-	}, [pathname, menuData]);
+	}, [currentPathname, menuData]);
 
 		// 如果菜单正在加载，显示加载指示器
 	if (menuLoading) {
@@ -212,16 +212,16 @@ export default function AdminLayout({ children, user }) {
 
 	return (
 		<ProLayout
-				title='Jimeng Admin'
-				logo='/logo.png'
-				layout='mix'
-				splitMenus={false}
-				route={route}
-				location={{ pathname }}
-				collapsed={collapsed}
-				onCollapse={setCollapsed}
-				collapseButtonRender={false}
-				menuExtraRender={false}
+			title='Jimeng Admin'
+			logo='/logo.png'
+			layout='mix'
+			splitMenus={false}
+			route={route}
+			location={{ pathname: currentPathname }}
+			collapsed={collapsed}
+			onCollapse={setCollapsed}
+			collapseButtonRender={false}
+			menuExtraRender={false}
 				fixSiderbar
 				fixedHeader
 				contentWidth='Fluid'
@@ -249,14 +249,11 @@ export default function AdminLayout({ children, user }) {
 				);
 			} else {
 				// 内部链接：使用 Next.js Link
-				return (
-					<Link
-						href={linkPath}
-						onClick={() => setPathname(linkPath)}
-					>
-						{dom}
-					</Link>
-				);
+			return (
+				<Link href={linkPath}>
+					{dom}
+				</Link>
+			);
 			}
 		}}
 			avatarProps={{

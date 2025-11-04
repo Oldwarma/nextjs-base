@@ -344,6 +344,7 @@ export default function RolesManagementPage() {
 				key: 'assign-permissions',
 				text: 'Assign Permissions',
 				icon: <KeyOutlined />,
+				inMore: true, // ✅ 放入更多菜单
 				onClick: handleAssignPermissions,
 				show: (record) => record.id !== 'admin', // 不显示给 admin 角色
 			},
@@ -351,6 +352,7 @@ export default function RolesManagementPage() {
 				key: 'assign-menus',
 				text: 'Assign Menus',
 				icon: <MenuOutlined />,
+				inMore: true, // ✅ 放入更多菜单
 				onClick: handleAssignMenus,
 				show: (record) => record.id !== 'admin', // 不显示给 admin 角色
 			},

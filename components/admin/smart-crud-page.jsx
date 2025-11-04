@@ -19,7 +19,7 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import { ProTable, ModalForm, DrawerForm } from '@ant-design/pro-components';
-import { Button, Modal, Space, Dropdown, notification, Descriptions } from 'antd';
+import { Button, Modal, Space, Dropdown, Popconfirm, message, Descriptions } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, ReloadOutlined, MoreOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 
 // 导入字段生成器
@@ -83,8 +83,8 @@ export default function SmartCrudPage({
 	enableDelete = true,
 	baseQuery = {},
 }) {
-	// 使用 Ant Design notification hooks
-	const [api, contextHolder] = notification.useNotification();
+	// 使用 Ant Design message hooks
+	const [messageApi, contextHolder] = message.useMessage();
 	
 	// 验证字段配置
 	useMemo(() => {
@@ -92,13 +92,9 @@ export default function SmartCrudPage({
 			validateFieldsConfig(fieldsConfig);
 		} catch (error) {
 			console.error('Invalid fieldsConfig:', error);
-			api.error({
-				message: 'Configuration Error',
-				description: error.message,
-				placement: 'topRight',
-			});
+			messageApi.error(`Configuration Error: ${error.message}`);
 		}
-	}, [fieldsConfig, api]);
+	}, [fieldsConfig, messageApi]);
 
 	// 状态管理
 	const [editModalVisible, setEditModalVisible] = useState(false);
@@ -147,47 +143,84 @@ export default function SmartCrudPage({
 			...tableColumns,
 			{
 				title: 'Actions',
-				valueType: 'option',
-				width: 80,
-				fixed: 'right',
-				search: false,
-				render: (_, record) => {
-					const items = [];
+			valueType: 'option',
+			width: 120,
+			fixed: 'right',
+			search: false,
+			render: (_, record) => {
+				// 平铺显示的按钮
+				const flatButtons = [];
+				// 更多下拉菜单项
+				const moreMenuItems = [];
 
-					// 查看详情
-					if (enableDetail) {
-						items.push({
-							key: 'view',
-							label: 'View Details',
-							icon: <EyeOutlined />,
-							onClick: () => handleViewDetail(record),
-						});
-					}
+				// 查看详情 - 平铺显示
+				if (enableDetail) {
+					flatButtons.push(
+						<Button
+							key='view'
+							type='text'
+							size='small'
+							icon={<EyeOutlined />}
+							onClick={(e) => {
+								e.stopPropagation();
+								handleViewDetail(record);
+							}}
+						/>
+					);
+				}
 
-					// 编辑
-					if (enableEdit) {
-						items.push({
-							key: 'edit',
-							label: 'Edit',
-							icon: <EditOutlined />,
-							onClick: () => handleEdit(record),
-						});
-					}
+				// 编辑 - 平铺显示
+				if (enableEdit) {
+					flatButtons.push(
+						<Button
+							key='edit'
+							type='text'
+							size='small'
+							icon={<EditOutlined />}
+							onClick={(e) => {
+								e.stopPropagation();
+								handleEdit(record);
+							}}
+						/>
+					);
+				}
 
-					// 自定义行操作（插入在编辑和删除之间）
-					if (customRowActions && customRowActions.length > 0) {
-						// 如果前面有基础操作，添加分隔线
-						if (enableDetail || enableEdit) {
-							items.push({ type: 'divider' });
+				// 删除 - 平铺显示（使用 Popconfirm）
+				if (enableDelete) {
+					flatButtons.push(
+						<Popconfirm
+							key='delete'
+							title='Delete Confirmation'
+							description='Are you sure you want to delete this record? This action cannot be undone.'
+							okText='Delete'
+							okType='danger'
+							cancelText='Cancel'
+							onConfirm={() => handleDelete(record[rowKey])}
+							placement='topRight'
+						>
+							<Button
+								type='text'
+								size='small'
+								danger
+								icon={<DeleteOutlined />}
+								onClick={(e) => e.stopPropagation()}
+							/>
+						</Popconfirm>
+					);
+				}
+
+				// 自定义行操作
+				if (customRowActions && customRowActions.length > 0) {
+					customRowActions.forEach((action) => {
+						// 支持条件显示
+						if (action.show && !action.show(record)) {
+							return;
 						}
 
-						customRowActions.forEach((action) => {
-							// 支持条件显示
-							if (action.show && !action.show(record)) {
-								return;
-							}
-
-							items.push({
+						// 判断是平铺显示还是放入更多菜单
+						// inMore 为 true 时放入更多菜单，否则平铺显示
+						if (action.inMore) {
+							moreMenuItems.push({
 								key: action.key || action.text,
 								label: action.text,
 								icon: action.icon,
@@ -195,47 +228,47 @@ export default function SmartCrudPage({
 								disabled: action.disabled ? action.disabled(record) : false,
 								onClick: () => action.onClick(record),
 							});
-						});
-					}
+						} else {
+							flatButtons.push(
+								<Button
+									key={action.key || action.text}
+									type='text'
+									size='small'
+									danger={action.danger || false}
+									disabled={action.disabled ? action.disabled(record) : false}
+									icon={action.icon}
+									onClick={(e) => {
+										e.stopPropagation();
+										action.onClick(record);
+									}}
+								>
+									{action.showText ? action.text : null}
+								</Button>
+							);
+						}
+					});
+				}
 
-					// 分隔线
-					if ((enableDetail || enableEdit || (customRowActions && customRowActions.length > 0)) && enableDelete) {
-						items.push({ type: 'divider' });
-					}
-
-					// 删除
-					if (enableDelete) {
-						items.push({
-							key: 'delete',
-							label: 'Delete',
-							icon: <DeleteOutlined />,
-							danger: true,
-							onClick: () => {
-								Modal.confirm({
-									title: 'Delete Confirmation',
-									content: 'Are you sure you want to delete this record? This action cannot be undone.',
-									okText: 'Delete',
-									okType: 'danger',
-									cancelText: 'Cancel',
-									onOk: () => handleDelete(record[rowKey]),
-								});
-							},
-						});
-					}
-
-					return (
-						<Dropdown
-							menu={{ items }}
-							trigger={['click']}
-						>
-							<Button
-								type='text'
-								icon={<MoreOutlined />}
-								onClick={(e) => e.stopPropagation()}
-							/>
-						</Dropdown>
-					);
-				},
+				return (
+					<Space size='small'>
+						{flatButtons}
+						{moreMenuItems.length > 0 && (
+							<Dropdown
+								menu={{ items: moreMenuItems }}
+								trigger={['click']}
+								placement='bottomRight'
+							>
+								<Button
+									type='text'
+									size='small'
+									icon={<MoreOutlined />}
+									onClick={(e) => e.stopPropagation()}
+								/>
+							</Dropdown>
+						)}
+					</Space>
+				);
+			},
 			},
 		];
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -255,11 +288,7 @@ export default function SmartCrudPage({
 			});
 
 			if (!result.success) {
-				api.error({
-					message: 'Failed to Fetch Data',
-					description: result.error || 'Failed to fetch data',
-					placement: 'topRight',
-				});
+				messageApi.error(result.error || 'Failed to fetch data');
 				return { data: [], success: false, total: 0 };
 			}
 
@@ -270,11 +299,7 @@ export default function SmartCrudPage({
 			};
 		} catch (error) {
 			console.error('Failed to fetch data:', error);
-			api.error({
-				message: 'Failed to Fetch Data',
-				description: 'An unexpected error occurred',
-				placement: 'topRight',
-			});
+			messageApi.error('An unexpected error occurred');
 			return { data: [], success: false, total: 0 };
 		}
 	};
@@ -287,19 +312,11 @@ export default function SmartCrudPage({
 				if (result.success) {
 					setCurrentRow(result.data);
 				} else {
-					api.error({
-						message: 'Failed to Fetch Detail',
-						description: result.error || 'Failed to fetch detail',
-						placement: 'topRight',
-					});
+				messageApi.error(result.error || 'Failed to fetch detail');
 					return;
 				}
 			} catch (error) {
-				api.error({
-					message: 'Failed to Fetch Detail',
-					description: 'An unexpected error occurred',
-					placement: 'topRight',
-				});
+				messageApi.error('An unexpected error occurred');
 				return;
 			}
 		} else {
@@ -331,25 +348,13 @@ export default function SmartCrudPage({
 			const result = await actions.delete(id);
 
 			if (result.success) {
-				api.success({
-					message: 'Success',
-					description: result.message || 'Deleted successfully',
-					placement: 'topRight',
-				});
+			messageApi.success(result.message || 'Deleted successfully');
 				actionRef.current?.reload();
 			} else {
-				api.error({
-					message: 'Failed to Delete',
-					description: result.error || 'Failed to delete',
-					placement: 'topRight',
-				});
+				messageApi.error(result.error || 'Failed to delete');
 			}
 		} catch (error) {
-			api.error({
-				message: 'Failed to Delete',
-				description: 'An unexpected error occurred',
-				placement: 'topRight',
-			});
+			messageApi.error('An unexpected error occurred');
 		}
 	};
 
@@ -367,44 +372,28 @@ export default function SmartCrudPage({
 			const result = await actions.update(currentRow[rowKey], processedValues);
 
 			if (result.success) {
-				api.success({
-					message: 'Success',
-					description: result.message || 'Updated successfully',
-					placement: 'topRight',
-				});
+			messageApi.success(result.message || 'Updated successfully');
 				setEditModalVisible(false);
 				setCurrentRow(null);
 				actionRef.current?.reload();
 				return true;
-			} else {
-				api.error({
-					message: 'Failed to Update',
-					description: result.error || 'Failed to update',
-					placement: 'topRight',
-				});
-				return false;
-			}
-		} catch (error) {
-			console.error('Failed to update:', error);
-			api.error({
-				message: 'Failed to Update',
-				description: 'An unexpected error occurred',
-				placement: 'topRight',
-			});
+		} else {
+			messageApi.error(result.error || 'Failed to update');
 			return false;
 		}
+	} catch (error) {
+		console.error('Failed to update:', error);
+		messageApi.error('An unexpected error occurred');
+		return false;
+	}
 	};
 
 	// 创建
 	const handleCreate = async (values) => {
-		if (!actions.create) {
-			api.error({
-				message: 'Action Not Available',
-				description: 'Create action not provided',
-				placement: 'topRight',
-			});
-			return false;
-		}
+	if (!actions.create) {
+		messageApi.error('Create action not provided');
+		return false;
+	}
 
 		// 创建前回调
 		if (beforeCreate) {
@@ -417,69 +406,41 @@ export default function SmartCrudPage({
 			const result = await actions.create(values);
 
 			if (result.success) {
-				api.success({
-					message: 'Success',
-					description: result.message || 'Created successfully',
-					placement: 'topRight',
-				});
+		messageApi.success(result.message || 'Created successfully');
 				setCreateModalVisible(false);
 				actionRef.current?.reload();
 				return true;
-			} else {
-				api.error({
-					message: 'Failed to Create',
-					description: result.error || 'Failed to create',
-					placement: 'topRight',
-				});
-				return false;
-			}
-		} catch (error) {
-			console.error('Failed to create:', error);
-			api.error({
-				message: 'Failed to Create',
-				description: 'An unexpected error occurred',
-				placement: 'topRight',
-			});
+		} else {
+			messageApi.error(result.error || 'Failed to create');
 			return false;
 		}
+	} catch (error) {
+		console.error('Failed to create:', error);
+		messageApi.error('An unexpected error occurred');
+		return false;
+	}
 	};
 
 	// 批量操作
 	const handleBatchAction = async (action, params) => {
-		if (selectedRowKeys.length === 0) {
-			api.warning({
-				message: 'No Selection',
-				description: 'Please select items first',
-				placement: 'topRight',
-			});
-			return;
-		}
+	if (selectedRowKeys.length === 0) {
+		messageApi.warning('Please select items first');
+		return;
+	}
 
 		try {
 			const result = await action(selectedRowKeys, params);
 
-			if (result.success) {
-				api.success({
-					message: 'Success',
-					description: result.message || 'Operation completed successfully',
-					placement: 'topRight',
-				});
-				setSelectedRowKeys([]);
-				actionRef.current?.reload();
-			} else {
-				api.error({
-					message: 'Operation Failed',
-					description: result.error || 'Operation failed',
-					placement: 'topRight',
-				});
-			}
-		} catch (error) {
-			api.error({
-				message: 'Operation Failed',
-				description: 'An unexpected error occurred',
-				placement: 'topRight',
-			});
+		if (result.success) {
+			messageApi.success(result.message || 'Operation completed successfully');
+			setSelectedRowKeys([]);
+			actionRef.current?.reload();
+		} else {
+			messageApi.error(result.error || 'Operation failed');
 		}
+	} catch (error) {
+		messageApi.error('An unexpected error occurred');
+	}
 	};
 
 	// 工具栏按钮

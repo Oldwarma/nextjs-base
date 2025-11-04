@@ -489,9 +489,10 @@ export default function UsersManagementPage() {
 	// ============================================
 	const customRowActions = [
 		{
+			key: 'assign-roles',
 			text: 'Assign Roles',
 			icon: <TeamOutlined />,
-			type: 'link',
+			inMore: true, // ✅ 放入更多菜单
 			onClick: handleAssignRoles,
 		},
 	];
