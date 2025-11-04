@@ -1,7 +1,7 @@
 'use server';
 
 import { createCrudActions } from '@/app/(admin)/actions/dao/base';
-import { creditTransactionCrudConfig } from '@/app/(admin)/actions/configs/credit-transaction-crud.config';
+import { creditTransactionCrudConfig } from '@/app/(admin)/actions/finance/configs/credit-transaction-crud.config';
 import { checkAdminAction } from '@/lib/admin-auth';
 import { adminAdjustCredits, getCreditTransactions } from '@/lib/credits';
 

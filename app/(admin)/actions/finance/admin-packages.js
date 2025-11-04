@@ -1,7 +1,7 @@
 'use server';
 
 import { createCrudActions } from '@/app/(admin)/actions/dao/base';
-import { packageCrudConfig } from '@/app/(admin)/actions/configs/package-crud.config';
+import { packageCrudConfig } from '@/app/(admin)/actions/finance/configs/package-crud.config';
 import { checkAdminAction } from '@/lib/admin-auth';
 import { getUserPackages } from '@/lib/packages';
 

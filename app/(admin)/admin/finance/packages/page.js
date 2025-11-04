@@ -23,7 +23,7 @@ import {
 	createPackageAction as create,
 	updatePackageAction as update,
 	deletePackageAction as deleteItem,
-} from '@/app/(admin)/actions/admin-packages';
+} from '@/app/(admin)/actions/finance/admin-packages';
 
 export default function PackagesManagementPage() {
 	// ============================================

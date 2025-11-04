@@ -229,7 +229,7 @@ const findMenuByPath = (menus, path) => {
 
 1. **Import Menu Action**
 ```javascript
-import { getMenuListAction } from '@/app/(admin)/actions/admin-menus';
+import { getMenuListAction } from '@/app/(admin)/actions/rbac/admin-menus';
 ```
 
 2. **State Management**

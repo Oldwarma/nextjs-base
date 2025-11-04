@@ -29,7 +29,7 @@ import {
 	getCreditTransactionListAction as getList,
 	adminAddCreditsAction as addCredits,
 	adminDeductCreditsAction as deductCredits,
-} from '@/app/(admin)/actions/admin-credits';
+} from '@/app/(admin)/actions/finance/admin-credits';
 
 export default function CreditsManagementPage() {
 	const [adjustModalVisible, setAdjustModalVisible] = useState(false);

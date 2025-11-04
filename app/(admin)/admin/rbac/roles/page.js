@@ -31,11 +31,11 @@ import {
 	roleBindMenusAction,
 	getRolePermissionsAction,
 	getRoleMenusAction,
-} from '@/app/(admin)/actions/admin-roles';
+} from '@/app/(admin)/actions/rbac/admin-roles';
 
 // Server Actions - Permissions & Menus
-import { getPermissionTreeForSelectAction } from '@/app/(admin)/actions/admin-permissions';
-import { getMenuTreeForSelectAction } from '@/app/(admin)/actions/admin-menus';
+import { getPermissionTreeForSelectAction } from '@/app/(admin)/actions/rbac/admin-permissions';
+import { getMenuTreeForSelectAction } from '@/app/(admin)/actions/rbac/admin-menus';
 
 // Convert tree data to Ant Design Tree format (递归函数，移到组件外部)
 const convertToTreeData = (data, keyField) => {

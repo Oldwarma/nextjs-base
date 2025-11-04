@@ -28,12 +28,12 @@ import {
 	getUserListAction,
 	updateUserInfoAction,
 	deleteUserAction,
-} from '@/app/(admin)/actions/admin-users';
+} from '@/app/(admin)/actions/rbac/admin-users';
 
 import {
 	getAllPackagesAdminAction,
 	createPackageAction,
-} from '@/app/(admin)/actions/admin-packages';
+} from '@/app/(admin)/actions/finance/admin-packages';
 ```
 
 > **为什么没有 index.js？**
@@ -236,13 +236,13 @@ export async function someAction() {
 import {
 	getUserListAction,
 	updateUserInfoAction,
-} from '@/app/(admin)/actions/admin-users';
+} from '@/app/(admin)/actions/rbac/admin-users';
 
 // ✅ 可选：使用别名简化
 import {
 	getUserListAction as getList,
 	updateUserInfoAction as update,
-} from '@/app/(admin)/actions/admin-users';
+} from '@/app/(admin)/actions/rbac/admin-users';
 ```
 
 ### 2. Actions 命名规范

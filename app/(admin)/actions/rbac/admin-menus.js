@@ -170,23 +170,16 @@ function buildMenuTreeForSelector(menus, parent_id = null) {
  * 创建菜单
  */
 export async function createMenuAction(data) {
-	console.log('🔵 [1/6] createMenuAction START - received data:', data);
-
 	try {
-		console.log('🔵 [2/6] Checking admin permissions...');
 		const admin = await checkAdmin();
-		console.log('🔵 [2/6] Admin check result:', admin);
 
 		// checkAdmin() 返回 { session, user } 而不是 { success }
 		// 如果执行到这里说明权限验证通过（否则会 redirect）
 		if (!admin?.user) {
-			console.error('❌ Admin check failed: No user found');
 			return { success: false, error: 'Unauthorized' };
 		}
 
-		console.log('🔵 [3/6] Getting menus collection...');
 		const menusCollection = await getCollection('menus');
-		console.log('🔵 [3/6] Got menus collection:', !!menusCollection);
 
 		// 准备菜单数据（生成 UUID 作为 id）
 		const menuData = {
@@ -203,15 +196,9 @@ export async function createMenuAction(data) {
 			updatedAt: new Date(),
 		};
 
-		console.log('🔵 [5/6] Attempting to insert menu data:', menuData);
-
 		const result = await menusCollection.insertOne(menuData);
 
-		console.log('🔵 [6/6] Insert result:', result);
-		console.log('🔵 [6/6] insertedId:', result?.insertedId);
-
 		if (result.insertedId) {
-			console.log('✅ Menu created successfully with ID:', result.insertedId.toString());
 			return {
 				success: true,
 				message: 'Menu created successfully',
@@ -219,15 +206,12 @@ export async function createMenuAction(data) {
 			};
 		}
 
-		console.error('❌ Failed to create menu: insertedId is missing');
 		return {
 			success: false,
 			error: 'Failed to create menu: insertedId is missing',
 		};
 	} catch (error) {
-		console.error('❌ [ERROR] Failed to create menu - Error details:', error);
-		console.error('❌ [ERROR] Error message:', error.message);
-		console.error('❌ [ERROR] Error stack:', error.stack);
+		console.error('Failed to create menu:', error);
 		return {
 			success: false,
 			error: `Failed to create menu: ${error.message}`,
@@ -356,7 +340,7 @@ export async function getMenuTreeForSelectAction({ withLabel = true } = {}) {
 		}
 
 		// 使用 sysDao 的方法获取菜单树
-		const { getMenuTreeForSelect } = await import('./dao/sys');
+		const { getMenuTreeForSelect } = await import('../dao/sys');
 		const menuTree = await getMenuTreeForSelect({ withLabel });
 
 		const result = {

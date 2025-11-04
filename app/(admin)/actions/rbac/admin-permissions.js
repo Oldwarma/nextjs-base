@@ -1,7 +1,7 @@
 'use server';
 
 import { createCrudActions } from '@/app/(admin)/actions/dao/base';
-import { permissionCrudConfig } from '@/app/(admin)/actions/configs/permission-crud.config';
+import { permissionCrudConfig } from '@/app/(admin)/actions/rbac/configs/permission-crud.config';
 import { checkAdminAction } from '@/lib/admin-auth';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
 

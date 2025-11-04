@@ -26,9 +26,9 @@ import {
 	batchUpdateUsersAction as batchUpdate,
 	bindUserRolesAction,
 	getUserRolesAction,
-} from '@/app/(admin)/actions/admin-users';
+} from '@/app/(admin)/actions/rbac/admin-users';
 
-import { getRoleListForSelectAction } from '@/app/(admin)/actions/admin-roles';
+import { getRoleListForSelectAction } from '@/app/(admin)/actions/rbac/admin-roles';
 
 export default function UsersManagementPage() {
 	const [refreshTrigger, setRefreshTrigger] = useState(0);

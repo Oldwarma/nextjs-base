@@ -30,7 +30,7 @@ import {
 	updatePermissionAction as update,
 	deletePermissionAction as deleteItem,
 	getPermissionTreeForSelectAction,
-} from '@/app/(admin)/actions/admin-permissions';
+} from '@/app/(admin)/actions/rbac/admin-permissions';
 
 // Convert permission tree to Ant Design Tree format
 const convertToTreeData = (data) => {

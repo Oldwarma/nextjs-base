@@ -32,7 +32,7 @@ import {
 	updateMenuAction as update,
 	deleteMenuAction as deleteItem,
 	getMenuTreeAction,
-} from '@/app/(admin)/actions/admin-menus';
+} from '@/app/(admin)/actions/rbac/admin-menus';
 
 export default function MenusManagementPage() {
 	const [menuTree, setMenuTree] = useState([]);

@@ -1,7 +1,7 @@
 'use server';
 
 import { createCrudActions } from '@/app/(admin)/actions/dao/base';
-import { userCrudConfig } from '@/app/(admin)/actions/configs/user-crud.config';
+import { userCrudConfig } from '@/app/(admin)/actions/rbac/configs/user-crud.config';
 import { checkAdminAction } from '@/lib/admin-auth';
 import { getUserStatistics } from '@/lib/user-profile';
 

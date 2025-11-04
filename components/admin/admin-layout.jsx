@@ -15,7 +15,7 @@ import { UserOutlined, HomeOutlined, LogoutOutlined, LinkOutlined } from '@ant-d
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { signOutAction } from '@/app/(client)/actions/auth';
-import { getMenuListAction } from '@/app/(admin)/actions/admin-menus';
+import { getMenuListAction } from '@/app/(admin)/actions/rbac/admin-menus';
 
 /**
  * 管理后台布局组件 - 使用 Pro Components
