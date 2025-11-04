@@ -126,3 +126,124 @@ export async function getUserStatisticsAdminAction(userId) {
 		};
 	}
 }
+
+/**
+ * 为用户绑定角色（管理员）
+ * @param {String} userId - 用户ID
+ * @param {Array<String>} roleIds - 角色ID数组
+ * @param {Boolean} reset - 是否重置（true=替换，false=追加）
+ * @returns {Promise<Object>} 更新结果
+ */
+export async function bindUserRolesAction(userId, roleIds, reset = true) {
+	const adminCheck = await checkAdminAction();
+	if (!adminCheck.isAdmin) {
+		return {
+			success: false,
+			error: adminCheck.error,
+		};
+	}
+
+	try {
+		const { bindUserRoles } = await import('@/app/(admin)/actions/dao/sys');
+
+		const result = await bindUserRoles({
+			userId,
+			roleIds,
+			reset,
+		});
+
+		return {
+			success: result.success,
+			data: result,
+		};
+	} catch (error) {
+		return {
+			success: false,
+			error: error.message,
+		};
+	}
+}
+
+/**
+ * 获取用户的角色（管理员）
+ * @param {String} userId - 用户ID
+ * @returns {Promise<Object>} 角色ID数组
+ */
+export async function getUserRolesAction(userId) {
+	const adminCheck = await checkAdminAction();
+	if (!adminCheck.isAdmin) {
+		return {
+			success: false,
+			error: adminCheck.error,
+		};
+	}
+
+	try {
+		const { getUserRoleIds } = await import('@/app/(admin)/actions/dao/sys');
+
+		const roleIds = await getUserRoleIds(userId);
+
+		return {
+			success: true,
+			data: roleIds,
+		};
+	} catch (error) {
+		return {
+			success: false,
+			error: error.message,
+		};
+	}
+}
+
+/**
+ * 批量为用户绑定角色（管理员）
+ * @param {Array<String>} userIds - 用户ID数组
+ * @param {Array<String>} roleIds - 角色ID数组
+ * @param {Boolean} reset - 是否重置（true=替换，false=追加）
+ * @returns {Promise<Object>} 更新结果
+ */
+export async function batchBindUserRolesAction(userIds, roleIds, reset = true) {
+	const adminCheck = await checkAdminAction();
+	if (!adminCheck.isAdmin) {
+		return {
+			success: false,
+			error: adminCheck.error,
+		};
+	}
+
+	try {
+		const { bindUserRoles } = await import('@/app/(admin)/actions/dao/sys');
+
+		let successCount = 0;
+		let failedCount = 0;
+		const errors = [];
+
+		for (const userId of userIds) {
+			try {
+				await bindUserRoles({
+					userId,
+					roleIds,
+					reset,
+				});
+				successCount++;
+			} catch (error) {
+				failedCount++;
+				errors.push({ userId, error: error.message });
+			}
+		}
+
+		return {
+			success: failedCount === 0,
+			data: {
+				successCount,
+				failedCount,
+				errors,
+			},
+		};
+	} catch (error) {
+		return {
+			success: false,
+			error: error.message,
+		};
+	}
+}

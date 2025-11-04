@@ -302,9 +302,15 @@ export class BaseDAO {
 			await this.config.hooks.afterCreate(filtered, result);
 		}
 
+		// 转换 ObjectId 为字符串
+		const serializedResult = {
+			acknowledged: result.acknowledged,
+			insertedId: result.insertedId?.toString(),
+		};
+
 		return {
 			success: true,
-			data: result,
+			data: serializedResult,
 			message: 'Created successfully',
 		};
 	}

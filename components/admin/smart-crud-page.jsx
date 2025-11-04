@@ -59,6 +59,7 @@ import DynamicFormFields from '@/components/admin/dynamic-form-fields';
  * @param {Boolean} enableDetail - 是否启用详情查看
  * @param {Boolean} enableEdit - 是否启用编辑
  * @param {Boolean} enableDelete - 是否启用删除
+ * @param {Array} customRowActions - 自定义行操作按钮配置
  * @param {Object} baseQuery - 基础查询条件 (强制应用)
  */
 export default function SmartCrudPage({
@@ -70,6 +71,7 @@ export default function SmartCrudPage({
 	formProps = {},
 	batchActions = [],
 	customToolbarButtons = [], // 自定义工具栏按钮
+	customRowActions = [], // 自定义行操作按钮
 	onActionRefReady, // 回调：当 actionRef 准备好时调用
 	beforeEdit,
 	beforeDelete,
@@ -172,8 +174,32 @@ export default function SmartCrudPage({
 						});
 					}
 
+					// 自定义行操作（插入在编辑和删除之间）
+					if (customRowActions && customRowActions.length > 0) {
+						// 如果前面有基础操作，添加分隔线
+						if (enableDetail || enableEdit) {
+							items.push({ type: 'divider' });
+						}
+
+						customRowActions.forEach((action) => {
+							// 支持条件显示
+							if (action.show && !action.show(record)) {
+								return;
+							}
+
+							items.push({
+								key: action.key || action.text,
+								label: action.text,
+								icon: action.icon,
+								danger: action.danger || false,
+								disabled: action.disabled ? action.disabled(record) : false,
+								onClick: () => action.onClick(record),
+							});
+						});
+					}
+
 					// 分隔线
-					if ((enableDetail || enableEdit) && enableDelete) {
+					if ((enableDetail || enableEdit || (customRowActions && customRowActions.length > 0)) && enableDelete) {
 						items.push({ type: 'divider' });
 					}
 
@@ -213,7 +239,7 @@ export default function SmartCrudPage({
 			},
 		];
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [tableColumns, enableDetail, enableEdit, enableDelete, rowKey]);
+	}, [tableColumns, enableDetail, enableEdit, enableDelete, customRowActions, rowKey]);
 
 	// 获取数据
 	const request = async (params, sort) => {

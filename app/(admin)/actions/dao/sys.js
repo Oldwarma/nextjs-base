@@ -1,0 +1,993 @@
+import { getCollection } from '@/lib/mongodb';
+
+/**
+ * SysDAO - 系统权限相关的数据访问对象
+ * 管理角色(Roles)、权限(Permissions)、菜单(Menus)及其关联关系
+ */
+
+const COLLECTION_NAMES = {
+	ROLES: 'roles',
+	PERMISSIONS: 'permissions',
+	MENUS: 'menus',
+	USERS: 'users',
+};
+
+const DB_MAX_LIMIT = 1000;
+
+/**
+ * ===================
+ * 角色(Role)相关方法
+ * ===================
+ */
+
+/**
+ * 根据角色ID查询角色
+ * @param {String} roleId - 角色ID
+ * @returns {Promise<Object|null>} 角色对象
+ */
+export async function findRoleById(roleId) {
+	const collection = await getCollection(COLLECTION_NAMES.ROLES);
+	return await collection.findOne({ role_id: roleId });
+}
+
+/**
+ * 根据多个角色ID查询角色列表
+ * @param {Array<String>} roleIds - 角色ID数组
+ * @returns {Promise<Array>} 角色对象数组
+ */
+export async function findRolesByIds(roleIds) {
+	if (!Array.isArray(roleIds) || roleIds.length === 0) {
+		return [];
+	}
+
+	const collection = await getCollection(COLLECTION_NAMES.ROLES);
+	return await collection.find({
+		role_id: { $in: roleIds },
+	});
+}
+
+/**
+ * 角色绑定权限
+ * @param {Object} params
+ * @param {String} params.roleId - 角色ID
+ * @param {Array<String>} params.permissionIds - 权限ID数组
+ * @param {Boolean} params.reset - 是否重置（true=替换，false=追加）
+ * @returns {Promise<Object>} 更新结果
+ */
+export async function roleBindPermissions({ roleId, permissionIds = [], reset = false }) {
+	const collection = await getCollection(COLLECTION_NAMES.ROLES);
+
+	let finalPermissions = permissionIds;
+
+	if (!reset) {
+		// 追加模式：获取现有权限并合并
+		const role = await findRoleById(roleId);
+		const existingPermissions = role?.permission || [];
+		finalPermissions = [...new Set([...existingPermissions, ...permissionIds])];
+	}
+
+	const result = await collection.updateOne({ role_id: roleId }, { $set: { permission: finalPermissions } });
+
+	return {
+		success: result.modifiedCount > 0,
+		modifiedCount: result.modifiedCount,
+	};
+}
+
+/**
+ * 角色绑定菜单
+ * @param {Object} params
+ * @param {String} params.roleId - 角色ID
+ * @param {Array<String>} params.menuIds - 菜单ID数组
+ * @param {Boolean} params.reset - 是否重置（true=替换，false=追加）
+ * @param {Boolean} params.autoBindMenuPermissions - 是否自动绑定菜单关联的权限
+ * @returns {Promise<Object>} 更新结果
+ */
+export async function roleBindMenus({ roleId, menuIds = [], reset = false, autoBindMenuPermissions = false }) {
+	const collection = await getCollection(COLLECTION_NAMES.ROLES);
+
+	let finalMenus = menuIds;
+
+	if (!reset) {
+		// 追加模式：获取现有菜单并合并
+		const role = await findRoleById(roleId);
+		const existingMenus = role?.menu || [];
+		finalMenus = [...new Set([...existingMenus, ...menuIds])];
+	}
+
+	const result = await collection.updateOne({ role_id: roleId }, { $set: { menu: finalMenus } });
+
+	// 如果需要自动绑定菜单关联的权限
+	if (autoBindMenuPermissions && menuIds.length > 0) {
+		const menuPermissions = await getPermissionsByMenuIds(menuIds);
+		if (menuPermissions.length > 0) {
+			await roleBindPermissions({
+				roleId,
+				permissionIds: menuPermissions,
+				reset: false, // 追加权限，不重置
+			});
+		}
+	}
+
+	return {
+		success: result.modifiedCount > 0,
+		modifiedCount: result.modifiedCount,
+	};
+}
+
+/**
+ * 获取角色列表（分页）
+ * @param {Object} params
+ * @param {Number} params.pageIndex - 页码
+ * @param {Number} params.pageSize - 每页数量
+ * @param {Object} params.filters - 过滤条件
+ * @returns {Promise<Object>} 分页结果
+ */
+export async function getRoleList({ pageIndex = 1, pageSize = 20, filters = {} }) {
+	const collection = await getCollection(COLLECTION_NAMES.ROLES);
+
+	const query = { ...filters };
+
+	return await collection.findWithPagination({
+		query,
+		pageIndex,
+		pageSize,
+		sort: { role_id: 1 },
+	});
+}
+
+/**
+ * ===================
+ * 权限(Permission)相关方法
+ * ===================
+ */
+
+/**
+ * 根据权限ID查询权限
+ * @param {String} permissionId - 权限ID
+ * @returns {Promise<Object|null>} 权限对象
+ */
+export async function findPermissionById(permissionId) {
+	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
+	return await collection.findOne({ permission_id: permissionId });
+}
+
+/**
+ * 根据多个权限ID查询权限列表
+ * @param {Array<String>} permissionIds - 权限ID数组
+ * @returns {Promise<Array>} 权限对象数组
+ */
+export async function findPermissionsByIds(permissionIds) {
+	if (!Array.isArray(permissionIds) || permissionIds.length === 0) {
+		return [];
+	}
+
+	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
+	return await collection.find({
+		permission_id: { $in: permissionIds },
+	});
+}
+
+/**
+ * 获取权限树形列表
+ * @param {Object} params
+ * @param {Number} params.pageIndex - 页码
+ * @param {Number} params.pageSize - 每页数量
+ * @param {Object} params.filters - 过滤条件
+ * @returns {Promise<Object>} 树形结构数据
+ */
+export async function getPermissionTree({ pageIndex = 1, pageSize = DB_MAX_LIMIT, filters = {} }) {
+	const { fromObjectId } = await import('@/lib/mongodb');
+	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
+
+	// 查询顶级权限（parent_id为null或空字符串）
+	const query = {
+		$or: [{ parent_id: null }, { parent_id: '' }, { parent_id: { $exists: false } }],
+		...filters,
+	};
+
+	const result = await collection.findWithPagination({
+		query,
+		pageIndex,
+		pageSize,
+		sort: { sort: 1, permission_id: 1 },
+	});
+
+	// 递归获取子权限并序列化
+	if (result.rows && result.rows.length > 0) {
+		const serializedRows = [];
+		for (const item of result.rows) {
+			const serializedItem = fromObjectId(item);
+			const children = await getChildPermissions(item.permission_id);
+			
+			// 只有当有子节点时才添加 children 属性
+			if (children && children.length > 0) {
+				serializedItem.children = children;
+			}
+			
+			serializedRows.push(serializedItem);
+		}
+		result.rows = serializedRows;
+	}
+
+	return result;
+}
+
+/**
+ * 获取所有权限（扁平化列表）
+ * @param {Object} filters - 过滤条件
+ * @returns {Promise<Array>} 权限列表
+ */
+export async function getAllPermissions(filters = {}) {
+	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
+	return await collection.find(filters);
+}
+
+/**
+ * 递归获取子权限
+ * @param {String} parentId - 父级权限ID
+ * @param {Number} maxDepth - 最大递归深度，防止死循环
+ * @param {Number} currentDepth - 当前递归深度
+ * @returns {Promise<Array>} 子权限数组
+ */
+async function getChildPermissions(parentId, maxDepth = 5, currentDepth = 0) {
+	if (currentDepth >= maxDepth) {
+		return [];
+	}
+
+	const { fromObjectId } = await import('@/lib/mongodb');
+	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
+	const children = await collection.find({ parent_id: parentId });
+
+	// 序列化并递归获取每个子节点的子节点
+	const serializedChildren = [];
+	for (const child of children) {
+		const serializedChild = fromObjectId(child);
+		const grandChildren = await getChildPermissions(child.permission_id, maxDepth, currentDepth + 1);
+		
+		// 只有当有子节点时才添加 children 属性
+		if (grandChildren && grandChildren.length > 0) {
+			serializedChild.children = grandChildren;
+		}
+		
+		serializedChildren.push(serializedChild);
+	}
+
+	return serializedChildren.sort((a, b) => (a.sort || 0) - (b.sort || 0));
+}
+
+/**
+ * 根据角色ID数组获取所有权限ID（包含继承）
+ * @param {Array<String>} roleIds - 角色ID数组
+ * @returns {Promise<Array<String>>} 权限ID数组
+ */
+export async function getPermissionIdsByRoleIds(roleIds) {
+	if (!Array.isArray(roleIds) || roleIds.length === 0) {
+		return [];
+	}
+
+	// admin角色拥有所有权限
+	if (roleIds.includes('admin')) {
+		return ['*']; // 特殊标识：所有权限
+	}
+
+	const roles = await findRolesByIds(roleIds);
+	const permissionIds = [];
+
+	roles.forEach((role) => {
+		if (role.permission && Array.isArray(role.permission)) {
+			permissionIds.push(...role.permission);
+		}
+	});
+
+	// 去重
+	return [...new Set(permissionIds)];
+}
+
+/**
+ * 递归获取权限及其所有子权限ID
+ * @param {String} permissionId - 权限ID
+ * @returns {Promise<Array<String>>} 包含自身及所有后代的权限ID数组
+ */
+export async function getAllChildPermissionIds(permissionId) {
+	const allIds = [permissionId];
+
+	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
+	const children = await collection.find({ parent_id: permissionId });
+
+	for (const child of children) {
+		const childIds = await getAllChildPermissionIds(child.permission_id);
+		allIds.push(...childIds);
+	}
+
+	return allIds;
+}
+
+/**
+ * 根据权限ID数组获取所有actions路径
+ * @param {Array<String>} permissionIds - 权限ID数组
+ * @returns {Promise<Array<String>>} actions路径数组
+ */
+export async function getActionsByPermissionIds(permissionIds) {
+	if (!Array.isArray(permissionIds) || permissionIds.length === 0) {
+		return [];
+	}
+
+	const permissions = await findPermissionsByIds(permissionIds);
+	const actions = [];
+
+	permissions.forEach((permission) => {
+		if (permission.actions && Array.isArray(permission.actions)) {
+			actions.push(...permission.actions);
+		}
+	});
+
+	// 去重
+	return [...new Set(actions)];
+}
+
+/**
+ * ===================
+ * 菜单(Menu)相关方法
+ * ===================
+ */
+
+/**
+ * 根据菜单ID查询菜单
+ * @param {String} menuId - 菜单ID
+ * @returns {Promise<Object|null>} 菜单对象
+ */
+export async function findMenuById(menuId) {
+	const collection = await getCollection(COLLECTION_NAMES.MENUS);
+	return await collection.findOne({ menu_id: menuId });
+}
+
+/**
+ * 根据多个菜单Key查询菜单列表
+ * @param {Array<String>} menuKeys - 菜单Key数组（业务标识）
+ * @returns {Promise<Array>} 菜单对象数组
+ */
+export async function findMenusByKeys(menuKeys) {
+	if (!Array.isArray(menuKeys) || menuKeys.length === 0) {
+		return [];
+	}
+
+	const collection = await getCollection(COLLECTION_NAMES.MENUS);
+	return await collection.find({
+		key: { $in: menuKeys },
+	});
+}
+
+/**
+ * 根据多个菜单ID查询菜单列表（兼容旧接口）
+ * @deprecated 使用 findMenusByKeys 代替
+ * @param {Array<String>} menuIds - 菜单ID数组
+ * @returns {Promise<Array>} 菜单对象数组
+ */
+export async function findMenusByIds(menuIds) {
+	// 兼容：如果传入的是 key，直接用 key 查询
+	return await findMenusByKeys(menuIds);
+}
+
+/**
+ * 获取菜单树形列表
+ * @param {Object} params
+ * @param {Number} params.pageIndex - 页码
+ * @param {Number} params.pageSize - 每页数量
+ * @param {Object} params.filters - 过滤条件
+ * @returns {Promise<Object>} 树形结构数据
+ */
+export async function getMenuTree({ pageIndex = 1, pageSize = DB_MAX_LIMIT, filters = {} }) {
+	const collection = await getCollection(COLLECTION_NAMES.MENUS);
+
+	// 查询顶级菜单
+	const query = {
+		$or: [{ parent_id: null }, { parent_id: '' }, { parent_id: { $exists: false } }],
+		...filters,
+	};
+
+	const result = await collection.findWithPagination({
+		query,
+		pageIndex,
+		pageSize,
+		sort: { sort: 1, menu_id: 1 },
+	});
+
+	// 递归获取子菜单
+	if (result.rows && result.rows.length > 0) {
+		for (const item of result.rows) {
+			item.children = await getChildMenus(item.menu_id);
+		}
+	}
+
+	return result;
+}
+
+/**
+ * 递归获取子菜单
+ * @param {String} parentId - 父级菜单ID
+ * @param {Number} maxDepth - 最大递归深度
+ * @param {Number} currentDepth - 当前递归深度
+ * @returns {Promise<Array>} 子菜单数组
+ */
+async function getChildMenus(parentId, maxDepth = 5, currentDepth = 0) {
+	if (currentDepth >= maxDepth) {
+		return [];
+	}
+
+	const collection = await getCollection(COLLECTION_NAMES.MENUS);
+	const children = await collection.find({ parent_id: parentId });
+
+	for (const child of children) {
+		child.children = await getChildMenus(child.menu_id, maxDepth, currentDepth + 1);
+	}
+
+	return children.sort((a, b) => (a.sort || 0) - (b.sort || 0));
+}
+
+/**
+ * 根据菜单Key数组获取关联的权限ID
+ * @param {Array<String>} menuKeys - 菜单Key数组
+ * @returns {Promise<Array<String>>} 权限ID数组
+ */
+export async function getPermissionsByMenuKeys(menuKeys) {
+	if (!Array.isArray(menuKeys) || menuKeys.length === 0) {
+		return [];
+	}
+
+	const menus = await findMenusByKeys(menuKeys);
+	const permissionIds = [];
+
+	menus.forEach((menu) => {
+		if (menu.permission && Array.isArray(menu.permission)) {
+			permissionIds.push(...menu.permission);
+		}
+	});
+
+	// 去重
+	return [...new Set(permissionIds)];
+}
+
+/**
+ * 根据菜单ID数组获取关联的权限ID（兼容旧接口）
+ * @deprecated 使用 getPermissionsByMenuKeys 代替
+ */
+export async function getPermissionsByMenuIds(menuIds) {
+	return await getPermissionsByMenuKeys(menuIds);
+}
+
+/**
+ * 根据角色ID数组获取菜单（用于菜单渲染）
+ * @param {Array<String>} roleIds - 角色ID数组
+ * @returns {Promise<Array>} 菜单树形数组
+ */
+export async function getMenusByRoleIds(roleIds) {
+	if (!Array.isArray(roleIds) || roleIds.length === 0) {
+		return [];
+	}
+
+	// admin角色获取所有菜单
+	if (roleIds.includes('admin')) {
+		const allMenus = await getMenuTree({ filters: { enable: true } });
+		return allMenus.rows || [];
+	}
+
+	const roles = await findRolesByIds(roleIds);
+	const menuIds = [];
+
+	roles.forEach((role) => {
+		if (role.menu && Array.isArray(role.menu)) {
+			menuIds.push(...role.menu);
+		}
+	});
+
+	const uniqueMenuIds = [...new Set(menuIds)];
+
+	if (uniqueMenuIds.length === 0) {
+		return [];
+	}
+
+	const menus = await findMenusByIds(uniqueMenuIds);
+
+	// 过滤已启用的菜单
+	const enabledMenus = menus.filter((m) => m.enable !== false);
+
+	// 构建树形结构
+	return buildMenuTree(enabledMenus);
+}
+
+/**
+ * 构建菜单树形结构
+ * @param {Array} menus - 扁平化的菜单数组
+ * @returns {Array} 树形结构的菜单数组
+ */
+function buildMenuTree(menus) {
+	const menuMap = new Map();
+	const rootMenus = [];
+
+	// 第一步：创建Map便于查找
+	menus.forEach((menu) => {
+		menuMap.set(menu.menu_id, { ...menu, children: [] });
+	});
+
+	// 第二步：构建树形关系
+	menus.forEach((menu) => {
+		const node = menuMap.get(menu.menu_id);
+		if (!menu.parent_id || menu.parent_id === '' || menu.parent_id === null) {
+			// 顶级菜单
+			rootMenus.push(node);
+		} else {
+			// 子菜单
+			const parent = menuMap.get(menu.parent_id);
+			if (parent) {
+				parent.children.push(node);
+			} else {
+				// 父级不存在（可能未授权），作为顶级处理
+				rootMenus.push(node);
+			}
+		}
+	});
+
+	// 第三步：清理空的 children 数组并排序
+	const sortAndCleanMenus = (menuList) => {
+		menuList.sort((a, b) => (a.sort || 0) - (b.sort || 0));
+		menuList.forEach((menu) => {
+			if (menu.children && menu.children.length > 0) {
+				sortAndCleanMenus(menu.children);
+			} else {
+				// 删除空的 children 数组
+				delete menu.children;
+			}
+		});
+	};
+
+	sortAndCleanMenus(rootMenus);
+
+	return rootMenus;
+}
+
+/**
+ * ===================
+ * 用户-角色关联方法
+ * ===================
+ */
+
+/**
+ * 为用户绑定角色
+ * @param {Object} params
+ * @param {String} params.userId - 用户ID
+ * @param {Array<String>} params.roleIds - 角色ID数组
+ * @param {Boolean} params.reset - 是否重置（true=替换，false=追加）
+ * @returns {Promise<Object>} 更新结果
+ */
+export async function bindUserRoles({ userId, roleIds = [], reset = false }) {
+	const collection = await getCollection(COLLECTION_NAMES.USERS);
+	const { fromObjectId } = await import('@/lib/mongodb');
+
+	let finalRoles = roleIds;
+
+	if (!reset) {
+		// 追加模式：获取现有角色并合并
+		// 尝试使用 id 字段查询，如果不存在则使用 _id
+		let user = await collection.findOne({ id: userId });
+		
+		// 如果用 id 找不到，尝试用 _id（可能是 ObjectId）
+		if (!user) {
+			try {
+				const objectId = fromObjectId(userId);
+				user = await collection.findOne({ _id: objectId });
+			} catch (e) {
+				// userId 不是有效的 ObjectId，忽略
+			}
+		}
+
+		// 使用 role_ids 字段（避免与 Better Auth 的 role 字段冲突）
+		let existingRoles = user?.role_ids || [];
+		if (!Array.isArray(existingRoles)) {
+			existingRoles = [];
+		}
+
+		finalRoles = [...new Set([...existingRoles, ...roleIds])];
+	}
+
+	// 使用 role_ids 字段存储 RBAC 角色数组
+	// 尝试用 id 更新，如果失败则用 _id
+	let result = await collection.updateOne({ id: userId }, { $set: { role_ids: finalRoles } });
+	
+	// 如果用 id 更新失败（matchedCount === 0），尝试用 _id
+	if (result.matchedCount === 0) {
+		try {
+			const objectId = fromObjectId(userId);
+			result = await collection.updateOne({ _id: objectId }, { $set: { role_ids: finalRoles } });
+		} catch (e) {
+			// userId 不是有效的 ObjectId
+		}
+	}
+
+	return {
+		success: result.modifiedCount > 0,
+		modifiedCount: result.modifiedCount,
+	};
+}
+
+/**
+ * 获取用户的角色ID数组
+ * @param {String} userId - 用户ID
+ * @returns {Promise<Array<String>>} 角色ID数组
+ */
+export async function getUserRoleIds(userId) {
+	const collection = await getCollection(COLLECTION_NAMES.USERS);
+	const { fromObjectId } = await import('@/lib/mongodb');
+	
+	// 尝试使用 id 字段查询
+	let user = await collection.findOne({ id: userId });
+	
+	// 如果用 id 找不到，尝试用 _id（可能是 ObjectId）
+	if (!user) {
+		try {
+			const objectId = fromObjectId(userId);
+			user = await collection.findOne({ _id: objectId });
+		} catch (e) {
+			// userId 不是有效的 ObjectId，忽略
+		}
+	}
+
+	if (!user) {
+		return [];
+	}
+
+	// 使用 role_ids 字段（避免与 Better Auth 的 role 字段冲突）
+	const roleIds = user.role_ids;
+
+	if (!roleIds) {
+		return [];
+	}
+
+	if (Array.isArray(roleIds)) {
+		return roleIds;
+	}
+
+	return [];
+}
+
+/**
+ * 获取用户的所有权限ID（通过角色继承）
+ * @param {String} userId - 用户ID
+ * @returns {Promise<Array<String>>} 权限ID数组
+ */
+export async function getUserPermissionIds(userId) {
+	const roleIds = await getUserRoleIds(userId);
+	return await getPermissionIdsByRoleIds(roleIds);
+}
+
+/**
+ * 获取用户的所有菜单（通过角色继承）
+ * @param {String} userId - 用户ID
+ * @returns {Promise<Array>} 菜单树形数组
+ */
+export async function getUserMenus(userId) {
+	const roleIds = await getUserRoleIds(userId);
+	return await getMenusByRoleIds(roleIds);
+}
+
+/**
+ * ===================
+ * 权限验证方法
+ * ===================
+ */
+
+/**
+ * 检查用户是否有指定的权限
+ * @param {String} userId - 用户ID
+ * @param {String} requiredPermissionId - 需要的权限ID
+ * @returns {Promise<Boolean>} 是否有权限
+ */
+export async function checkUserHasPermission(userId, requiredPermissionId) {
+	const userPermissionIds = await getUserPermissionIds(userId);
+
+	// admin拥有所有权限
+	if (userPermissionIds.includes('*')) {
+		return true;
+	}
+
+	return userPermissionIds.includes(requiredPermissionId);
+}
+
+/**
+ * 检查用户是否有权限访问指定的action
+ * @param {String} userId - 用户ID
+ * @param {String} actionPath - action路径，如 '/admin/actions/user/create'
+ * @returns {Promise<Boolean>} 是否有权限
+ */
+export async function checkUserHasActionPermission(userId, actionPath) {
+	const userPermissionIds = await getUserPermissionIds(userId);
+
+	// admin拥有所有权限
+	if (userPermissionIds.includes('*')) {
+		return true;
+	}
+
+	if (userPermissionIds.length === 0) {
+		return false;
+	}
+
+	// 获取所有权限的actions配置
+	const actions = await getActionsByPermissionIds(userPermissionIds);
+
+	if (actions.length === 0) {
+		return false;
+	}
+
+	// 检查是否匹配（支持通配符）
+	return matchActionPath(actionPath, actions);
+}
+
+/**
+ * 匹配action路径（支持通配符）
+ * @param {String} actionPath - 待检查的action路径
+ * @param {Array<String>} patterns - 权限配置的路径模式数组
+ * @returns {Boolean} 是否匹配
+ */
+function matchActionPath(actionPath, patterns) {
+	for (const pattern of patterns) {
+		// 精确匹配
+		if (pattern === actionPath) {
+			return true;
+		}
+
+		// 通配符匹配
+		if (pattern.includes('*')) {
+			const regex = patternToRegex(pattern);
+			if (regex.test(actionPath)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+/**
+ * 将通配符模式转换为正则表达式
+ * @param {String} pattern - 通配符模式，如 '/admin/actions/user/*'
+ * @returns {RegExp} 正则表达式
+ */
+function patternToRegex(pattern) {
+	// 转义特殊字符，但保留 * 和 **
+	let regexStr = pattern
+		.replace(/[.+?^${}()|[\]\\]/g, '\\$&') // 转义特殊字符
+		.replace(/\*\*/g, '__DOUBLE_STAR__') // 临时替换 **
+		.replace(/\*/g, '[^/]*') // * 匹配单层路径
+		.replace(/__DOUBLE_STAR__/g, '.*'); // ** 匹配任意层级
+
+	return new RegExp(`^${regexStr}$`);
+}
+
+/**
+ * ===================
+ * 菜单绑定权限
+ * ===================
+ */
+
+/**
+ * 为菜单绑定权限
+ * @param {Object} params
+ * @param {String} params.menuId - 菜单ID
+ * @param {Array<String>} params.permissionIds - 权限ID数组
+ * @param {Boolean} params.reset - 是否重置（true=替换，false=追加）
+ * @returns {Promise<Object>} 更新结果
+ */
+export async function menuBindPermissions({ menuId, permissionIds = [], reset = false }) {
+	const collection = await getCollection(COLLECTION_NAMES.MENUS);
+
+	let finalPermissions = permissionIds;
+
+	if (!reset) {
+		// 追加模式：获取现有权限并合并
+		const menu = await findMenuById(menuId);
+		const existingPermissions = menu?.permission || [];
+		finalPermissions = [...new Set([...existingPermissions, ...permissionIds])];
+	}
+
+	const result = await collection.updateOne({ menu_id: menuId }, { $set: { permission: finalPermissions } });
+
+	return {
+		success: result.modifiedCount > 0,
+		modifiedCount: result.modifiedCount,
+	};
+}
+
+/**
+ * ===================
+ * 获取权限树（用于前端展示）
+ * ===================
+ */
+
+/**
+ * 获取权限树形结构（用于树形选择器）
+ * @param {Object} params
+ * @param {Boolean} params.withLabel - 是否包含格式化的label字段
+ * @returns {Promise<Array>} 权限树形数组
+ */
+export async function getPermissionTreeForSelect({ withLabel = true } = {}) {
+	const { fromObjectId } = await import('@/lib/mongodb');
+	// 获取所有未删除的权限（包括已禁用的，让管理员可以选择）
+	const allPermissions = await getAllPermissions({ 
+		deletedAt: { $exists: false }
+	});
+
+	// 转换 ObjectId 为字符串
+	const serializedPermissions = allPermissions.map((p) => fromObjectId(p));
+
+	// 构建树形结构
+	const tree = buildPermissionTree(serializedPermissions);
+
+	if (withLabel) {
+		// 为每个节点添加label字段
+		addLabelsToTree(tree);
+	}
+
+	return tree;
+}
+
+/**
+ * 构建权限树形结构
+ * @param {Array} permissions - 扁平化的权限数组
+ * @returns {Array} 树形结构的权限数组
+ */
+function buildPermissionTree(permissions) {
+	const permissionMap = new Map();
+	const rootPermissions = [];
+
+	// 第一步：创建Map便于查找
+	permissions.forEach((permission) => {
+		permissionMap.set(permission.permission_id, { ...permission, children: [] });
+	});
+
+	// 第二步：构建树形关系
+	permissions.forEach((permission) => {
+		const node = permissionMap.get(permission.permission_id);
+		if (!permission.parent_id || permission.parent_id === '' || permission.parent_id === null) {
+			// 顶级权限
+			rootPermissions.push(node);
+		} else {
+			// 子权限
+			const parent = permissionMap.get(permission.parent_id);
+			if (parent) {
+				parent.children.push(node);
+			} else {
+				// 父级不存在，作为顶级处理
+				rootPermissions.push(node);
+			}
+		}
+	});
+
+	// 第三步：清理空的 children 数组并排序
+	const sortAndCleanPermissions = (permissionList) => {
+		permissionList.sort((a, b) => (a.sort || 0) - (b.sort || 0));
+		permissionList.forEach((permission) => {
+			if (permission.children && permission.children.length > 0) {
+				sortAndCleanPermissions(permission.children);
+			} else {
+				// 删除空的 children 数组
+				delete permission.children;
+			}
+		});
+	};
+
+	sortAndCleanPermissions(rootPermissions);
+
+	return rootPermissions;
+}
+
+/**
+ * 为树形结构添加label字段（递归）
+ * @param {Array} tree - 树形结构数组
+ */
+function addLabelsToTree(tree) {
+	const levelNames = ['其他', '子弹', '炸弹', '榴弹', '核弹'];
+	const curdNames = ['未分类', '增', '删', '改', '查', '特殊'];
+
+	tree.forEach((node) => {
+		const badges = [];
+		
+		// CURD 类型
+		if (node.curd_category !== undefined && node.curd_category !== null && node.curd_category !== 0) {
+			badges.push(curdNames[node.curd_category] || '未分类');
+		}
+		
+		// 权限级别
+		if (node.level !== undefined && node.level !== null && node.level !== 0) {
+			badges.push(levelNames[node.level] || '其他');
+		}
+		
+		// 状态
+		if (node.enable === false) {
+			badges.push('已禁用');
+		}
+		
+		const badgeText = badges.length > 0 ? ` [${badges.join('/')}]` : '';
+		node.label = `${node.permission_name || node.permission_id}${badgeText}`;
+
+		if (node.children && node.children.length > 0) {
+			addLabelsToTree(node.children);
+		}
+	});
+}
+
+/**
+ * 获取菜单树形结构（用于树形选择器）
+ * @param {Object} params
+ * @param {Boolean} params.withLabel - 是否包含格式化的label字段
+ * @returns {Promise<Array>} 菜单树形数组
+ */
+export async function getMenuTreeForSelect({ withLabel = true } = {}) {
+	const { fromObjectId } = await import('@/lib/mongodb');
+	const collection = await getCollection(COLLECTION_NAMES.MENUS);
+	
+	// 获取所有未删除的菜单（包括已禁用的，让管理员可以选择）
+	const allMenus = await collection.find(
+		{ 
+			deletedAt: { $exists: false }
+		},
+		{
+			sort: { sortOrder: 1, createdAt: 1 }
+		}
+	);
+
+	// 转换 ObjectId 为字符串
+	const serializedMenus = allMenus.map((m) => fromObjectId(m));
+
+	// 构建树形结构（使用 parentId 字段）
+	const tree = buildMenuTreeFromFlat(serializedMenus, null);
+
+	if (withLabel) {
+		// 为每个节点添加label字段
+		addLabelsToMenuTree(tree);
+	}
+
+	return tree;
+}
+
+/**
+ * 从扁平数组构建菜单树（递归）
+ * @param {Array} menus - 扁平化的菜单数组
+ * @param {String|null} parentId - 父级 _id（因为数据库 parentId 字段存的是 _id）
+ * @returns {Array} 树形结构数组
+ */
+function buildMenuTreeFromFlat(menus, parentId = null) {
+	const tree = [];
+	
+	for (const menu of menus) {
+		// 数据库中 parentId 字段存的是父菜单的 _id
+		if (menu.parentId === parentId) {
+			const children = buildMenuTreeFromFlat(menus, menu._id);
+			if (children.length > 0) {
+				menu.children = children;
+			}
+			tree.push(menu);
+		}
+	}
+	
+	return tree;
+}
+
+/**
+ * 为菜单树形结构添加label字段（递归）
+ * @param {Array} tree - 树形结构数组
+ */
+function addLabelsToMenuTree(tree) {
+	tree.forEach((node) => {
+		const badges = [];
+		if (node.enabled === false) badges.push('已禁用');
+		if (node.hidden === true) badges.push('隐藏');
+		
+		const badgeText = badges.length > 0 ? ` [${badges.join('/')}]` : '';
+		node.label = `${node.name}${badgeText}`;
+
+		if (node.children && node.children.length > 0) {
+			addLabelsToMenuTree(node.children);
+		}
+	});
+}
+

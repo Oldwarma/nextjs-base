@@ -192,6 +192,14 @@ export const userCrudConfig = {
 			// 移除敏感字段（如果有）
 			// 注意：password 等字段在我们的系统中由 better-auth 管理，不在 users 表中
 
+			// 确保 Better Auth 的 id 字段存在
+			// MongoDB 查询可能只返回 _id，需要确保 id 字段也存在
+			if (!data.id && data._id) {
+				// 如果没有 id 但有 _id，可能需要从数据库重新获取完整数据
+				// 或者检查数据库中是否真的有 id 字段
+				console.warn('[UserCRUD] User record missing "id" field, only has "_id":', data._id);
+			}
+
 			// 确保日期字段格式正确
 			if (data.createdAt && !(data.createdAt instanceof Date)) {
 				data.createdAt = new Date(data.createdAt);

@@ -372,3 +372,42 @@ export async function deleteMenuAction(id) {
 		};
 	}
 }
+
+/**
+ * 获取菜单树形结构（用于树形选择器）
+ * 返回格式化的树形数据，包含 label 字段
+ */
+export async function getMenuTreeForSelectAction({ withLabel = true } = {}) {
+	const startTime = Date.now();
+	const requestTime = new Date();
+
+	try {
+		// 权限检查
+		const admin = await checkAdmin();
+		if (!admin?.user) {
+			const result = { success: false, error: 'Unauthorized' };
+			logAction('getMenuTreeForSelect', 'admin/menus', startTime, requestTime, {}, result, true);
+			return result;
+		}
+
+		// 使用 sysDao 的方法获取菜单树
+		const { getMenuTreeForSelect } = await import('./dao/sys');
+		const menuTree = await getMenuTreeForSelect({ withLabel });
+
+		const result = {
+			success: true,
+			data: menuTree,
+		};
+
+		logAction('getMenuTreeForSelect', 'admin/menus', startTime, requestTime, {}, result);
+		return result;
+	} catch (error) {
+		console.error('Failed to get menu tree for select:', error);
+		const result = {
+			success: false,
+			error: 'Failed to get menu tree',
+		};
+		logAction('getMenuTreeForSelect', 'admin/menus', startTime, requestTime, {}, result, true);
+		return result;
+	}
+}

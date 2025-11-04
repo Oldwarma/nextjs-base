@@ -7,9 +7,10 @@
 
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Avatar } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import { Avatar, Modal, Tree, Tag, message, Space } from 'antd';
+import { UserOutlined, TeamOutlined } from '@ant-design/icons';
 
 // 动态导入 SmartCrudPage，禁用 SSR 避免 Hydration 错误
 const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
@@ -23,17 +24,142 @@ import {
 	updateUserInfoAction as update,
 	deleteUserAction as deleteItem,
 	batchUpdateUsersAction as batchUpdate,
+	bindUserRolesAction,
+	getUserRolesAction,
 } from '@/app/(admin)/actions/admin-users';
 
+import { getRoleListForSelectAction } from '@/app/(admin)/actions/admin-roles';
+
 export default function UsersManagementPage() {
+	const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+	// Role assignment modal
+	const [roleModalVisible, setRoleModalVisible] = useState(false);
+	const [selectedUser, setSelectedUser] = useState(null);
+	const [allRoles, setAllRoles] = useState([]);
+	const [roleTree, setRoleTree] = useState([]);
+	const [selectedRoles, setSelectedRoles] = useState([]);
+	const [roleLoading, setRoleLoading] = useState(false);
+	const [rolesLoaded, setRolesLoaded] = useState(false);
+
+	// Load all roles (for tree display) - 统一使用 getRoleListForSelectAction
+	useEffect(() => {
+		const loadAllRoles = async () => {
+			try {
+				// 使用专门的选择器 Action，统一格式
+				const result = await getRoleListForSelectAction({ withLabel: true });
+				
+				if (result.success) {
+					const roles = result.data || [];
+					console.log('[Users] Loaded roles:', roles.length);
+					setAllRoles(roles);
+					
+					// Convert to tree data for Tree component
+					const treeData = roles.map(role => ({
+						title: role.label || role.role_name,  // 使用后端生成的 label
+						value: role.role_id,
+						key: role.role_id,
+						disabled: !role.enable,
+					}));
+					setRoleTree(treeData);
+					setRolesLoaded(true);
+				} else {
+					console.error('[Users] Failed to load roles:', result.error);
+					message.error(result.error || 'Failed to load roles');
+					setRolesLoaded(true);
+				}
+			} catch (error) {
+				console.error('[Users] Failed to load roles:', error);
+				message.error('Failed to load roles');
+				setRolesLoaded(true);
+			}
+		};
+
+		loadAllRoles();
+	}, []);
+
+	// Handle assign roles
+	const handleAssignRoles = async (record) => {
+		// Better Auth 应该使用 id 字段，但如果没有则使用 _id
+		const userId = record.id || record._id;
+		
+		if (!userId) {
+			message.error('User ID is missing');
+			return;
+		}
+		
+		setSelectedUser(record);
+		setRoleModalVisible(true);
+		setRoleLoading(true);
+
+		try {
+			// Get current user roles (使用 Better Auth 的 id 字段，或 _id 作为后备)
+			const result = await getUserRolesAction(userId);
+			
+			if (result.success) {
+				setSelectedRoles(result.data || []);
+			} else {
+				console.error('[Users] Failed to get user roles:', result.error);
+				message.error(result.error || 'Failed to load user roles');
+			}
+		} catch (error) {
+			console.error('[Users] Failed to load user roles:', error);
+			message.error('Failed to load user roles');
+		} finally {
+			setRoleLoading(false);
+		}
+	};
+
+	// Save roles
+	const handleSaveRoles = async () => {
+		if (!selectedUser) return;
+
+		// Better Auth 应该使用 id 字段，但如果没有则使用 _id
+		const userId = selectedUser.id || selectedUser._id;
+		
+		if (!userId) {
+			message.error('User ID is missing');
+			return;
+		}
+
+		setRoleLoading(true);
+
+		try {
+			// 使用 Better Auth 的 id 字段，或 _id 作为后备
+			const result = await bindUserRolesAction(userId, selectedRoles, true);
+
+			if (result.success) {
+				message.success('Roles assigned successfully');
+				setRoleModalVisible(false);
+				setRefreshTrigger((prev) => prev + 1);
+			} else {
+				message.error(result.error || 'Failed to assign roles');
+			}
+		} catch (error) {
+			console.error('[Users] Failed to save roles:', error);
+			message.error('Failed to assign roles');
+		} finally {
+			setRoleLoading(false);
+		}
+	};
+
 	// ============================================
 	// 统一字段配置
 	// ============================================
 	const fieldsConfig = [
-		// userid
+		// Better Auth 主键 (id)
+		{
+			key: 'id',
+			title: 'ID',
+			type: 'text',
+			table: false,
+			form: false,
+			search: false
+		},
+		// MongoDB _id
 		{
 			key: '_id',
-			title: 'ID',
+			title: 'MongoDB ID',
 			type: 'text',
 			table: false,
 			form: false,
@@ -125,10 +251,10 @@ export default function UsersManagementPage() {
 			},
 		},
 		
-		// 角色
+		// Better Auth 角色 (单一角色: admin/user)
 		{
 			key: 'role',
-			title: 'Role',
+			title: 'Auth Role',
 			type: 'select',
 			options: [
 				{ label: 'Admin', value: 'admin', color: 'blue' },
@@ -143,6 +269,24 @@ export default function UsersManagementPage() {
 			search: {
 				enabled: true,
 				mode: 'exact',
+			},
+		},
+		
+		// RBAC 角色 (多角色数组)
+		{
+			key: 'role_ids',
+			title: 'RBAC Roles',
+			type: 'text',
+			table: false,
+			form: false,
+			hideInTable: true,
+			detail: {
+				render: (value) => {
+					if (!value || !Array.isArray(value) || value.length === 0) {
+						return 'No roles assigned';
+					}
+					return value.join(', ');
+				},
 			},
 		},
 		
@@ -324,40 +468,87 @@ export default function UsersManagementPage() {
 	);
 	
 	// ============================================
+	// 自定义行操作
+	// ============================================
+	const customRowActions = [
+		{
+			text: 'Assign Roles',
+			icon: <TeamOutlined />,
+			type: 'link',
+			onClick: handleAssignRoles,
+		},
+	];
+
+	// ============================================
 	// 返回 SmartCrudPage
 	// ============================================
 	return (
-		<SmartCrudPage
-			fieldsConfig={fieldsConfig}
-			actions={actions}
-			title='User Management'
-			rowKey='_id'
-			
-			// 批量操作
-			batchActions={batchActions}
-			
-			// 自定义详情头部
-			renderDetailHeader={renderDetailHeader}
-			
-			// 功能开关
-			enableCreate={false}  // 用户通过注册创建，不需要管理员手动创建
-			enableDetail={true}
-			enableEdit={true}
-			enableDelete={true}
-			
-			// 表格配置
-			tableProps={{
-				scroll: { x: 1400 },
-				pagination: {
-					showTotal: (total) => `Total ${total} users`,
-				},
-			}}
-			
-			// 表单配置
-			formProps={{
-				width: 600,
-			}}
-		/>
+		<>
+			<SmartCrudPage
+				fieldsConfig={fieldsConfig}
+				actions={actions}
+				title='User Management'
+				rowKey={(record) => record.id || record._id}
+				
+				// 批量操作
+				batchActions={batchActions}
+				
+				// 自定义详情头部
+				renderDetailHeader={renderDetailHeader}
+				
+				// 自定义行操作
+				customRowActions={customRowActions}
+				
+				// 功能开关
+				enableCreate={false}  // 用户通过注册创建，不需要管理员手动创建
+				enableDetail={true}
+				enableEdit={true}
+				enableDelete={true}
+				
+				// 表格配置
+				tableProps={{
+					scroll: { x: 1400 },
+					pagination: {
+						showTotal: (total) => `Total ${total} users`,
+					},
+				}}
+				
+				// 表单配置
+				formProps={{
+					width: 600,
+				}}
+				
+				// 刷新触发器
+				refreshTrigger={refreshTrigger}
+			/>
+
+			{/* Role Assignment Modal */}
+			<Modal
+				title={`Assign Roles: ${selectedUser?.name || 'User'}`}
+				open={roleModalVisible}
+				onOk={handleSaveRoles}
+				onCancel={() => setRoleModalVisible(false)}
+				width={600}
+				confirmLoading={roleLoading}
+				okButtonProps={{ disabled: !rolesLoaded || roleLoading }}
+			>
+				{!rolesLoaded || roleLoading ? (
+					<div style={{ textAlign: 'left' }}>
+						{!rolesLoaded ? 'Loading available roles...' : 'Loading user roles...'}
+					</div>
+				) : roleTree.length > 0 ? (
+					<Tree
+						checkable
+						treeData={roleTree}
+						checkedKeys={selectedRoles}
+						onCheck={(checkedKeys) => setSelectedRoles(checkedKeys)}
+						style={{ maxHeight: 400, overflowY: 'auto' }}
+					/>
+				) : (
+					<div style={{ textAlign: 'left' }}>No roles available</div>
+				)}
+			</Modal>
+		</>
 	);
 }
 
