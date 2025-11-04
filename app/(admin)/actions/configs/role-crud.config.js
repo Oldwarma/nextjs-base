@@ -15,42 +15,54 @@ export const roleCrudConfig = {
 	// Log category
 	logCategory: 'admin/roles',
 
-	// Primary key field
-	primaryKey: 'role_id',
+	// Primary key field (UUID)
+	primaryKey: 'id',
 
 	// Field configuration
 	fields: {
 		// Creatable fields
-		creatable: ['role_id', 'role_name', 'remark', 'enable'],
+		creatable: ['name', 'remark', 'enable'],
 
 		// Updatable fields
-		updatable: ['role_name', 'remark', 'enable'],
+		updatable: ['name', 'remark', 'enable'],
 
 		// Searchable fields
-		searchable: ['role_id', 'role_name', 'remark'],
+		searchable: ['name', 'remark'],
 	},
 
 	// Query configuration
 	query: {
 		// Default sort
-		defaultSort: { role_id: 1 },
+		defaultSort: { name: 1 },
 
 		// Default page size
 		defaultPageSize: 20,
 
 		// Base filter
 		baseFilter: {},
+
+		// 连表配置（可选）- 在 getList 时自动连表查询权限和菜单的名称
+		foreignDB: [
+			{
+				dbName: 'permissions',
+				localKey: 'permission',        // roles.permission 是 UUID 数组
+				foreignKey: 'id',              // permissions.id 是 UUID
+				as: 'permissionList',          // 连表结果存放在 permissionList 字段
+				fieldJson: { id: 1, name: 1 }, // 只返回 id 和 name
+			},
+			{
+				dbName: 'menus',
+				localKey: 'menu',              // roles.menu 是 UUID 数组
+				foreignKey: 'id',              // menus.id 是 UUID
+				as: 'menuList',                // 连表结果存放在 menuList 字段
+				fieldJson: { id: 1, name: 1 }, // 只返回 id 和 name
+			},
+		],
 	},
 
 	// Data validation rules
 	validation: {
-		role_id: {
-			required: true,
-			pattern: /^[a-zA-Z0-9_-]+$/,
-			unique: true,
-			message: 'Role ID is required and must be unique (letters, numbers, dashes, underscores)',
-		},
-		role_name: {
+		name: {
 			required: true,
 			minLength: 2,
 			maxLength: 100,
@@ -93,7 +105,7 @@ export const roleCrudConfig = {
 		 */
 		beforeUpdate: async (id, data, existing) => {
 			// Prevent modifying admin role
-			if (id === 'admin') {
+			if (existing.name === 'admin' || existing.name === 'Admin') {
 				throw new Error('Cannot modify admin role');
 			}
 
@@ -105,7 +117,7 @@ export const roleCrudConfig = {
 		 */
 		beforeDelete: async (id, existing) => {
 			// Prevent deleting admin role
-			if (id === 'admin') {
+			if (existing.name === 'admin' || existing.name === 'Admin') {
 				throw new Error('Cannot delete admin role');
 			}
 
@@ -120,16 +132,10 @@ export const roleCrudConfig = {
 			const { getCollection } = await import('@/lib/mongodb');
 			const usersCollection = await getCollection('users');
 
-			// Handle both single role string and role array
+			// Remove role from users' roles array
 			await usersCollection.updateMany(
-				{ role: id },
-				{ $set: { role: 'user' } } // Set to default 'user' role
-			);
-
-			// Handle role arrays
-			await usersCollection.updateMany(
-				{ role: { $in: [id] } },
-				{ $pull: { role: id } }
+				{ roles: id },
+				{ $pull: { roles: id } }
 			);
 
 			console.log(`Role ${id} deleted, cleaned up from users`);
@@ -140,7 +146,15 @@ export const roleCrudConfig = {
 		 */
 		beforeBatchDelete: async (ids) => {
 			// Prevent deleting admin role
-			if (ids.includes('admin')) {
+			const { getCollection } = await import('@/lib/mongodb');
+			const collection = await getCollection('roles');
+			
+			const adminRoles = await collection.find({
+				id: { $in: ids },
+				$or: [{ name: 'admin' }, { name: 'Admin' }]
+			});
+
+			if (adminRoles.length > 0) {
 				throw new Error('Cannot delete admin role');
 			}
 
@@ -160,12 +174,8 @@ export const roleCrudConfig = {
 			}
 
 			// Trim string fields
-			if (data.role_id) {
-				data.role_id = data.role_id.trim();
-			}
-
-			if (data.role_name) {
-				data.role_name = data.role_name.trim();
+			if (data.name) {
+				data.name = data.name.trim();
 			}
 
 			return data;
@@ -196,4 +206,3 @@ export const roleCrudConfig = {
 	// Disable soft delete for roles (use hard delete)
 	softDelete: false,
 };
-

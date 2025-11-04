@@ -15,61 +15,66 @@ export const permissionCrudConfig = {
 	// Log category
 	logCategory: 'admin/permissions',
 
-	// Primary key field
-	primaryKey: 'permission_id',
+	// Primary key field (UUID)
+	primaryKey: 'id',
 
 	// Field configuration
 	fields: {
 		// Creatable fields
 		creatable: [
-			'permission_id',
-			'permission_name',
+			'name',
 			'parent_id',
 			'remark',
 			'enable',
 			'sort',
-			'curd_category',
+			'crud_category',
 			'level',
 			'actions',
 		],
 
 		// Updatable fields
 		updatable: [
-			'permission_name',
+			'name',
 			'parent_id',
 			'remark',
 			'enable',
 			'sort',
-			'curd_category',
+			'crud_category',
 			'level',
 			'actions',
 		],
 
 		// Searchable fields
-		searchable: ['permission_id', 'permission_name', 'remark'],
+		searchable: ['name', 'remark'],
 	},
 
 	// Query configuration
 	query: {
 		// Default sort
-		defaultSort: { sort: 1, permission_id: 1 },
+		defaultSort: { sort: 1, name: 1 },
 
 		// Default page size
 		defaultPageSize: 100,
 
 		// Base filter (always applied)
 		baseFilter: {},
+
+		// 连表配置（可选）- 在 getList 时自动连表查询父权限名称
+		foreignDB: [
+			{
+				dbName: 'permissions',         // 自连表
+				localKey: 'parent_id',         // permissions.parent_id
+				foreignKey: 'id',              // permissions.id
+				as: 'parentInfo',              // 连表结果存放在 parentInfo 字段
+				limit: 1,                      // 一对一关系
+				fieldJson: { id: 1, name: 1 }, // 只返回 id 和 name
+			},
+		],
 	},
 
 	// Data validation rules
 	validation: {
-		permission_id: {
-			required: true,
-			pattern: /^[a-zA-Z0-9._-]+$/,
-			unique: true,
-			message: 'Permission ID is required and must be unique (letters, numbers, dots, dashes, underscores)',
-		},
-		permission_name: {
+		name: {
 			required: true,
 			minLength: 2,
 			maxLength: 100,
@@ -86,9 +91,9 @@ export const permissionCrudConfig = {
 				// 检查父级是否存在
 				const { getCollection } = await import('@/lib/mongodb');
 				const collection = await getCollection('permissions');
-				const parent = await collection.findOne({ permission_id: value });
+				const parentPerm = await collection.findOne({ id: value });
 
-				return !!parent;
+				return !!parentPerm;
 			},
 			message: 'Parent permission does not exist',
 		},
@@ -106,13 +111,13 @@ export const permissionCrudConfig = {
 			},
 			message: 'Sort must be a non-negative number',
 		},
-		curd_category: {
+		crud_category: {
 			required: false,
 			validator: (value) => {
 				// 0=未分类, 1=增, 2=删, 3=改, 4=查, 5=特殊
 				return [0, 1, 2, 3, 4, 5].includes(value);
 			},
-			message: 'CURD category must be 0-5 (0=Unclassified, 1=Create, 2=Delete, 3=Update, 4=Read, 5=Special)',
+			message: 'CRUD category must be 0-5 (0=Unclassified, 1=Create, 2=Delete, 3=Update, 4=Read, 5=Special)',
 		},
 		level: {
 			required: false,
@@ -162,8 +167,8 @@ export const permissionCrudConfig = {
 				data.actions = [];
 			}
 
-			if (data.curd_category === undefined) {
-				data.curd_category = 0;
+			if (data.crud_category === undefined) {
+				data.crud_category = 0;
 			}
 
 			if (data.level === undefined) {
@@ -188,21 +193,21 @@ export const permissionCrudConfig = {
 				const collection = await getCollection('permissions');
 
 				// Check if parent_id would create a circular reference
-				let currentParentId = data.parent_id;
+				let currentParent = data.parent_id;
 				let depth = 0;
 				const maxDepth = 10;
 
-				while (currentParentId && depth < maxDepth) {
-					if (currentParentId === id) {
+				while (currentParent && depth < maxDepth) {
+					if (currentParent === id) {
 						throw new Error('Circular reference detected in parent_id');
 					}
 
-					const parent = await collection.findOne({ permission_id: currentParentId });
-					if (!parent) {
+					const parentPerm = await collection.findOne({ id: currentParent });
+					if (!parentPerm) {
 						break;
 					}
 
-					currentParentId = parent.parent_id;
+					currentParent = parentPerm.parent_id;
 					depth++;
 				}
 			}
@@ -287,8 +292,8 @@ export const permissionCrudConfig = {
 				data.sort = parseInt(data.sort, 10);
 			}
 
-			if (data.curd_category !== undefined) {
-				data.curd_category = parseInt(data.curd_category, 10);
+			if (data.crud_category !== undefined) {
+				data.crud_category = parseInt(data.crud_category, 10);
 			}
 
 			if (data.level !== undefined) {
@@ -318,12 +323,8 @@ export const permissionCrudConfig = {
 			}
 
 			// Trim string fields
-			if (data.permission_id) {
-				data.permission_id = data.permission_id.trim();
-			}
-
-			if (data.permission_name) {
-				data.permission_name = data.permission_name.trim();
+			if (data.name) {
+				data.name = data.name.trim();
 			}
 
 			return data;
@@ -350,4 +351,3 @@ export const permissionCrudConfig = {
 	// Disable soft delete for permissions (use hard delete)
 	softDelete: false,
 };
-

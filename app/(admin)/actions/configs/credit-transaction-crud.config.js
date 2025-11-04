@@ -29,6 +29,18 @@ export const creditTransactionCrudConfig = {
 		defaultSort: { createdAt: -1 }, // 按创建时间倒序
 		defaultPageSize: 20,
 		baseFilter: {}, // 管理员可以看到所有交易记录
+
+		// 连表配置（可选）- 在 getList 时自动连表查询用户信息
+		foreignDB: [
+			{
+				dbName: 'users',
+				localKey: 'userId',            // credit_transactions.userId
+				foreignKey: 'id',              // users.id (Better Auth 主键)
+				as: 'userInfo',                // 连表结果存放在 userInfo 字段
+				limit: 1,                      // 一对一关系
+				fieldJson: { id: 1, name: 1, email: 1, image: 1 }, // 返回用户基本信息
+			},
+		],
 	},
 
 	// 生命周期钩子

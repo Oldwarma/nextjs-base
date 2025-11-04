@@ -11,7 +11,7 @@ const ProLayout = dynamic(
 	{ ssr: false }
 );
 import * as Icons from '@ant-design/icons';
-import { UserOutlined, HomeOutlined, LogoutOutlined } from '@ant-design/icons';
+import { UserOutlined, HomeOutlined, LogoutOutlined, LinkOutlined } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { signOutAction } from '@/app/(client)/actions/auth';
@@ -62,19 +62,19 @@ export default function AdminLayout({ children, user }) {
 		const IconComponent = menu.icon && Icons[menu.icon] ? Icons[menu.icon] : null;
 
 		// 使用 url 字段作为跳转路径
-		const menuPath = menu.url || `/admin/${menu.key}`;
+		const menuPath = menu.url || `/admin/${menu.id}`; // ✅ 使用 id（UUID）
 
 		const route = {
 			path: menuPath,
 			name: menu.name,
-			key: menu.key || menu._id,
+			key: menu.id, // ✅ 使用 id（UUID）作为唯一标识
 			icon: IconComponent ? <IconComponent /> : null,
 		};
 
 		// 递归处理子菜单
 		if (menu.children && menu.children.length > 0) {
 			route.routes = menu.children
-				.filter(child => child.enabled && !child.hidden)
+				.filter(child => child.enable && !child.hidden) // ✅ 使用 enable（不是 enabled）
 				.map(convertMenuToRoute);
 		}
 
@@ -91,7 +91,7 @@ export default function AdminLayout({ children, user }) {
 		}
 
 		const routes = menuData
-			.filter(menu => menu.enabled && !menu.hidden)
+			.filter(menu => menu.enable && !menu.hidden) // ✅ 使用 enable（不是 enabled）
 			.map(convertMenuToRoute);
 
 		return {
@@ -129,7 +129,7 @@ export default function AdminLayout({ children, user }) {
 	// 根据当前路径从菜单数据中查找菜单名称
 	const findMenuByPath = (menus, path) => {
 		for (const menu of menus) {
-			const menuPath = menu.url || `/admin/${menu.key}`;
+			const menuPath = menu.url || `/admin/${menu.id}`; // ✅ 使用 id（UUID）
 			if (menuPath === path) {
 				return menu;
 			}
@@ -227,9 +227,28 @@ export default function AdminLayout({ children, user }) {
 				contentWidth='Fluid'
 				navTheme='light'
 				colorPrimary='#1890ff'
-			menuItemRender={(item, dom) => {
-				// item.path 已经是数据库中的 url 字段（在 convertMenuToRoute 中设置）
-				const linkPath = item.path || '/admin';
+		menuItemRender={(item, dom) => {
+			// item.path 已经是数据库中的 url 字段（在 convertMenuToRoute 中设置）
+			const linkPath = item.path || '/admin';
+			
+			// 检查是否是外部链接（以 http:// 或 https:// 开头）
+			const isExternalLink = linkPath.startsWith('http://') || linkPath.startsWith('https://');
+			
+			if (isExternalLink) {
+				// 外部链接：在新标签页打开，添加外部链接图标
+				return (
+					<a
+						href={linkPath}
+						target="_blank"
+						rel="noopener noreferrer"
+						style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+					>
+						{dom}
+						<LinkOutlined style={{ fontSize: '12px', opacity: 0.65 }} />
+					</a>
+				);
+			} else {
+				// 内部链接：使用 Next.js Link
 				return (
 					<Link
 						href={linkPath}
@@ -238,7 +257,8 @@ export default function AdminLayout({ children, user }) {
 						{dom}
 					</Link>
 				);
-			}}
+			}
+		}}
 			avatarProps={{
 				src: user?.image,
 				icon: <UserOutlined />,

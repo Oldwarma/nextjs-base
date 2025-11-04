@@ -1573,7 +1573,7 @@ export async function getUsersWithCursorAction(cursor, limit = 20) {
 		
 		const users = await collection
 			.find(query)
-			.sort({ _id: 1 })
+			.sort({ createdAt: 1 })
 			.limit(limit + 1)
 			.toArray();
 		

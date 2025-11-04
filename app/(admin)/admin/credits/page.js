@@ -13,9 +13,9 @@
 
 import { useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Button, Tag, Statistic, Row, Col } from 'antd';
+import { Button, Tag, Statistic, Row, Col, Avatar, Space } from 'antd';
 import { ModalForm, ProFormText, ProFormDigit, ProFormTextArea } from '@ant-design/pro-components';
-import { PlusOutlined, MinusOutlined, WalletOutlined } from '@ant-design/icons';
+import { PlusOutlined, MinusOutlined, WalletOutlined, UserOutlined } from '@ant-design/icons';
 import { toast } from 'sonner';
 
 // 动态导入 SmartCrudPage
@@ -54,15 +54,48 @@ export default function CreditsManagementPage() {
 			search: false,
 		},
 		
-		// 用户 ID
+		// 用户信息
 		{
 			key: 'userId',
-			title: 'User ID',
+			title: 'User',
 			type: 'text',
 			table: {
-				width: 120,
-				ellipsis: true,
-				copyable: true,
+				width: 200,
+				render: (value, record) => {
+					const user = record.userInfo;
+					if (!user) {
+						// Fallback: 只显示 userId
+						return <span style={{ color: '#999', fontSize: 12 }}>{value}</span>;
+					}
+					return (
+						<Space>
+							<Avatar src={user.image} size='small' icon={<UserOutlined />}>
+								{user.name?.[0]?.toUpperCase()}
+							</Avatar>
+							<div>
+								<div style={{ fontWeight: 500, fontSize: 13 }}>{user.name || 'N/A'}</div>
+								<div style={{ fontSize: 11, color: '#999' }}>{user.email}</div>
+							</div>
+						</Space>
+					);
+				},
+			},
+			detail: {
+				render: (value, record) => {
+					const user = record.userInfo;
+					if (!user) return value; // Fallback: 显示 userId
+					return (
+						<Space>
+							<Avatar src={user.image} icon={<UserOutlined />}>
+								{user.name?.[0]?.toUpperCase()}
+							</Avatar>
+							<div>
+								<div style={{ fontWeight: 500 }}>{user.name}</div>
+								<div style={{ color: '#999' }}>{user.email}</div>
+							</div>
+						</Space>
+					);
+				},
 			},
 			form: false,
 			search: {

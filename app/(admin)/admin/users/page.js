@@ -54,13 +54,13 @@ export default function UsersManagementPage() {
 					console.log('[Users] Loaded roles:', roles.length);
 					setAllRoles(roles);
 					
-					// Convert to tree data for Tree component
-					const treeData = roles.map(role => ({
-						title: role.label || role.role_name,  // 使用后端生成的 label
-						value: role.role_id,
-						key: role.role_id,
-						disabled: !role.enable,
-					}));
+				// Convert to tree data for Tree component
+				const treeData = roles.map(role => ({
+					title: role.label || role.name,  // ✅ 使用 name 字段
+					value: role.id,  // ✅ 使用 id（UUID）
+					key: role.id,    // ✅ 使用 id（UUID）
+					disabled: !role.enable,
+				}));
 					setRoleTree(treeData);
 					setRolesLoaded(true);
 				} else {
@@ -274,18 +274,35 @@ export default function UsersManagementPage() {
 		
 		// RBAC 角色 (多角色数组)
 		{
-			key: 'role_ids',
+			key: 'roles',
 			title: 'RBAC Roles',
 			type: 'text',
 			table: false,
 			form: false,
 			hideInTable: true,
 			detail: {
-				render: (value) => {
-					if (!value || !Array.isArray(value) || value.length === 0) {
-						return 'No roles assigned';
+				render: (value, record) => {
+					// 优先使用连表数据 roleList，fallback 到原始字段 roles
+					const roles = record.roleList || value || [];
+					
+					if (!Array.isArray(roles) || roles.length === 0) {
+						return <span style={{ color: '#999' }}>No roles assigned</span>;
 					}
-					return value.join(', ');
+					
+					return (
+						<Space wrap>
+							{roles.map((item, index) => {
+								// 如果是对象（连表数据），取 name；否则显示原值（UUID）
+								const displayText = item?.name || item;
+								const key = item?.id || item;
+								return (
+									<Tag key={key || index} color='blue'>
+										{displayText}
+									</Tag>
+								);
+							})}
+						</Space>
+					);
 				},
 			},
 		},

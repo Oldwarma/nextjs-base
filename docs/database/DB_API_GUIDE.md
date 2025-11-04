@@ -729,7 +729,7 @@ const users = await getList({
 | dbName | String | 是 | 集合名称 |
 | whereJson | Object | 否 | 查询条件 |
 | fieldJson | Object | 否 | 字段显示规则 |
-| sortJson | Object | 否 | 排序规则（默认 `{ _id: -1 }`） |
+| sortJson | Object | 否 | 排序规则（默认 `{ createdAt: -1 }`） |
 | pageIndex | Number | 否 | 当前页码（从 1 开始，默认 1） |
 | pageSize | Number | 否 | 每页条数（默认 20） |
 

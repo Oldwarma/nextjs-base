@@ -37,6 +37,18 @@ import {
 import { getPermissionTreeForSelectAction } from '@/app/(admin)/actions/admin-permissions';
 import { getMenuTreeForSelectAction } from '@/app/(admin)/actions/admin-menus';
 
+// Convert tree data to Ant Design Tree format (递归函数，移到组件外部)
+const convertToTreeData = (data, keyField) => {
+	if (!Array.isArray(data)) return [];
+
+	return data.map((item) => ({
+		title: item.label || item.name || item[keyField],
+		value: item[keyField],
+		key: item[keyField],
+		children: item.children && item.children.length > 0 ? convertToTreeData(item.children, keyField) : undefined,
+	}));
+};
+
 export default function RolesManagementPage() {
 	const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -54,24 +66,12 @@ export default function RolesManagementPage() {
 	const [menuLoading, setMenuLoading] = useState(false);
 	const [autoBindMenuPermissions, setAutoBindMenuPermissions] = useState(true);
 
-	// Convert tree data to Ant Design Tree format (递归函数，不用 useCallback)
-	const convertToTreeData = (data, keyField) => {
-		if (!Array.isArray(data)) return [];
-
-		return data.map((item) => ({
-			title: item.label || item.name || item[keyField],
-			value: item[keyField],
-			key: item[keyField],
-			children: item.children && item.children.length > 0 ? convertToTreeData(item.children, keyField) : undefined,
-		}));
-	};
-
 	// Load permission and menu trees
 	useEffect(() => {
 		const loadPermissionTree = async () => {
 			const result = await getPermissionTreeForSelectAction({ withLabel: true });
 			if (result.success) {
-				const treeData = convertToTreeData(result.data, 'permission_id');
+				const treeData = convertToTreeData(result.data, 'id'); // ✅ 使用 id（UUID）
 				setPermissionTree(treeData);
 			}
 		};
@@ -79,7 +79,7 @@ export default function RolesManagementPage() {
 		const loadMenuTree = async () => {
 			const result = await getMenuTreeForSelectAction({ withLabel: true });
 			if (result.success) {
-				const treeData = convertToTreeData(result.data, 'key');
+				const treeData = convertToTreeData(result.data, 'id'); // ✅ 使用 id（UUID）
 				setMenuTree(treeData);
 			}
 		};
@@ -90,7 +90,7 @@ export default function RolesManagementPage() {
 
 	// Handle assign permissions
 	const handleAssignPermissions = async (record) => {
-		if (record.role_id === 'admin') {
+		if (record.id === 'admin') {
 			message.warning('Cannot modify admin role permissions');
 			return;
 		}
@@ -100,7 +100,7 @@ export default function RolesManagementPage() {
 		setPermissionModalVisible(true);
 
 		// Get current permissions
-		const result = await getRolePermissionsAction(record.role_id);
+		const result = await getRolePermissionsAction(record.id);
 		if (result.success) {
 			setSelectedPermissions(result.data || []);
 		} else {
@@ -112,7 +112,7 @@ export default function RolesManagementPage() {
 
 	// Handle assign menus
 	const handleAssignMenus = async (record) => {
-		if (record.role_id === 'admin') {
+		if (record.id === 'admin') {
 			message.warning('Cannot modify admin role menus');
 			return;
 		}
@@ -122,7 +122,7 @@ export default function RolesManagementPage() {
 		setMenuModalVisible(true);
 
 		// Get current menus
-		const result = await getRoleMenusAction(record.role_id);
+		const result = await getRoleMenusAction(record.id);
 		if (result.success) {
 			setSelectedMenus(result.data || []);
 		} else {
@@ -138,7 +138,7 @@ export default function RolesManagementPage() {
 
 		setPermissionLoading(true);
 
-		const result = await roleBindPermissionsAction(selectedRole.role_id, selectedPermissions, true);
+		const result = await roleBindPermissionsAction(selectedRole.id, selectedPermissions, true);
 
 		if (result.success) {
 			message.success('Permissions assigned successfully');
@@ -157,7 +157,7 @@ export default function RolesManagementPage() {
 
 		setMenuLoading(true);
 
-		const result = await roleBindMenusAction(selectedRole.role_id, selectedMenus, true, autoBindMenuPermissions);
+		const result = await roleBindMenusAction(selectedRole.id, selectedMenus, true, autoBindMenuPermissions);
 
 		if (result.success) {
 			message.success('Menus assigned successfully');
@@ -173,59 +173,36 @@ export default function RolesManagementPage() {
 	// Field configuration
 	const fieldsConfig = useMemo(
 		() => [
-			// ID
-			{
-				key: '_id',
-				title: 'ID',
-				type: 'text',
-				table: false,
-				form: false,
-				search: false,
-			},
+		// ID (UUID - 自动生成，不显示)
+		{
+			key: 'id',
+			title: 'ID',
+			type: 'text',
+			table: false, // 不在表格中显示
+			form: false,  // 自动生成，不允许编辑
+			search: false,
+		},
 
-			// Role ID
-			{
-				key: 'role_id',
-				title: 'Role ID',
-				type: 'text',
-				table: {
-					width: 150,
-					copyable: true,
-				},
-				form: {
-					required: true,
-					placeholder: 'e.g., editor, viewer, manager',
-					fieldProps: {
-						showCount: true,
-						maxLength: 50,
-					},
-					tips: 'Unique identifier for the role (letters, numbers, dashes, underscores)',
-				},
-				search: {
-					placeholder: 'Search by role ID',
-				},
-			},
-
-			// Role Name
-			{
-				key: 'role_name',
-				title: 'Role Name',
+		// Name
+		{
+			key: 'name',
+			title: 'Name',
 				type: 'text',
 				table: {
 					width: 150,
 					ellipsis: true,
 				},
-				form: {
-					required: true,
-					placeholder: 'Enter role name',
-					fieldProps: {
-						showCount: true,
-						maxLength: 100,
-					},
+			form: {
+				required: true,
+				placeholder: 'Enter name',
+				fieldProps: {
+					showCount: true,
+					maxLength: 100,
 				},
-				search: {
-					placeholder: 'Search by name',
-				},
+			},
+			search: {
+				placeholder: 'Search by name',
+			},
 			},
 
 			// Permissions Count
@@ -240,22 +217,31 @@ export default function RolesManagementPage() {
 						return <Tag color='blue'>{count} permissions</Tag>;
 					},
 				},
-				detail: {
-					render: (value) => {
-						if (!Array.isArray(value) || value.length === 0) {
-							return <span style={{ color: '#999' }}>No permissions assigned</span>;
-						}
-						return (
-							<Space wrap>
-								{value.map((id, index) => (
-									<Tag key={index} color='blue'>
-										{id}
-									</Tag>
-								))}
-							</Space>
-						);
-					},
-				},
+		detail: {
+			render: (value, record) => {
+				// 优先使用连表数据 permissionList，fallback 到原始字段 permission
+				const permissions = record.permissionList || value || [];
+				
+				if (!Array.isArray(permissions) || permissions.length === 0) {
+					return <span style={{ color: '#999' }}>No permissions assigned</span>;
+				}
+				
+				return (
+					<Space wrap>
+						{permissions.map((item, index) => {
+							// 如果是对象，取 name；否则显示原值（UUID）
+							const displayText = item?.name || item;
+							const key = item?.id || item;
+							return (
+								<Tag key={key || index} color='blue'>
+									{displayText}
+								</Tag>
+							);
+						})}
+					</Space>
+				);
+			},
+		},
 				form: false,
 				search: false,
 			},
@@ -272,22 +258,31 @@ export default function RolesManagementPage() {
 						return <Tag color='cyan'>{count} menus</Tag>;
 					},
 				},
-				detail: {
-					render: (value) => {
-						if (!Array.isArray(value) || value.length === 0) {
-							return <span style={{ color: '#999' }}>No menus assigned</span>;
-						}
-						return (
-							<Space wrap>
-								{value.map((id, index) => (
-									<Tag key={index} color='cyan'>
-										{id}
-									</Tag>
-								))}
-							</Space>
-						);
-					},
-				},
+		detail: {
+			render: (value, record) => {
+				// 优先使用连表数据 menuList，fallback 到原始字段 menu
+				const menus = record.menuList || value || [];
+				
+				if (!Array.isArray(menus) || menus.length === 0) {
+					return <span style={{ color: '#999' }}>No menus assigned</span>;
+				}
+				
+				return (
+					<Space wrap>
+						{menus.map((item, index) => {
+							// 如果是对象，取 name；否则显示原值（UUID）
+							const displayText = item?.name || item;
+							const key = item?.id || item;
+							return (
+								<Tag key={key || index} color='cyan'>
+									{displayText}
+								</Tag>
+							);
+						})}
+					</Space>
+				);
+			},
+		},
 				form: false,
 				search: false,
 			},
@@ -350,14 +345,14 @@ export default function RolesManagementPage() {
 				text: 'Assign Permissions',
 				icon: <KeyOutlined />,
 				onClick: handleAssignPermissions,
-				show: (record) => record.role_id !== 'admin', // 不显示给 admin 角色
+				show: (record) => record.id !== 'admin', // 不显示给 admin 角色
 			},
 			{
 				key: 'assign-menus',
 				text: 'Assign Menus',
 				icon: <MenuOutlined />,
 				onClick: handleAssignMenus,
-				show: (record) => record.role_id !== 'admin', // 不显示给 admin 角色
+				show: (record) => record.id !== 'admin', // 不显示给 admin 角色
 			},
 		],
 		[]
@@ -368,7 +363,7 @@ export default function RolesManagementPage() {
 			<SmartCrudPage
 				title='Role Management'
 				description='Manage system roles and their permissions'
-				rowKey='role_id'
+				rowKey='id'
 				fieldsConfig={fieldsConfig}
 				actions={{
 					getList,
@@ -392,7 +387,7 @@ export default function RolesManagementPage() {
 
 			{/* Permission Assignment Modal */}
 			<Modal
-				title={`Assign Permissions: ${selectedRole?.role_name || ''}`}
+				title={`Assign Permissions: ${selectedRole?.name || ''}`}
 				open={permissionModalVisible}
 				onOk={handleSavePermissions}
 				onCancel={() => setPermissionModalVisible(false)}
@@ -414,7 +409,7 @@ export default function RolesManagementPage() {
 
 			{/* Menu Assignment Modal */}
 			<Modal
-				title={`Assign Menus: ${selectedRole?.role_name || ''}`}
+				title={`Assign Menus: ${selectedRole?.name || ''}`}
 				open={menuModalVisible}
 				onOk={handleSaveMenus}
 				onCancel={() => setMenuModalVisible(false)}

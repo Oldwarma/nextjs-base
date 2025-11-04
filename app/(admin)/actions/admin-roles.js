@@ -79,7 +79,7 @@ export async function getRoleListForSelectAction({ withLabel = false } = {}) {
 
 				return {
 					...role,
-					label: `${role.role_name} (${role.role_id})${badgeStr}${remarkStr}`,
+					label: `${role.name} (${role.id})${badgeStr}${remarkStr}`,
 				};
 			});
 		}
@@ -98,11 +98,40 @@ export async function getRoleListForSelectAction({ withLabel = false } = {}) {
 
 /**
  * Get role detail (Admin)
+ * 包含权限和菜单的名称信息
  * @param {String} roleId - Role ID
- * @returns {Promise<Object>} Role detail
+ * @returns {Promise<Object>} Role detail with permission and menu names
  */
 export async function getRoleDetailAction(roleId) {
-	return await roleCrud.getDetail(roleId);
+	const adminCheck = await checkAdminAction();
+	if (!adminCheck.isAdmin) {
+		return {
+			success: false,
+			error: adminCheck.error,
+		};
+	}
+
+	try {
+		// 使用 DAO 层的方法获取带名称的角色详情
+		const role = await sysDao.findRoleByIdWithNames(roleId);
+		
+		if (!role) {
+			return {
+				success: false,
+				error: 'Role not found',
+			};
+		}
+
+		return {
+			success: true,
+			data: role,
+		};
+	} catch (error) {
+		return {
+			success: false,
+			error: error.message,
+		};
+	}
 }
 
 /**

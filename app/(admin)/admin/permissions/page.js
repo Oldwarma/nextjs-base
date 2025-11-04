@@ -6,7 +6,7 @@
  * - Create, edit, delete permissions
  * - Parent permission tree selector
  * - Actions configuration (support wildcards)
- * - CURD category and level management
+ * - CRUD category and level management
  * - Sorting functionality
  */
 
@@ -37,9 +37,9 @@ const convertToTreeData = (data) => {
 	if (!Array.isArray(data)) return [];
 
 	return data.map((item) => ({
-		title: item.label || item.permission_name,
-		value: item.permission_id,
-		key: item.permission_id,
+		title: item.label || item.name,
+		value: item.id,
+		key: item.id,
 		children: item.children && item.children.length > 0 ? convertToTreeData(item.children) : undefined,
 	}));
 };
@@ -66,155 +66,183 @@ export default function PermissionsManagementPage() {
 	// Field configuration
 	const fieldsConfig = useMemo(
 		() => [
-			// ID
-			{
-				key: '_id',
-				title: 'ID',
-				type: 'text',
-				table: false,
-				form: false,
-				search: false,
-			},
+		// ID (UUID - 自动生成，不显示)
+		{
+			key: 'id',
+			title: 'ID',
+			type: 'text',
+			table: false, // 不在表格中显示
+			form: false,  // 自动生成，不允许编辑
+			search: false,
+		},
 
-			// Permission ID
-			{
-				key: 'permission_id',
-				title: 'Permission ID',
-				type: 'text',
-				table: {
-					width: 200,
-					copyable: true,
-				},
-				form: {
-					required: true,
-					placeholder: 'e.g., user.create, order.view',
-					fieldProps: {
-						showCount: true,
-						maxLength: 100,
-						disabled: false, // Can set in edit mode
-					},
-					tips: 'Unique identifier for the permission (letters, numbers, dots, dashes, underscores)',
-				},
-				search: {
-					placeholder: 'Search by permission ID',
-				},
-			},
-
-			// Permission Name
-			{
-				key: 'permission_name',
-				title: 'Permission Name',
+		// Name
+		{
+			key: 'name',
+			title: 'Name',
 				type: 'text',
 				table: {
 					width: 200,
 					ellipsis: true,
 				},
-				form: {
-					required: true,
-					placeholder: 'Enter permission name',
-					fieldProps: {
-						showCount: true,
-						maxLength: 100,
-					},
+			form: {
+				required: true,
+				placeholder: 'Enter name',
+				fieldProps: {
+					showCount: true,
+					maxLength: 100,
 				},
-				search: {
-					placeholder: 'Search by name',
-				},
+			},
+			search: {
+				placeholder: 'Search by name',
+			},
 			},
 
-			// Parent Permission
-			{
-				key: 'parent_id',
-				title: 'Parent Permission',
-				type: 'tree-select',
-				table: false,
-				form: {
-					required: false,
-					placeholder: 'Select parent permission (leave empty for root)',
-					fieldProps: {
-						treeData: permissionTree,
-						allowClear: true,
-						showSearch: true,
-						treeNodeFilterProp: 'title',
-						dropdownStyle: { maxHeight: 400, overflow: 'auto' },
-					},
+		// Parent Permission
+		{
+			key: 'parent_id',
+			title: 'Parent Permission',
+			type: 'tree-select',
+			table: false,
+			form: {
+				required: false,
+				placeholder: 'Select parent permission (leave empty for root)',
+				fieldProps: {
+					treeData: permissionTree,
+					allowClear: true,
+					showSearch: true,
+					treeNodeFilterProp: 'title',
+					dropdownStyle: { maxHeight: 400, overflow: 'auto' },
 				},
-				search: false,
 			},
+		detail: {
+			render: (value, record) => {
+				if (!value) return 'Root Permission';
+				
+				// 优先使用连表数据 parentInfo
+				const parent = record.parentInfo;
+				if (parent && parent.name) {
+					return parent.name;
+				}
+				
+				// Fallback: 从树中查找父权限名称（为了兼容性保留）
+				const findName = (tree, id) => {
+					for (const node of tree) {
+						if (node.value === id) return node.title;
+						if (node.children) {
+							const found = findName(node.children, id);
+							if (found) return found;
+						}
+					}
+					return null;
+				};
+				const parentName = findName(permissionTree, value);
+				return parentName || value;
+			},
+		},
+			search: false,
+		},
 
-			// CURD Category
-			{
-				key: 'curd_category',
-				title: 'CURD Category',
-				type: 'radio',
-				table: {
-					width: 120,
-					render: (value) => {
-						const categoryMap = {
-							0: { text: 'Unclassified', color: 'default' },
-							1: { text: 'Create', color: 'green' },
-							2: { text: 'Delete', color: 'red' },
-							3: { text: 'Update', color: 'blue' },
-							4: { text: 'Read', color: 'cyan' },
-							5: { text: 'Special', color: 'purple' },
-						};
-						const category = categoryMap[value] || categoryMap[0];
-						return <Tag color={category.color}>{category.text}</Tag>;
-					},
+		// CRUD Category
+		{
+			key: 'crud_category',
+			title: 'CRUD Category',
+			type: 'radio',
+			table: {
+				width: 120,
+				render: (value) => {
+					const categoryMap = {
+						0: { text: 'Unclassified', color: 'default' },
+						1: { text: 'Create', color: 'green' },
+						2: { text: 'Delete', color: 'red' },
+						3: { text: 'Update', color: 'blue' },
+						4: { text: 'Read', color: 'cyan' },
+						5: { text: 'Special', color: 'purple' },
+					};
+					const category = categoryMap[value] || categoryMap[0];
+					return <Tag color={category.color}>{category.text}</Tag>;
 				},
-				form: {
-					required: false,
-					valueType: 'radio',
-					fieldProps: {
-						options: [
-							{ label: 'Unclassified', value: 0 },
-							{ label: 'Create', value: 1 },
-							{ label: 'Delete', value: 2 },
-							{ label: 'Update', value: 3 },
-							{ label: 'Read', value: 4 },
-							{ label: 'Special', value: 5 },
-						],
-					},
-					initialValue: 0,
-				},
-				search: false,
 			},
+			form: {
+				required: false,
+				valueType: 'radio',
+				fieldProps: {
+					options: [
+						{ label: 'Unclassified', value: 0 },
+						{ label: 'Create', value: 1 },
+						{ label: 'Delete', value: 2 },
+						{ label: 'Update', value: 3 },
+						{ label: 'Read', value: 4 },
+						{ label: 'Special', value: 5 },
+					],
+				},
+				initialValue: 0,
+			},
+			detail: {
+				render: (value) => {
+					const categoryMap = {
+						0: { text: 'Unclassified', color: 'default' },
+						1: { text: 'Create', color: 'green' },
+						2: { text: 'Delete', color: 'red' },
+						3: { text: 'Update', color: 'blue' },
+						4: { text: 'Read', color: 'cyan' },
+						5: { text: 'Special', color: 'purple' },
+					};
+					const category = categoryMap[value] || categoryMap[0];
+					return <Tag color={category.color}>{category.text}</Tag>;
+				},
+			},
+			search: false,
+		},
 
-			// Permission Level
-			{
-				key: 'level',
-				title: 'Permission Level',
-				type: 'radio',
-				table: {
-					width: 120,
-					render: (value) => {
-						const levelMap = {
-							0: { text: 'Other', color: 'default' },
-							1: { text: 'Bullet', color: 'green' },
-							2: { text: 'Bomb', color: 'orange' },
-							3: { text: 'Grenade', color: 'red' },
-							4: { text: 'Nuclear', color: 'purple' },
-						};
-						const level = levelMap[value] || levelMap[0];
-						return <Tag color={level.color}>{level.text}</Tag>;
-					},
+		// Permission Level
+		{
+			key: 'level',
+			title: 'Permission Level',
+			type: 'radio',
+			table: {
+				width: 120,
+				render: (value) => {
+					const levelMap = {
+						0: { text: 'Other', color: 'default' },
+						1: { text: 'Bullet', color: 'green' },
+						2: { text: 'Bomb', color: 'orange' },
+						3: { text: 'Grenade', color: 'red' },
+						4: { text: 'Nuclear', color: 'purple' },
+					};
+					const level = levelMap[value] || levelMap[0];
+					return <Tag color={level.color}>{level.text}</Tag>;
 				},
-				form: {
-					required: false,
-					valueType: 'radio',
-					fieldProps: {
-						options: [
-							{ label: 'Other', value: 0 },
-							{ label: 'Bullet Level', value: 1 },
-							{ label: 'Bomb Level', value: 2 },
-							{ label: 'Grenade Level', value: 3 },
-							{ label: 'Nuclear Level', value: 4 },
-						],
-					},
-					initialValue: 0,
-				},
-				search: false,
 			},
+			form: {
+				required: false,
+				valueType: 'radio',
+				fieldProps: {
+					options: [
+						{ label: 'Other', value: 0 },
+						{ label: 'Bullet Level', value: 1 },
+						{ label: 'Bomb Level', value: 2 },
+						{ label: 'Grenade Level', value: 3 },
+						{ label: 'Nuclear Level', value: 4 },
+					],
+				},
+				initialValue: 0,
+			},
+			detail: {
+				render: (value) => {
+					const levelMap = {
+						0: { text: 'Other', color: 'default' },
+						1: { text: 'Bullet', color: 'green' },
+						2: { text: 'Bomb', color: 'orange' },
+						3: { text: 'Grenade', color: 'red' },
+						4: { text: 'Nuclear', color: 'purple' },
+					};
+					const level = levelMap[value] || levelMap[0];
+					return <Tag color={level.color}>{level.text}</Tag>;
+				},
+			},
+			search: false,
+		},
 
 			// Actions
 			{
@@ -372,7 +400,7 @@ export default function PermissionsManagementPage() {
 		<SmartCrudPage
 			title='Permission Management'
 			description='Manage system permissions with tree structure support'
-			rowKey='permission_id'
+			rowKey='id'
 			fieldsConfig={fieldsConfig}
 			actions={{
 				getList,

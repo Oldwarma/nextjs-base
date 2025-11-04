@@ -1,4 +1,5 @@
 import { getCollection } from '@/lib/mongodb';
+import { selects } from '@/lib/db-api';
 
 /**
  * SysDAO - 系统权限相关的数据访问对象
@@ -27,7 +28,62 @@ const DB_MAX_LIMIT = 1000;
  */
 export async function findRoleById(roleId) {
 	const collection = await getCollection(COLLECTION_NAMES.ROLES);
-	return await collection.findOne({ role_id: roleId });
+	return await collection.findOne({ id: roleId });
+}
+
+/**
+ * 根据角色ID查询角色（包含权限和菜单的名称）
+ * 使用通用的 selects 方法实现连表查询
+ * @param {String} roleId - 角色ID
+ * @returns {Promise<Object|null>} 角色对象，permission 和 menu 字段包含 { id, name } 对象数组
+ */
+export async function findRoleByIdWithNames(roleId) {
+	if (!roleId) return null;
+
+	try {
+		const result = await selects({
+			dbName: COLLECTION_NAMES.ROLES,
+			whereJson: { id: roleId },
+			pageIndex: 1,
+			pageSize: 1,
+			getCount: false,
+			foreignDB: [
+				{
+					dbName: COLLECTION_NAMES.PERMISSIONS,
+					localKey: 'permission',        // roles.permission 是 UUID 数组
+					foreignKey: 'id',              // permissions.id 是 UUID
+					as: 'permissionList',          // 连表结果存放在 permissionList
+					fieldJson: { id: 1, name: 1 }, // 只返回 id 和 name
+				},
+				{
+					dbName: COLLECTION_NAMES.MENUS,
+					localKey: 'menu',              // roles.menu 是 UUID 数组
+					foreignKey: 'id',              // menus.id 是 UUID
+					as: 'menuList',                // 连表结果存放在 menuList
+					fieldJson: { id: 1, name: 1 }, // 只返回 id 和 name
+				},
+			],
+		});
+
+		if (!result.rows || result.rows.length === 0) {
+			return null;
+		}
+
+		const role = result.rows[0];
+
+		// 将 permissionList 转换为 permission 字段（保持原字段名）
+		role.permission = role.permissionList || [];
+		delete role.permissionList;
+
+		// 将 menuList 转换为 menu 字段（保持原字段名）
+		role.menu = role.menuList || [];
+		delete role.menuList;
+
+		return role;
+	} catch (error) {
+		console.error('findRoleByIdWithNames error:', error);
+		return null;
+	}
 }
 
 /**
@@ -42,7 +98,7 @@ export async function findRolesByIds(roleIds) {
 
 	const collection = await getCollection(COLLECTION_NAMES.ROLES);
 	return await collection.find({
-		role_id: { $in: roleIds },
+		id: { $in: roleIds },
 	});
 }
 
@@ -66,7 +122,7 @@ export async function roleBindPermissions({ roleId, permissionIds = [], reset = 
 		finalPermissions = [...new Set([...existingPermissions, ...permissionIds])];
 	}
 
-	const result = await collection.updateOne({ role_id: roleId }, { $set: { permission: finalPermissions } });
+	const result = await collection.updateOne({ id: roleId }, { $set: { permission: finalPermissions } });
 
 	return {
 		success: result.modifiedCount > 0,
@@ -95,7 +151,7 @@ export async function roleBindMenus({ roleId, menuIds = [], reset = false, autoB
 		finalMenus = [...new Set([...existingMenus, ...menuIds])];
 	}
 
-	const result = await collection.updateOne({ role_id: roleId }, { $set: { menu: finalMenus } });
+	const result = await collection.updateOne({ id: roleId }, { $set: { menu: finalMenus } });
 
 	// 如果需要自动绑定菜单关联的权限
 	if (autoBindMenuPermissions && menuIds.length > 0) {
@@ -132,7 +188,7 @@ export async function getRoleList({ pageIndex = 1, pageSize = 20, filters = {} }
 		query,
 		pageIndex,
 		pageSize,
-		sort: { role_id: 1 },
+		sort: { id: 1 },
 	});
 }
 
@@ -149,7 +205,7 @@ export async function getRoleList({ pageIndex = 1, pageSize = 20, filters = {} }
  */
 export async function findPermissionById(permissionId) {
 	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
-	return await collection.findOne({ permission_id: permissionId });
+	return await collection.findOne({ id: permissionId });
 }
 
 /**
@@ -164,7 +220,7 @@ export async function findPermissionsByIds(permissionIds) {
 
 	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
 	return await collection.find({
-		permission_id: { $in: permissionIds },
+		id: { $in: permissionIds },
 	});
 }
 
@@ -190,7 +246,7 @@ export async function getPermissionTree({ pageIndex = 1, pageSize = DB_MAX_LIMIT
 		query,
 		pageIndex,
 		pageSize,
-		sort: { sort: 1, permission_id: 1 },
+		sort: { sort: 1, id: 1 },
 	});
 
 	// 递归获取子权限并序列化
@@ -198,7 +254,7 @@ export async function getPermissionTree({ pageIndex = 1, pageSize = DB_MAX_LIMIT
 		const serializedRows = [];
 		for (const item of result.rows) {
 			const serializedItem = fromObjectId(item);
-			const children = await getChildPermissions(item.permission_id);
+			const children = await getChildPermissions(item.id);
 			
 			// 只有当有子节点时才添加 children 属性
 			if (children && children.length > 0) {
@@ -225,25 +281,25 @@ export async function getAllPermissions(filters = {}) {
 
 /**
  * 递归获取子权限
- * @param {String} parentId - 父级权限ID
+ * @param {String} parent_id - 父级权限ID
  * @param {Number} maxDepth - 最大递归深度，防止死循环
  * @param {Number} currentDepth - 当前递归深度
  * @returns {Promise<Array>} 子权限数组
  */
-async function getChildPermissions(parentId, maxDepth = 5, currentDepth = 0) {
+async function getChildPermissions(parent_id, maxDepth = 5, currentDepth = 0) {
 	if (currentDepth >= maxDepth) {
 		return [];
 	}
 
 	const { fromObjectId } = await import('@/lib/mongodb');
 	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
-	const children = await collection.find({ parent_id: parentId });
+	const children = await collection.find({ parent_id: parent_id });
 
 	// 序列化并递归获取每个子节点的子节点
 	const serializedChildren = [];
 	for (const child of children) {
 		const serializedChild = fromObjectId(child);
-		const grandChildren = await getChildPermissions(child.permission_id, maxDepth, currentDepth + 1);
+		const grandChildren = await getChildPermissions(child.id, maxDepth, currentDepth + 1);
 		
 		// 只有当有子节点时才添加 children 属性
 		if (grandChildren && grandChildren.length > 0) {
@@ -296,7 +352,7 @@ export async function getAllChildPermissionIds(permissionId) {
 	const children = await collection.find({ parent_id: permissionId });
 
 	for (const child of children) {
-		const childIds = await getAllChildPermissionIds(child.permission_id);
+		const childIds = await getAllChildPermissionIds(child.id);
 		allIds.push(...childIds);
 	}
 
@@ -339,34 +395,34 @@ export async function getActionsByPermissionIds(permissionIds) {
  */
 export async function findMenuById(menuId) {
 	const collection = await getCollection(COLLECTION_NAMES.MENUS);
-	return await collection.findOne({ menu_id: menuId });
+	return await collection.findOne({ id: menuId });
 }
 
 /**
- * 根据多个菜单Key查询菜单列表
- * @param {Array<String>} menuKeys - 菜单Key数组（业务标识）
+ * 根据多个菜单ID查询菜单列表
+ * @param {Array<String>} menuIds - 菜单ID数组（UUID）
  * @returns {Promise<Array>} 菜单对象数组
  */
-export async function findMenusByKeys(menuKeys) {
-	if (!Array.isArray(menuKeys) || menuKeys.length === 0) {
+export async function findMenusByIds(menuIds) {
+	if (!Array.isArray(menuIds) || menuIds.length === 0) {
 		return [];
 	}
 
 	const collection = await getCollection(COLLECTION_NAMES.MENUS);
 	return await collection.find({
-		key: { $in: menuKeys },
+		id: { $in: menuIds }, // ✅ 使用 id（UUID）查询
 	});
 }
 
 /**
- * 根据多个菜单ID查询菜单列表（兼容旧接口）
- * @deprecated 使用 findMenusByKeys 代替
- * @param {Array<String>} menuIds - 菜单ID数组
+ * 根据多个菜单Key查询菜单列表（已废弃）
+ * @deprecated 使用 findMenusByIds 代替
+ * @param {Array<String>} menuKeys - 菜单Key数组
  * @returns {Promise<Array>} 菜单对象数组
  */
-export async function findMenusByIds(menuIds) {
-	// 兼容：如果传入的是 key，直接用 key 查询
-	return await findMenusByKeys(menuIds);
+export async function findMenusByKeys(menuKeys) {
+	// 向后兼容：现在 key 已废弃，直接使用 id
+	return await findMenusByIds(menuKeys);
 }
 
 /**
@@ -390,13 +446,13 @@ export async function getMenuTree({ pageIndex = 1, pageSize = DB_MAX_LIMIT, filt
 		query,
 		pageIndex,
 		pageSize,
-		sort: { sort: 1, menu_id: 1 },
+		sort: { sort: 1, id: 1 },
 	});
 
 	// 递归获取子菜单
 	if (result.rows && result.rows.length > 0) {
 		for (const item of result.rows) {
-			item.children = await getChildMenus(item.menu_id);
+			item.children = await getChildMenus(item.id);
 		}
 	}
 
@@ -405,21 +461,21 @@ export async function getMenuTree({ pageIndex = 1, pageSize = DB_MAX_LIMIT, filt
 
 /**
  * 递归获取子菜单
- * @param {String} parentId - 父级菜单ID
+ * @param {String} parent_id - 父级菜单ID
  * @param {Number} maxDepth - 最大递归深度
  * @param {Number} currentDepth - 当前递归深度
  * @returns {Promise<Array>} 子菜单数组
  */
-async function getChildMenus(parentId, maxDepth = 5, currentDepth = 0) {
+async function getChildMenus(parent_id, maxDepth = 5, currentDepth = 0) {
 	if (currentDepth >= maxDepth) {
 		return [];
 	}
 
 	const collection = await getCollection(COLLECTION_NAMES.MENUS);
-	const children = await collection.find({ parent_id: parentId });
+	const children = await collection.find({ parent_id: parent_id });
 
 	for (const child of children) {
-		child.children = await getChildMenus(child.menu_id, maxDepth, currentDepth + 1);
+		child.children = await getChildMenus(child.id, maxDepth, currentDepth + 1);
 	}
 
 	return children.sort((a, b) => (a.sort || 0) - (b.sort || 0));
@@ -490,10 +546,10 @@ export async function getMenusByRoleIds(roleIds) {
 	const menus = await findMenusByIds(uniqueMenuIds);
 
 	// 过滤已启用的菜单
-	const enabledMenus = menus.filter((m) => m.enable !== false);
+	const enableMenus = menus.filter((m) => m.enable !== false);
 
 	// 构建树形结构
-	return buildMenuTree(enabledMenus);
+	return buildMenuTree(enableMenus);
 }
 
 /**
@@ -507,12 +563,12 @@ function buildMenuTree(menus) {
 
 	// 第一步：创建Map便于查找
 	menus.forEach((menu) => {
-		menuMap.set(menu.menu_id, { ...menu, children: [] });
+		menuMap.set(menu.id, { ...menu, children: [] });
 	});
 
 	// 第二步：构建树形关系
 	menus.forEach((menu) => {
-		const node = menuMap.get(menu.menu_id);
+		const node = menuMap.get(menu.id);
 		if (!menu.parent_id || menu.parent_id === '' || menu.parent_id === null) {
 			// 顶级菜单
 			rootMenus.push(node);
@@ -556,15 +612,15 @@ function buildMenuTree(menus) {
  * 为用户绑定角色
  * @param {Object} params
  * @param {String} params.userId - 用户ID
- * @param {Array<String>} params.roleIds - 角色ID数组
+ * @param {Array<String>} params.roles - 角色ID数组
  * @param {Boolean} params.reset - 是否重置（true=替换，false=追加）
  * @returns {Promise<Object>} 更新结果
  */
-export async function bindUserRoles({ userId, roleIds = [], reset = false }) {
+export async function bindUserRoles({ userId, roles = [], reset = false }) {
 	const collection = await getCollection(COLLECTION_NAMES.USERS);
 	const { fromObjectId } = await import('@/lib/mongodb');
 
-	let finalRoles = roleIds;
+	let finalRoles = roles;
 
 	if (!reset) {
 		// 追加模式：获取现有角色并合并
@@ -581,24 +637,24 @@ export async function bindUserRoles({ userId, roleIds = [], reset = false }) {
 			}
 		}
 
-		// 使用 role_ids 字段（避免与 Better Auth 的 role 字段冲突）
-		let existingRoles = user?.role_ids || [];
+		// 使用 roles 字段存储 RBAC 角色数组（避免与 Better Auth 的 role 单一字段冲突）
+		let existingRoles = user?.roles || [];
 		if (!Array.isArray(existingRoles)) {
 			existingRoles = [];
 		}
 
-		finalRoles = [...new Set([...existingRoles, ...roleIds])];
+		finalRoles = [...new Set([...existingRoles, ...roles])];
 	}
 
-	// 使用 role_ids 字段存储 RBAC 角色数组
+	// 使用 roles 字段存储 RBAC 角色数组
 	// 尝试用 id 更新，如果失败则用 _id
-	let result = await collection.updateOne({ id: userId }, { $set: { role_ids: finalRoles } });
+	let result = await collection.updateOne({ id: userId }, { $set: { roles: finalRoles } });
 	
 	// 如果用 id 更新失败（matchedCount === 0），尝试用 _id
 	if (result.matchedCount === 0) {
 		try {
 			const objectId = fromObjectId(userId);
-			result = await collection.updateOne({ _id: objectId }, { $set: { role_ids: finalRoles } });
+			result = await collection.updateOne({ _id: objectId }, { $set: { roles: finalRoles } });
 		} catch (e) {
 			// userId 不是有效的 ObjectId
 		}
@@ -636,15 +692,15 @@ export async function getUserRoleIds(userId) {
 		return [];
 	}
 
-	// 使用 role_ids 字段（避免与 Better Auth 的 role 字段冲突）
-	const roleIds = user.role_ids;
+	// 使用 roles 字段存储 RBAC 角色数组（避免与 Better Auth 的 role 单一字段冲突）
+	const roles = user.roles;
 
-	if (!roleIds) {
+	if (!roles) {
 		return [];
 	}
 
-	if (Array.isArray(roleIds)) {
-		return roleIds;
+	if (Array.isArray(roles)) {
+		return roles;
 	}
 
 	return [];
@@ -789,7 +845,7 @@ export async function menuBindPermissions({ menuId, permissionIds = [], reset = 
 		finalPermissions = [...new Set([...existingPermissions, ...permissionIds])];
 	}
 
-	const result = await collection.updateOne({ menu_id: menuId }, { $set: { permission: finalPermissions } });
+	const result = await collection.updateOne({ id: menuId }, { $set: { permission: finalPermissions } });
 
 	return {
 		success: result.modifiedCount > 0,
@@ -841,12 +897,12 @@ function buildPermissionTree(permissions) {
 
 	// 第一步：创建Map便于查找
 	permissions.forEach((permission) => {
-		permissionMap.set(permission.permission_id, { ...permission, children: [] });
+		permissionMap.set(permission.id, { ...permission, children: [] });
 	});
 
 	// 第二步：构建树形关系
 	permissions.forEach((permission) => {
-		const node = permissionMap.get(permission.permission_id);
+		const node = permissionMap.get(permission.id);
 		if (!permission.parent_id || permission.parent_id === '' || permission.parent_id === null) {
 			// 顶级权限
 			rootPermissions.push(node);
@@ -886,14 +942,14 @@ function buildPermissionTree(permissions) {
  */
 function addLabelsToTree(tree) {
 	const levelNames = ['其他', '子弹', '炸弹', '榴弹', '核弹'];
-	const curdNames = ['未分类', '增', '删', '改', '查', '特殊'];
+	const crudNames = ['未分类', '增', '删', '改', '查', '特殊'];
 
 	tree.forEach((node) => {
 		const badges = [];
 		
-		// CURD 类型
-		if (node.curd_category !== undefined && node.curd_category !== null && node.curd_category !== 0) {
-			badges.push(curdNames[node.curd_category] || '未分类');
+		// CRUD 类型
+		if (node.crud_category !== undefined && node.crud_category !== null && node.crud_category !== 0) {
+			badges.push(crudNames[node.crud_category] || '未分类');
 		}
 		
 		// 权限级别
@@ -907,7 +963,7 @@ function addLabelsToTree(tree) {
 		}
 		
 		const badgeText = badges.length > 0 ? ` [${badges.join('/')}]` : '';
-		node.label = `${node.permission_name || node.permission_id}${badgeText}`;
+		node.label = `${node.name || node.id}${badgeText}`;
 
 		if (node.children && node.children.length > 0) {
 			addLabelsToTree(node.children);
@@ -931,14 +987,14 @@ export async function getMenuTreeForSelect({ withLabel = true } = {}) {
 			deletedAt: { $exists: false }
 		},
 		{
-			sort: { sortOrder: 1, createdAt: 1 }
+			sort: { sort: 1, createdAt: 1 }
 		}
 	);
 
 	// 转换 ObjectId 为字符串
 	const serializedMenus = allMenus.map((m) => fromObjectId(m));
 
-	// 构建树形结构（使用 parentId 字段）
+	// 构建树形结构（使用 parent_id 字段）
 	const tree = buildMenuTreeFromFlat(serializedMenus, null);
 
 	if (withLabel) {
@@ -952,16 +1008,16 @@ export async function getMenuTreeForSelect({ withLabel = true } = {}) {
 /**
  * 从扁平数组构建菜单树（递归）
  * @param {Array} menus - 扁平化的菜单数组
- * @param {String|null} parentId - 父级 _id（因为数据库 parentId 字段存的是 _id）
+ * @param {String|null} parent_id - 父级 id（UUID）
  * @returns {Array} 树形结构数组
  */
-function buildMenuTreeFromFlat(menus, parentId = null) {
+function buildMenuTreeFromFlat(menus, parent_id = null) {
 	const tree = [];
 	
 	for (const menu of menus) {
-		// 数据库中 parentId 字段存的是父菜单的 _id
-		if (menu.parentId === parentId) {
-			const children = buildMenuTreeFromFlat(menus, menu._id);
+		// 数据库中 parent_id 字段存的是父菜单的 id（UUID）
+		if (menu.parent_id === parent_id) {
+			const children = buildMenuTreeFromFlat(menus, menu.id); // ✅ 使用 id（UUID）而不是 _id
 			if (children.length > 0) {
 				menu.children = children;
 			}
@@ -979,7 +1035,7 @@ function buildMenuTreeFromFlat(menus, parentId = null) {
 function addLabelsToMenuTree(tree) {
 	tree.forEach((node) => {
 		const badges = [];
-		if (node.enabled === false) badges.push('已禁用');
+		if (node.enable === false) badges.push('已禁用');
 		if (node.hidden === true) badges.push('隐藏');
 		
 		const badgeText = badges.length > 0 ? ` [${badges.join('/')}]` : '';

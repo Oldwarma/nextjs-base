@@ -40,6 +40,17 @@ export const userCrudConfig = {
 
 		// 基础过滤条件（始终应用）
 		baseFilter: {},
+
+		// 连表配置（可选）- 在 getList 时自动连表查询角色名称
+		foreignDB: [
+			{
+				dbName: 'roles',
+				localKey: 'roles',             // users.roles 是角色 ID 数组 (RBAC)
+				foreignKey: 'id',              // roles.id 是 UUID
+				as: 'roleList',                // 连表结果存放在 roleList 字段
+				fieldJson: { id: 1, name: 1 }, // 只返回 id 和 name
+			},
+		],
 	},
 
 	// 数据验证规则

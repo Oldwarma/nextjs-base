@@ -130,11 +130,11 @@ export async function getUserStatisticsAdminAction(userId) {
 /**
  * 为用户绑定角色（管理员）
  * @param {String} userId - 用户ID
- * @param {Array<String>} roleIds - 角色ID数组
+ * @param {Array<String>} roles - 角色ID数组
  * @param {Boolean} reset - 是否重置（true=替换，false=追加）
  * @returns {Promise<Object>} 更新结果
  */
-export async function bindUserRolesAction(userId, roleIds, reset = true) {
+export async function bindUserRolesAction(userId, roles, reset = true) {
 	const adminCheck = await checkAdminAction();
 	if (!adminCheck.isAdmin) {
 		return {
@@ -148,7 +148,7 @@ export async function bindUserRolesAction(userId, roleIds, reset = true) {
 
 		const result = await bindUserRoles({
 			userId,
-			roleIds,
+			roles,
 			reset,
 		});
 
@@ -198,11 +198,11 @@ export async function getUserRolesAction(userId) {
 /**
  * 批量为用户绑定角色（管理员）
  * @param {Array<String>} userIds - 用户ID数组
- * @param {Array<String>} roleIds - 角色ID数组
+ * @param {Array<String>} roles - 角色ID数组
  * @param {Boolean} reset - 是否重置（true=替换，false=追加）
  * @returns {Promise<Object>} 更新结果
  */
-export async function batchBindUserRolesAction(userIds, roleIds, reset = true) {
+export async function batchBindUserRolesAction(userIds, roles, reset = true) {
 	const adminCheck = await checkAdminAction();
 	if (!adminCheck.isAdmin) {
 		return {
@@ -222,7 +222,7 @@ export async function batchBindUserRolesAction(userIds, roleIds, reset = true) {
 			try {
 				await bindUserRoles({
 					userId,
-					roleIds,
+					roles,
 					reset,
 				});
 				successCount++;

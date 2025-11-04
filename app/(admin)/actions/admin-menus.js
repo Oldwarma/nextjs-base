@@ -11,7 +11,7 @@
  * - 获取菜单树（用于父级选择）
  */
 
-import { getCollection, fromObjectId } from '@/lib/mongodb';
+import { getCollection, fromObjectId, generateId } from '@/lib/mongodb';
 import { checkAdmin } from '@/lib/admin-auth';
 import { logAction } from '@/lib/action-logger';
 
@@ -45,13 +45,13 @@ export async function getMenuListAction({ pageIndex = 1, pageSize = 1000, ...fil
 		}
 
 		// 是否启用筛选
-		if (filters.enabled !== undefined && filters.enabled !== null && filters.enabled !== '') {
-			query.enabled = filters.enabled === true || filters.enabled === 'true';
+		if (filters.enable !== undefined && filters.enable !== null && filters.enable !== '') {
+			query.enable = filters.enable === true || filters.enable === 'true';
 		}
 
 		// 获取所有菜单（不分页，因为需要构建树形结构）
 		const menus = await menusCollection.find(query, {
-			sort: { sortOrder: 1, createdAt: 1 }, // 按排序值升序，创建时间正序
+			sort: { sort: 1, createdAt: 1 }, // 按排序值升序，创建时间正序
 		});
 
 		// 转换 ObjectId
@@ -81,13 +81,15 @@ export async function getMenuListAction({ pageIndex = 1, pageSize = 1000, ...fil
 
 /**
  * 构建菜单树
+ * @param {Array} menus - 扁平菜单数组
+ * @param {String|null} parent_id - 父级 id（UUID）
  */
-function buildMenuTree(menus, parentId = null) {
+function buildMenuTree(menus, parent_id = null) {
 	const tree = [];
 
 	for (const menu of menus) {
-		if (menu.parentId === parentId) {
-			const children = buildMenuTree(menus, menu._id);
+		if (menu.parent_id === parent_id) {
+			const children = buildMenuTree(menus, menu.id); // ✅ 使用 id（UUID）而不是 _id
 			if (children.length > 0) {
 				menu.children = children;
 			}
@@ -113,10 +115,10 @@ export async function getMenuTreeAction() {
 		const menus = await menusCollection.find(
 			{
 				deletedAt: { $exists: false },
-				enabled: true, // 只显示启用的菜单
+				enable: true, // 只显示启用的菜单
 			},
 			{
-				sort: { sortOrder: 1, createdAt: 1 },
+				sort: { sort: 1, createdAt: 1 },
 			}
 		);
 
@@ -141,18 +143,18 @@ export async function getMenuTreeAction() {
 /**
  * 构建菜单树（用于 TreeSelect）
  */
-function buildMenuTreeForSelector(menus, parentId = null) {
+function buildMenuTreeForSelector(menus, parent_id = null) {
 	const tree = [];
 
 	for (const menu of menus) {
-		if (menu.parentId === parentId) {
+		if (menu.parent_id === parent_id) {
 			const node = {
 				title: menu.name,
-				value: menu._id,
-				key: menu._id,
+				value: menu.id,
+				key: menu.id,
 			};
 
-			const children = buildMenuTreeForSelector(menus, menu._id);
+			const children = buildMenuTreeForSelector(menus, menu.id);
 			if (children.length > 0) {
 				node.children = children;
 			}
@@ -186,34 +188,16 @@ export async function createMenuAction(data) {
 		const menusCollection = await getCollection('menus');
 		console.log('🔵 [3/6] Got menus collection:', !!menusCollection);
 
-		// 验证菜单标识唯一性
-		if (data.key) {
-			console.log('🔵 [4/6] Checking if menu key exists:', data.key);
-			const existingMenu = await menusCollection.findOne({
-				key: data.key,
-				deletedAt: { $exists: false },
-			});
-			console.log('🔵 [4/6] Existing menu found:', !!existingMenu);
-
-			if (existingMenu) {
-				console.warn('⚠️ Menu key already exists:', data.key);
-				return {
-					success: false,
-					error: 'Menu key already exists',
-				};
-			}
-		}
-
-		// 准备菜单数据
+		// 准备菜单数据（生成 UUID 作为 id）
 		const menuData = {
-			key: data.key,
+			id: generateId(), // ✅ 生成 UUID
 			name: data.name,
 			icon: data.icon || null,
 			url: data.url || null,
-			sortOrder: data.sortOrder !== undefined ? data.sortOrder : 0,
-			parentId: data.parentId || null,
+			sort: data.sort !== undefined ? data.sort : 0,
+			parent_id: data.parent_id || null,
 			remark: data.remark || null,
-			enabled: data.enabled !== false, // 默认启用
+			enable: data.enable !== false, // 默认启用
 			hidden: data.hidden || false, // 默认不隐藏
 			createdAt: new Date(),
 			updatedAt: new Date(),
@@ -262,47 +246,29 @@ export async function updateMenuAction(id, data) {
 		}
 
 		const menusCollection = await getCollection('menus');
-		const { ObjectId } = await import('mongodb');
-
-		// 验证菜单标识唯一性（排除当前菜单）
-		if (data.key) {
-			const existingMenu = await menusCollection.findOne({
-				key: data.key,
-				_id: { $ne: new ObjectId(id) },
-				deletedAt: { $exists: false },
-			});
-
-			if (existingMenu) {
-				return {
-					success: false,
-					error: 'Menu key already exists',
-				};
-			}
-		}
 
 		// 不能将菜单的父级设置为自己或自己的子菜单
-		if (data.parentId && data.parentId === id) {
+		if (data.parent_id && data.parent_id === id) {
 			return {
 				success: false,
 				error: 'Cannot set menu as its own parent',
 			};
 		}
 
-		// 准备更新数据
+		// 准备更新数据（id 不可修改）
 		const updateData = {
-			key: data.key,
 			name: data.name,
 			icon: data.icon || null,
 			url: data.url || null,
-			sortOrder: data.sortOrder || 0,
-			parentId: data.parentId || null,
+			sort: data.sort || 0,
+			parent_id: data.parent_id || null,
 			remark: data.remark || null,
-			enabled: data.enabled !== false,
+			enable: data.enable !== false,
 			hidden: data.hidden || false,
 			updatedAt: new Date(),
 		};
 
-		const result = await menusCollection.updateOne({ _id: new ObjectId(id) }, { $set: updateData });
+		const result = await menusCollection.updateOne({ id: id }, { $set: updateData });
 
 		if (result.matchedCount > 0) {
 			return {
@@ -335,11 +301,10 @@ export async function deleteMenuAction(id) {
 		}
 
 		const menusCollection = await getCollection('menus');
-		const { ObjectId } = await import('mongodb');
 
 		// 检查是否有子菜单
 		const childMenus = await menusCollection.findOne({
-			parentId: id,
+			parent_id: id,
 			deletedAt: { $exists: false },
 		});
 
@@ -351,7 +316,7 @@ export async function deleteMenuAction(id) {
 		}
 
 		// 软删除
-		const result = await menusCollection.updateOne({ _id: new ObjectId(id) }, { $set: { deletedAt: new Date() } });
+		const result = await menusCollection.updateOne({ id: id }, { $set: { deletedAt: new Date() } });
 
 		if (result.matchedCount > 0) {
 			return {

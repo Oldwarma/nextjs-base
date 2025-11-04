@@ -38,69 +38,47 @@ export default function MenusManagementPage() {
 	const [menuTree, setMenuTree] = useState([]);
 
 	// 加载菜单树（用于父级选择）
-	const loadMenuTree = useCallback(async () => {
-		const result = await getMenuTreeAction();
-		if (result.success) {
-			setMenuTree(result.data);
-		}
-	}, []);
-
 	useEffect(() => {
+		const loadMenuTree = async () => {
+			const result = await getMenuTreeAction();
+			if (result.success) {
+				setMenuTree(result.data);
+			}
+		};
+		
 		loadMenuTree();
-	}, [loadMenuTree]);
+	}, []);
 
 	// 使用 useMemo 缓存字段配置，避免无限循环
 	const fieldsConfig = useMemo(
 		() => [
-			// ID
+			// ID (UUID - 自动生成)
 			{
-				key: '_id',
+				key: 'id',
 				title: 'ID',
 				type: 'text',
 				table: false,
-				form: false,
+				form: false, // 自动生成，不允许编辑
 				search: false,
 			},
 
-			// 菜单标识
-			{
-				key: 'key',
-				title: 'Menu Key',
-				type: 'text',
-				// table: {
-				// 	width: 150,
-				// 	copyable: true,
-				// },
-				table: false,
-				form: {
-					required: true,
-					placeholder: 'e.g., dashboard, users, settings',
-					fieldProps: {
-						showCount: true,
-						maxLength: 50,
-					},
-					tips: 'Unique identifier for the menu item (alphanumeric and underscore)',
-				},
-				search: false,
-			},
-
-			// 菜单名称
-			{
-				key: 'name',
-				title: 'Menu Name',
+		// Name
+		{
+			key: 'name',
+			title: 'Name',
 				type: 'text',
 				table: {
 					width: 200,
 					ellipsis: true,
 				},
-				form: {
-					required: true,
-					placeholder: 'Enter menu name',
-					fieldProps: {
-						showCount: true,
-						maxLength: 50,
-					},
+			form: {
+				required: true,
+				placeholder: 'Enter name',
+				fieldProps: {
+					showCount: true,
+					maxLength: 50,
 				},
+			},
 				search: {
 					fieldProps: {
 						placeholder: 'Search by name',
@@ -125,12 +103,12 @@ export default function MenusManagementPage() {
 				form: {
 					placeholder: 'Select an icon',
 					tips: 'Icon is only for top-level menus. Sub-menu items do not display icons.',
-					// 依赖 parentId 字段，当 parentId 有值时禁用图标选择
-					dependencies: ['parentId'],
+					// 依赖 parent_id 字段，当 parent_id 有值时禁用图标选择
+					dependencies: ['parent_id'],
 					fieldProps: (form) => {
-						const parentId = form?.getFieldValue('parentId');
+						const parent_id = form?.getFieldValue('parent_id');
 						return {
-							disabled: !!parentId, // 有父级菜单时禁用图标选择
+							disabled: !!parent_id, // 有父级菜单时禁用图标选择
 						};
 					},
 				},
@@ -159,7 +137,7 @@ export default function MenusManagementPage() {
 
 			// 排序值
 			{
-				key: 'sortOrder',
+				key: 'sort',
 				title: 'Sort Order',
 				type: 'number',
 				table: {
@@ -183,7 +161,7 @@ export default function MenusManagementPage() {
 
 			// 父级菜单
 			{
-				key: 'parentId',
+				key: 'parent_id',
 				title: 'Parent Menu',
 				type: 'tree-select',
 				data: menuTree,
@@ -228,14 +206,14 @@ export default function MenusManagementPage() {
 
 			// 是否启用
 			{
-				key: 'enabled',
+				key: 'enable',
 				title: 'Enabled',
 				type: 'switch',
 				table: {
 					width: 100,
 					align: 'center',
-					render: (enabled) => {
-						return enabled ? (
+					render: (enable) => {
+						return enable ? (
 							<Tag
 								icon={<CheckCircleOutlined />}
 								color='success'
@@ -297,7 +275,7 @@ export default function MenusManagementPage() {
 						checkedChildren: 'Hidden',
 						unCheckedChildren: 'Visible',
 					},
-					tips: 'Hidden menus are enabled but not shown in the navigation (useful for direct access pages)',
+					tips: 'Hidden menus are enable but not shown in the navigation (useful for direct access pages)',
 				},
 				search: false,
 			},
@@ -345,6 +323,7 @@ export default function MenusManagementPage() {
 				delete: deleteItem,
 			}}
 			title='Menu Management'
+			rowKey='id' // ✅ 使用 UUID id 作为主键
 			enableCreate={true}
 			enableEdit={true}
 			enableDelete={true}

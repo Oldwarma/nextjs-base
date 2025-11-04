@@ -1,6 +1,7 @@
-import { getCollection } from '@/lib/mongodb';
+import { getCollection, generateId, fromObjectId } from '@/lib/mongodb';
 import { checkAdminAction } from '@/lib/admin-auth';
 import { logAction } from '@/lib/action-logger';
+import { selects } from '@/lib/db-api';
 
 /**
  * BaseDAO - 通用数据访问对象基类
@@ -169,6 +170,7 @@ export class BaseDAO {
 	/**
 	 * 获取列表（分页）
 	 * @param {Object} params - 查询参数
+	 * @param {Array} params.foreignDB - 连表配置（可选）
 	 * @returns {Promise<Object>} 查询结果
 	 */
 	async getList(params = {}) {
@@ -180,9 +182,8 @@ export class BaseDAO {
 			search,
 			filters = {},
 			sort,
+			foreignDB, // 连表配置（参数传入）
 		} = params;
-
-		const collection = await getCollection(this.config.collectionName);
 
 		// 构建查询条件
 		const query = { ...this.config.query.baseFilter };
@@ -211,7 +212,37 @@ export class BaseDAO {
 		// 排序
 		const sortOption = sort || this.config.query.defaultSort;
 
-		// 执行查询
+		// 连表配置：优先使用参数传入的，否则使用 config 中配置的
+		const finalForeignDB = foreignDB || this.config.query?.foreignDB;
+
+		// 如果配置了 foreignDB，使用 selects 方法进行连表查询
+		if (Array.isArray(finalForeignDB) && finalForeignDB.length > 0) {
+			const result = await selects({
+				dbName: this.config.collectionName,
+				whereJson: query,
+				sortJson: sortOption,
+				pageIndex,
+				pageSize,
+				getCount: true,
+				foreignDB: finalForeignDB,
+			});
+
+			// 输出转换
+			const transform = this.config.transforms?.output;
+			const data = transform ? result.rows.map(transform) : result.rows;
+
+			return {
+				success: true,
+				data,
+				total: result.total,
+				pageIndex: result.pageIndex,
+				pageSize: result.pageSize,
+				totalPages: result.totalPages,
+			};
+		}
+
+		// 否则使用普通查询
+		const collection = await getCollection(this.config.collectionName);
 		const result = await collection.findWithPagination({
 			query,
 			pageIndex,
@@ -255,9 +286,12 @@ export class BaseDAO {
 			throw new Error('Record has been deleted');
 		}
 
+		// 序列化 ObjectId
+		const serialized = fromObjectId(record);
+
 		// 输出转换
 		const transform = this.config.transforms?.output;
-		const data = transform ? transform(record) : record;
+		const data = transform ? transform(serialized) : serialized;
 
 		return {
 			success: true,
@@ -287,6 +321,11 @@ export class BaseDAO {
 		// 前置钩子
 		if (this.config.hooks?.beforeCreate) {
 			filtered = await this.config.hooks.beforeCreate(filtered);
+		}
+
+		// 自动生成 UUID 作为主键（如果没有提供）
+		if (!filtered[this.config.primaryKey]) {
+			filtered[this.config.primaryKey] = generateId();
 		}
 
 		// 添加时间戳
