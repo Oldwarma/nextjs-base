@@ -211,9 +211,6 @@ export class BaseDAO {
 
 		// 排序：优先使用传入的 sortJson，否则使用 config 中的默认排序
 		const sortOption = sortJson || this.config.query.defaultSort || {};
-		console.log('[BaseDAO] sortJson from params:', sortJson);
-		console.log('[BaseDAO] defaultSort from config:', this.config.query.defaultSort);
-		console.log('[BaseDAO] Final sortOption:', sortOption);
 
 		// 连表配置：优先使用参数传入的，否则使用 config 中配置的
 		const finalForeignDB = foreignDB || this.config.query?.foreignDB || [];
@@ -229,7 +226,6 @@ export class BaseDAO {
 			getCount: true,
 			foreignDB: finalForeignDB,  // 没有连表时为空数组
 		};
-		console.log('[BaseDAO] Calling selects with params:', selectsParams);
 		
 		const result = await selects(selectsParams);
 

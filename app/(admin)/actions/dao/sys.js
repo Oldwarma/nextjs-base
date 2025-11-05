@@ -548,8 +548,82 @@ export async function getMenusByRoleIds(roleIds) {
 	// 过滤已启用的菜单
 	const enableMenus = menus.filter((m) => m.enable !== false);
 
+	// 🔧 修复：自动补全缺失的父级菜单
+	const menusWithParents = await fillMissingParentMenus(enableMenus);
+
 	// 构建树形结构
-	return buildMenuTree(enableMenus);
+	return buildMenuTree(menusWithParents);
+}
+
+/**
+ * 自动补全缺失的父级菜单
+ * 当用户有子菜单权限但缺少父菜单权限时，自动从数据库查询并添加父菜单
+ * 这样可以保证菜单树的完整性，避免子菜单被拉平到顶级
+ * 
+ * @param {Array} menus - 用户已有权限的菜单数组
+ * @returns {Promise<Array>} 补全后的菜单数组
+ */
+async function fillMissingParentMenus(menus) {
+	if (!Array.isArray(menus) || menus.length === 0) {
+		return menus;
+	}
+
+	const menuMap = new Map();
+	const missingParentIds = new Set();
+
+	// 第一步：将已有菜单放入Map
+	menus.forEach((menu) => {
+		menuMap.set(menu.id, menu);
+	});
+
+	// 第二步：找出所有缺失的父级ID
+	menus.forEach((menu) => {
+		if (menu.parent_id && !menuMap.has(menu.parent_id)) {
+			missingParentIds.add(menu.parent_id);
+		}
+	});
+
+	// 如果没有缺失的父级，直接返回
+	if (missingParentIds.size === 0) {
+		return menus;
+	}
+
+	// 第三步：从数据库查询缺失的父级菜单
+	const missingParentIdsArray = Array.from(missingParentIds);
+	const parentMenus = await findMenusByIds(missingParentIdsArray);
+
+	// 第四步：将父级菜单添加到结果中，并标记为自动补全
+	const result = [...menus];
+	const addedParentIds = new Set();
+
+	parentMenus.forEach((parentMenu) => {
+		// 只添加已启用的父级菜单
+		if (parentMenu.enable !== false) {
+			// 标记这是自动补全的菜单（用于前端区分显示）
+			result.push({
+				...parentMenu,
+				_autoFilled: true, // 标记为自动补全
+			});
+			addedParentIds.add(parentMenu.id);
+		}
+	});
+
+	// 第五步：递归检查新添加的父级菜单是否还有缺失的父级
+	// 例如：用户有三级菜单权限，但缺少一级和二级菜单
+	const newMissingParentIds = new Set();
+	parentMenus.forEach((menu) => {
+		if (menu.parent_id && !menuMap.has(menu.parent_id) && !addedParentIds.has(menu.parent_id)) {
+			newMissingParentIds.add(menu.parent_id);
+		}
+	});
+
+	// 如果还有缺失的父级，递归补全
+	if (newMissingParentIds.size > 0) {
+		return await fillMissingParentMenus(result);
+	}
+
+	console.log(`🔧 [fillMissingParentMenus] Auto-filled ${addedParentIds.size} parent menu(s)`);
+	return result;
 }
 
 /**
@@ -578,7 +652,9 @@ function buildMenuTree(menus) {
 			if (parent) {
 				parent.children.push(node);
 			} else {
-				// 父级不存在（可能未授权），作为顶级处理
+				// 父级不存在（理论上不应该发生，因为已经自动补全了）
+				// 但作为兜底，还是作为顶级处理，避免子菜单丢失
+				console.warn(`⚠️ [buildMenuTree] Parent menu not found for: ${menu.title} (${menu.id}), parent_id: ${menu.parent_id}`);
 				rootMenus.push(node);
 			}
 		}

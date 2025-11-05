@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Avatar, Dropdown, Breadcrumb, Button, Spin } from 'antd';
 import { RightOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
@@ -15,7 +15,8 @@ import { UserOutlined, HomeOutlined, LogoutOutlined, LinkOutlined } from '@ant-d
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { signOutAction } from '@/app/(client)/actions/auth';
-import { getMenuListAction } from '@/app/(admin)/actions/rbac/admin-menus';
+import { getUserAccessibleMenusAction } from '@/app/(admin)/actions/rbac/user-permissions';
+import PageAccessGuard from './page-access-guard';
 
 /**
  * 管理后台布局组件 - 使用 Pro Components
@@ -27,12 +28,13 @@ export default function AdminLayout({ children, user }) {
 	const [menuLoading, setMenuLoading] = useState(true);
 	const router = useRouter();
 
-	// 加载菜单数据
+	// 加载菜单数据 - 使用 RBAC 权限过滤
 	useEffect(() => {
 		const loadMenus = async () => {
 			setMenuLoading(true);
 			try {
-				const result = await getMenuListAction({});
+				// 获取当前用户有权限访问的菜单
+				const result = await getUserAccessibleMenusAction();
 				if (result.success) {
 					setMenuData(result.data || []);
 				} else {
@@ -57,7 +59,7 @@ export default function AdminLayout({ children, user }) {
 	};
 
 	// 将数据库菜单转换为 ProLayout 路由配置
-	const convertMenuToRoute = (menu) => {
+	const convertMenuToRoute = useCallback((menu) => {
 		// 获取图标组件
 		const IconComponent = menu.icon && Icons[menu.icon] ? Icons[menu.icon] : null;
 
@@ -79,7 +81,7 @@ export default function AdminLayout({ children, user }) {
 		}
 
 		return route;
-	};
+	}, []);
 
 	// 路由配置（从数据库菜单生成）
 	const route = useMemo(() => {
@@ -98,7 +100,7 @@ export default function AdminLayout({ children, user }) {
 			path: '/admin',
 			routes,
 		};
-	}, [menuData]);
+	}, [menuData, convertMenuToRoute]);
 
 	// 用户下拉菜单
 	const userMenuItems = [
@@ -127,7 +129,7 @@ export default function AdminLayout({ children, user }) {
 	];
 
 	// 根据当前路径从菜单数据中查找菜单名称
-	const findMenuByPath = (menus, path) => {
+	const findMenuByPath = useCallback((menus, path) => {
 		for (const menu of menus) {
 			const menuPath = menu.url || `/admin/${menu.id}`; // ✅ 使用 id（UUID）
 			if (menuPath === path) {
@@ -139,7 +141,7 @@ export default function AdminLayout({ children, user }) {
 			}
 		}
 		return null;
-	};
+	}, []);
 
 	// 根据当前路径生成面包屑
 	const breadcrumbItems = useMemo(() => {
@@ -191,7 +193,7 @@ export default function AdminLayout({ children, user }) {
 		}
 
 		return items;
-	}, [currentPathname, menuData]);
+	}, [currentPathname, menuData, findMenuByPath]);
 
 		// 如果菜单正在加载，显示加载指示器
 	if (menuLoading) {
@@ -362,7 +364,9 @@ export default function AdminLayout({ children, user }) {
 			}}
 		>
 			<div style={{ minHeight: '100%', background: '#f5f5f5' }}>
-				{children}
+				<PageAccessGuard>
+					{children}
+				</PageAccessGuard>
 			</div>
 		</ProLayout>
 	);
