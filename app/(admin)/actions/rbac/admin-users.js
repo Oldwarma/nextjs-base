@@ -6,7 +6,7 @@
  * 使用 DAO 层进行数据操作
  */
 
-import { auth } from '@/lib/auth';
+import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
 import * as userDao from '@/app/(admin)/actions/dao/user';
 

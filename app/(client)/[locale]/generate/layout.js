@@ -1,5 +1,5 @@
 import { AppSidebar } from '@/components/client/layout/sidebar/app-sidebar';
-import { auth } from '@/lib/auth';
+import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
 
 export default async function GenerateLayout({ children }) {

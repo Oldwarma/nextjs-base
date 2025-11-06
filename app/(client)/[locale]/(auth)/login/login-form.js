@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 import { signInWithEmailAction, checkAndInitUserAction } from '@/app/(client)/actions/auth';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '@/lib/auth/auth-client';
 
 export function LoginForm({ className, callbackUrl, ...props }) {
 	const t = useTranslations();

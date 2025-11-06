@@ -12,7 +12,7 @@
  */
 
 import { getCollection, fromObjectId, generateId } from '@/lib/mongodb';
-import { checkAdmin } from '@/lib/admin-auth';
+import { checkAdmin } from '@/lib/auth/admin-auth';
 import { logAction } from '@/lib/action-logger';
 
 /**

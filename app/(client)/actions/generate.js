@@ -1,6 +1,6 @@
 'use server';
 
-import { auth } from '@/lib/auth';
+import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
 import { createUsageLog, updateUsageLog, checkUserCanUseFeature } from '@/lib/usage-logs';
 

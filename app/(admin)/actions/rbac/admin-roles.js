@@ -2,7 +2,7 @@
 
 import { createCrudActions } from '@/app/(admin)/actions/dao/base';
 import { roleCrudConfig } from '@/app/(admin)/actions/rbac/configs/role-crud.config';
-import { checkAdminAction } from '@/lib/admin-auth';
+import { checkAdminAction } from '@/lib/auth/admin-auth';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
 
 // Create role CRUD Actions using BaseDAO
