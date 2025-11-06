@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Avatar, Modal, Tree, Tag, Space, Button, Form, Input, Select, InputNumber, Switch, App } from 'antd';
 import { UserOutlined, TeamOutlined, PlusOutlined, KeyOutlined, StopOutlined } from '@ant-design/icons';
@@ -63,55 +63,61 @@ export default function UsersManagementPage() {
 	const [roleLoading, setRoleLoading] = useState(false);
 	const [rolesLoaded, setRolesLoaded] = useState(false);
 
-	// Load all roles (for tree display) - 统一使用 getRoleListForSelectAction
-	useEffect(() => {
-		const loadAllRoles = async () => {
-			try {
-				// 使用专门的选择器 Action，统一格式
-				const result = await getRoleListForSelectAction({ withLabel: true });
+	// 搜索表单展开状态
+	const [searchExpanded, setSearchExpanded] = useState(false);
+
+	// ✅ 加载角色数据的回调函数
+	const loadAllRoles = useCallback(async () => {
+		try {
+			// 使用专门的选择器 Action，统一格式
+			const result = await getRoleListForSelectAction({ withLabel: true });
+			
+			if (result.success) {
+				const roles = result.data || [];
+				console.log('[Users] Loaded roles:', roles);
+				setAllRoles(roles);
 				
-				if (result.success) {
-					const roles = result.data || [];
-					console.log('[Users] Loaded roles:', roles);
-					setAllRoles(roles);
-					
-					// Convert to tree data for Tree component (角色绑定模态框)
-					const treeData = roles
-						.filter(role => role && role.id) // 过滤无效数据
-						.map(role => ({
-							title: String(role.label || role.name || 'Unknown'), // 确保是字符串
-							value: String(role.id), // 确保是字符串
-							key: String(role.id),   // 确保是字符串
-							disabled: !role.enable,
-						}));
-					
-					console.log('[Users] Tree data:', treeData);
-					setRoleTree(treeData);
-					
-					// 为搜索表单准备选项数据（只包含启用的角色）
-					const searchOptions = roles
-						.filter(role => role && role.id && role.enable)
-						.map(role => ({
-							label: String(role.label || role.name || 'Unknown'),
-							value: String(role.id),
-						}));
-					setRoleOptions(searchOptions);
-					
-					setRolesLoaded(true);
-				} else {
-					console.error('[Users] Failed to load roles:', result.error);
-					messageApi.error(result.error || 'Failed to load roles');
-					setRolesLoaded(true);
-				}
-			} catch (error) {
-				console.error('[Users] Failed to load roles:', error);
-				messageApi.error('Failed to load roles');
+				// Convert to tree data for Tree component (角色绑定模态框)
+				const treeData = roles
+					.filter(role => role && role.id) // 过滤无效数据
+					.map(role => ({
+						title: String(role.label || role.name || 'Unknown'), // 确保是字符串
+						value: String(role.id), // 确保是字符串
+						key: String(role.id),   // 确保是字符串
+						disabled: !role.enable,
+					}));
+				
+				console.log('[Users] Tree data:', treeData);
+				setRoleTree(treeData);
+				
+				// 为搜索表单准备选项数据（只包含启用的角色）
+				const searchOptions = roles
+					.filter(role => role && role.id && role.enable)
+					.map(role => ({
+						label: String(role.label || role.name || 'Unknown'),
+						value: String(role.id),
+					}));
+				setRoleOptions(searchOptions);
+				
+				setRolesLoaded(true);
+			} else {
+				console.error('[Users] Failed to load roles:', result.error);
+				messageApi.error(result.error || 'Failed to load roles');
 				setRolesLoaded(true);
 			}
-		};
+		} catch (error) {
+			console.error('[Users] Failed to load roles:', error);
+			messageApi.error('Failed to load roles');
+			setRolesLoaded(true);
+		}
+	}, [messageApi]);
 
-		loadAllRoles();
-	}, []);
+	// ✅ 延迟加载：只在搜索表单展开时加载角色选项
+	useEffect(() => {
+		if (searchExpanded && !rolesLoaded) {
+			loadAllRoles();
+		}
+	}, [searchExpanded, rolesLoaded, loadAllRoles]);
 
 	// Handle assign roles
 	const handleAssignRoles = async (record) => {
@@ -454,9 +460,10 @@ export default function UsersManagementPage() {
 				enabled: true,
 				mode: 'in',  // 数组包含查询（MongoDB $in 操作符）
 				placeholder: 'Filter by roles',
+				lazyLoad: true,  // ✅ 延迟加载：只在搜索表单展开时显示
 				fieldProps: {
 					mode: 'multiple',  // 搜索时也支持多选
-					loading: !rolesLoaded,  // 加载中状态
+					loading: searchExpanded && !rolesLoaded,  // 展开且未加载时显示 loading
 				},
 			},
 			detail: {
@@ -655,7 +662,7 @@ export default function UsersManagementPage() {
 			form: false,
 			hideInTable: true, // 只在详情中显示
 		},
-	], [roleOptions, rolesLoaded]);  // ✅ 依赖动态选项
+	], [roleOptions, rolesLoaded, searchExpanded]);  // ✅ 依赖动态选项和搜索展开状态
 	
 	// ============================================
 	// Actions 配置
@@ -760,6 +767,9 @@ export default function UsersManagementPage() {
 				
 				// 自定义行操作
 				customRowActions={customRowActions}
+				
+				// ✅ 监听搜索表单展开状态
+				onSearchExpandChange={setSearchExpanded}
 				
 				// 功能开关
 				enableCreate={false}  // ✅ 关闭默认创建，使用自定义模态框

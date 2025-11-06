@@ -62,6 +62,7 @@ import DynamicFormFields from '@/components/admin/dynamic-form-fields';
  * @param {Boolean} enableDelete - 是否启用删除
  * @param {Array} customRowActions - 自定义行操作按钮配置
  * @param {Object} baseQuery - 基础查询条件 (强制应用)
+ * @param {Function} onSearchExpandChange - 搜索表单展开状态变化回调
  */
 export default function SmartCrudPage({
 	fieldsConfig,
@@ -74,6 +75,7 @@ export default function SmartCrudPage({
 	customToolbarButtons = [], // 自定义工具栏按钮
 	customRowActions = [], // 自定义行操作按钮
 	onActionRefReady, // 回调：当 actionRef 准备好时调用
+	onSearchExpandChange, // 回调：搜索表单展开状态变化时调用
 	beforeEdit,
 	beforeDelete,
 	beforeCreate,
@@ -105,6 +107,7 @@ export default function SmartCrudPage({
 	const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 	const [editModalFullscreen, setEditModalFullscreen] = useState(false);
 	const [createModalFullscreen, setCreateModalFullscreen] = useState(false);
+	const [searchExpanded, setSearchExpanded] = useState(false); // 搜索表单展开状态
 	const actionRef = useRef();
 	
 	// 表单实例引用（用于动态表单字段）
@@ -118,15 +121,28 @@ export default function SmartCrudPage({
 		}
 	}, [onActionRefReady, actionRef]);
 
-	// 自动生成表格列
+	// 自动生成表格列（根据搜索表单展开状态）
 	const tableColumns = useMemo(() => {
-		return generateTableColumns(fieldsConfig);
-	}, [fieldsConfig]);
+		return generateTableColumns(fieldsConfig, { searchExpanded });
+	}, [fieldsConfig, searchExpanded]);
 
 	// 自动生成搜索配置
 	const searchConfig = useMemo(() => {
-		return generateSearchConfig(fieldsConfig);
-	}, [fieldsConfig]);
+		const config = generateSearchConfig(fieldsConfig, { searchExpanded });
+		
+		// 监听搜索表单的展开/收起事件
+		config.onCollapse = (collapsed) => {
+			const expanded = !collapsed;
+			setSearchExpanded(expanded);
+			
+			// 通知父组件
+			if (onSearchExpandChange) {
+				onSearchExpandChange(expanded);
+			}
+		};
+		
+		return config;
+	}, [fieldsConfig, searchExpanded, onSearchExpandChange]);
 
 	// 自动生成搜索转换函数
 	const searchTransform = useMemo(() => {
