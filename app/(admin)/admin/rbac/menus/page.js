@@ -27,20 +27,20 @@ import { renderIcon } from '@/components/admin/icon-picker';
 
 // Server Actions
 import {
-	getMenuListAction as getList,
+	getMenuTreeAction as getList,
+	getMenuTreeForSelectAction,
 	createMenuAction as create,
 	updateMenuAction as update,
 	deleteMenuAction as deleteItem,
-	getMenuTreeAction,
 } from '@/app/(admin)/actions/rbac/admin-menus';
 
 export default function MenusManagementPage() {
 	const [menuTree, setMenuTree] = useState([]);
 
-	// 加载菜单树（用于父级选择）
+	// 加载菜单树（用于父级选择器）
 	useEffect(() => {
 		const loadMenuTree = async () => {
-			const result = await getMenuTreeAction();
+			const result = await getMenuTreeForSelectAction();
 			if (result.success) {
 				setMenuTree(result.data);
 			}

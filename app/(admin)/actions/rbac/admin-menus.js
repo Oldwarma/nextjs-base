@@ -49,6 +49,7 @@ export const getMenuTreeAction = wrapQueryAction('menu', async ({ pageIndex = 1,
 
 /**
  * 获取菜单列表（用于父级选择器）
+ * 返回扁平列表格式
  */
 export const getMenuListForParentSelectAction = wrapQueryAction('menu', async () => {
 	const result = await crudActions._dao.getList({
@@ -74,5 +75,41 @@ export const getMenuListForParentSelectAction = wrapQueryAction('menu', async ()
 	return {
 		success: true,
 		data: menus,
+	};
+});
+
+/**
+ * 获取菜单树（用于树形选择器）
+ * 返回树形结构，适合 TreeSelect 组件
+ */
+export const getMenuTreeForSelectAction = wrapQueryAction('menu', async () => {
+	const result = await sysDao.getMenuTree({
+		pageIndex: 1,
+		pageSize: 1000,
+		filters: { enable: true },
+	});
+
+	// 转换为 TreeSelect 所需的格式
+	const convertToTreeSelect = (menus) => {
+		if (!Array.isArray(menus)) return [];
+		
+		return menus.map(menu => ({
+			title: menu.name,
+			value: menu.id,
+			key: menu.id,
+			children: menu.children && menu.children.length > 0 
+				? convertToTreeSelect(menu.children) 
+				: undefined,
+		}));
+	};
+
+	const treeData = [
+		{ title: '--- Root Menu ---', value: null, key: 'root' },
+		...convertToTreeSelect(result.rows || []),
+	];
+
+	return {
+		success: true,
+		data: treeData,
 	};
 });
