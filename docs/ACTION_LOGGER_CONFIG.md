@@ -7,6 +7,8 @@ action-logger 是一个强大的 Server Action 日志系统，支持：
 - ✅ 灵活的输出模式（full/summary/simple）
 - ✅ 可配置的展开深度（1-5 或完全展开）
 - ✅ 可选的数据库存储（开/关）
+- ✅ **智能日志清理**（最大记录数限制）
+- ✅ **类型过滤**（只记录指定类型的操作）
 - ✅ 开发环境控制台输出 + 生产环境数据库存储
 
 ---
@@ -24,6 +26,12 @@ ACTION_LOG_DEPTH=2            # 1-5 或 null
 
 # 数据库存储开关
 ACTION_LOG_DATABASE=1         # 1=入库（默认） | 0=不入库
+
+# ✨ 最大记录数（超过后自动删除最旧的日志）
+ACTION_LOG_MAX=10000          # 数字 = 保留最新 N 条 | 0/留空 = 无限记录
+
+# ✨ 操作类型过滤（只记录指定类型的操作）
+ACTION_LOG_TYPE=all           # all | create,delete | create,read,update,delete | 留空=不记录
 ```
 
 ---
@@ -226,6 +234,189 @@ ACTION_LOG_DATABASE=1         # 1=入库（默认） | 0=不入库
 
 ---
 
+## 🧹 MAX 最大记录数限制
+
+**可选值**：数字（如 `10000`）或 `0`/留空（无限记录）
+
+### 功能说明
+
+当日志记录数超过 `ACTION_LOG_MAX` 设定值时，系统会自动删除最旧的日志，保持数据库整洁。
+
+### 配置示例
+
+```bash
+# 保留最新的 10000 条日志
+ACTION_LOG_MAX=10000
+
+# 保留最新的 1000 条日志
+ACTION_LOG_MAX=1000
+
+# 无限记录（默认，不删除旧日志）
+ACTION_LOG_MAX=0
+# 或留空
+ACTION_LOG_MAX=
+```
+
+### 工作原理
+
+1. 每次写入新日志后，检查总记录数
+2. 如果超过 `MAX` 值，计算需要删除的数量
+3. 按 `createdAt` 升序排列，删除最旧的 N 条记录
+4. 在后台异步执行，不阻塞主流程
+
+### 使用建议
+
+| 环境 | 推荐值 | 说明 |
+|------|--------|------|
+| 开发环境 | `1000` | 本地测试，保留少量日志即可 |
+| 测试环境 | `10000` | 短期运行，保留适量日志 |
+| 生产环境（小型） | `50000` | 约保留 1-2 个月的日志 |
+| 生产环境（大型） | `100000+` | 高频操作，需要更多历史记录 |
+
+**注意**：
+- 清理操作在后台异步执行，不影响性能
+- 如需永久保留日志，请定期导出或备份 `action_logs` 集合
+- 删除操作无法恢复，请谨慎设置
+
+---
+
+## 🎯 TYPE 操作类型过滤
+
+**可选值**：`all` | `create,delete` | 留空
+
+### 功能说明
+
+**只控制数据库写入**，不影响控制台输出。
+
+- ✅ 控制台日志（开发环境）：始终输出所有操作
+- ✅ 数据库日志：根据 TYPE 配置过滤
+
+这样设计的好处：
+- 开发时可以看到所有操作，方便调试
+- 数据库只存储关键操作，减少存储成本
+
+### 支持的操作类型
+
+| 类型 | 包含的操作 | 说明 |
+|------|-----------|------|
+| `read` | `query`, `getList`, `getDetail` | 所有查询/读取操作 |
+| `create` | `create` | 创建操作 |
+| `update` | `update`, `batchUpdate` | 更新操作（包括批量更新） |
+| `delete` | `delete`, `batchDelete` | 删除操作（包括批量删除） |
+| `all` | 所有操作 | 记录所有类型 |
+
+### 配置示例
+
+#### 1. 记录所有操作（默认）
+
+```bash
+ACTION_LOG_TYPE=all
+# 或留空（默认行为）
+ACTION_LOG_TYPE=
+```
+
+**效果**：
+- 控制台：输出所有操作
+- 数据库：记录所有操作
+
+---
+
+#### 2. 只记录创建和删除
+
+```bash
+ACTION_LOG_TYPE=create,delete
+```
+
+**效果**：
+- 控制台：✅ 输出所有操作（不受影响）
+- 数据库：
+  - ✅ 记录：`create`, `delete`, `batchDelete`
+  - ❌ 不记录：`query`, `getList`, `getDetail`, `update`, `batchUpdate`
+
+**使用场景**：审计重要操作，数据库不存储查询和更新日志
+
+---
+
+#### 3. 只记录修改操作（创建、更新、删除）
+
+```bash
+ACTION_LOG_TYPE=create,update,delete
+```
+
+**效果**：
+- 控制台：✅ 输出所有操作（不受影响）
+- 数据库：
+  - ✅ 记录：`create`, `update`, `batchUpdate`, `delete`, `batchDelete`
+  - ❌ 不记录：`query`, `getList`, `getDetail`
+
+**使用场景**：数据变更审计，数据库不存储查询日志
+
+---
+
+#### 4. 只记录查询操作
+
+```bash
+ACTION_LOG_TYPE=read
+```
+
+**效果**：
+- 控制台：✅ 输出所有操作（不受影响）
+- 数据库：
+  - ✅ 记录：`query`, `getList`, `getDetail`
+  - ❌ 不记录：`create`, `update`, `delete` 等
+
+**使用场景**：分析查询性能，监控数据访问
+
+---
+
+#### 5. 完全禁用数据库日志
+
+```bash
+ACTION_LOG_TYPE=
+```
+
+**效果**：
+- 控制台：✅ 仍然输出（不受影响）
+- 数据库：❌ 不记录任何操作
+
+**使用场景**：只需要控制台日志，不需要持久化存储
+
+---
+
+### 类型映射说明
+
+系统自动将操作名称映射到类型：
+
+```javascript
+// read 类型
+'query' → 'read'
+'getList' → 'read'
+'getDetail' → 'read'
+
+// create 类型
+'create' → 'create'
+
+// update 类型
+'update' → 'update'
+'batchUpdate' → 'update'
+
+// delete 类型
+'delete' → 'delete'
+'batchDelete' → 'delete'
+```
+
+### 使用建议
+
+| 场景 | 推荐配置 | 说明 |
+|------|---------|------|
+| 开发调试 | `all` | 查看所有操作，方便调试 |
+| 生产环境 | `create,update,delete` | 只记录数据变更，减少日志量 |
+| 安全审计 | `create,delete` | 关注重要操作，防止误删 |
+| 性能监控 | `read` | 分析查询性能 |
+| 完全禁用 | `''`（留空） | 临时关闭日志 |
+
+---
+
 ## 📦 自动集成的地方
 
 以下场景会**自动记录日志**，无需手动调用：
@@ -292,27 +483,50 @@ export const myAction = wrapAdminAction('create', 'user', async (params, context
 ### 开发环境（.env.local）
 
 ```bash
-# 极简模式，控制台干净整洁
+# 方案 1：极简模式（日常开发）
 ACTION_LOG_MODE=simple
-ACTION_LOG_DATABASE=0
+ACTION_LOG_DATABASE=0           # 不入库
+ACTION_LOG_TYPE=all             # 记录所有操作
+ACTION_LOG_MAX=1000             # 保留最新 1000 条
 
-# 或者调试时用 full 模式看详细信息
-# ACTION_LOG_MODE=full
-# ACTION_LOG_DEPTH=2
-# ACTION_LOG_DATABASE=0
+# 方案 2：调试模式（排查问题时）
+ACTION_LOG_MODE=full
+ACTION_LOG_DEPTH=3
+ACTION_LOG_DATABASE=0           # 不入库
+ACTION_LOG_TYPE=all             # 记录所有操作
 ```
 
 ### 生产环境（.env.production）
 
 ```bash
-# 不输出控制台日志（生产环境 NODE_ENV=production 时自动不输出）
-# 但记录到数据库用于审计
-ACTION_LOG_DATABASE=1
-
-# MODE 和 DEPTH 在生产环境不影响控制台（因为不输出）
-# 但影响写入数据库的数据格式
+# 方案 1：完整审计（记录所有操作）
 ACTION_LOG_MODE=summary
 ACTION_LOG_DEPTH=2
+ACTION_LOG_DATABASE=1           # 入库
+ACTION_LOG_TYPE=all             # 记录所有操作
+ACTION_LOG_MAX=100000           # 保留最新 10 万条
+
+# 方案 2：关键操作审计（只记录数据变更）
+ACTION_LOG_MODE=summary
+ACTION_LOG_DEPTH=2
+ACTION_LOG_DATABASE=1           # 入库
+ACTION_LOG_TYPE=create,update,delete  # 只记录变更操作
+ACTION_LOG_MAX=50000            # 保留最新 5 万条
+
+# 方案 3：安全审计（只记录创建和删除）
+ACTION_LOG_MODE=summary
+ACTION_LOG_DEPTH=1
+ACTION_LOG_DATABASE=1           # 入库
+ACTION_LOG_TYPE=create,delete   # 只记录创建和删除
+ACTION_LOG_MAX=50000            # 保留最新 5 万条
+```
+
+### 性能测试环境
+
+```bash
+# 不记录日志，避免影响性能测试
+ACTION_LOG_TYPE=                # 留空，完全禁用
+ACTION_LOG_DATABASE=0
 ```
 
 ---
@@ -405,9 +619,18 @@ ACTION_LOG_DEPTH=2
 
 ### Q4: 如何只记录特定操作的日志？
 
-**A**: 当前所有使用 logAction 的地方都会记录。如果需要选择性记录，可以：
-1. 使用 `ACTION_LOG_DATABASE=0` 关闭数据库写入
-2. 在特定 Action 中手动调用 `logAction`，而不使用自动包装
+**A**: 使用 `ACTION_LOG_TYPE` 配置：
+
+```bash
+# 只记录创建和删除操作
+ACTION_LOG_TYPE=create,delete
+
+# 只记录数据变更（不记录查询）
+ACTION_LOG_TYPE=create,update,delete
+
+# 完全禁用日志
+ACTION_LOG_TYPE=
+```
 
 ### Q5: 如何查看历史日志？
 
@@ -441,6 +664,8 @@ db.action_logs.aggregate([
 
 ## 📝 更新日志
 
+- **2025-11-06**: ✨ 添加 `ACTION_LOG_MAX` 配置，支持自动清理超出限制的旧日志
+- **2025-11-06**: ✨ 添加 `ACTION_LOG_TYPE` 配置，支持按操作类型过滤日志记录
 - **2025-11-06**: 添加 `ACTION_LOG_DATABASE` 配置，支持控制是否入库
 - **2025-11-06**: 重构日志系统，实现 full/summary/simple 三种模式
 - **2025-11-06**: 添加 `ACTION_LOG_DEPTH` 配置，支持 1-5 层深度控制

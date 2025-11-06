@@ -40,16 +40,16 @@ export default function MenusManagementPage() {
 	// 加载菜单树（用于父级选择器）- 只加载一次
 	useEffect(() => {
 		let isMounted = true;
-		
+
 		const loadMenuTree = async () => {
 			const result = await getMenuTreeForSelectAction();
 			if (result.success && isMounted) {
 				setMenuTree(result.data);
 			}
 		};
-		
+
 		loadMenuTree();
-		
+
 		return () => {
 			isMounted = false;
 		};
@@ -68,23 +68,23 @@ export default function MenusManagementPage() {
 				search: false,
 			},
 
-		// Name
-		{
-			key: 'name',
-			title: 'Name',
+			// Name
+			{
+				key: 'name',
+				title: 'Name',
 				type: 'text',
 				table: {
 					width: 200,
 					ellipsis: true,
 				},
-			form: {
-				required: true,
-				placeholder: 'Enter name',
-				fieldProps: {
-					showCount: true,
-					maxLength: 50,
+				form: {
+					required: true,
+					placeholder: 'Enter name',
+					fieldProps: {
+						showCount: true,
+						maxLength: 50,
+					},
 				},
-			},
 				search: {
 					fieldProps: {
 						placeholder: 'Search by name',
@@ -149,7 +149,6 @@ export default function MenusManagementPage() {
 				table: {
 					width: 100,
 					align: 'center',
-					sorter: true,
 				},
 				form: {
 					required: true,
@@ -293,7 +292,6 @@ export default function MenusManagementPage() {
 				type: 'datetime',
 				table: {
 					width: 180,
-					sorter: true,
 				},
 				form: false,
 				search: false,
@@ -306,7 +304,6 @@ export default function MenusManagementPage() {
 				type: 'datetime',
 				table: {
 					width: 180,
-					sorter: true,
 				},
 				form: false,
 				search: false,
