@@ -49,11 +49,25 @@ export const getPermissionTreeAction = wrapQueryAction('permission', async ({ pa
 });
 
 /**
- * 获取权限列表（用于选择器）
- * 按 parent 分组
+ * 获取权限树（用于 TreeSelect 选择器）
+ * 返回树形结构
  */
-export const getPermissionListForSelectAction = wrapQueryAction('permission', async ({ withLabel = false } = {}) => {
-	// 获取所有启用的权限
+export const getPermissionTreeForSelectAction = wrapQueryAction('permission', async () => {
+	// 使用 sysDao.getPermissionTreeForSelect 获取完整的权限树
+	const tree = await sysDao.getPermissionTreeForSelect({ withLabel: false });
+	
+	return {
+		success: true,
+		data: tree || [],
+	};
+});
+
+/**
+ * 获取权限列表（用于普通 Select 或 Checkbox）
+ * 返回扁平化列表，适配角色页面的权限分配
+ */
+export const getPermissionListForSelectAction = wrapQueryAction('permission', async () => {
+	// 获取所有启用的权限（扁平化）
 	const result = await crudActions._dao.getList({
 		pageIndex: 1,
 		pageSize: 1000,
@@ -64,35 +78,13 @@ export const getPermissionListForSelectAction = wrapQueryAction('permission', as
 		return result;
 	}
 
-	let permissions = result.data || [];
-
-	// 如果需要标签，格式化为分组
-	if (withLabel) {
-		// 按 parent 分组
-		const grouped = permissions.reduce((acc, perm) => {
-			const parentId = perm.parent || 'root';
-			if (!acc[parentId]) {
-				acc[parentId] = [];
-			}
-			acc[parentId].push({
-				...perm,
-				label: `${perm.name} (${perm.id})`,
-				value: perm.id,
-			});
-			return acc;
-		}, {});
-
-		// 转换为选项格式
-		const options = Object.entries(grouped).map(([parentId, children]) => ({
-			label: parentId === 'root' ? 'Root Permissions' : parentId,
-			options: children,
-		}));
-
-		return {
-			success: true,
-			data: options,
-		};
-	}
+	const permissions = (result.data || []).map(perm => ({
+		id: perm.id,
+		name: perm.name,
+		code: perm.code,
+		category: perm.category,
+		parent_id: perm.parent_id,
+	}));
 
 	return {
 		success: true,

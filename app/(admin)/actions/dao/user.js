@@ -99,18 +99,22 @@ export async function createUser(userData) {
 	};
 
 	// 创建用户
-	const result = await add({
+	const insertedId = await add({
 		dbName: 'users',
 		dataJson: newUser,
 	});
 
-	if (!result || !result._id) {
+	if (!insertedId) {
 		throw new Error('Failed to create user');
 	}
 
+	// 注意：不应该直接调用此函数创建用户
+	// 应该使用 Better Auth 的 API (auth.api.signUpEmail)
+	// 此函数保留用于特殊情况或数据迁移
+	
 	// 创建 credential account
 	const newAccount = {
-		userId: result._id, // 使用 Better Auth 生成的 _id
+		userId: insertedId,
 		accountId: email.toLowerCase(),
 		providerId: 'credential',
 		password: hashedPassword,
@@ -123,7 +127,8 @@ export async function createUser(userData) {
 		dataJson: newAccount,
 	});
 
-	return mapUserFields(result);
+	// 返回完整的用户对象（包含 _id）
+	return mapUserFields({ ...newUser, _id: insertedId });
 }
 
 /**

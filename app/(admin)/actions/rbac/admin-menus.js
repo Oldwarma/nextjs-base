@@ -93,14 +93,20 @@ export const getMenuTreeForSelectAction = wrapQueryAction('menu', async () => {
 	const convertToTreeSelect = (menus) => {
 		if (!Array.isArray(menus)) return [];
 		
-		return menus.map(menu => ({
-			title: menu.name,
-			value: menu.id,
-			key: menu.id,
-			children: menu.children && menu.children.length > 0 
-				? convertToTreeSelect(menu.children) 
-				: undefined,
-		}));
+		return menus.map(menu => {
+			const node = {
+				title: menu.name,
+				value: menu.id,
+				key: menu.id,
+			};
+			
+			// 只有当存在子节点时才添加 children 字段
+			if (menu.children && menu.children.length > 0) {
+				node.children = convertToTreeSelect(menu.children);
+			}
+			
+			return node;
+		});
 	};
 
 	const treeData = [

@@ -80,37 +80,35 @@ export async function createUserAction(userData) {
 			};
 		}
 
-		// 检查邮箱是否已存在
-		const existingUser = await userDao.getUserByEmail(email);
-		if (existingUser) {
+		// 使用 Better Auth Admin Plugin 的 createUser API
+		const { auth } = await import('@/lib/auth/auth');
+		
+		// 调用 Better Auth Admin Plugin 的 createUser
+		const newUser = await auth.api.createUser({
+			headers: await headers(),
+			body: {
+				email: email.toLowerCase(),
+				password,
+				name: name || username || email.split('@')[0],
+				role: role || 'user',
+				// 使用 data 字段传递额外的自定义字段
+				data: {
+					username: username || null,
+					isBackendAllowed: isBackendAllowed || false,
+					roles: roles || [],
+					credits: credits || 0,
+					totalCreditsEarned: 0,
+					totalCreditsUsed: 0,
+				},
+			},
+		});
+
+		if (!newUser) {
 			return {
 				success: false,
-				error: 'Email already exists',
+				error: 'Failed to create user via Better Auth Admin Plugin',
 			};
 		}
-
-		// 检查用户名是否已存在
-		if (username) {
-			const existingUsername = await userDao.getUserByUsername(username);
-			if (existingUsername) {
-				return {
-					success: false,
-					error: 'Username already exists',
-				};
-}
-		}
-
-		// 使用 DAO 创建用户
-		const newUser = await userDao.createUser({
-			email,
-			password,
-			name,
-			username,
-			role,
-			isBackendAllowed,
-			roles,
-			credits,
-		});
 
 		return {
 			success: true,
@@ -143,15 +141,21 @@ export async function updateUserAction(userId, updateData) {
 				success: false,
 				error: 'User ID is required',
 			};
-}
+		}
 
-		// 使用 DAO 更新用户
-		const updatedUser = await userDao.updateUser(userId, updateData);
+		// 使用 Better Auth Admin Plugin 的 updateUser API
+		const updatedUser = await auth.api.adminUpdateUser({
+			headers: await headers(),
+			body: {
+				userId,
+				data: updateData, // Better Auth 会自动更新 additionalFields 中定义的字段
+			},
+		});
 
 		if (!updatedUser) {
 			return {
 				success: false,
-				error: 'User not found',
+				error: 'Failed to update user',
 			};
 		}
 
@@ -192,18 +196,24 @@ export async function resetUserPasswordAction(userId, newPassword) {
 			return {
 				success: false,
 				error: 'User ID and new password are required',
-		};
-	}
+			};
+		}
 
 		if (newPassword.length < 8) {
 			return {
 				success: false,
 				error: 'Password must be at least 8 characters',
 			};
-}
+		}
 
-		// 使用 DAO 重置密码
-		await userDao.resetUserPassword(userId, newPassword);
+		// 使用 Better Auth Admin Plugin 的 setUserPassword API
+		await auth.api.setUserPassword({
+			headers: await headers(),
+			body: {
+				userId,
+				newPassword,
+			},
+		});
 
 		return {
 			success: true,
@@ -236,10 +246,15 @@ export async function deleteUserAction(userId) {
 				success: false,
 				error: 'User ID is required',
 			};
-}
+		}
 
-		// 使用 DAO 删除用户
-		await userDao.deleteUser(userId);
+		// 使用 Better Auth Admin Plugin 的 removeUser API
+		await auth.api.removeUser({
+			headers: await headers(),
+			body: {
+				userId,
+			},
+		});
 
 		return {
 			success: true,
@@ -443,6 +458,90 @@ export async function getUserRolesAction(userId) {
 		return {
 			success: false,
 			error: error.message || 'Failed to get user roles',
+		};
+	}
+}
+
+/**
+ * 封禁用户
+ */
+export async function banUserAction(userId, banReason, banExpiresIn) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+		}
+
+		// 使用 Better Auth Admin Plugin 的 banUser API
+		await auth.api.banUser({
+			headers: await headers(),
+			body: {
+				userId,
+				banReason,
+				banExpiresIn,
+			},
+		});
+
+		return {
+			success: true,
+			message: 'User banned successfully',
+		};
+	} catch (error) {
+		console.error('Failed to ban user:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to ban user',
+		};
+	}
+}
+
+/**
+ * 解封用户
+ */
+export async function unbanUserAction(userId) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+		}
+
+		// 使用 Better Auth Admin Plugin 的 unbanUser API
+		await auth.api.unbanUser({
+			headers: await headers(),
+			body: {
+				userId,
+			},
+		});
+
+		return {
+			success: true,
+			message: 'User unbanned successfully',
+		};
+	} catch (error) {
+		console.error('Failed to unban user:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to unban user',
 		};
 	}
 }

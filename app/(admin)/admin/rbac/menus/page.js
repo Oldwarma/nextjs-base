@@ -37,17 +37,23 @@ import {
 export default function MenusManagementPage() {
 	const [menuTree, setMenuTree] = useState([]);
 
-	// 加载菜单树（用于父级选择器）
+	// 加载菜单树（用于父级选择器）- 只加载一次
 	useEffect(() => {
+		let isMounted = true;
+		
 		const loadMenuTree = async () => {
 			const result = await getMenuTreeForSelectAction();
-			if (result.success) {
+			if (result.success && isMounted) {
 				setMenuTree(result.data);
 			}
 		};
 		
 		loadMenuTree();
-	}, []);
+		
+		return () => {
+			isMounted = false;
+		};
+	}, []); // 空依赖数组，只在mount时执行一次
 
 	// 使用 useMemo 缓存字段配置，避免无限循环
 	const fieldsConfig = useMemo(
@@ -307,7 +313,7 @@ export default function MenusManagementPage() {
 			},
 		],
 		[menuTree]
-	); // ✅ 添加 menuTree 作为依赖
+	);
 
 	// 创建/编辑回调 - 不需要重新加载菜单树
 	// 因为 menuTree 已经在组件初始化时加载了

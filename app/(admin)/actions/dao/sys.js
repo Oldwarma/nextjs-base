@@ -452,7 +452,11 @@ export async function getMenuTree({ pageIndex = 1, pageSize = DB_MAX_LIMIT, filt
 	// 递归获取子菜单
 	if (result.rows && result.rows.length > 0) {
 		for (const item of result.rows) {
-			item.children = await getChildMenus(item.id);
+			const children = await getChildMenus(item.id);
+			// 只有当存在子菜单时才添加 children 字段
+			if (children.length > 0) {
+				item.children = children;
+			}
 		}
 	}
 
@@ -475,7 +479,11 @@ async function getChildMenus(parent_id, maxDepth = 5, currentDepth = 0) {
 	const children = await collection.find({ parent_id: parent_id });
 
 	for (const child of children) {
-		child.children = await getChildMenus(child.id, maxDepth, currentDepth + 1);
+		const subChildren = await getChildMenus(child.id, maxDepth, currentDepth + 1);
+		// 只有当存在子菜单时才添加 children 字段
+		if (subChildren.length > 0) {
+			child.children = subChildren;
+		}
 	}
 
 	return children.sort((a, b) => (a.sort || 0) - (b.sort || 0));

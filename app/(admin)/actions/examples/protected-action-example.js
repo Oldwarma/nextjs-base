@@ -12,7 +12,7 @@
  */
 
 import { checkActionPermission, checkPermission, checkRole } from '@/lib/auth/permission-auth';
-import { logAction } from '@/lib/logging/action-logger';
+import { logActionToConsole } from '@/lib/logging/action-logger';
 
 /**
  * Example 1: 使用 Action 路径验证权限
@@ -32,7 +32,7 @@ export async function createUserExampleAction(data) {
 				success: false,
 				error: permCheck.error || 'Permission denied: You do not have permission to create users',
 			};
-			logAction('createUserExample', 'examples/protected', startTime, requestTime, data, result, true);
+			logActionToConsole('createUserExample', 'examples/protected', startTime, requestTime, data, result, true);
 			return result;
 		}
 
@@ -44,14 +44,14 @@ export async function createUserExampleAction(data) {
 			message: 'User created successfully',
 		};
 
-		logAction('createUserExample', 'examples/protected', startTime, requestTime, data, result, false);
+		logActionToConsole('createUserExample', 'examples/protected', startTime, requestTime, data, result, false);
 		return result;
 	} catch (error) {
 		const result = {
 			success: false,
 			error: error.message,
 		};
-		logAction('createUserExample', 'examples/protected', startTime, requestTime, data, result, true);
+		logActionToConsole('createUserExample', 'examples/protected', startTime, requestTime, data, result, true);
 		return result;
 	}
 }
@@ -74,7 +74,7 @@ export async function deleteUserExampleAction(userId) {
 				success: false,
 				error: 'Permission denied: You do not have permission to delete users',
 			};
-			logAction('deleteUserExample', 'examples/protected', startTime, requestTime, { userId }, result, true);
+			logActionToConsole('deleteUserExample', 'examples/protected', startTime, requestTime, { userId }, result, true);
 			return result;
 		}
 
@@ -86,14 +86,14 @@ export async function deleteUserExampleAction(userId) {
 			message: 'User deleted successfully',
 		};
 
-		logAction('deleteUserExample', 'examples/protected', startTime, requestTime, { userId }, result, false);
+		logActionToConsole('deleteUserExample', 'examples/protected', startTime, requestTime, { userId }, result, false);
 		return result;
 	} catch (error) {
 		const result = {
 			success: false,
 			error: error.message,
 		};
-		logAction('deleteUserExample', 'examples/protected', startTime, requestTime, { userId }, result, true);
+		logActionToConsole('deleteUserExample', 'examples/protected', startTime, requestTime, { userId }, result, true);
 		return result;
 	}
 }
@@ -116,7 +116,7 @@ export async function adminOnlyExampleAction() {
 				success: false,
 				error: 'Access denied: Admin role required',
 			};
-			logAction('adminOnlyExample', 'examples/protected', startTime, requestTime, {}, result, true);
+			logActionToConsole('adminOnlyExample', 'examples/protected', startTime, requestTime, {}, result, true);
 			return result;
 		}
 
@@ -128,14 +128,14 @@ export async function adminOnlyExampleAction() {
 			message: 'Admin action executed successfully',
 		};
 
-		logAction('adminOnlyExample', 'examples/protected', startTime, requestTime, {}, result, false);
+		logActionToConsole('adminOnlyExample', 'examples/protected', startTime, requestTime, {}, result, false);
 		return result;
 	} catch (error) {
 		const result = {
 			success: false,
 			error: error.message,
 		};
-		logAction('adminOnlyExample', 'examples/protected', startTime, requestTime, {}, result, true);
+		logActionToConsole('adminOnlyExample', 'examples/protected', startTime, requestTime, {}, result, true);
 		return result;
 	}
 }
@@ -164,7 +164,7 @@ export async function flexibleAccessExampleAction(data) {
 				success: false,
 				error: 'Permission denied: You need at least one of the required permissions',
 			};
-			logAction('flexibleAccessExample', 'examples/protected', startTime, requestTime, data, result, true);
+			logActionToConsole('flexibleAccessExample', 'examples/protected', startTime, requestTime, data, result, true);
 			return result;
 		}
 
@@ -176,14 +176,14 @@ export async function flexibleAccessExampleAction(data) {
 			message: 'Action executed successfully',
 		};
 
-		logAction('flexibleAccessExample', 'examples/protected', startTime, requestTime, data, result, false);
+		logActionToConsole('flexibleAccessExample', 'examples/protected', startTime, requestTime, data, result, false);
 		return result;
 	} catch (error) {
 		const result = {
 			success: false,
 			error: error.message,
 		};
-		logAction('flexibleAccessExample', 'examples/protected', startTime, requestTime, data, result, true);
+		logActionToConsole('flexibleAccessExample', 'examples/protected', startTime, requestTime, data, result, true);
 		return result;
 	}
 }
@@ -212,7 +212,7 @@ export async function strictAccessExampleAction(data) {
 				success: false,
 				error: `Permission denied: Missing permission ${permCheck.missingPermission}`,
 			};
-			logAction('strictAccessExample', 'examples/protected', startTime, requestTime, data, result, true);
+			logActionToConsole('strictAccessExample', 'examples/protected', startTime, requestTime, data, result, true);
 			return result;
 		}
 
@@ -224,14 +224,14 @@ export async function strictAccessExampleAction(data) {
 			message: 'Action executed successfully',
 		};
 
-		logAction('strictAccessExample', 'examples/protected', startTime, requestTime, data, result, false);
+		logActionToConsole('strictAccessExample', 'examples/protected', startTime, requestTime, data, result, false);
 		return result;
 	} catch (error) {
 		const result = {
 			success: false,
 			error: error.message,
 		};
-		logAction('strictAccessExample', 'examples/protected', startTime, requestTime, data, result, true);
+		logActionToConsole('strictAccessExample', 'examples/protected', startTime, requestTime, data, result, true);
 		return result;
 	}
 }
@@ -260,7 +260,7 @@ export async function complexPermissionExampleAction(userId, data) {
 				success: false,
 				error: 'Unauthorized: Please login',
 			};
-			logAction('complexPermissionExample', 'examples/protected', startTime, requestTime, data, result, true);
+			logActionToConsole('complexPermissionExample', 'examples/protected', startTime, requestTime, data, result, true);
 			return result;
 		}
 
@@ -271,7 +271,7 @@ export async function complexPermissionExampleAction(userId, data) {
 				success: true,
 				message: 'Own data updated successfully',
 			};
-			logAction('complexPermissionExample', 'examples/protected', startTime, requestTime, data, result, false);
+			logActionToConsole('complexPermissionExample', 'examples/protected', startTime, requestTime, data, result, false);
 			return result;
 		}
 
@@ -283,7 +283,7 @@ export async function complexPermissionExampleAction(userId, data) {
 				success: false,
 				error: 'Permission denied: You can only edit your own data or need admin permission',
 			};
-			logAction('complexPermissionExample', 'examples/protected', startTime, requestTime, data, result, true);
+			logActionToConsole('complexPermissionExample', 'examples/protected', startTime, requestTime, data, result, true);
 			return result;
 		}
 
@@ -295,14 +295,14 @@ export async function complexPermissionExampleAction(userId, data) {
 			message: 'User data updated successfully',
 		};
 
-		logAction('complexPermissionExample', 'examples/protected', startTime, requestTime, data, result, false);
+		logActionToConsole('complexPermissionExample', 'examples/protected', startTime, requestTime, data, result, false);
 		return result;
 	} catch (error) {
 		const result = {
 			success: false,
 			error: error.message,
 		};
-		logAction('complexPermissionExample', 'examples/protected', startTime, requestTime, data, result, true);
+		logActionToConsole('complexPermissionExample', 'examples/protected', startTime, requestTime, data, result, true);
 		return result;
 	}
 }

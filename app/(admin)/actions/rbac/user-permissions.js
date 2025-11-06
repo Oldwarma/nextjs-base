@@ -12,211 +12,140 @@
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth/auth';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
-import { logAction } from '@/lib/logging/action-logger';
+import { wrapAdminAction } from '@/lib/core/action-wrapper';
 
 /**
  * Get current user's accessible menus (RBAC-aware)
  * @returns {Promise<Object>} User's menu tree result
  */
-export async function getUserAccessibleMenusAction() {
-	const startTime = Date.now();
-	const requestTime = new Date();
+export const getUserAccessibleMenusAction = wrapAdminAction('query', 'menu', async () => {
+	// Get current session
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
 
-	try {
-		// Get current session
-		const session = await auth.api.getSession({
-			headers: await headers(),
-		});
+	if (!session?.user) {
+		return { success: false, error: 'Unauthorized: Please login' };
+	}
 
-		if (!session?.user) {
-			const result = { success: false, error: 'Unauthorized: Please login' };
-			logAction('getUserAccessibleMenus', 'rbac/user-permissions', startTime, requestTime, {}, result, true);
-			return result;
-		}
+	const userId = session.user.id;
+	const userRole = session.user.role;
 
-		const userId = session.user.id;
-		const userRole = session.user.role;
+	// Admin role: get all enabled menus
+	if (userRole === 'admin') {
+		const { getCollection, fromObjectId } = await import('@/lib/database/mongodb');
+		const menusCollection = await getCollection('menus');
+		const allMenus = await menusCollection.find(
+			{
+				enable: true,
+				deletedAt: { $exists: false },
+			},
+			{
+				sort: { sort: 1, createdAt: 1 },
+			}
+		);
 
-		// Admin role: get all enabled menus (注释用于测试)
-		if (userRole === 'admin') {
-			const { getCollection, fromObjectId } = await import('@/lib/database/mongodb');
-			const menusCollection = await getCollection('menus');
-			const allMenus = await menusCollection.find(
-				{
-					enable: true,
-					deletedAt: { $exists: false },
-				},
-				{
-					sort: { sort: 1, createdAt: 1 },
-				}
-			);
+		const serializedMenus = allMenus.map((m) => fromObjectId(m));
 
-			const serializedMenus = allMenus.map((m) => fromObjectId(m));
+		// Build tree structure
+		const menuTree = buildMenuTreeFromFlat(serializedMenus);
 
-			// Build tree structure
-			const menuTree = buildMenuTreeFromFlat(serializedMenus);
-
-			// 深度序列化，移除所有 ObjectId 和不可序列化的对象
-			const serializedTree = JSON.parse(JSON.stringify(menuTree));
-
-			const result = {
-				success: true,
-				data: serializedTree,
-				isAdmin: true,
-			};
-
-			logAction('getUserAccessibleMenus', 'rbac/user-permissions', startTime, requestTime, {}, result, false);
-			return result;
-		}
-
-		// Regular user: get menus based on RBAC roles
-		const menuTree = await sysDao.getUserMenus(userId);
-
-		// 深度序列化，确保可以传递给客户端组件
+		// 深度序列化，移除所有 ObjectId 和不可序列化的对象
 		const serializedTree = JSON.parse(JSON.stringify(menuTree));
 
-		const result = {
+		return {
 			success: true,
 			data: serializedTree,
-			isAdmin: false,
+			isAdmin: true,
 		};
-
-		logAction('getUserAccessibleMenus', 'rbac/user-permissions', startTime, requestTime, {}, result, false);
-		return result;
-	} catch (error) {
-		console.error('Failed to get user accessible menus:', error);
-		const result = {
-			success: false,
-			error: 'Failed to get user menus',
-		};
-		logAction('getUserAccessibleMenus', 'rbac/user-permissions', startTime, requestTime, {}, result, true);
-		return result;
 	}
-}
+
+	// Regular user: get menus based on RBAC roles
+	const menuTree = await sysDao.getUserMenus(userId);
+
+	// 深度序列化，确保可以传递给客户端组件
+	const serializedTree = JSON.parse(JSON.stringify(menuTree));
+
+	return {
+		success: true,
+		data: serializedTree,
+		isAdmin: false,
+	};
+}, { skipPermission: true, skipLog: false });
 
 /**
  * Get current user's permission IDs
  * @returns {Promise<Object>} User's permission IDs result
  */
-export async function getUserPermissionIdsAction() {
-	const startTime = Date.now();
-	const requestTime = new Date();
+export const getUserPermissionIdsAction = wrapAdminAction('query', 'permission', async () => {
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
 
-	try {
-		const session = await auth.api.getSession({
-			headers: await headers(),
-		});
-
-		if (!session?.user) {
-			const result = { success: false, error: 'Unauthorized: Please login' };
-			logAction('getUserPermissionIds', 'rbac/user-permissions', startTime, requestTime, {}, result, true);
-			return result;
-		}
-
-		const userId = session.user.id;
-		const userRole = session.user.role;
-
-		// Admin role: has all permissions
-		if (userRole === 'admin') {
-			const result = {
-				success: true,
-				data: ['*'], // Special marker for all permissions
-				isAdmin: true,
-			};
-			logAction('getUserPermissionIds', 'rbac/user-permissions', startTime, requestTime, {}, result, false);
-			return result;
-		}
-
-		// Get permission IDs from RBAC
-		const permissionIds = await sysDao.getUserPermissionIds(userId);
-
-		const result = {
-			success: true,
-			data: permissionIds,
-			isAdmin: false,
-		};
-
-		logAction('getUserPermissionIds', 'rbac/user-permissions', startTime, requestTime, {}, result, false);
-		return result;
-	} catch (error) {
-		console.error('Failed to get user permission IDs:', error);
-		const result = {
-			success: false,
-			error: 'Failed to get user permissions',
-		};
-		logAction('getUserPermissionIds', 'rbac/user-permissions', startTime, requestTime, {}, result, true);
-		return result;
+	if (!session?.user) {
+		return { success: false, error: 'Unauthorized: Please login' };
 	}
-}
+
+	const userId = session.user.id;
+	const userRole = session.user.role;
+
+	// Admin role: has all permissions
+	if (userRole === 'admin') {
+		return {
+			success: true,
+			data: ['*'], // Special marker for all permissions
+			isAdmin: true,
+		};
+	}
+
+	// Get permission IDs from RBAC
+	const permissionIds = await sysDao.getUserPermissionIds(userId);
+
+	return {
+		success: true,
+		data: permissionIds,
+		isAdmin: false,
+	};
+}, { skipPermission: true, skipLog: false });
 
 /**
  * Check if current user can access a specific page URL
  * @param {String} pageUrl - Page URL to check, e.g. '/admin/users'
  * @returns {Promise<Object>} Access check result
  */
-export async function checkPageAccessAction(pageUrl) {
-	const startTime = Date.now();
-	const requestTime = new Date();
-	const params = { pageUrl };
+export const checkPageAccessAction = wrapAdminAction('query', 'page_access', async (pageUrl) => {
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
 
-	try {
-		const session = await auth.api.getSession({
-			headers: await headers(),
-		});
-
-		if (!session?.user) {
-			const result = { success: false, hasAccess: false, error: 'Unauthorized: Please login' };
-			logAction('checkPageAccess', 'rbac/user-permissions', startTime, requestTime, params, result, true);
-			return result;
-		}
-
-		const userId = session.user.id;
-		const userRole = session.user.role;
-
-		// Admin role: can access all pages (注释用于测试)
-		if (userRole === 'admin') {
-			const result = {
-				success: true,
-				hasAccess: true,
-				isAdmin: true,
-			};
-			logAction('checkPageAccess', 'rbac/user-permissions', startTime, requestTime, params, result, false);
-			return result;
-		}
-
-		// Get user's accessible menus
-		const menuTree = await sysDao.getUserMenus(userId);
-
-		// 调试日志：输出用户的菜单树
-		console.log('🔍 [checkPageAccess] User ID:', userId);
-		console.log('🔍 [checkPageAccess] User Role:', userRole);
-		console.log('🔍 [checkPageAccess] Checking URL:', pageUrl);
-		console.log('🔍 [checkPageAccess] User Menu Tree:', JSON.stringify(menuTree, null, 2));
-
-		// Check if pageUrl exists in user's menu tree
-		const hasAccess = checkUrlInMenuTree(pageUrl, menuTree);
-
-		console.log('🔍 [checkPageAccess] Has Access:', hasAccess);
-
-		const result = {
-			success: true,
-			hasAccess,
-			isAdmin: false,
-		};
-
-		logAction('checkPageAccess', 'rbac/user-permissions', startTime, requestTime, params, result, false);
-		return result;
-	} catch (error) {
-		console.error('Failed to check page access:', error);
-		const result = {
-			success: false,
-			hasAccess: false,
-			error: 'Failed to check page access',
-		};
-		logAction('checkPageAccess', 'rbac/user-permissions', startTime, requestTime, params, result, true);
-		return result;
+	if (!session?.user) {
+		return { success: false, hasAccess: false, error: 'Unauthorized: Please login' };
 	}
-}
+
+	const userId = session.user.id;
+	const userRole = session.user.role;
+
+	// Admin role: can access all pages
+	if (userRole === 'admin') {
+		return {
+			success: true,
+			hasAccess: true,
+			isAdmin: true,
+		};
+	}
+
+	// Get user's accessible menus
+	const menuTree = await sysDao.getUserMenus(userId);
+
+	// Check if pageUrl exists in user's menu tree
+	const hasAccess = checkUrlInMenuTree(pageUrl, menuTree);
+
+	return {
+		success: true,
+		hasAccess,
+		isAdmin: false,
+	};
+}, { skipPermission: true, skipLog: false });
 
 /**
  * Helper: Build menu tree from flat array
@@ -278,44 +207,26 @@ function checkUrlInMenuTree(url, menuTree) {
  * Get current user's roles
  * @returns {Promise<Object>} User's roles result
  */
-export async function getUserRolesAction() {
-	const startTime = Date.now();
-	const requestTime = new Date();
+export const getUserRolesAction = wrapAdminAction('query', 'role', async () => {
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
 
-	try {
-		const session = await auth.api.getSession({
-			headers: await headers(),
-		});
-
-		if (!session?.user) {
-			const result = { success: false, error: 'Unauthorized: Please login' };
-			logAction('getUserRoles', 'rbac/user-permissions', startTime, requestTime, {}, result, true);
-			return result;
-		}
-
-		const userId = session.user.id;
-		const userRole = session.user.role;
-
-		// Get RBAC role IDs
-		const roleIds = await sysDao.getUserRoleIds(userId);
-
-		const result = {
-			success: true,
-			data: {
-				betterAuthRole: userRole, // 'admin' or 'user'
-				rbacRoles: roleIds, // RBAC role UUIDs
-			},
-		};
-
-		logAction('getUserRoles', 'rbac/user-permissions', startTime, requestTime, {}, result, false);
-		return result;
-	} catch (error) {
-		console.error('Failed to get user roles:', error);
-		const result = {
-			success: false,
-			error: 'Failed to get user roles',
-		};
-		logAction('getUserRoles', 'rbac/user-permissions', startTime, requestTime, {}, result, true);
-		return result;
+	if (!session?.user) {
+		return { success: false, error: 'Unauthorized: Please login' };
 	}
-}
+
+	const userId = session.user.id;
+	const userRole = session.user.role;
+
+	// Get RBAC role IDs
+	const roleIds = await sysDao.getUserRoleIds(userId);
+
+	return {
+		success: true,
+		data: {
+			betterAuthRole: userRole, // 'admin' or 'user'
+			rbacRoles: roleIds, // RBAC role UUIDs
+		},
+	};
+}, { skipPermission: true, skipLog: false });

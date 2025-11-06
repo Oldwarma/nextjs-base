@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Tag } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
@@ -29,39 +29,63 @@ import {
 	createPermissionAction as create,
 	updatePermissionAction as update,
 	deletePermissionAction as deleteItem,
-	getPermissionListForSelectAction,
+	getPermissionTreeForSelectAction,
 } from '@/app/(admin)/actions/rbac/admin-permissions';
 
 // Convert permission tree to Ant Design Tree format
 const convertToTreeData = (data) => {
 	if (!Array.isArray(data)) return [];
 
-	return data.map((item) => ({
-		title: item.label || item.name,
-		value: item.id,
-		key: item.id,
-		children: item.children && item.children.length > 0 ? convertToTreeData(item.children) : undefined,
-	}));
+	return data.map((item) => {
+		const node = {
+			title: item.name || item.label,
+			value: item.id,
+			key: item.id,
+		};
+		
+		// 只有当 children 存在且不为空时才添加 children 属性
+		if (item.children && item.children.length > 0) {
+			node.children = convertToTreeData(item.children);
+		}
+		
+		return node;
+	});
 };
 
 export default function PermissionsManagementPage() {
 	const [permissionTree, setPermissionTree] = useState([]);
 
 	// Load permission tree (for parent selector)
-	const loadPermissionTree = useCallback(async () => {
-		const result = await getPermissionListForSelectAction({ withLabel: true });
+	const loadPermissionTree = async () => {
+		// 使用专门的 TreeSelect action 获取树形结构
+		const result = await getPermissionTreeForSelectAction();
+		
 		if (result.success) {
-			// Convert to Ant Design Tree format
-			const treeData = convertToTreeData(result.data);
+			// 添加 "Root Permission" 选项（value 和 key 必须一致）
+			const treeData = [
+				{
+					title: '--- Root Permission ---',
+					value: null,
+					key: null, // key 必须和 value 一致
+				},
+				...convertToTreeData(result.data || []),
+			];
 			setPermissionTree(treeData);
 		}
-	}, []);
+	};
 
-	// Load tree on mount
+	// Load permission tree on mount - 只加载一次
 	useEffect(() => {
-		loadPermissionTree();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+		let isMounted = true;
+		
+		if (isMounted) {
+			loadPermissionTree();
+		}
+		
+		return () => {
+			isMounted = false;
+		};
+	}, []); // 空依赖数组，只在mount时执行一次
 
 	// Field configuration
 	const fieldsConfig = useMemo(

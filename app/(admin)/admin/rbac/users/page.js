@@ -9,8 +9,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Avatar, Modal, Tree, Tag, message, Space, Button, Form, Input, Select, InputNumber, Switch } from 'antd';
-import { UserOutlined, TeamOutlined, PlusOutlined, KeyOutlined } from '@ant-design/icons';
+import { Avatar, Modal, Tree, Tag, Space, Button, Form, Input, Select, InputNumber, Switch, App } from 'antd';
+import { UserOutlined, TeamOutlined, PlusOutlined, KeyOutlined, StopOutlined } from '@ant-design/icons';
 
 // 动态导入 SmartCrudPage，禁用 SSR 避免 Hydration 错误
 const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
@@ -28,6 +28,8 @@ import {
 	resetUserPasswordAction,
 	bindUserRolesAction,
 	getUserRolesAction,
+	banUserAction,
+	unbanUserAction,
 } from '@/app/(admin)/actions/rbac/admin-users';
 
 import { getRoleListForSelectAction } from '@/app/(admin)/actions/rbac/admin-roles';
@@ -35,6 +37,7 @@ import { getRoleListForSelectAction } from '@/app/(admin)/actions/rbac/admin-rol
 const { Option } = Select;
 
 export default function UsersManagementPage() {
+	const { message: messageApi } = App.useApp();
 	const [refreshTrigger, setRefreshTrigger] = useState(0);
 
 	// Create user modal
@@ -66,26 +69,30 @@ export default function UsersManagementPage() {
 				
 				if (result.success) {
 					const roles = result.data || [];
-					console.log('[Users] Loaded roles:', roles.length);
+					console.log('[Users] Loaded roles:', roles);
 					setAllRoles(roles);
 					
-				// Convert to tree data for Tree component
-				const treeData = roles.map(role => ({
-					title: role.label || role.name,  // ✅ 使用 name 字段
-					value: role.id,  // ✅ 使用 id（UUID）
-					key: role.id,    // ✅ 使用 id（UUID）
-					disabled: !role.enable,
-				}));
+					// Convert to tree data for Tree component
+					const treeData = roles
+						.filter(role => role && role.id) // 过滤无效数据
+						.map(role => ({
+							title: String(role.label || role.name || 'Unknown'), // 确保是字符串
+							value: String(role.id), // 确保是字符串
+							key: String(role.id),   // 确保是字符串
+							disabled: !role.enable,
+						}));
+					
+					console.log('[Users] Tree data:', treeData);
 					setRoleTree(treeData);
 					setRolesLoaded(true);
 				} else {
 					console.error('[Users] Failed to load roles:', result.error);
-					message.error(result.error || 'Failed to load roles');
+					messageApi.error(result.error || 'Failed to load roles');
 					setRolesLoaded(true);
 				}
 			} catch (error) {
 				console.error('[Users] Failed to load roles:', error);
-				message.error('Failed to load roles');
+				messageApi.error('Failed to load roles');
 				setRolesLoaded(true);
 			}
 		};
@@ -99,7 +106,7 @@ export default function UsersManagementPage() {
 		const userId = record.id || record._id;
 		
 		if (!userId) {
-			message.error('User ID is missing');
+			messageApi.error('User ID is missing');
 			return;
 		}
 		
@@ -112,14 +119,28 @@ export default function UsersManagementPage() {
 			const result = await getUserRolesAction(userId);
 			
 			if (result.success) {
-				setSelectedRoles(result.data || []);
+				const userRoles = result.data || [];
+				console.log('[Users] User roles:', userRoles);
+				
+				// 将角色对象数组转换为 ID 字符串数组
+				// getUserRolesAction 返回的是角色对象数组，需要提取 id
+				const roleIds = userRoles.map(role => {
+					// 兼容不同的数据格式
+					if (typeof role === 'string') {
+						return role; // 已经是字符串 ID
+					}
+					return String(role.id || role._id || '');
+				}).filter(id => id); // 过滤空值
+				
+				console.log('[Users] Role IDs:', roleIds);
+				setSelectedRoles(roleIds);
 			} else {
 				console.error('[Users] Failed to get user roles:', result.error);
-				message.error(result.error || 'Failed to load user roles');
+				messageApi.error(result.error || 'Failed to load user roles');
 			}
 		} catch (error) {
 			console.error('[Users] Failed to load user roles:', error);
-			message.error('Failed to load user roles');
+			messageApi.error('Failed to load user roles');
 		} finally {
 			setRoleLoading(false);
 		}
@@ -133,7 +154,7 @@ export default function UsersManagementPage() {
 		const userId = selectedUser.id || selectedUser._id;
 		
 		if (!userId) {
-			message.error('User ID is missing');
+			messageApi.error('User ID is missing');
 			return;
 		}
 
@@ -144,15 +165,15 @@ export default function UsersManagementPage() {
 			const result = await bindUserRolesAction(userId, selectedRoles, true);
 
 			if (result.success) {
-				message.success('Roles assigned successfully');
+				messageApi.success('Roles assigned successfully');
 				setRoleModalVisible(false);
 				setRefreshTrigger((prev) => prev + 1);
 			} else {
-				message.error(result.error || 'Failed to assign roles');
+				messageApi.error(result.error || 'Failed to assign roles');
 			}
 		} catch (error) {
 			console.error('[Users] Failed to save roles:', error);
-			message.error('Failed to assign roles');
+			messageApi.error('Failed to assign roles');
 		} finally {
 			setRoleLoading(false);
 		}
@@ -164,15 +185,15 @@ export default function UsersManagementPage() {
 		try {
 			const result = await createUserAction(values);
 			if (result.success) {
-				message.success('User created successfully');
+				messageApi.success('User created successfully');
 				setCreateModalVisible(false);
 				createForm.resetFields();
 				setRefreshTrigger((prev) => prev + 1);
 			} else {
-				message.error(result.error || 'Failed to create user');
+				messageApi.error(result.error || 'Failed to create user');
 			}
 		} catch (error) {
-			message.error('Failed to create user');
+			messageApi.error('Failed to create user');
 			console.error(error);
 		} finally {
 			setCreateLoading(false);
@@ -185,18 +206,50 @@ export default function UsersManagementPage() {
 		try {
 			const result = await resetUserPasswordAction(selectedUserId, values.password);
 			if (result.success) {
-				message.success('Password reset successfully');
+				messageApi.success('Password reset successfully');
 				setPasswordModalVisible(false);
 				passwordForm.resetFields();
 				setSelectedUserId(null);
 			} else {
-				message.error(result.error || 'Failed to reset password');
+				messageApi.error(result.error || 'Failed to reset password');
 			}
 		} catch (error) {
-			message.error('Failed to reset password');
+			messageApi.error('Failed to reset password');
 			console.error(error);
 		} finally {
 			setPasswordLoading(false);
+		}
+	};
+
+	// Handle ban/unban user
+	const handleToggleBanUser = async (record) => {
+		const userId = record.id || record._id;
+		if (!userId) {
+			messageApi.error('User ID is missing');
+			return;
+		}
+
+		const isBanned = record.banned;
+
+		try {
+			let result;
+			if (isBanned) {
+				// 解封用户
+				result = await unbanUserAction(userId);
+			} else {
+				// 封禁用户
+				result = await banUserAction(userId, 'Banned by administrator');
+			}
+
+			if (result.success) {
+				messageApi.success(isBanned ? 'User unbanned successfully' : 'User banned successfully');
+				setRefreshTrigger((prev) => prev + 1);
+			} else {
+				messageApi.error(result.error || `Failed to ${isBanned ? 'unban' : 'ban'} user`);
+			}
+		} catch (error) {
+			console.error(`Failed to ${isBanned ? 'unban' : 'ban'} user:`, error);
+			messageApi.error(`Failed to ${isBanned ? 'unban' : 'ban'} user`);
 		}
 	};
 
@@ -355,9 +408,31 @@ export default function UsersManagementPage() {
 			key: 'roles',
 			title: 'RBAC Roles',
 			type: 'text',
-			table: false,
+			table: {
+				width: 100,
+				ellipsis: true,
+				render: (value, record) => {
+					const roles = record.roleList || value || [];
+					if (!Array.isArray(roles) || roles.length === 0) {
+						return <span style={{ color: '#999' }}>No roles assigned</span>;
+					}
+					return (
+						<Space wrap>
+							{roles.map((item, index) => {
+								// 如果是对象（连表数据），取 name；否则显示原值（UUID）
+								const displayText = item?.name || item;
+								const key = item?.id || item;
+								return (
+									<Tag key={key || index} color='blue'>
+										{displayText}
+									</Tag>
+								);
+							})}
+						</Space>
+					);
+				},
+			},
 			form: false,
-			hideInTable: true,
 			detail: {
 				render: (value, record) => {
 					// 优先使用连表数据 roleList，fallback 到原始字段 roles
@@ -382,6 +457,21 @@ export default function UsersManagementPage() {
 						</Space>
 					);
 				},
+			},
+		},
+
+		// ban state
+		{
+			key: 'banned',
+			title: 'Ban State',
+			type: 'switch',
+			table: {
+				width: 100,
+			},
+			form: false,
+			search: {
+				enabled: true,
+				mode: 'exact',
 			},
 		},
 		
@@ -596,12 +686,32 @@ export default function UsersManagementPage() {
 			onClick: (record) => {
 				const userId = record.id || record._id;
 				if (!userId) {
-					message.error('User ID is missing');
+					messageApi.error('User ID is missing');
 					return;
 				}
 				setSelectedUserId(userId);
 				setPasswordModalVisible(true);
 			},
+		},
+		{
+			key: 'toggle-ban',
+			text: (record) => record.banned ? 'Unban User' : 'Ban User',
+			icon: <StopOutlined />,
+			danger: (record) => !record.banned,
+			showText: true,
+			inMore: true,
+			// 使用新的 confirm 配置，支持动态内容
+			confirm: (record) => ({
+				title: record.banned ? 'Unban User' : 'Ban User',
+				description: record.banned 
+					? `Are you sure you want to unban "${record.name || record.email}"? They will be able to sign in again.`
+					: `Are you sure you want to ban "${record.name || record.email}"? This will revoke all active sessions and prevent sign-in.`,
+				okText: record.banned ? 'Unban' : 'Ban',
+				okType: record.banned ? 'primary' : 'danger',
+				cancelText: 'Cancel',
+				placement: 'topRight',
+			}),
+			onClick: handleToggleBanUser,
 		},
 	];
 

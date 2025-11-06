@@ -1,6 +1,6 @@
 import { getCollection, generateId, fromObjectId } from '@/lib/database/mongodb';
 import { checkAdminAction } from '@/lib/auth/admin-auth';
-import { logAction } from '@/lib/logging/action-logger';
+import { logActionToConsole } from '@/lib/logging/action-logger';
 import { selects } from '@/lib/database/db-api';
 
 /**
@@ -770,12 +770,12 @@ export function createCrudActions(config) {
 			
 			try {
 				const result = await dao.getList(params);
-				logAction('getList', category, startTime, requestTime, params, result, !result.success);
+				logActionToConsole('getList', category, startTime, requestTime, params, result, !result.success);
 				return result;
 			} catch (error) {
 				console.error('getList error:', error);
 				const errorResult = { success: false, error: error.message };
-				logAction('getList', category, startTime, requestTime, params, errorResult, true);
+				logActionToConsole('getList', category, startTime, requestTime, params, errorResult, true);
 				return errorResult;
 			}
 		},
@@ -787,12 +787,12 @@ export function createCrudActions(config) {
 			
 			try {
 				const result = await dao.getDetail(id);
-				logAction('getDetail', category, startTime, requestTime, { id }, result, !result.success);
+				logActionToConsole('getDetail', category, startTime, requestTime, { id }, result, !result.success);
 				return result;
 			} catch (error) {
 				console.error('getDetail error:', error);
 				const errorResult = { success: false, error: error.message };
-				logAction('getDetail', category, startTime, requestTime, { id }, errorResult, true);
+				logActionToConsole('getDetail', category, startTime, requestTime, { id }, errorResult, true);
 				return errorResult;
 			}
 		},
@@ -804,12 +804,12 @@ export function createCrudActions(config) {
 			
 			try {
 				const result = await dao.create(data);
-				logAction('create', category, startTime, requestTime, data, result, !result.success);
+				logActionToConsole('create', category, startTime, requestTime, data, result, !result.success);
 				return result;
 			} catch (error) {
 				console.error('create error:', error);
 				const errorResult = { success: false, error: error.message };
-				logAction('create', category, startTime, requestTime, data, errorResult, true);
+				logActionToConsole('create', category, startTime, requestTime, data, errorResult, true);
 				return errorResult;
 			}
 		},
@@ -821,12 +821,12 @@ export function createCrudActions(config) {
 			
 			try {
 				const result = await dao.update(id, data);
-				logAction('update', category, startTime, requestTime, { id, data }, result, !result.success);
+				logActionToConsole('update', category, startTime, requestTime, { id, data }, result, !result.success);
 				return result;
 			} catch (error) {
 				console.error('update error:', error);
 				const errorResult = { success: false, error: error.message };
-				logAction('update', category, startTime, requestTime, { id, data }, errorResult, true);
+				logActionToConsole('update', category, startTime, requestTime, { id, data }, errorResult, true);
 				return errorResult;
 			}
 		},
@@ -838,12 +838,12 @@ export function createCrudActions(config) {
 			
 			try {
 				const result = await dao.delete(id);
-				logAction('delete', category, startTime, requestTime, { id }, result, !result.success);
+				logActionToConsole('delete', category, startTime, requestTime, { id }, result, !result.success);
 				return result;
 			} catch (error) {
 				console.error('delete error:', error);
 				const errorResult = { success: false, error: error.message };
-				logAction('delete', category, startTime, requestTime, { id }, errorResult, true);
+				logActionToConsole('delete', category, startTime, requestTime, { id }, errorResult, true);
 				return errorResult;
 			}
 		},
@@ -855,12 +855,12 @@ export function createCrudActions(config) {
 			
 			try {
 				const result = await dao.batchUpdate(ids, data);
-				logAction('batchUpdate', category, startTime, requestTime, { ids, data }, result, !result.success);
+				logActionToConsole('batchUpdate', category, startTime, requestTime, { ids, data }, result, !result.success);
 				return result;
 			} catch (error) {
 				console.error('batchUpdate error:', error);
 				const errorResult = { success: false, error: error.message };
-				logAction('batchUpdate', category, startTime, requestTime, { ids, data }, errorResult, true);
+				logActionToConsole('batchUpdate', category, startTime, requestTime, { ids, data }, errorResult, true);
 				return errorResult;
 			}
 		},
@@ -872,12 +872,12 @@ export function createCrudActions(config) {
 			
 			try {
 				const result = await dao.batchDelete(ids);
-				logAction('batchDelete', category, startTime, requestTime, { ids }, result, !result.success);
+				logActionToConsole('batchDelete', category, startTime, requestTime, { ids }, result, !result.success);
 				return result;
 			} catch (error) {
 				console.error('batchDelete error:', error);
 				const errorResult = { success: false, error: error.message };
-				logAction('batchDelete', category, startTime, requestTime, { ids }, errorResult, true);
+				logActionToConsole('batchDelete', category, startTime, requestTime, { ids }, errorResult, true);
 				return errorResult;
 			}
 		},

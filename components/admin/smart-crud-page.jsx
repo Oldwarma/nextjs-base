@@ -19,7 +19,7 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import { ProTable, ModalForm, DrawerForm } from '@ant-design/pro-components';
-import { Button, Modal, Space, Dropdown, Popconfirm, message, Descriptions } from 'antd';
+import { Button, Modal, Space, Dropdown, Popconfirm, message, Descriptions, App } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, ReloadOutlined, MoreOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 
 // 导入字段生成器
@@ -84,8 +84,8 @@ export default function SmartCrudPage({
 	enableDelete = true,
 	baseQuery = {},
 }) {
-	// 使用 Ant Design message hooks
-	const [messageApi, contextHolder] = message.useMessage();
+	// 使用 Ant Design App hooks
+	const { message: messageApi, modal: modalApi } = App.useApp();
 	
 	// 验证字段配置
 	useMemo(() => {
@@ -218,34 +218,89 @@ export default function SmartCrudPage({
 							return;
 						}
 
+						// 计算动态属性
+						const actionText = typeof action.text === 'function' ? action.text(record) : action.text;
+						const isDanger = typeof action.danger === 'function' ? action.danger(record) : action.danger || false;
+
 						// 判断是平铺显示还是放入更多菜单
 						// inMore 为 true 时放入更多菜单，否则平铺显示
 						if (action.inMore) {
+							// Dropdown 菜单项的处理
+							// 注意：Ant Design Dropdown menu.items 不支持嵌套 Popconfirm
+							// 如果需要确认，必须使用 modalApi.confirm（模态对话框）
+							const handleClick = action.confirm
+								? () => {
+										const confirmConfig = typeof action.confirm === 'function' 
+											? action.confirm(record) 
+											: action.confirm;
+										
+										modalApi.confirm({
+											title: confirmConfig.title || 'Confirmation',
+											content: confirmConfig.description || 'Are you sure?',
+											okText: confirmConfig.okText || 'OK',
+											okType: confirmConfig.okType || 'primary',
+											cancelText: confirmConfig.cancelText || 'Cancel',
+											onOk: () => action.onClick(record),
+										});
+								  }
+								: () => action.onClick(record);
+
 							moreMenuItems.push({
-								key: action.key || action.text,
-								label: action.text,
+								key: action.key || actionText,
+								label: actionText,
 								icon: action.icon,
-								danger: action.danger || false,
+								danger: isDanger,
 								disabled: action.disabled ? action.disabled(record) : false,
-								onClick: () => action.onClick(record),
+								onClick: handleClick,
 							});
 						} else {
-							flatButtons.push(
-								<Button
-									key={action.key || action.text}
-									type='text'
-									size='small'
-									danger={action.danger || false}
-									disabled={action.disabled ? action.disabled(record) : false}
-									icon={action.icon}
-									onClick={(e) => {
-										e.stopPropagation();
-										action.onClick(record);
-									}}
-								>
-									{action.showText ? action.text : null}
-								</Button>
-							);
+							// 如果配置了 confirm，使用 Popconfirm 包裹
+							if (action.confirm) {
+								const confirmConfig = typeof action.confirm === 'function' 
+									? action.confirm(record) 
+									: action.confirm;
+								
+								flatButtons.push(
+									<Popconfirm
+										key={action.key || actionText}
+										title={confirmConfig.title || 'Confirmation'}
+										description={confirmConfig.description || 'Are you sure?'}
+										okText={confirmConfig.okText || 'OK'}
+										okType={confirmConfig.okType || 'primary'}
+										cancelText={confirmConfig.cancelText || 'Cancel'}
+										placement={confirmConfig.placement || 'topRight'}
+										onConfirm={() => action.onClick(record)}
+									>
+										<Button
+											type='text'
+											size='small'
+											danger={isDanger}
+											disabled={action.disabled ? action.disabled(record) : false}
+											icon={action.icon}
+											onClick={(e) => e.stopPropagation()}
+										>
+											{action.showText ? actionText : null}
+										</Button>
+									</Popconfirm>
+								);
+							} else {
+								flatButtons.push(
+									<Button
+										key={action.key || actionText}
+										type='text'
+										size='small'
+										danger={isDanger}
+										disabled={action.disabled ? action.disabled(record) : false}
+										icon={action.icon}
+										onClick={(e) => {
+											e.stopPropagation();
+											action.onClick(record);
+										}}
+									>
+										{action.showText ? actionText : null}
+									</Button>
+								);
+							}
 						}
 					});
 				}
@@ -521,7 +576,6 @@ export default function SmartCrudPage({
 
 	return (
 		<>
-			{contextHolder}
 			<ProTable
 				columns={columnsWithActions}
 				actionRef={actionRef}
