@@ -1,95 +1,51 @@
 'use server';
 
-import { createCrudActions } from '@/app/(admin)/actions/dao/base';
+/**
+ * 套餐管理 Server Actions
+ * 使用核心库自动处理权限验证和日志记录
+ */
+
+import { createCrudActions } from '@/lib/core/crud-helper';
+import { wrapQueryAction } from '@/lib/core/action-wrapper';
 import { packageCrudConfig } from '@/app/(admin)/actions/finance/configs/package-crud.config';
-import { checkAdminAction } from '@/lib/auth/admin-auth';
 import { getUserPackages } from '@/lib/business/packages';
 
-// 创建套餐 CRUD Actions
-const packageCrud = createCrudActions(packageCrudConfig);
+/**
+ * 创建标准 CRUD Actions
+ */
+const crudActions = createCrudActions(packageCrudConfig);
 
 /**
- * 获取所有套餐（管理员）
- * 包括激活和未激活的套餐
- * @param {Object} params - 查询参数
- * @returns {Promise<Object>} 套餐列表结果
+ * 导出标准 CRUD Actions
  */
-export async function getAllPackagesAdminAction(params = {}) {
-	return await packageCrud.getList(params);
-}
+export const getAllPackagesAdminAction = crudActions.getList;
+export const getPackageDetailAction = crudActions.getDetail;
+export const createPackageAction = crudActions.create;
+export const updatePackageAction = crudActions.update;
+export const deletePackageAction = crudActions.delete;
+export const batchUpdatePackagesAction = crudActions.batchUpdate;
+export const batchDeletePackagesAction = crudActions.batchDelete;
 
 /**
- * 获取套餐详情（管理员）
- * @param {String} packageId - 套餐ID
- * @returns {Promise<Object>} 套餐详情
+ * 自定义 Actions
  */
-export async function getPackageDetailAction(packageId) {
-	return await packageCrud.getDetail(packageId);
-}
 
 /**
- * 创建套餐（管理员）
- * @param {Object} packageData - 套餐数据
- * @returns {Promise<Object>} 创建结果
+ * 获取用户购买记录
  */
-export async function createPackageAction(packageData) {
-	return await packageCrud.create(packageData);
-}
-
-/**
- * 更新套餐（管理员）
- * @param {String} packageId - 套餐ID
- * @param {Object} updates - 更新数据
- * @returns {Promise<Object>} 更新结果
- */
-export async function updatePackageAction(packageId, updates) {
-	return await packageCrud.update(packageId, updates);
-}
-
-/**
- * 删除套餐（管理员）
- * @param {String} packageId - 套餐ID
- * @returns {Promise<Object>} 删除结果
- */
-export async function deletePackageAction(packageId) {
-	return await packageCrud.delete(packageId);
-}
-
-/**
- * 批量更新套餐（管理员）
- * @param {Array} packageIds - 套餐ID数组
- * @param {Object} updates - 更新数据
- * @returns {Promise<Object>} 更新结果
- */
-export async function batchUpdatePackagesAction(packageIds, updates) {
-	return await packageCrud.batchUpdate(packageIds, updates);
-}
-
-/**
- * 批量删除套餐（管理员）
- * @param {Array} packageIds - 套餐ID数组
- * @returns {Promise<Object>} 删除结果
- */
-export async function batchDeletePackagesAction(packageIds) {
-	return await packageCrud.batchDelete(packageIds);
-}
-
-/**
- * 获取用户的套餐购买记录（管理员）
- * 这是一个自定义方法，不使用 BaseDAO
- * @param {String} userId - 用户ID
- * @returns {Promise<Object>} 用户套餐列表
- */
-export async function getUserPackagesAdminAction(userId) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return { success: false, error: adminCheck.error };
+export const getUserPackagesAction = wrapQueryAction('package', async ({ userId, pageIndex = 1, pageSize = 20 } = {}) => {
+	if (!userId) {
+		return {
+			success: false,
+			error: 'User ID is required',
+		};
 	}
 
-	try {
-		const packages = await getUserPackages(userId);
-		return { success: true, data: packages };
-	} catch (error) {
-		return { success: false, error: error.message };
-	}
-}
+	const result = await getUserPackages({
+		userId,
+		pageIndex,
+		pageSize,
+	});
+
+	return result;
+});

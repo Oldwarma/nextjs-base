@@ -1,110 +1,77 @@
 'use server';
 
-import { createCrudActions } from '@/app/(admin)/actions/dao/base';
+/**
+ * 积分管理 Server Actions
+ * 使用核心库自动处理权限验证和日志记录
+ */
+
+import { createReadOnlyActions } from '@/lib/core/crud-helper';
+import { wrapAdminAction } from '@/lib/core/action-wrapper';
 import { creditTransactionCrudConfig } from '@/app/(admin)/actions/finance/configs/credit-transaction-crud.config';
-import { checkAdminAction } from '@/lib/auth/admin-auth';
 import { adminAdjustCredits, getCreditTransactions } from '@/lib/business/credits';
 
-// 创建积分交易记录 CRUD Actions（只读）
-const creditTransactionCrud = createCrudActions(creditTransactionCrudConfig);
+/**
+ * 创建只读 CRUD Actions（积分交易记录只能查看）
+ */
+const crudActions = createReadOnlyActions(creditTransactionCrudConfig);
 
 /**
- * 获取积分交易记录列表（管理员）
- * @param {Object} params - 查询参数
- * @param {Number} params.pageIndex - 页码
- * @param {Number} params.pageSize - 每页数量
- * @param {String} params.search - 搜索关键词（userId, reason, relatedId）
- * @param {Object} params.filters - 过滤条件（如 type, userId）
- * @returns {Promise<Object>} 交易记录列表结果
+ * 导出标准查询 Actions
  */
-export async function getCreditTransactionListAction(params = {}) {
-	return await creditTransactionCrud.getList(params);
-}
+export const getCreditTransactionListAction = crudActions.getList;
+export const getCreditTransactionDetailAction = crudActions.getDetail;
 
 /**
- * 获取单个积分交易记录详情（管理员）
- * @param {String} transactionId - 交易记录ID
- * @returns {Promise<Object>} 交易记录详情
+ * 自定义 Actions
  */
-export async function getCreditTransactionDetailAction(transactionId) {
-	return await creditTransactionCrud.getDetail(transactionId);
-}
 
 /**
- * 获取指定用户的积分交易记录（管理员）
- * 这是一个便捷方法，用于查询特定用户的交易记录
- * @param {String} userId - 用户ID
- * @param {Object} options - 查询选项
- * @param {Number} options.pageIndex - 页码
- * @param {Number} options.pageSize - 每页数量
- * @returns {Promise<Object>} 交易记录列表
+ * 管理员调整用户积分
  */
-export async function getUserCreditTransactionsAction(userId, { pageIndex = 1, pageSize = 20 } = {}) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return { success: false, error: adminCheck.error };
-	}
+export const adjustUserCreditsAction = wrapAdminAction(
+	'adjust_credits',
+	'credits',
+	async ({ userId, amount, reason, expiresAt }, context) => {
+		// 验证参数
+		if (!userId || amount === undefined || amount === 0) {
+			return {
+				success: false,
+				error: 'Invalid parameters: userId and non-zero amount are required',
+			};
+		}
 
-	try {
-		const result = await getCreditTransactions(userId, { pageIndex, pageSize });
-		return { success: true, data: result };
-	} catch (error) {
-		return { success: false, error: error.message };
+		// 调用业务逻辑
+		const result = await adminAdjustCredits({
+			userId,
+			amount: Number(amount),
+			reason: reason || 'Admin adjustment',
+			expiresAt: expiresAt ? new Date(expiresAt) : null,
+		});
+
+		return result;
 	}
-}
+);
 
 /**
- * 管理员调整用户积分（管理员）
- * 可以是正数（增加）或负数（扣除）
- * @param {String} userId - 用户ID
- * @param {Number} amount - 调整数量（正数=增加，负数=扣除）
- * @param {String} reason - 调整原因
- * @returns {Promise<Object>} 调整结果
+ * 获取用户积分交易历史
  */
-export async function adminAdjustCreditsAction(userId, amount, reason = 'admin_adjustment') {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return { success: false, error: adminCheck.error };
-	}
+export const getUserCreditTransactionsAction = wrapAdminAction(
+	'read',
+	'credits',
+	async ({ userId, pageIndex = 1, pageSize = 20 }, context) => {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+		}
 
-	try {
-		const result = await adminAdjustCredits(userId, amount, reason, adminCheck.userId);
-		return {
-			success: true,
-			message: amount > 0 ? 'Credits added successfully' : 'Credits deducted successfully',
-			data: result,
-		};
-	} catch (error) {
-		return { success: false, error: error.message };
-	}
-}
+		const result = await getCreditTransactions({
+			userId,
+			pageIndex,
+			pageSize,
+		});
 
-/**
- * 管理员增加用户积分（管理员）
- * 这是 adminAdjustCreditsAction 的便捷方法
- * @param {String} userId - 用户ID
- * @param {Number} amount - 积分数量（正数）
- * @param {String} reason - 原因
- * @returns {Promise<Object>} 调整结果
- */
-export async function adminAddCreditsAction(userId, amount, reason = 'admin_adjustment') {
-	if (amount <= 0) {
-		return { success: false, error: 'Amount must be positive' };
+		return result;
 	}
-	return await adminAdjustCreditsAction(userId, amount, reason);
-}
-
-/**
- * 管理员扣除用户积分（管理员）
- * 这是 adminAdjustCreditsAction 的便捷方法
- * @param {String} userId - 用户ID
- * @param {Number} amount - 积分数量（正数）
- * @param {String} reason - 原因
- * @returns {Promise<Object>} 调整结果
- */
-export async function adminDeductCreditsAction(userId, amount, reason = 'admin_adjustment') {
-	if (amount <= 0) {
-		return { success: false, error: 'Amount must be positive' };
-	}
-	return await adminAdjustCreditsAction(userId, -amount, reason);
-}
+);

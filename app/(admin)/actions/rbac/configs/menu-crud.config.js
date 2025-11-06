@@ -1,60 +1,71 @@
 /**
- * Menu Management CRUD Config
- * 
- * 菜单管理的 CRUD 配置（注意：菜单管理目前未使用 BaseDAO，此文件供参考）
+ * 菜单管理 CRUD 配置
  */
-
 export const menuCrudConfig = {
 	collectionName: 'menus',
-	logCategory: 'admin/menus',
-	primaryKey: 'id',
 	
-	fields: {
-		creatable: ['name', 'url', 'icon', 'parent_id', 'enable', 'hidden', 'sort', 'remark'],
-		updatable: ['name', 'url', 'icon', 'parent_id', 'enable', 'hidden', 'sort', 'remark'],
-		searchable: ['name', 'url'],
-	},
-	
-	query: {
-		defaultSort: { sort: 1, name: 1 },
-		defaultPageSize: 100,
-		baseFilter: {},
-	},
-	
-	validation: {
+	fieldsConfig: {
 		name: {
+			type: 'text',
+			label: 'Menu Name',
 			required: true,
-			minLength: 2,
-			maxLength: 50,
-			message: 'Menu name must be between 2 and 50 characters',
+			tableShow: true,
+			formShow: true,
+			searchShow: true,
+			rules: [
+				{ required: true, message: 'Menu name is required' },
+				{ min: 2, max: 50, message: 'Name length: 2-50 characters' },
+			],
 		},
-		parent_id: {
+		
+		parent: {
+			type: 'select',
+			label: 'Parent Menu',
 			required: false,
-			validator: async (value) => {
-				if (!value) return true;
-				const { getCollection } = await import('@/lib/mongodb');
-				const menus = await getCollection('menus');
-				const parent = await menus.findOne({ id: value });
-				return !!parent;
-			},
-			message: 'Parent menu does not exist',
+			tableShow: true,
+			formShow: true,
+			defaultValue: null,
+		},
+		
+		url: {
+			type: 'text',
+			label: 'URL Path',
+			required: false,
+			tableShow: true,
+			formShow: true,
+			rules: [
+				{ max: 200, message: 'URL max length: 200' },
+			],
+		},
+		
+		icon: {
+			type: 'text',
+			label: 'Icon',
+			required: false,
+			tableShow: true,
+			formShow: true,
+		},
+		
+		sort: {
+			type: 'number',
+			label: 'Display Order',
+			required: false,
+			tableShow: true,
+			formShow: true,
+			defaultValue: 0,
+		},
+		
+		enable: {
+			type: 'switch',
+			label: 'Enabled',
+			required: false,
+			tableShow: true,
+			formShow: true,
+			defaultValue: true,
 		},
 	},
 	
-	transforms: {
-		input: (data) => {
-			if (data.name) data.name = data.name.trim();
-			if (data.url) data.url = data.url.trim();
-			return data;
-		},
-		output: (data) => {
-			if (data.enable === undefined) data.enable = true;
-			if (data.hidden === undefined) data.hidden = false;
-			if (data.sort === undefined) data.sort = 0;
-			return data;
-		},
-	},
-	
-	softDelete: false,
+	enableSoftDelete: false,
+	searchFields: ['name', 'url'],
+	defaultSort: { sort: 1, createdAt: 1 },
 };
-
