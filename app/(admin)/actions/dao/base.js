@@ -209,21 +209,21 @@ export class BaseDAO {
 			// 传统模式：使用 search 和 filters 构建查询
 			query = { ...this.config.query.baseFilter };
 
-			// 搜索条件
-			const searchQuery = this.buildSearchQuery(search);
-			if (searchQuery.$or) {
-				if (query.$or) {
-					// 合并 $or 条件
-					query.$and = [{ $or: query.$or }, searchQuery];
-					delete query.$or;
-				} else {
-					Object.assign(query, searchQuery);
-				}
+		// 搜索条件
+		const searchQuery = this.buildSearchQuery(search);
+		if (searchQuery.$or) {
+			if (query.$or) {
+				// 合并 $or 条件
+				query.$and = [{ $or: query.$or }, searchQuery];
+				delete query.$or;
+			} else {
+				Object.assign(query, searchQuery);
 			}
+		}
 
-			// 额外过滤条件
-			const filtersQuery = this.buildFiltersQuery(filters);
-			Object.assign(query, filtersQuery);
+		// 额外过滤条件
+		const filtersQuery = this.buildFiltersQuery(filters);
+		Object.assign(query, filtersQuery);
 		}
 
 		// 软删除过滤（始终应用）
