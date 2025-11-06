@@ -192,7 +192,7 @@ const fieldsConfig = [
 | `gte` 或 `>=` | 大于等于 | `{ field_gte: value }` |
 | `lt` 或 `<` | 小于 | `{ field_lt: value }` |
 | `lte` 或 `<=` | 小于等于 | `{ field_lte: value }` |
-| `in` | 包含（数组） | `{ field: [v1, v2] }` |
+| `in` | 数组包含查询 | `{ field_in: [v1, v2] }` → `{ field: { $in: [...] } }` |
 
 ### 转换示例
 

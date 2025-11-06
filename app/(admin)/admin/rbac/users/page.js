@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Avatar, Modal, Tree, Tag, Space, Button, Form, Input, Select, InputNumber, Switch, App } from 'antd';
 import { UserOutlined, TeamOutlined, PlusOutlined, KeyOutlined, StopOutlined } from '@ant-design/icons';
@@ -51,6 +51,9 @@ export default function UsersManagementPage() {
 	const [passwordLoading, setPasswordLoading] = useState(false);
 	const [selectedUserId, setSelectedUserId] = useState(null);
 
+	// 动态选项：角色列表
+	const [roleOptions, setRoleOptions] = useState([]);
+
 	// Role assignment modal
 	const [roleModalVisible, setRoleModalVisible] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
@@ -72,7 +75,7 @@ export default function UsersManagementPage() {
 					console.log('[Users] Loaded roles:', roles);
 					setAllRoles(roles);
 					
-					// Convert to tree data for Tree component
+					// Convert to tree data for Tree component (角色绑定模态框)
 					const treeData = roles
 						.filter(role => role && role.id) // 过滤无效数据
 						.map(role => ({
@@ -84,6 +87,16 @@ export default function UsersManagementPage() {
 					
 					console.log('[Users] Tree data:', treeData);
 					setRoleTree(treeData);
+					
+					// 为搜索表单准备选项数据（只包含启用的角色）
+					const searchOptions = roles
+						.filter(role => role && role.id && role.enable)
+						.map(role => ({
+							label: String(role.label || role.name || 'Unknown'),
+							value: String(role.id),
+						}));
+					setRoleOptions(searchOptions);
+					
 					setRolesLoaded(true);
 				} else {
 					console.error('[Users] Failed to load roles:', result.error);
@@ -256,7 +269,7 @@ export default function UsersManagementPage() {
 	// ============================================
 	// 统一字段配置
 	// ============================================
-	const fieldsConfig = [
+	const fieldsConfig = useMemo(() => [
 		// Better Auth 主键 (id)
 		{
 			key: 'id',
@@ -407,7 +420,12 @@ export default function UsersManagementPage() {
 		{
 			key: 'roles',
 			title: 'RBAC Roles',
-			type: 'text',
+			type: 'select',  // ✅ 改为 select 类型
+			options: roleOptions,  // ✅ 使用动态加载的选项
+			form: {
+				mode: 'multiple',  // 多选模式
+				placeholder: 'Select roles',
+			},
 			table: {
 				width: 100,
 				ellipsis: true,
@@ -432,7 +450,15 @@ export default function UsersManagementPage() {
 					);
 				},
 			},
-			form: false,
+			search: {
+				enabled: true,
+				mode: 'in',  // 数组包含查询（MongoDB $in 操作符）
+				placeholder: 'Filter by roles',
+				fieldProps: {
+					mode: 'multiple',  // 搜索时也支持多选
+					loading: !rolesLoaded,  // 加载中状态
+				},
+			},
 			detail: {
 				render: (value, record) => {
 					// 优先使用连表数据 roleList，fallback 到原始字段 roles
@@ -629,7 +655,7 @@ export default function UsersManagementPage() {
 			form: false,
 			hideInTable: true, // 只在详情中显示
 		},
-	];
+	], [roleOptions, rolesLoaded]);  // ✅ 依赖动态选项
 	
 	// ============================================
 	// Actions 配置

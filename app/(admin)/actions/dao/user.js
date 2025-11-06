@@ -246,6 +246,7 @@ export async function getUserList({ page = 1, pageSize = 20, filters = {}, sort 
 	// 构建查询条件
 	const query = {};
 
+	// 处理特定字段的搜索
 	if (filters.email) {
 		query.email = { $regex: filters.email, $options: 'i' };
 	}
@@ -265,6 +266,18 @@ export async function getUserList({ page = 1, pageSize = 20, filters = {}, sort 
 	if (filters.banned !== undefined) {
 		query.banned = filters.banned;
 	}
+
+	// 处理 _in 后缀的查询（数组包含查询）
+	// 例如: roles_in: ['role-id-1', 'role-id-2'] => { roles: { $in: [...] } }
+	Object.keys(filters).forEach(key => {
+		if (key.endsWith('_in')) {
+			const fieldName = key.slice(0, -3);  // 移除 '_in' 后缀
+			const value = filters[key];
+			if (Array.isArray(value) && value.length > 0) {
+				query[fieldName] = { $in: value };
+			}
+		}
+	});
 
 	// 查询用户并关联角色信息
 	const results = await selects({
