@@ -8,6 +8,7 @@
 
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
+import { wrapQueryAction } from '@/lib/core/action-wrapper';
 import * as userDao from '@/app/(admin)/actions/dao/user';
 
 /**
@@ -271,42 +272,39 @@ export async function deleteUserAction(userId) {
 
 /**
  * 获取用户列表（分页）
+ * 兼容 SmartCrudPage 的参数格式
+ * 参数格式: { pageIndex, pageSize, whereJson, sortJson }
  */
-export async function getUserListAction(params = {}) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return {
-			success: false,
-			error: backendCheck.error,
-		};
-	}
+export const getUserListAction = wrapQueryAction('user', async (params = {}) => {
+	// 兼容两种参数格式
+	// 格式 1（SmartCrudPage）: { pageIndex, pageSize, ...searchFields, sortJson }
+	// 格式 2（标准格式）: { pageIndex, pageSize, whereJson, sortJson }
+	const pageIndex = params.pageIndex || params.page || 1;
+	const pageSize = params.pageSize || 20;
+	const sortJson = params.sortJson || params.sort || { createdAt: -1 };
+	
+	// 提取搜索条件（排除分页和排序参数）
+	const { pageIndex: _, page: __, pageSize: ___, sortJson: ____, sort: _____, whereJson: ______, filters: _______, ...searchFields } = params;
+	
+	// 优先使用 whereJson，其次是 filters，最后是顶层的搜索字段
+	const conditions = params.whereJson || params.filters || searchFields;
 
-	try {
-		const { page = 1, pageSize = 20, filters = {}, sort = { createdAt: -1 } } = params;
+	// 使用 DAO 获取用户列表
+	const result = await userDao.getUserList({
+		page: pageIndex,
+		pageSize,
+		filters: conditions,
+		sort: sortJson,
+	});
 
-		// 使用 DAO 获取用户列表
-		const result = await userDao.getUserList({
-			page,
-			pageSize,
-			filters,
-			sort,
-		});
-
-		return {
-			success: true,
-			data: result.data,
-			total: result.total,
-			page: result.page,
-			pageSize: result.pageSize,
-		};
-	} catch (error) {
-		console.error('Failed to get user list:', error);
-		return {
-			success: false,
-			error: error.message || 'Failed to get user list',
-		};
-	}
-}
+	return {
+		success: true,
+		data: result.data,
+		total: result.total,
+		page: result.page,
+		pageSize: result.pageSize,
+	};
+});
 
 /**
  * 获取单个用户详情

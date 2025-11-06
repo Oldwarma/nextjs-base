@@ -334,24 +334,21 @@ export default function SmartCrudPage({
 	const request = async (params, sort, filter) => {
 		try {
 			// 使用自动生成的搜索转换函数转换参数
-			const searchParams = searchTransform(params);
+			const whereJson = searchTransform(params);
 
-		// 转换排序参数 (ProTable 的 sort 格式 -> MongoDB 的 sortJson 格式)
-		// ProTable: { fieldName: 'ascend' | 'descend' }
-		// MongoDB: { fieldName: 1 | -1 }
-		console.log('[SmartCrudPage] ProTable sort params:', sort);
-		const sortJson = buildSortCondition(sort, fieldsConfig);
-		console.log('[SmartCrudPage] Converted sortJson:', sortJson);
+			// 转换排序参数 (ProTable 的 sort 格式 -> MongoDB 的 sortJson 格式)
+			// ProTable: { fieldName: 'ascend' | 'descend' }
+			// MongoDB: { fieldName: 1 | -1 }
+			const sortJson = buildSortCondition(sort, fieldsConfig);
 
-		const requestParams = {
-			pageIndex: params.current,
-			pageSize: params.pageSize,
-			...searchParams,
-			sortJson,  // ✅ 直接传递 sortJson 参数
-		};
-		console.log('[SmartCrudPage] Final request params:', requestParams);
+			const requestParams = {
+				pageIndex: params.current,
+				pageSize: params.pageSize,
+				whereJson,    // ✅ 统一使用 whereJson 传递查询条件
+				sortJson,     // ✅ 统一使用 sortJson 传递排序条件
+			};
 
-		const result = await actions.getList(requestParams);
+			const result = await actions.getList(requestParams);
 
 			if (!result.success) {
 				messageApi.error(result.error || 'Failed to fetch data');
