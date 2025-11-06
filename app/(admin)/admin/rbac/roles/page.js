@@ -24,18 +24,17 @@ const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page')
 // Server Actions - Roles
 import {
 	getRoleListAction as getList,
+	getRoleDetailAction,
 	createRoleAction as create,
 	updateRoleAction as update,
 	deleteRoleAction as deleteItem,
-	roleBindPermissionsAction,
-	roleBindMenusAction,
-	getRolePermissionsAction,
-	getRoleMenusAction,
+	assignPermissionsToRoleAction,
+	assignMenusToRoleAction,
 } from '@/app/(admin)/actions/rbac/admin-roles';
 
 // Server Actions - Permissions & Menus
-import { getPermissionTreeForSelectAction } from '@/app/(admin)/actions/rbac/admin-permissions';
-import { getMenuTreeForSelectAction } from '@/app/(admin)/actions/rbac/admin-menus';
+import { getPermissionListForSelectAction } from '@/app/(admin)/actions/rbac/admin-permissions';
+import { getMenuListForParentSelectAction } from '@/app/(admin)/actions/rbac/admin-menus';
 
 // Convert tree data to Ant Design Tree format (递归函数，移到组件外部)
 const convertToTreeData = (data, keyField) => {
@@ -69,7 +68,7 @@ export default function RolesManagementPage() {
 	// Load permission and menu trees
 	useEffect(() => {
 		const loadPermissionTree = async () => {
-			const result = await getPermissionTreeForSelectAction({ withLabel: true });
+			const result = await getPermissionListForSelectAction({ withLabel: true });
 			if (result.success) {
 				const treeData = convertToTreeData(result.data, 'id'); // ✅ 使用 id（UUID）
 				setPermissionTree(treeData);
@@ -77,7 +76,7 @@ export default function RolesManagementPage() {
 		};
 
 		const loadMenuTree = async () => {
-			const result = await getMenuTreeForSelectAction({ withLabel: true });
+			const result = await getMenuListForParentSelectAction({ withLabel: true });
 			if (result.success) {
 				const treeData = convertToTreeData(result.data, 'id'); // ✅ 使用 id（UUID）
 				setMenuTree(treeData);
@@ -100,9 +99,9 @@ export default function RolesManagementPage() {
 		setPermissionModalVisible(true);
 
 		// Get current permissions
-		const result = await getRolePermissionsAction(record.id);
+		const result = await getRoleDetailAction({ id: record.id });
 		if (result.success) {
-			setSelectedPermissions(result.data || []);
+			setSelectedPermissions(result.data?.permission || []);
 		} else {
 			message.error(result.error || 'Failed to load permissions');
 		}
@@ -122,9 +121,9 @@ export default function RolesManagementPage() {
 		setMenuModalVisible(true);
 
 		// Get current menus
-		const result = await getRoleMenusAction(record.id);
+		const result = await getRoleDetailAction({ id: record.id });
 		if (result.success) {
-			setSelectedMenus(result.data || []);
+			setSelectedMenus(result.data?.menu || []);
 		} else {
 			message.error(result.error || 'Failed to load menus');
 		}
@@ -138,7 +137,10 @@ export default function RolesManagementPage() {
 
 		setPermissionLoading(true);
 
-		const result = await roleBindPermissionsAction(selectedRole.id, selectedPermissions, true);
+		const result = await assignPermissionsToRoleAction({ 
+			roleId: selectedRole.id, 
+			permissionIds: selectedPermissions 
+		});
 
 		if (result.success) {
 			message.success('Permissions assigned successfully');
@@ -157,7 +159,10 @@ export default function RolesManagementPage() {
 
 		setMenuLoading(true);
 
-		const result = await roleBindMenusAction(selectedRole.id, selectedMenus, true, autoBindMenuPermissions);
+		const result = await assignMenusToRoleAction({ 
+			roleId: selectedRole.id, 
+			menuIds: selectedMenus 
+		});
 
 		if (result.success) {
 			message.success('Menus assigned successfully');

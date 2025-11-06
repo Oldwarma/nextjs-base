@@ -29,7 +29,7 @@ import {
 	createPermissionAction as create,
 	updatePermissionAction as update,
 	deletePermissionAction as deleteItem,
-	getPermissionTreeForSelectAction,
+	getPermissionListForSelectAction,
 } from '@/app/(admin)/actions/rbac/admin-permissions';
 
 // Convert permission tree to Ant Design Tree format
@@ -49,7 +49,7 @@ export default function PermissionsManagementPage() {
 
 	// Load permission tree (for parent selector)
 	const loadPermissionTree = useCallback(async () => {
-		const result = await getPermissionTreeForSelectAction({ withLabel: true });
+		const result = await getPermissionListForSelectAction({ withLabel: true });
 		if (result.success) {
 			// Convert to Ant Design Tree format
 			const treeData = convertToTreeData(result.data);
