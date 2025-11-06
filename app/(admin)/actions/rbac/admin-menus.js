@@ -13,7 +13,7 @@
 
 import { getCollection, fromObjectId, generateId } from '@/lib/mongodb';
 import { checkAdmin } from '@/lib/auth/admin-auth';
-import { logAction } from '@/lib/action-logger';
+import { logAction } from '@/lib/logging/action-logger';
 
 /**
  * 获取菜单列表

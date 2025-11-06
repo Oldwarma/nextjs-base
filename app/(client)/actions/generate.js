@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
-import { createUsageLog, updateUsageLog, checkUserCanUseFeature } from '@/lib/usage-logs';
+import { createUsageLog, updateUsageLog, checkUserCanUseFeature } from '@/lib/logging/usage-logs';
 
 /**
  * 文生图 - 从文本生成图片

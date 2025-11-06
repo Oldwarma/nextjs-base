@@ -277,7 +277,7 @@ export async function updateUserById(userId, updateData) {
 // ===== actions/admin-users.js =====
 // Actions 层：业务逻辑 + 权限检查 + 验证 + 日志
 import * as userDao from '@/dao/userDao';
-import { logAction } from '@/lib/action-logger';
+import { logAction } from '@/lib/logging/action-logger';
 
 export async function getUserListAction(params) {
     const startTime = Date.now();

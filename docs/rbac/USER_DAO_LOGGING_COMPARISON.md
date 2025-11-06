@@ -13,7 +13,7 @@ BaseDAO 提供了完整的操作日志记录：
 ```javascript
 // app/(admin)/actions/dao/base.js
 
-import { logAction } from '@/lib/action-logger';
+import { logAction } from '@/lib/logging/action-logger';
 
 class BaseDAO {
     // ...
@@ -204,7 +204,7 @@ export async function getRoleListAction(params) {
 ```javascript
 // app/(admin)/actions/rbac/admin-users.js
 
-import { logAction } from '@/lib/action-logger';
+import { logAction } from '@/lib/logging/action-logger';
 
 export async function getUserListAction(params = {}) {
     const startTime = Date.now();

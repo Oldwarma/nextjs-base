@@ -11,8 +11,8 @@
  * 3. 使用 checkRole 验证用户角色
  */
 
-import { checkActionPermission, checkPermission, checkRole } from '@/lib/permission-auth';
-import { logAction } from '@/lib/action-logger';
+import { checkActionPermission, checkPermission, checkRole } from '@/lib/auth/permission-auth';
+import { logAction } from '@/lib/logging/action-logger';
 
 /**
  * Example 1: 使用 Action 路径验证权限

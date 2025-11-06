@@ -12,7 +12,7 @@
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth/auth';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
-import { logAction } from '@/lib/action-logger';
+import { logAction } from '@/lib/logging/action-logger';
 
 /**
  * Get current user's accessible menus (RBAC-aware)

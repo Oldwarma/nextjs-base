@@ -413,7 +413,7 @@ const permCheck = await checkAllPermissions([
 'use server';
 
 import { checkActionPermission } from '@/lib/permission-auth';
-import { logAction } from '@/lib/action-logger';
+import { logAction } from '@/lib/logging/action-logger';
 
 export async function updateUserRoleAction(userId, newRole) {
 	const startTime = Date.now();

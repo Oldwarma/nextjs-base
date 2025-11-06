@@ -1,6 +1,6 @@
 import { getCollection, generateId, fromObjectId } from '@/lib/mongodb';
-import { checkAdminAction } from '@/lib/admin-auth';
-import { logAction } from '@/lib/action-logger';
+import { checkAdminAction } from '@/lib/auth/admin-auth';
+import { logAction } from '@/lib/logging/action-logger';
 import { selects } from '@/lib/db-api';
 
 /**

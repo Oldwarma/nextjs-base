@@ -11,7 +11,7 @@
 
 import { createCrudActions } from './dao/base';
 import { usageCrudConfig } from './configs/usage-crud.config';
-import { logAction } from '@/lib/action-logger';
+import { logAction } from '@/lib/logging/action-logger';
 
 // 创建基础 CRUD Actions
 const crudActions = createCrudActions(usageCrudConfig);

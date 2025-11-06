@@ -7,7 +7,7 @@ import {
 	getUserUsageStatistics,
 	checkUserCanUseFeature,
 	getFeaturePrices,
-} from '@/lib/usage-logs';
+} from '@/lib/logging/usage-logs';
 
 /**
  * 获取用户使用记录

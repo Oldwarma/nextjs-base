@@ -127,7 +127,7 @@ export async function createPostAction(data) {
 对于不使用 BaseDAO 的自定义 action：
 
 ```javascript
-import { logAction } from '@/lib/action-logger';
+import { logAction } from '@/lib/logging/action-logger';
 
 export async function myCustomAction(params) {
 	const startTime = Date.now();
