@@ -1,327 +1,174 @@
 'use server';
 
-import { createCrudActions } from '@/app/(admin)/actions/dao/base';
+/**
+ * 角色管理 Server Actions
+ * 使用核心库自动处理权限验证和日志记录
+ */
+
+import { createCrudActions } from '@/lib/core/crud-helper';
+import { wrapQueryAction, wrapAdminAction } from '@/lib/core/action-wrapper';
 import { roleCrudConfig } from '@/app/(admin)/actions/rbac/configs/role-crud.config';
-import { checkAdminAction } from '@/lib/auth/admin-auth';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
 
-// Create role CRUD Actions using BaseDAO
-const roleCrud = createCrudActions(roleCrudConfig);
+/**
+ * 创建标准 CRUD Actions
+ * 自动包含：权限验证、日志记录、错误处理
+ */
+const crudActions = createCrudActions(roleCrudConfig);
 
 /**
- * Get role list (Admin)
- * @param {Object} params - Query parameters
- * @returns {Promise<Object>} Role list result
+ * 导出标准 CRUD Actions
  */
-export async function getRoleListAction({ pageIndex = 1, pageSize = 20, search, filters = {} } = {}) {
-	return await roleCrud.getList({
-		pageIndex,
-		pageSize,
-		search,
-		filters,
+export const getRoleListAction = crudActions.getList;
+export const getRoleDetailAction = wrapQueryAction('role', async ({ id }) => {
+	// 获取角色详情，包含权限和菜单名称
+	const role = await sysDao.findRoleByIdWithNames(id);
+	
+	if (!role) {
+		return {
+			success: false,
+			error: 'Role not found',
+		};
+	}
+
+	return {
+		success: true,
+		data: role,
+	};
+});
+
+export const createRoleAction = crudActions.create;
+export const updateRoleAction = crudActions.update;
+export const deleteRoleAction = crudActions.delete;
+export const batchUpdateRolesAction = crudActions.batchUpdate;
+export const batchDeleteRolesAction = crudActions.batchDelete;
+
+/**
+ * 自定义 Actions
+ */
+
+/**
+ * 获取角色列表（用于选择器）
+ * 只返回启用的角色，可选添加标签
+ */
+export const getRoleListForSelectAction = wrapQueryAction('role', async ({ withLabel = false } = {}) => {
+	// 获取所有启用的角色（不分页）
+	const result = await crudActions._dao.getList({
+		pageIndex: 1,
+		pageSize: 1000,
+		filters: { enable: true },
 	});
-}
 
-/**
- * Get role list for selection (Admin)
- * 专门用于选择器的角色列表，只返回启用的角色，带标签格式
- * @param {Object} params - Query parameters
- * @param {Boolean} params.withLabel - Whether to add label field
- * @returns {Promise<Object>} Role list with labels
- */
-export async function getRoleListForSelectAction({ withLabel = false } = {}) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
+	if (!result.success) {
+		return result;
 	}
 
-	try {
-		// 获取所有启用的角色（不分页）
-		const result = await roleCrud.getList({
-			pageIndex: 1,
-			pageSize: 1000,
-			filters: { enable: true },
+	let roles = result.data || [];
+
+	// 如果需要标签，添加详细标签
+	if (withLabel) {
+		roles = roles.map((role) => {
+			const badges = [];
+			
+			// 禁用标签
+			if (!role.enable) {
+				badges.push('[已禁用]');
+			}
+			
+			// 权限数量
+			const permCount = Array.isArray(role.permission) ? role.permission.length : 0;
+			if (permCount > 0) {
+				badges.push(`${permCount}权限`);
+			}
+			
+			// 菜单数量
+			const menuCount = Array.isArray(role.menu) ? role.menu.length : 0;
+			if (menuCount > 0) {
+				badges.push(`${menuCount}菜单`);
+			}
+
+			const badgeStr = badges.length > 0 ? ` ${badges.join(' ')}` : '';
+			const remarkStr = role.remark ? ` - ${role.remark}` : '';
+
+			return {
+				...role,
+				label: `${role.name} (${role.id})${badgeStr}${remarkStr}`,
+				value: role.id,
+			};
 		});
-
-		if (!result.success) {
-			return result;
-		}
-
-		let roles = result.data || [];
-
-		// 如果需要标签，添加标签字段
-		if (withLabel) {
-			roles = roles.map((role) => {
-				const badges = [];
-				
-				// 禁用标签
-				if (!role.enable) {
-					badges.push('[已禁用]');
-				}
-				
-				// 权限数量
-				const permCount = Array.isArray(role.permission) ? role.permission.length : 0;
-				if (permCount > 0) {
-					badges.push(`${permCount}权限`);
-				}
-				
-				// 菜单数量
-				const menuCount = Array.isArray(role.menu) ? role.menu.length : 0;
-				if (menuCount > 0) {
-					badges.push(`${menuCount}菜单`);
-				}
-
-				const badgeStr = badges.length > 0 ? ` ${badges.join(' ')}` : '';
-				const remarkStr = role.remark ? ` - ${role.remark}` : '';
-
-				return {
-					...role,
-					label: `${role.name} (${role.id})${badgeStr}${remarkStr}`,
-				};
-			});
-		}
-
-		return {
-			success: true,
-			data: roles,
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
 	}
-}
+
+	return {
+		success: true,
+		data: roles,
+	};
+});
 
 /**
- * Get role detail (Admin)
- * 包含权限和菜单的名称信息
- * @param {String} roleId - Role ID
- * @returns {Promise<Object>} Role detail with permission and menu names
+ * 分配权限给角色
  */
-export async function getRoleDetailAction(roleId) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
-	try {
-		// 使用 DAO 层的方法获取带名称的角色详情
-		const role = await sysDao.findRoleByIdWithNames(roleId);
-		
-		if (!role) {
+export const assignPermissionsToRoleAction = wrapAdminAction(
+	'assign_permissions',
+	'role',
+	async ({ roleId, permissionIds }, context) => {
+		// 验证输入
+		if (!roleId || !Array.isArray(permissionIds)) {
 			return {
 				success: false,
-				error: 'Role not found',
+				error: 'Invalid parameters: roleId and permissionIds (array) are required',
 			};
 		}
 
-		return {
-			success: true,
-			data: role,
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
-	}
-}
-
-/**
- * Create role (Admin)
- * @param {Object} data - Role data
- * @returns {Promise<Object>} Create result
- */
-export async function createRoleAction(data) {
-	return await roleCrud.create(data);
-}
-
-/**
- * Update role (Admin)
- * @param {String} roleId - Role ID
- * @param {Object} data - Update data
- * @returns {Promise<Object>} Update result
- */
-export async function updateRoleAction(roleId, data) {
-	return await roleCrud.update(roleId, data);
-}
-
-/**
- * Delete role (Admin)
- * @param {String} roleId - Role ID
- * @returns {Promise<Object>} Delete result
- */
-export async function deleteRoleAction(roleId) {
-	return await roleCrud.delete(roleId);
-}
-
-/**
- * Batch update roles (Admin)
- * @param {Array} roleIds - Role ID array
- * @param {Object} updates - Update data
- * @returns {Promise<Object>} Update result
- */
-export async function batchUpdateRolesAction(roleIds, updates) {
-	return await roleCrud.batchUpdate(roleIds, updates);
-}
-
-/**
- * Batch delete roles (Admin)
- * @param {Array} roleIds - Role ID array
- * @returns {Promise<Object>} Delete result
- */
-export async function batchDeleteRolesAction(roleIds) {
-	return await roleCrud.batchDelete(roleIds);
-}
-
-/**
- * Bind permissions to role (Admin)
- * @param {String} roleId - Role ID
- * @param {Array<String>} permissionIds - Permission ID array
- * @param {Boolean} reset - Whether to reset (true=replace, false=append)
- * @returns {Promise<Object>} Update result
- */
-export async function roleBindPermissionsAction(roleId, permissionIds, reset = false) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
-	try {
-		const result = await sysDao.roleBindPermissions({
-			roleId,
-			permissionIds,
-			reset,
+		// 更新角色的权限列表
+		const result = await crudActions._dao.update({
+			id: roleId,
+			data: { permission: permissionIds },
+			userId: context.userId,
 		});
 
-		return {
-			success: result.success,
-			data: result,
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
+		return result;
 	}
-}
+);
 
 /**
- * Bind menus to role (Admin)
- * @param {String} roleId - Role ID
- * @param {Array<String>} menuIds - Menu ID array
- * @param {Boolean} reset - Whether to reset (true=replace, false=append)
- * @param {Boolean} autoBindMenuPermissions - Whether to auto bind menu's permissions
- * @returns {Promise<Object>} Update result
+ * 分配菜单给角色
  */
-export async function roleBindMenusAction(roleId, menuIds, reset = false, autoBindMenuPermissions = false) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
-	try {
-		const result = await sysDao.roleBindMenus({
-			roleId,
-			menuIds,
-			reset,
-			autoBindMenuPermissions,
-		});
-
-		return {
-			success: result.success,
-			data: result,
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
-	}
-}
-
-/**
- * Get role's permissions (Admin)
- * @param {String} roleId - Role ID
- * @returns {Promise<Object>} Permission IDs result
- */
-export async function getRolePermissionsAction(roleId) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
-	try {
-		const role = await sysDao.findRoleById(roleId);
-
-		if (!role) {
+export const assignMenusToRoleAction = wrapAdminAction(
+	'assign_menus',
+	'role',
+	async ({ roleId, menuIds }, context) => {
+		// 验证输入
+		if (!roleId || !Array.isArray(menuIds)) {
 			return {
 				success: false,
-				error: 'Role not found',
+				error: 'Invalid parameters: roleId and menuIds (array) are required',
 			};
 		}
 
-		return {
-			success: true,
-			data: role.permission || [],
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
+		// 更新角色的菜单列表
+		const result = await crudActions._dao.update({
+			id: roleId,
+			data: { menu: menuIds },
+			userId: context.userId,
+		});
+
+		return result;
 	}
-}
+);
 
 /**
- * Get role's menus (Admin)
- * @param {String} roleId - Role ID
- * @returns {Promise<Object>} Menu IDs result
+ * 切换角色启用/禁用状态
  */
-export async function getRoleMenusAction(roleId) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
+export const toggleRoleStatusAction = wrapAdminAction(
+	'toggle_status',
+	'role',
+	async ({ roleId, enable }, context) => {
+		const result = await crudActions._dao.update({
+			id: roleId,
+			data: { enable },
+			userId: context.userId,
+		});
+
+		return result;
 	}
-
-	try {
-		const role = await sysDao.findRoleById(roleId);
-
-		if (!role) {
-			return {
-				success: false,
-				error: 'Role not found',
-			};
-		}
-
-		return {
-			success: true,
-			data: role.menu || [],
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
-	}
-}
-
+);
