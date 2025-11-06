@@ -21,26 +21,7 @@ export async function signInWithEmailAction(credentials) {
 			};
 		}
 
-		// 🔍 调试：检查数据库中的账户
-		console.log('🔍 [DEBUG] 开始登录调试');
-		console.log('🔍 [DEBUG] Email:', email);
-		
-		const { getCollection } = await import('@/lib/database/mongodb');
-		const accountColl = await getCollection('account');
-		const credAccount = await accountColl.findOne({
-			accountId: email,
-			providerId: 'credential'
-		});
-		
-		console.log('🔍 [DEBUG] 数据库查询结果:', credAccount ? '✅ 找到账户' : '❌ 未找到账户');
-		if (credAccount) {
-			console.log('🔍 [DEBUG] Account ID:', credAccount.id);
-			console.log('🔍 [DEBUG] User ID:', credAccount.userId);
-			console.log('🔍 [DEBUG] Has Password:', !!credAccount.password);
-		}
-
 		// 使用 better-auth API 进行登录
-		console.log('🔍 [DEBUG] 调用 Better Auth API...');
 		const result = await auth.api.signInEmail({
 			body: {
 				email,
@@ -49,8 +30,6 @@ export async function signInWithEmailAction(credentials) {
 			headers: await headers(),
 		});
 		
-		console.log('🔍 [DEBUG] Better Auth 返回结果:', result ? '✅ 成功' : '❌ 失败');
-
 		if (!result) {
 			return {
 				success: false,
