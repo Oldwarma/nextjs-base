@@ -12,7 +12,7 @@
  * - DAO 层负责将 _id 转换为字符串 id 对外暴露
  */
 
-import { selects, add, updateOne, updateMany, remove } from '@/lib/db-api';
+import { selects, add, updateOne, updateMany, remove } from '@/lib/database/db-api';
 
 /**
  * 字段映射：将 _id (ObjectId) 转换为字符串 id

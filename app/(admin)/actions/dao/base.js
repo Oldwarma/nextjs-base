@@ -1,7 +1,7 @@
-import { getCollection, generateId, fromObjectId } from '@/lib/mongodb';
+import { getCollection, generateId, fromObjectId } from '@/lib/database/mongodb';
 import { checkAdminAction } from '@/lib/auth/admin-auth';
 import { logAction } from '@/lib/logging/action-logger';
-import { selects } from '@/lib/db-api';
+import { selects } from '@/lib/database/db-api';
 
 /**
  * BaseDAO - 通用数据访问对象基类

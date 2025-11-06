@@ -1,5 +1,5 @@
-import { getCollection } from '@/lib/mongodb';
-import { selects } from '@/lib/db-api';
+import { getCollection } from '@/lib/database/mongodb';
+import { selects } from '@/lib/database/db-api';
 
 /**
  * SysDAO - 系统权限相关的数据访问对象

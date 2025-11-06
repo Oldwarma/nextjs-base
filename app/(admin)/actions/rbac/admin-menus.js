@@ -11,7 +11,7 @@
  * - 获取菜单树（用于父级选择）
  */
 
-import { getCollection, fromObjectId, generateId } from '@/lib/mongodb';
+import { getCollection, fromObjectId, generateId } from '@/lib/database/mongodb';
 import { checkAdmin } from '@/lib/auth/admin-auth';
 import { logAction } from '@/lib/logging/action-logger';
 
