@@ -129,7 +129,7 @@ export const roleCrudConfig = {
 		 */
 		afterDelete: async (id, deleted) => {
 			// Remove this role from all users
-			const { getCollection } = await import('@/lib/mongodb');
+			const { getCollection } = await import('@/lib/database/mongodb');
 			const usersCollection = await getCollection('users');
 
 			// Remove role from users' roles array
@@ -146,7 +146,7 @@ export const roleCrudConfig = {
 		 */
 		beforeBatchDelete: async (ids) => {
 			// Prevent deleting admin role
-			const { getCollection } = await import('@/lib/mongodb');
+			const { getCollection } = await import('@/lib/database/mongodb');
 			const collection = await getCollection('roles');
 			
 			const adminRoles = await collection.find({

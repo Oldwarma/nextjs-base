@@ -1023,7 +1023,7 @@ export const productCrudConfig = {
 		
 		beforeDelete: async (id, existing) => {
 			// 检查是否有未完成的订单
-			const { getCollection } = await import('@/lib/mongodb');
+			const { getCollection } = await import('@/lib/database/mongodb');
 			const ordersCollection = await getCollection('orders');
 			
 			const pendingOrders = await ordersCollection.({
@@ -1090,7 +1090,7 @@ export const productCrudConfig = {
 
 import { createCrudActions } from '@/@/(admin)/actions/dao/base';
 import { productCrudConfig } from '@/configs/product-crud.config';
-import { checkAdminAction } from '@/lib/admin-auth';
+import { checkAdminAction } from '@/lib/admin/admin-auth';
 
 const productCrud = createCrudActions(productCrudConfig);
 
@@ -1140,7 +1140,7 @@ export async function adjustStockAction(id, quantity, reason) {
 	}
 	
 	try {
-		const { getCollection } = await import('@/lib/mongodb');
+		const { getCollection } = await import('@/lib/database/mongodb');
 		const productsCollection = await getCollection('products');
 		
 		const product = await productsCollection.findOne({ id });

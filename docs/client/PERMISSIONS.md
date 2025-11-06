@@ -666,7 +666,7 @@ import { updateUserRoleAction } from '@/app/(admin)/actions';
 await updateUserRoleAction(userId, 'admin');
 
 // 方式 2: 直接修改数据库
-import { getCollection } from '@/lib/mongodb';
+import { getCollection } from '@/lib/database/mongodb';
 
 const usersCollection = await getCollection('users');
 await usersCollection.updateOne(

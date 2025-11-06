@@ -9,7 +9,7 @@
 ```javascript
 // Admin role: get all enabled menus
 if (userRole === 'admin') {
-    // const { getCollection, fromObjectId } = await import('@/lib/mongodb');
+    // const { getCollection, fromObjectId } = await import('@/lib/database/mongodb');
     // ... 所有代码都被注释
 }
 

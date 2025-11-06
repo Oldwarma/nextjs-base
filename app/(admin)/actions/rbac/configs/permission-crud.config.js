@@ -89,7 +89,7 @@ export const permissionCrudConfig = {
 				}
 
 				// 检查父级是否存在
-				const { getCollection } = await import('@/lib/mongodb');
+				const { getCollection } = await import('@/lib/database/mongodb');
 				const collection = await getCollection('permissions');
 				const parentPerm = await collection.findOne({ id: value });
 
@@ -189,7 +189,7 @@ export const permissionCrudConfig = {
 
 			// Prevent circular reference (basic check)
 			if (data.parent_id) {
-				const { getCollection } = await import('@/lib/mongodb');
+				const { getCollection } = await import('@/lib/database/mongodb');
 				const collection = await getCollection('permissions');
 
 				// Check if parent_id would create a circular reference
@@ -220,7 +220,7 @@ export const permissionCrudConfig = {
 		 */
 		beforeDelete: async (id, existing) => {
 			// Check if this permission has children
-			const { getCollection } = await import('@/lib/mongodb');
+			const { getCollection } = await import('@/lib/database/mongodb');
 			const collection = await getCollection('permissions');
 
 			const childrenCount = await collection.count({ parent_id: id });
@@ -237,7 +237,7 @@ export const permissionCrudConfig = {
 		 */
 		afterDelete: async (id, deleted) => {
 			// Remove this permission from all roles
-			const { getCollection } = await import('@/lib/mongodb');
+			const { getCollection } = await import('@/lib/database/mongodb');
 			const rolesCollection = await getCollection('roles');
 
 			await rolesCollection.updateMany(
@@ -261,7 +261,7 @@ export const permissionCrudConfig = {
 		 */
 		beforeBatchDelete: async (ids) => {
 			// Check if any permission has children
-			const { getCollection } = await import('@/lib/mongodb');
+			const { getCollection } = await import('@/lib/database/mongodb');
 			const collection = await getCollection('permissions');
 
 			const childrenCount = await collection.count({

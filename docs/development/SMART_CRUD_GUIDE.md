@@ -190,7 +190,7 @@ export const articleCrudConfig = {
       required: true,
       validator: async (value) => {
         // 自定义验证：检查作者是否存在
-        const { getCollection } = await import('@/lib/mongodb');
+        const { getCollection } = await import('@/lib/database/mongodb');
         const users = await getCollection('users');
         const user = await users.findOne({ id: value });
         return !!user;
@@ -268,7 +268,7 @@ export const articleCrudConfig = {
      */
     afterDelete: async (id, deleted) => {
       // 清理关联数据（如评论）
-      const { getCollection } = await import('@/lib/mongodb');
+      const { getCollection } = await import('@/lib/database/mongodb');
       const comments = await getCollection('comments');
       await comments.deleteMany({ article_id: id });
       
@@ -293,7 +293,7 @@ export const articleCrudConfig = {
      */
     beforeBatchDelete: async (ids) => {
       // 检查是否有已发布的文章
-      const { getCollection } = await import('@/lib/mongodb');
+      const { getCollection } = await import('@/lib/database/mongodb');
       const articles = await getCollection('articles');
       const publishedCount = await articles.({
         id: { $in: ids },
@@ -1623,7 +1623,7 @@ softDelete: true,
 // CRUD Config
 hooks: {
   afterDelete: async (id, deleted) => {
-    const { getCollection } = await import('@/lib/mongodb');
+    const { getCollection } = await import('@/lib/database/mongodb');
     const comments = await getCollection('comments');
     await comments.deleteMany({ article_id: id });
   },

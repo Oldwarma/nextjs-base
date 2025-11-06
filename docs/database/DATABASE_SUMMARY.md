@@ -489,7 +489,7 @@ const db = await connectToDatabase();
 const user = await db.collection('users').findOne({ email });
 
 // 文件 C
-import { getCollection } from '@/lib/mongodb';
+import { getCollection } from '@/lib/database/mongodb';
 const coll = await getCollection('users');
 const user = await coll.findOne({ email });
 ```

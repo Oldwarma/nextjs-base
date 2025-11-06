@@ -1,5 +1,5 @@
 import localFont from 'next/font/local';
-import { checkAdmin } from '@/lib/admin-auth';
+import { checkAdmin } from '@/lib/auth/admin-auth';
 import { Toaster } from '@/components/ui/sonner';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import AdminLayout from '@/components/admin/admin-layout';

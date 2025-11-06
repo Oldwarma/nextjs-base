@@ -193,7 +193,7 @@ export async function getUserPackagesAction(userId) {
 所有 Actions 都使用统一的 `checkAdminAction`：
 
 ```javascript
-import { checkAdminAction } from '@/lib/admin-auth';
+import { checkAdminAction } from '@/lib/admin/admin-auth';
 
 export async function someAction() {
 	const adminCheck = await checkAdminAction();

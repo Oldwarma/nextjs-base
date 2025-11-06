@@ -233,7 +233,7 @@ export async function findPermissionsByIds(permissionIds) {
  * @returns {Promise<Object>} 树形结构数据
  */
 export async function getPermissionTree({ pageIndex = 1, pageSize = DB_MAX_LIMIT, filters = {} }) {
-	const { fromObjectId } = await import('@/lib/mongodb');
+	const { fromObjectId } = await import('@/lib/database/mongodb');
 	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
 
 	// 查询顶级权限（parent_id为null或空字符串）
@@ -291,7 +291,7 @@ async function getChildPermissions(parent_id, maxDepth = 5, currentDepth = 0) {
 		return [];
 	}
 
-	const { fromObjectId } = await import('@/lib/mongodb');
+	const { fromObjectId } = await import('@/lib/database/mongodb');
 	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
 	const children = await collection.find({ parent_id: parent_id });
 
@@ -694,7 +694,7 @@ function buildMenuTree(menus) {
  */
 export async function bindUserRoles({ userId, roles = [], reset = false }) {
 	const collection = await getCollection(COLLECTION_NAMES.USERS);
-	const { fromObjectId } = await import('@/lib/mongodb');
+	const { fromObjectId } = await import('@/lib/database/mongodb');
 
 	let finalRoles = roles;
 
@@ -749,7 +749,7 @@ export async function bindUserRoles({ userId, roles = [], reset = false }) {
  */
 export async function getUserRoleIds(userId) {
 	const collection = await getCollection(COLLECTION_NAMES.USERS);
-	const { fromObjectId } = await import('@/lib/mongodb');
+	const { fromObjectId } = await import('@/lib/database/mongodb');
 	
 	// 尝试使用 id 字段查询
 	let user = await collection.findOne({ id: userId });
@@ -942,7 +942,7 @@ export async function menuBindPermissions({ menuId, permissionIds = [], reset = 
  * @returns {Promise<Array>} 权限树形数组
  */
 export async function getPermissionTreeForSelect({ withLabel = true } = {}) {
-	const { fromObjectId } = await import('@/lib/mongodb');
+	const { fromObjectId } = await import('@/lib/database/mongodb');
 	// 获取所有未删除的权限（包括已禁用的，让管理员可以选择）
 	const allPermissions = await getAllPermissions({ 
 		deletedAt: { $exists: false }
@@ -1054,7 +1054,7 @@ function addLabelsToTree(tree) {
  * @returns {Promise<Array>} 菜单树形数组
  */
 export async function getMenuTreeForSelect({ withLabel = true } = {}) {
-	const { fromObjectId } = await import('@/lib/mongodb');
+	const { fromObjectId } = await import('@/lib/database/mongodb');
 	const collection = await getCollection(COLLECTION_NAMES.MENUS);
 	
 	// 获取所有未删除的菜单（包括已禁用的，让管理员可以选择）

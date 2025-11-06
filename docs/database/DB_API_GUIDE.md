@@ -1438,7 +1438,7 @@ export async function rechargeCreditsAction(packageId) {
 'use server';
 
 import { count, sum, avg, getList } from '@/lib/db-api';
-import { checkAdminAction } from '@/lib/admin-auth';
+import { checkAdminAction } from '@/lib/admin/admin-auth';
 
 export async function getDashboardStatsAction() {
 	const adminCheck = await checkAdminAction();
@@ -1740,7 +1740,7 @@ const configId = await add({
 对于需要原子性的操作，考虑使用事务（需要 MongoDB 副本集）：
 
 ```javascript
-import { connectToDatabase } from '@/lib/mongodb';
+import { connectToDatabase } from '@/lib/database/mongodb';
 
 export async function transferCreditsAction(fromUserId, toUserId, amount) {
 	const db = await connectToDatabase();

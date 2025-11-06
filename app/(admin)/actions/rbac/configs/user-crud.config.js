@@ -158,7 +158,7 @@ export const userCrudConfig = {
 		 */
 		beforeBatchDelete: async (ids) => {
 			// 检查是否会删除所有管理员
-			const { getCollection } = await import('@/lib/mongodb');
+			const { getCollection } = await import('@/lib/database/mongodb');
 			const usersCollection = await getCollection('users');
 
 			const adminCount = await usersCollection.count({

@@ -446,7 +446,7 @@ export async function updateUserRoleAction(userId, newRole) {
 		}
 
 		// ✅ 步骤3: 执行操作
-		const { getCollection } = await import('@/lib/mongodb');
+		const { getCollection } = await import('@/lib/database/mongodb');
 		const usersCollection = await getCollection('users');
 		
 		const updateResult = await usersCollection.updateOne(
@@ -643,7 +643,7 @@ export default function MyComponent() {
 'use server';
 
 import { checkActionPermission } from '@/lib/permission-auth';
-import { getCollection } from '@/lib/mongodb';
+import { getCollection } from '@/lib/database/mongodb';
 
 // 获取用户列表 - 无需特殊权限
 export async function getUserListAction() {

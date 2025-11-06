@@ -153,7 +153,7 @@ import { FIELD_TYPE_REGISTRY } from '@/lib/crud/field-types';
 
 - ✅ 使用绝对路径：`@/lib/auth/auth`
 - ✅ 明确子目录：`@/lib/database/db-api`
-- ❌ 避免：`@/lib/mongodb`（旧路径）
+- ❌ 避免：`@/lib/database/mongodb`（旧路径）
 
 ### 文件命名规范
 

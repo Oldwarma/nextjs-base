@@ -7,9 +7,9 @@
 **导入路径统计：**
 ```
 14 次 - @/lib/auth
- 7 次 - @/lib/admin-auth
+ 7 次 - @/lib/admin/admin-auth
  5 次 - @/lib/action-logger
- 3 次 - @/lib/mongodb
+ 3 次 - @/lib/database/mongodb
  3 次 - @/lib/db-api
  2 次 - @/lib/utils
  2 次 - @/lib/usage-logs
@@ -130,7 +130,7 @@ mv lib/permission-auth.js lib/auth/
 ```
 '@/lib/auth' → '@/lib/auth/auth'
 '@/lib/auth-client' → '@/lib/auth/auth-client'
-'@/lib/admin-auth' → '@/lib/auth/admin-auth'
+'@/lib/admin/admin-auth' → '@/lib/auth/admin-auth'
 '@/lib/page-auth' → '@/lib/auth/page-auth'
 '@/lib/permission-auth' → '@/lib/auth/permission-auth'
 ```
@@ -231,7 +231,7 @@ mv lib/mongodb.js lib/database/
 **替换规则：**
 ```
 '@/lib/db-api' → '@/lib/database/db-api'
-'@/lib/mongodb' → '@/lib/database/mongodb'
+'@/lib/database/mongodb' → '@/lib/database/mongodb'
 ```
 
 **注意：** db-api.js 本身也导入了 mongodb.js，需要更新

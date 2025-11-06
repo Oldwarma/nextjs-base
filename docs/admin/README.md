@@ -218,7 +218,7 @@ export const userCrudConfig = {
 所有后台 Actions 都使用 `checkAdminAction()` 进行权限检查：
 
 ```javascript
-import { checkAdminAction } from '@/lib/admin-auth';
+import { checkAdminAction } from '@/lib/admin/admin-auth';
 
 export async function someAdminAction() {
 	const adminCheck = await checkAdminAction();

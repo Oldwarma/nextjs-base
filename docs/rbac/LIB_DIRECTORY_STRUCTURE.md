@@ -257,7 +257,7 @@ grep -r "from '@/lib/db-api'" --include="*.js" --include="*.jsx"
 
 # 批量替换（需要手动确认）
 # '@/lib/db-api' → '@/lib/database/db-api'
-# '@/lib/mongodb' → '@/lib/database/mongodb'
+# '@/lib/database/mongodb' → '@/lib/database/mongodb'
 ```
 
 ### 阶段 3：移动 CRUD 相关文件（10 分钟）
@@ -462,11 +462,11 @@ EOF
 | 旧路径 | 新路径 |
 |--------|--------|
 | `@/lib/db-api` | `@/lib/database/db-api` |
-| `@/lib/mongodb` | `@/lib/database/mongodb` |
+| `@/lib/database/mongodb` | `@/lib/database/mongodb` |
 | `@/lib/admin/crud/*` | `@/lib/crud/*` |
 | `@/lib/auth` | `@/lib/auth/auth` |
 | `@/lib/auth-client` | `@/lib/auth/auth-client` |
-| `@/lib/admin-auth` | `@/lib/auth/admin-auth` |
+| `@/lib/admin/admin-auth` | `@/lib/auth/admin-auth` |
 | `@/lib/page-auth` | `@/lib/auth/page-auth` |
 | `@/lib/permission-auth` | `@/lib/auth/permission-auth` |
 | `@/lib/action-logger` | `@/lib/logging/action-logger` |

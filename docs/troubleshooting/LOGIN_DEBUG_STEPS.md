@@ -143,7 +143,7 @@ rm -rf .next
 'use server';
 
 import { hash } from 'bcryptjs';
-import { getCollection } from '@/lib/mongodb';
+import { getCollection } from '@/lib/database/mongodb';
 
 export async function tempLoginAction({ email, password }) {
     try {
@@ -214,7 +214,7 @@ const db = await getDatabase();
 console.log('Better Auth 数据库:', db.databaseName);
 
 // 在 Server Action 中
-const { getCollection } = await import('@/lib/mongodb');
+const { getCollection } = await import('@/lib/database/mongodb');
 const coll = await getCollection('account');
 console.log('Server Action 数据库:', coll.dbName);
 ```

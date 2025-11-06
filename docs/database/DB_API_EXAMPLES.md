@@ -162,7 +162,7 @@ export async function updateProfileAction(profileData) {
 'use server';
 
 import { getPage } from '@/lib/db-api';
-import { checkAdminAction } from '@/lib/admin-auth';
+import { checkAdminAction } from '@/lib/admin/admin-auth';
 
 export async function getUserListAction({ pageIndex = 1, pageSize = 20, search, role, emailVerified } = {}) {
 	const adminCheck = await checkAdminAction();
@@ -829,7 +829,7 @@ export async function getUserStatsAction() {
 'use server';
 
 import { count, sum, avg, aggregate } from '@/lib/db-api';
-import { checkAdminAction } from '@/lib/admin-auth';
+import { checkAdminAction } from '@/lib/admin/admin-auth';
 
 export async function getAdminDashboardStatsAction() {
 	const adminCheck = await checkAdminAction();
@@ -1069,7 +1069,7 @@ export async function getLeaderboardAction({ type = 'credits', limit = 10 } = {}
 'use server';
 
 import { getList } from '@/lib/db-api';
-import { checkAdminAction } from '@/lib/admin-auth';
+import { checkAdminAction } from '@/lib/admin/admin-auth';
 
 export async function exportUsersAction({ role, startDate, endDate } = {}) {
 	const adminCheck = await checkAdminAction();

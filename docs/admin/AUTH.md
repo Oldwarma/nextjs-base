@@ -11,7 +11,7 @@
 ### 1. `checkAdmin()` - 用于页面/Layout
 
 ```js
-import { checkAdmin } from '@/lib/admin-auth';
+import { checkAdmin } from '@/lib/admin/admin-auth';
 
 export default async function AdminLayout({ children }) {
   // 自动验证管理员权限，非管理员会被重定向
@@ -32,7 +32,7 @@ export default async function AdminLayout({ children }) {
 
 ```js
 'use server';
-import { checkAdminAction } from '@/lib/admin-auth';
+import { checkAdminAction } from '@/lib/admin/admin-auth';
 
 export async function adminAction() {
   const adminCheck = await checkAdminAction();
@@ -59,7 +59,7 @@ export async function adminAction() {
 ### 3. `isAdmin()` - 检查权限（不抛错）
 
 ```js
-import { isAdmin } from '@/lib/admin-auth';
+import { isAdmin } from '@/lib/admin/admin-auth';
 
 export async function MyComponent() {
   const hasAdminAccess = await isAdmin();
@@ -80,7 +80,7 @@ export async function MyComponent() {
 ### 4. `getAdminSession()` - 获取管理员 Session
 
 ```js
-import { getAdminSession } from '@/lib/admin-auth';
+import { getAdminSession } from '@/lib/admin/admin-auth';
 
 export default async function AdminPage() {
   const session = await getAdminSession();
@@ -103,7 +103,7 @@ export default async function AdminPage() {
 
 ```js
 // app/(admin)/layout.js
-import { checkAdmin } from '@/lib/admin-auth';
+import { checkAdmin } from '@/lib/admin/admin-auth';
 
 export default async function AdminLayout({ children }) {
   // 在 Layout 层面验证，所有子页面自动受保护
@@ -122,7 +122,7 @@ export default async function AdminLayout({ children }) {
 ```js
 // app/(admin)/actions/admin-users.js
 'use server';
-import { checkAdminAction } from '@/lib/admin-auth';
+import { checkAdminAction } from '@/lib/admin/admin-auth';
 
 export async function updateUserRole(userId, role) {
   const adminCheck = await checkAdminAction();
@@ -143,7 +143,7 @@ export async function updateUserRole(userId, role) {
 
 ```jsx
 'use client';
-import { isAdmin } from '@/lib/admin-auth';
+import { isAdmin } from '@/lib/admin/admin-auth';
 import { useEffect, useState } from 'react';
 
 export function AdminButton() {

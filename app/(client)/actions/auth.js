@@ -25,7 +25,7 @@ export async function signInWithEmailAction(credentials) {
 		console.log('🔍 [DEBUG] 开始登录调试');
 		console.log('🔍 [DEBUG] Email:', email);
 		
-		const { getCollection } = await import('@/lib/mongodb');
+		const { getCollection } = await import('@/lib/database/mongodb');
 		const accountColl = await getCollection('account');
 		const credAccount = await accountColl.findOne({
 			accountId: email,

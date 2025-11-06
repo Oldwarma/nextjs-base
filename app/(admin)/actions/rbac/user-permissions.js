@@ -39,7 +39,7 @@ export async function getUserAccessibleMenusAction() {
 
 		// Admin role: get all enabled menus (注释用于测试)
 		if (userRole === 'admin') {
-			const { getCollection, fromObjectId } = await import('@/lib/mongodb');
+			const { getCollection, fromObjectId } = await import('@/lib/database/mongodb');
 			const menusCollection = await getCollection('menus');
 			const allMenus = await menusCollection.find(
 				{

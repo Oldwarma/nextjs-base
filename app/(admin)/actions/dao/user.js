@@ -417,7 +417,7 @@ export async function getUserRoles(userId) {
  * @returns {Promise<Object>} 统计信息
  */
 export async function getUserStats() {
-	const { getDatabase } = await import('@/lib/mongodb');
+	const { getDatabase } = await import('@/lib/database/mongodb');
 	const db = await getDatabase();
 
 	const totalUsers = await db.collection('users').countDocuments();

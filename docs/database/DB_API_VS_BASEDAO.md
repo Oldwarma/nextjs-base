@@ -157,7 +157,7 @@ export const deleteUserAction = userCrud.delete;
 'use server';
 
 import { count, sum, avg } from '@/lib/db-api';
-import { checkAdminAction } from '@/lib/admin-auth';
+import { checkAdminAction } from '@/lib/admin/admin-auth';
 
 export async function getRevenueStatsAction() {
 	const adminCheck = await checkAdminAction();
@@ -349,7 +349,7 @@ export async function getUserStatsAction(userId) {
 
 **之前（直接使用 MongoDB）**：
 ```javascript
-import { getCollection } from '@/lib/mongodb';
+import { getCollection } from '@/lib/database/mongodb';
 
 const collection = await getCollection('users');
 const user = await collection.findOne({ email: 'test@example.com' });

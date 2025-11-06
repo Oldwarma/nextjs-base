@@ -142,11 +142,11 @@ lib/
 ```javascript
 // 认证
 '@/lib/auth' → '@/lib/auth/auth'
-'@/lib/admin-auth' → '@/lib/auth/admin-auth'
+'@/lib/admin/admin-auth' → '@/lib/auth/admin-auth'
 '@/lib/permission-auth' → '@/lib/auth/permission-auth'
 
 // 数据库
-'@/lib/mongodb' → '@/lib/database/mongodb'
+'@/lib/database/mongodb' → '@/lib/database/mongodb'
 '@/lib/db-api' → '@/lib/database/db-api'
 
 // 日志
