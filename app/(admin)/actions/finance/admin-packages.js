@@ -2,8 +2,8 @@
 
 import { createCrudActions } from '@/app/(admin)/actions/dao/base';
 import { packageCrudConfig } from '@/app/(admin)/actions/finance/configs/package-crud.config';
-import { checkAdminAction } from '@/lib/admin-auth';
-import { getUserPackages } from '@/lib/packages';
+import { checkAdminAction } from '@/lib/auth/admin-auth';
+import { getUserPackages } from '@/lib/business/packages';
 
 // 创建套餐 CRUD Actions
 const packageCrud = createCrudActions(packageCrudConfig);

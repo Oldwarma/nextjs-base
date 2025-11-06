@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
-import { getUserCredits, getUserCreditsInfo, getCreditTransactions } from '@/lib/credits';
+import { getUserCredits, getUserCreditsInfo, getCreditTransactions } from '@/lib/business/credits';
 
 /**
  * 获取用户当前积分

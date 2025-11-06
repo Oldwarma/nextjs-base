@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
-import { initializeNewUser, updateLastLogin } from '@/lib/init-user';
+import { initializeNewUser, updateLastLogin } from '@/lib/business/init-user';
 
 /**
  * 邮箱密码登录 - 仅用于已有账号

@@ -2,8 +2,8 @@
 
 import { createCrudActions } from '@/app/(admin)/actions/dao/base';
 import { creditTransactionCrudConfig } from '@/app/(admin)/actions/finance/configs/credit-transaction-crud.config';
-import { checkAdminAction } from '@/lib/admin-auth';
-import { adminAdjustCredits, getCreditTransactions } from '@/lib/credits';
+import { checkAdminAction } from '@/lib/auth/admin-auth';
+import { adminAdjustCredits, getCreditTransactions } from '@/lib/business/credits';
 
 // 创建积分交易记录 CRUD Actions（只读）
 const creditTransactionCrud = createCrudActions(creditTransactionCrudConfig);

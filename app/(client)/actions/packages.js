@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
-import { getActivePackages, purchasePackage, getUserPackages, getUserCurrentPackage } from '@/lib/packages';
+import { getActivePackages, purchasePackage, getUserPackages, getUserCurrentPackage } from '@/lib/business/packages';
 
 /**
  * 获取所有可用套餐

@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
-import { getUserProfile, updateUserProfile, getUserStatistics } from '@/lib/user-profile';
+import { getUserProfile, updateUserProfile, getUserStatistics } from '@/lib/business/user-profile';
 
 /**
  * 获取当前用户资料
