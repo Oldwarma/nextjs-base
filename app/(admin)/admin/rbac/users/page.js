@@ -9,8 +9,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Avatar, Modal, Tree, Tag, message, Space } from 'antd';
-import { UserOutlined, TeamOutlined } from '@ant-design/icons';
+import { Avatar, Modal, Tree, Tag, message, Space, Button, Form, Input, Select, InputNumber, Switch } from 'antd';
+import { UserOutlined, TeamOutlined, PlusOutlined, KeyOutlined } from '@ant-design/icons';
 
 // 动态导入 SmartCrudPage，禁用 SSR 避免 Hydration 错误
 const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
@@ -20,18 +20,33 @@ const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page')
 
 // Server Actions
 import {
+	createUserAction,
 	getUserListAction as getList,
 	updateUserInfoAction as update,
 	deleteUserAction as deleteItem,
 	batchUpdateUsersAction as batchUpdate,
+	resetUserPasswordAction,
 	bindUserRolesAction,
 	getUserRolesAction,
 } from '@/app/(admin)/actions/rbac/admin-users';
 
 import { getRoleListForSelectAction } from '@/app/(admin)/actions/rbac/admin-roles';
 
+const { Option } = Select;
+
 export default function UsersManagementPage() {
 	const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+	// Create user modal
+	const [createModalVisible, setCreateModalVisible] = useState(false);
+	const [createForm] = Form.useForm();
+	const [createLoading, setCreateLoading] = useState(false);
+
+	// Reset password modal
+	const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+	const [passwordForm] = Form.useForm();
+	const [passwordLoading, setPasswordLoading] = useState(false);
+	const [selectedUserId, setSelectedUserId] = useState(null);
 
 	// Role assignment modal
 	const [roleModalVisible, setRoleModalVisible] = useState(false);
@@ -140,6 +155,48 @@ export default function UsersManagementPage() {
 			message.error('Failed to assign roles');
 		} finally {
 			setRoleLoading(false);
+		}
+	};
+
+	// Handle create user
+	const handleCreateUser = async (values) => {
+		setCreateLoading(true);
+		try {
+			const result = await createUserAction(values);
+			if (result.success) {
+				message.success('User created successfully');
+				setCreateModalVisible(false);
+				createForm.resetFields();
+				setRefreshTrigger((prev) => prev + 1);
+			} else {
+				message.error(result.error || 'Failed to create user');
+			}
+		} catch (error) {
+			message.error('Failed to create user');
+			console.error(error);
+		} finally {
+			setCreateLoading(false);
+		}
+	};
+
+	// Handle reset password
+	const handleResetPassword = async (values) => {
+		setPasswordLoading(true);
+		try {
+			const result = await resetUserPasswordAction(selectedUserId, values.password);
+			if (result.success) {
+				message.success('Password reset successfully');
+				setPasswordModalVisible(false);
+				passwordForm.resetFields();
+				setSelectedUserId(null);
+			} else {
+				message.error(result.error || 'Failed to reset password');
+			}
+		} catch (error) {
+			message.error('Failed to reset password');
+			console.error(error);
+		} finally {
+			setPasswordLoading(false);
 		}
 	};
 
@@ -269,6 +326,27 @@ export default function UsersManagementPage() {
 			search: {
 				enabled: true,
 				mode: 'exact',
+			},
+		},
+		
+		// 后台访问权限
+		{
+			key: 'isBackendAllowed',
+			title: 'Backend Access',
+			type: 'switch',
+			table: {
+				width: 140,
+				trueText: 'Allowed',
+				falseText: 'Denied',
+			},
+			form: {
+				required: true,
+			},
+			search: {
+				enabled: true,
+				mode: 'exact',
+				trueText: 'Allowed',
+				falseText: 'Denied',
 			},
 		},
 		
@@ -433,7 +511,22 @@ export default function UsersManagementPage() {
 			form: false,
 			hideInTable: true, // 只在详情中显示
 			detail: {
-				render: (value) => (value ? new Date(value).toLocaleString() : 'N/A'),
+				render: (value) => {
+					if (!value) return 'N/A';
+					try {
+						const date = value instanceof Date ? value : new Date(value);
+						return date.toLocaleString('zh-CN', {
+							year: 'numeric',
+							month: '2-digit',
+							day: '2-digit',
+							hour: '2-digit',
+							minute: '2-digit',
+							second: '2-digit',
+						});
+					} catch (e) {
+						return String(value);
+					}
+				},
 			},
 		},
 		
@@ -492,8 +585,23 @@ export default function UsersManagementPage() {
 			key: 'assign-roles',
 			text: 'Assign Roles',
 			icon: <TeamOutlined />,
-			inMore: true, // ✅ 放入更多菜单
+			inMore: true,
 			onClick: handleAssignRoles,
+		},
+		{
+			key: 'reset-password',
+			text: 'Reset Password',
+			icon: <KeyOutlined />,
+			inMore: true,
+			onClick: (record) => {
+				const userId = record.id || record._id;
+				if (!userId) {
+					message.error('User ID is missing');
+					return;
+				}
+				setSelectedUserId(userId);
+				setPasswordModalVisible(true);
+			},
 		},
 	];
 
@@ -518,10 +626,22 @@ export default function UsersManagementPage() {
 				customRowActions={customRowActions}
 				
 				// 功能开关
-				enableCreate={false}  // 用户通过注册创建，不需要管理员手动创建
+				enableCreate={false}  // ✅ 关闭默认创建，使用自定义模态框
 				enableDetail={true}
 				enableEdit={true}
 				enableDelete={true}
+				
+				// 自定义工具栏按钮
+				customToolbarButtons={[
+					<Button
+						key="create"
+						type="primary"
+						icon={<PlusOutlined />}
+						onClick={() => setCreateModalVisible(true)}
+					>
+						Create User
+					</Button>,
+				]}
 				
 				// 表格配置
 				tableProps={{
@@ -539,6 +659,121 @@ export default function UsersManagementPage() {
 				// 刷新触发器
 				refreshTrigger={refreshTrigger}
 			/>
+
+			{/* Create User Modal */}
+			<Modal
+				title="Create User"
+				open={createModalVisible}
+				onOk={() => createForm.submit()}
+				onCancel={() => {
+					setCreateModalVisible(false);
+					createForm.resetFields();
+				}}
+				confirmLoading={createLoading}
+				width={600}
+			>
+				<Form
+					form={createForm}
+					layout="vertical"
+					onFinish={handleCreateUser}
+				>
+					<Form.Item
+						name="email"
+						label="Email"
+						rules={[
+							{ required: true, message: 'Please enter email' },
+							{ type: 'email', message: 'Invalid email format' },
+						]}
+					>
+						<Input placeholder="user@example.com" />
+					</Form.Item>
+
+					<Form.Item
+						name="password"
+						label="Password"
+						rules={[
+							{ required: true, message: 'Please enter password' },
+							{ min: 8, message: 'Password must be at least 8 characters' },
+						]}
+					>
+						<Input.Password placeholder="Enter password" />
+					</Form.Item>
+
+					<Form.Item
+						name="name"
+						label="Name"
+						rules={[{ required: true, message: 'Please enter name' }]}
+					>
+						<Input placeholder="Full name" />
+					</Form.Item>
+
+					<Form.Item
+						name="username"
+						label="Username"
+					>
+						<Input placeholder="username" />
+					</Form.Item>
+
+					<Form.Item
+						name="role"
+						label="System Role"
+						initialValue="user"
+						rules={[{ required: true, message: 'Please select role' }]}
+					>
+						<Select>
+							<Option value="user">User</Option>
+							<Option value="admin">Admin</Option>
+						</Select>
+					</Form.Item>
+
+					<Form.Item
+						name="isBackendAllowed"
+						label="Backend Access"
+						valuePropName="checked"
+						initialValue={false}
+					>
+						<Switch checkedChildren="Allowed" unCheckedChildren="Denied" />
+					</Form.Item>
+
+					<Form.Item
+						name="credits"
+						label="Initial Credits"
+						initialValue={0}
+					>
+						<InputNumber min={0} style={{ width: '100%' }} />
+					</Form.Item>
+				</Form>
+			</Modal>
+
+			{/* Reset Password Modal */}
+			<Modal
+				title="Reset Password"
+				open={passwordModalVisible}
+				onOk={() => passwordForm.submit()}
+				onCancel={() => {
+					setPasswordModalVisible(false);
+					passwordForm.resetFields();
+					setSelectedUserId(null);
+				}}
+				confirmLoading={passwordLoading}
+			>
+				<Form
+					form={passwordForm}
+					layout="vertical"
+					onFinish={handleResetPassword}
+				>
+					<Form.Item
+						name="password"
+						label="New Password"
+						rules={[
+							{ required: true, message: 'Please enter new password' },
+							{ min: 8, message: 'Password must be at least 8 characters' },
+						]}
+					>
+						<Input.Password placeholder="Enter new password" />
+					</Form.Item>
+				</Form>
+			</Modal>
 
 			{/* Role Assignment Modal */}
 			<Modal

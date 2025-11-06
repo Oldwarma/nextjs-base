@@ -365,7 +365,7 @@ export default function AdminLayout({ children, user }) {
 		>
 			<div style={{ minHeight: '100%', background: '#f5f5f5' }}>
 				<PageAccessGuard>
-					{children}
+				{children}
 				</PageAccessGuard>
 			</div>
 		</ProLayout>

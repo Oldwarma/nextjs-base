@@ -570,7 +570,7 @@ export class BaseDAO {
 			...whereJson,
 		};
 
-		const count = await collection.countDocuments(query);
+		const count = await collection.count(query);
 		return count;
 	}
 

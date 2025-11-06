@@ -29,8 +29,8 @@ import {
 	generateSearchConfig,
 	generateSearchTransform,
 	validateFieldsConfig,
-} from '@/lib/admin/crud/field-generator';
-import { buildSortCondition } from '@/lib/admin/crud/search-transformer';
+} from '@/lib/crud/field-generator';
+import { buildSortCondition } from '@/lib/crud/search-transformer';
 
 // 导入动态表单字段组件
 import DynamicFormFields from '@/components/admin/dynamic-form-fields';
@@ -317,11 +317,36 @@ export default function SmartCrudPage({
 
 	// 查看详情
 	const handleViewDetail = async (record) => {
+		// 清理 record 中的 Date 对象和其他复杂类型
+		const cleanRecord = (obj) => {
+			if (!obj || typeof obj !== 'object') return obj;
+			
+			const cleaned = {};
+			for (const [key, value] of Object.entries(obj)) {
+				if (value instanceof Date) {
+					// Date 对象转换为 ISO 字符串
+					cleaned[key] = value.toISOString();
+				} else if (Array.isArray(value)) {
+					// 递归清理数组
+					cleaned[key] = value.map(item => 
+						typeof item === 'object' ? cleanRecord(item) : item
+					);
+				} else if (value && typeof value === 'object' && value.constructor === Object) {
+					// 递归清理普通对象
+					cleaned[key] = cleanRecord(value);
+				} else {
+					// 基本类型直接复制
+					cleaned[key] = value;
+				}
+			}
+			return cleaned;
+		};
+		
 		if (actions.getDetail) {
 			try {
 				const result = await actions.getDetail(record[rowKey]);
 				if (result.success) {
-					setCurrentRow(result.data);
+					setCurrentRow(cleanRecord(result.data));
 				} else {
 				messageApi.error(result.error || 'Failed to fetch detail');
 					return;
@@ -331,7 +356,7 @@ export default function SmartCrudPage({
 				return;
 			}
 		} else {
-			setCurrentRow(record);
+			setCurrentRow(cleanRecord(record));
 		}
 		setDetailDrawerVisible(true);
 	};
@@ -380,7 +405,10 @@ export default function SmartCrudPage({
 				processedValues = processed || values;
 			}
 			
-			const result = await actions.update(currentRow[rowKey], processedValues);
+			// 获取 row 的 key（支持 string 或 function）
+			const id = typeof rowKey === 'function' ? rowKey(currentRow) : currentRow[rowKey];
+			
+			const result = await actions.update(id, processedValues);
 
 			if (result.success) {
 			messageApi.success(result.message || 'Updated successfully');
@@ -680,13 +708,47 @@ export default function SmartCrudPage({
 					<Descriptions
 								column={1}
 								bordered
-						items={detailColumns.map(col => ({
-							key: col.key,
-							label: col.title,
-							children: col.render 
-								? col.render(currentRow[col.dataIndex], currentRow)
-								: currentRow[col.dataIndex],
-						}))}
+						items={detailColumns.map(col => {
+							const value = currentRow[col.dataIndex];
+							let displayValue;
+							
+							if (col.render) {
+								// 使用自定义 render 函数
+								displayValue = col.render(value, currentRow);
+							} else if (value === null || value === undefined) {
+								// 空值显示为 -
+								displayValue = '-';
+							} else if (value instanceof Date || (typeof value === 'string' && !isNaN(Date.parse(value)) && value.includes('T'))) {
+								// Date 对象或 ISO 日期字符串
+								const date = value instanceof Date ? value : new Date(value);
+								displayValue = date.toLocaleString('zh-CN', {
+									year: 'numeric',
+									month: '2-digit',
+									day: '2-digit',
+									hour: '2-digit',
+									minute: '2-digit',
+									second: '2-digit',
+								});
+							} else if (Array.isArray(value)) {
+								// 数组转换为逗号分隔的字符串
+								displayValue = value.join(', ');
+							} else if (typeof value === 'object') {
+								// 其他对象转换为 JSON
+								displayValue = JSON.stringify(value, null, 2);
+							} else if (typeof value === 'boolean') {
+								// 布尔值转换为 Yes/No
+								displayValue = value ? 'Yes' : 'No';
+							} else {
+								// 基本类型直接显示
+								displayValue = String(value);
+							}
+							
+							return {
+								key: col.key,
+								label: col.title,
+								children: displayValue,
+							};
+						})}
 							/>
 				</div>
 					)}

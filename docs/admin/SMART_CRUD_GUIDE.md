@@ -294,7 +294,7 @@ export const articleCrudConfig = {
       // 检查是否有已发布的文章
       const { getCollection } = await import('@/lib/mongodb');
       const articles = await getCollection('articles');
-      const publishedCount = await articles.countDocuments({
+      const publishedCount = await articles.({
         id: { $in: ids },
         status: 'published',
       });

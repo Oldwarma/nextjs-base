@@ -80,7 +80,7 @@ export const packageCrudConfig = {
 		beforeDelete: async (id, existing) => {
 			// TODO: 可以检查是否有用户正在使用此套餐
 			// const usersCollection = await getCollection('user_packages');
-			// const activeUsers = await usersCollection.countDocuments({
+			// const activeUsers = await usersCollection.count({
 			// 	packageId: id,
 			// 	status: 'active'
 			// });

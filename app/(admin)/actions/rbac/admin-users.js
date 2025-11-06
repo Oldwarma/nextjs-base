@@ -1,249 +1,477 @@
 'use server';
 
-import { createCrudActions } from '@/app/(admin)/actions/dao/base';
-import { userCrudConfig } from '@/app/(admin)/actions/rbac/configs/user-crud.config';
-import { checkAdminAction } from '@/lib/admin-auth';
-import { getUserStatistics } from '@/lib/user-profile';
+/**
+ * 后台用户管理 Server Actions
+ * 集成 Better Auth 的用户创建、更新等功能
+ * 使用 DAO 层进行数据操作
+ */
 
-// 创建用户 CRUD Actions
-const userCrud = createCrudActions(userCrudConfig);
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import * as userDao from '@/app/(admin)/actions/dao/user';
 
 /**
- * 获取用户列表（管理员）
- * @param {Object} params - 查询参数
- * @returns {Promise<Object>} 用户列表结果
+ * 检查是否有后台访问权限
  */
-export async function getUserListAction({ pageIndex = 1, pageSize = 20, role, search } = {}) {
-	return await userCrud.getList({
-		pageIndex,
-		pageSize,
-		search,
-		filters: role ? { role } : {},
+async function checkBackendAccess() {
+	const session = await auth.api.getSession({
+		headers: await headers(),
 	});
-}
 
-/**
- * 获取用户详细信息（管理员）
- * @param {String} userId - 用户ID
- * @returns {Promise<Object>} 用户详情
- */
-export async function getUserDetailAction(userId) {
-	return await userCrud.getDetail(userId);
-}
-
-/**
- * 更新用户信息（管理员）
- * @param {String} userId - 用户ID
- * @param {Object} data - 更新数据
- * @returns {Promise<Object>} 更新结果
- */
-export async function updateUserInfoAction(userId, data) {
-	return await userCrud.update(userId, data);
-}
-
-/**
- * 删除用户（管理员）- 软删除
- * @param {String} userId - 用户ID
- * @returns {Promise<Object>} 删除结果
- */
-export async function deleteUserAction(userId) {
-	// 防止删除管理员自己
-	const adminCheck = await checkAdminAction();
-	if (adminCheck.isAdmin && adminCheck.userId === userId) {
+	if (!session?.user) {
 		return {
-			success: false,
-			error: 'Cannot delete your own account',
+			hasAccess: false,
+			error: 'Unauthorized: Please login',
 		};
 	}
 
-	return await userCrud.delete(userId);
-}
-
-/**
- * 批量更新用户状态（管理员）
- * @param {Array} userIds - 用户ID数组
- * @param {Object} updates - 更新数据
- * @returns {Promise<Object>} 更新结果
- */
-export async function batchUpdateUsersAction(userIds, updates) {
-	return await userCrud.batchUpdate(userIds, updates);
-}
-
-/**
- * 批量删除用户（管理员）
- * @param {Array} userIds - 用户ID数组
- * @returns {Promise<Object>} 删除结果
- */
-export async function batchDeleteUsersAction(userIds) {
-	// 防止删除管理员自己
-	const adminCheck = await checkAdminAction();
-	if (adminCheck.isAdmin && userIds.includes(adminCheck.userId)) {
+	// 检查是否允许访问后台
+	if (!session.user.isBackendAllowed) {
 		return {
-			success: false,
-			error: 'Cannot delete your own account',
+			hasAccess: false,
+			error: 'Forbidden: Backend access not allowed',
 		};
 	}
 
-	return await userCrud.batchDelete(userIds);
+	return {
+		hasAccess: true,
+		isAdmin: session.user.role === 'admin',
+		user: session.user,
+	};
 }
 
 /**
- * 更新用户角色（管理员）
- * 这是一个便捷方法，专门用于更新角色
- * @param {String} userId - 用户ID
- * @param {String} role - 新角色
- * @returns {Promise<Object>} 更新结果
+ * 创建用户（后台管理员使用）
  */
-export async function updateUserRoleAction(userId, role) {
-	return await userCrud.update(userId, { role });
-}
-
-/**
- * 获取用户统计信息（管理员）
- * 这个方法不使用 BaseDAO，因为它需要复杂的聚合查询
- * @param {String} userId - 用户ID
- * @returns {Promise<Object>} 统计信息
- */
-export async function getUserStatisticsAdminAction(userId) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
+export async function createUserAction(userData) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
 		return {
 			success: false,
-			error: adminCheck.error,
+			error: backendCheck.error,
 		};
 	}
 
 	try {
-		const stats = await getUserStatistics(userId);
+		const { email, password, name, username, role = 'user', isBackendAllowed = false, roles = [], credits = 0 } = userData;
+
+		// 验证必填字段
+		if (!email || !password || !name) {
+			return {
+				success: false,
+				error: 'Email, password and name are required',
+			};
+		}
+
+		// 验证邮箱格式
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(email)) {
+			return {
+				success: false,
+				error: 'Invalid email format',
+			};
+		}
+
+		// 验证密码强度
+		if (password.length < 8) {
+			return {
+				success: false,
+				error: 'Password must be at least 8 characters',
+			};
+		}
+
+		// 检查邮箱是否已存在
+		const existingUser = await userDao.getUserByEmail(email);
+		if (existingUser) {
+			return {
+				success: false,
+				error: 'Email already exists',
+			};
+		}
+
+		// 检查用户名是否已存在
+		if (username) {
+			const existingUsername = await userDao.getUserByUsername(username);
+			if (existingUsername) {
+				return {
+					success: false,
+					error: 'Username already exists',
+				};
+}
+		}
+
+		// 使用 DAO 创建用户
+		const newUser = await userDao.createUser({
+			email,
+			password,
+			name,
+			username,
+			role,
+			isBackendAllowed,
+			roles,
+			credits,
+		});
+
+		return {
+			success: true,
+			data: newUser,
+		};
+	} catch (error) {
+		console.error('Failed to create user:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to create user',
+		};
+	}
+}
+
+/**
+ * 更新用户信息
+ */
+export async function updateUserAction(userId, updateData) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+}
+
+		// 使用 DAO 更新用户
+		const updatedUser = await userDao.updateUser(userId, updateData);
+
+		if (!updatedUser) {
+			return {
+				success: false,
+				error: 'User not found',
+			};
+		}
+
+		return {
+			success: true,
+			data: updatedUser,
+		};
+	} catch (error) {
+		console.error('Failed to update user:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to update user',
+		};
+	}
+}
+
+/**
+ * 更新用户信息（别名，兼容旧代码）
+ */
+export async function updateUserInfoAction(userId, updateData) {
+	return await updateUserAction(userId, updateData);
+}
+
+/**
+ * 重置用户密码
+ */
+export async function resetUserPasswordAction(userId, newPassword) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!userId || !newPassword) {
+			return {
+				success: false,
+				error: 'User ID and new password are required',
+		};
+	}
+
+		if (newPassword.length < 8) {
+			return {
+				success: false,
+				error: 'Password must be at least 8 characters',
+			};
+}
+
+		// 使用 DAO 重置密码
+		await userDao.resetUserPassword(userId, newPassword);
+
+		return {
+			success: true,
+			message: 'Password reset successfully',
+		};
+	} catch (error) {
+		console.error('Failed to reset password:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to reset password',
+		};
+	}
+}
+
+/**
+ * 删除用户
+ */
+export async function deleteUserAction(userId) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+}
+
+		// 使用 DAO 删除用户
+		await userDao.deleteUser(userId);
+
+		return {
+			success: true,
+			message: 'User deleted successfully',
+		};
+	} catch (error) {
+		console.error('Failed to delete user:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to delete user',
+		};
+	}
+}
+
+/**
+ * 获取用户列表（分页）
+ */
+export async function getUserListAction(params = {}) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		const { page = 1, pageSize = 20, filters = {}, sort = { createdAt: -1 } } = params;
+
+		// 使用 DAO 获取用户列表
+		const result = await userDao.getUserList({
+			page,
+			pageSize,
+			filters,
+			sort,
+		});
+
+		return {
+			success: true,
+			data: result.data,
+			total: result.total,
+			page: result.page,
+			pageSize: result.pageSize,
+		};
+	} catch (error) {
+		console.error('Failed to get user list:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to get user list',
+		};
+	}
+}
+
+/**
+ * 获取单个用户详情
+ */
+export async function getUserByIdAction(userId) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+}
+
+		// 使用 DAO 获取用户
+		const user = await userDao.getUserById(userId);
+
+		if (!user) {
+			return {
+				success: false,
+				error: 'User not found',
+			};
+		}
+
+		return {
+			success: true,
+			data: user,
+		};
+	} catch (error) {
+		console.error('Failed to get user:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to get user',
+		};
+	}
+}
+
+/**
+ * 批量更新用户
+ */
+export async function batchUpdateUsersAction(userIds, updateData) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!Array.isArray(userIds) || userIds.length === 0) {
+			return {
+				success: false,
+				error: 'User IDs array is required',
+			};
+		}
+
+		// 使用 DAO 批量更新
+		const modifiedCount = await userDao.batchUpdateUsers(userIds, updateData);
+
+		return {
+			success: true,
+			data: {
+				modifiedCount,
+				matchedCount: userIds.length,
+			},
+		};
+	} catch (error) {
+		console.error('Failed to batch update users:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to batch update users',
+		};
+	}
+}
+
+/**
+ * 为用户绑定角色
+ */
+export async function bindUserRolesAction(userId, roleIds, reset = false) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+		}
+
+		// 使用 DAO 绑定角色
+		await userDao.bindUserRoles(userId, roleIds, reset);
+
+		return {
+			success: true,
+			message: 'Roles assigned successfully',
+		};
+	} catch (error) {
+		console.error('Failed to bind user roles:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to bind user roles',
+		};
+	}
+}
+
+/**
+ * 获取用户的角色列表
+ */
+export async function getUserRolesAction(userId) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+		}
+
+		// 使用 DAO 获取角色
+		const roles = await userDao.getUserRoles(userId);
+
+		return {
+			success: true,
+			data: roles,
+		};
+	} catch (error) {
+		console.error('Failed to get user roles:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to get user roles',
+		};
+	}
+}
+
+/**
+ * 获取用户统计信息
+ */
+export async function getUserStatsAction() {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		// 使用 DAO 获取统计
+		const stats = await userDao.getUserStats();
+
 		return {
 			success: true,
 			data: stats,
 		};
 	} catch (error) {
+		console.error('Failed to get user stats:', error);
 		return {
 			success: false,
-			error: error.message,
-		};
-	}
-}
-
-/**
- * 为用户绑定角色（管理员）
- * @param {String} userId - 用户ID
- * @param {Array<String>} roles - 角色ID数组
- * @param {Boolean} reset - 是否重置（true=替换，false=追加）
- * @returns {Promise<Object>} 更新结果
- */
-export async function bindUserRolesAction(userId, roles, reset = true) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
-	try {
-		const { bindUserRoles } = await import('@/app/(admin)/actions/dao/sys');
-
-		const result = await bindUserRoles({
-			userId,
-			roles,
-			reset,
-		});
-
-		return {
-			success: result.success,
-			data: result,
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
-	}
-}
-
-/**
- * 获取用户的角色（管理员）
- * @param {String} userId - 用户ID
- * @returns {Promise<Object>} 角色ID数组
- */
-export async function getUserRolesAction(userId) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
-	try {
-		const { getUserRoleIds } = await import('@/app/(admin)/actions/dao/sys');
-
-		const roleIds = await getUserRoleIds(userId);
-
-		return {
-			success: true,
-			data: roleIds,
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
-		};
-	}
-}
-
-/**
- * 批量为用户绑定角色（管理员）
- * @param {Array<String>} userIds - 用户ID数组
- * @param {Array<String>} roles - 角色ID数组
- * @param {Boolean} reset - 是否重置（true=替换，false=追加）
- * @returns {Promise<Object>} 更新结果
- */
-export async function batchBindUserRolesAction(userIds, roles, reset = true) {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return {
-			success: false,
-			error: adminCheck.error,
-		};
-	}
-
-	try {
-		const { bindUserRoles } = await import('@/app/(admin)/actions/dao/sys');
-
-		let successCount = 0;
-		let failedCount = 0;
-		const errors = [];
-
-		for (const userId of userIds) {
-			try {
-				await bindUserRoles({
-					userId,
-					roles,
-					reset,
-				});
-				successCount++;
-			} catch (error) {
-				failedCount++;
-				errors.push({ userId, error: error.message });
-			}
-		}
-
-		return {
-			success: failedCount === 0,
-			data: {
-				successCount,
-				failedCount,
-				errors,
-			},
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error.message,
+			error: error.message || 'Failed to get user stats',
 		};
 	}
 }

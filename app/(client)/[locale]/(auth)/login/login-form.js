@@ -218,6 +218,16 @@ export function LoginForm({ className, callbackUrl, ...props }) {
 						</form>
 					</CardContent>
 				</Card>
+				
+				{/* Register Link */}
+				<div className='mt-4 text-center'>
+					<a
+						href='/register'
+						className='text-sm text-white/70 hover:text-white underline'
+					>
+						Don't have an account? Register here
+					</a>
+				</div>
 			</div>
 			<FieldDescription className='px-6 text-center text-white/50'>
 				{t('auth.termsAndPrivacy')}

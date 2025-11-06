@@ -11,8 +11,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Form } from 'antd';
-import { evaluateRule } from '@/lib/admin/crud/rule-evaluator';
-import { FIELD_TYPE_REGISTRY } from '@/lib/admin/crud/field-types';
+import { evaluateRule } from '@/lib/crud/rule-evaluator';
+import { FIELD_TYPE_REGISTRY } from '@/lib/crud/field-types';
 
 /**
  * 动态表单字段渲染器

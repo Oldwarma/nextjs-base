@@ -817,7 +817,7 @@ export async function getUserStatsAction(userId) {
 		const generationsCollection = await getCollection('generations');
 		
 		const user = await usersCollection.findOne({ id: userId });
-		const generationsCount = await generationsCollection.countDocuments({ userId });
+		const generationsCount = await generationsCollection.({ userId });
 		
 		return {
 			success: true,
@@ -1026,7 +1026,7 @@ export const productCrudConfig = {
 			const { getCollection } = await import('@/lib/mongodb');
 			const ordersCollection = await getCollection('orders');
 			
-			const pendingOrders = await ordersCollection.countDocuments({
+			const pendingOrders = await ordersCollection.({
 				productId: id,
 				status: { $in: ['pending', 'processing'] },
 			});
@@ -1371,7 +1371,7 @@ hooks: {
 	beforeDelete: async (id, existing) => {
 		// 删除前检查关联数据
 		const ordersCollection = await getCollection('orders');
-		const orderCount = await ordersCollection.countDocuments({ userId: id });
+		const orderCount = await ordersCollection.({ userId: id });
 		
 		if (orderCount > 0) {
 			throw new Error('Cannot delete user with existing orders');

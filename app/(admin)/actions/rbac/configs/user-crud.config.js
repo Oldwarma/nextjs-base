@@ -42,13 +42,14 @@ export const userCrudConfig = {
 		baseFilter: {},
 
 		// 连表配置（可选）- 在 getList 时自动连表查询角色名称
+		// 注意：此配置用于 BaseDAO，目前 UserDAO 直接在 getUserList 中配置
 		foreignDB: [
 			{
-				dbName: 'roles',
+				dbName: 'roles',               // 副表集合名称
 				localKey: 'roles',             // users.roles 是角色 ID 数组 (RBAC)
 				foreignKey: 'id',              // roles.id 是 UUID
 				as: 'roleList',                // 连表结果存放在 roleList 字段
-				fieldJson: { id: 1, name: 1 }, // 只返回 id 和 name
+				fieldJson: { id: 1, name: 1, enable: 1 }, // 只返回需要的字段
 			},
 		],
 	},
@@ -160,12 +161,12 @@ export const userCrudConfig = {
 			const { getCollection } = await import('@/lib/mongodb');
 			const usersCollection = await getCollection('users');
 
-			const adminCount = await usersCollection.countDocuments({
+			const adminCount = await usersCollection.count({
 				role: 'admin',
 				$or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
 			});
 
-			const deletingAdmins = await usersCollection.countDocuments({
+			const deletingAdmins = await usersCollection.count({
 				id: { $in: ids },
 				role: 'admin',
 			});
