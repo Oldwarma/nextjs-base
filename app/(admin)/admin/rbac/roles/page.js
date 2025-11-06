@@ -76,7 +76,7 @@ export default function RolesManagementPage() {
 		};
 
 		const loadMenuTree = async () => {
-			const result = await getMenuListForParentSelectAction({ withLabel: true });
+			const result = await getMenuListForParentSelectAction();
 			if (result.success) {
 				const treeData = convertToTreeData(result.data, 'id'); // ✅ 使用 id（UUID）
 				setMenuTree(treeData);
