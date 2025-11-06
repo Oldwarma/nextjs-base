@@ -1,9 +1,21 @@
 'use server';
 
 /**
- * Protected Action Examples
+ * Protected Action Examples (DEPRECATED)
  * 
- * 这个文件展示了如何在 Server Actions 中使用 RBAC 权限验证
+ * ⚠️ 本文件已废弃，推荐使用 action-wrapper 来包装 Server Actions
+ * 
+ * 新的推荐方式：
+ * ```javascript
+ * import { wrapAdminAction } from '@/lib/core/action-wrapper';
+ * 
+ * export const myAction = wrapAdminAction('create', 'user', async (params, context) => {
+ *   // 自动验证权限、自动记录日志
+ *   return { success: true, data: {...} };
+ * });
+ * ```
+ * 
+ * 这个文件展示了如何在 Server Actions 中使用 RBAC 权限验证（旧方式）
  * 
  * 使用方法：
  * 1. 使用 checkActionPermission 验证 Action 路径权限
@@ -12,7 +24,7 @@
  */
 
 import { checkActionPermission, checkPermission, checkRole } from '@/lib/auth/permission-auth';
-import { logActionToConsole } from '@/lib/logging/action-logger';
+import { logAction } from '@/lib/logging/action-logger';
 
 /**
  * Example 1: 使用 Action 路径验证权限

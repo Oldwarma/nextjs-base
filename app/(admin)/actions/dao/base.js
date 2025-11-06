@@ -1,6 +1,6 @@
 import { getCollection, generateId, fromObjectId } from '@/lib/database/mongodb';
 import { checkAdminAction } from '@/lib/auth/admin-auth';
-import { logActionToConsole } from '@/lib/logging/action-logger';
+import { logAction } from '@/lib/logging/action-logger';
 import { selects } from '@/lib/database/db-api';
 
 /**
@@ -38,7 +38,7 @@ export class BaseDAO {
 
 	/**
 	 * 统一的权限检查
-	 * @returns {Promise<Object>} 管理员信息
+	 * @returns {Promise<Object>} 管理员信息 { user: { id, ... }, isAdmin: true }
 	 */
 	async checkPermission() {
 		const adminCheck = await checkAdminAction();
@@ -46,6 +46,19 @@ export class BaseDAO {
 			throw new Error(adminCheck.error);
 		}
 		return adminCheck;
+	}
+	
+	/**
+	 * 获取当前用户ID（用于日志记录）
+	 * @returns {Promise<string>} 用户ID
+	 */
+	async getCurrentUserId() {
+		try {
+			const adminCheck = await checkAdminAction();
+			return adminCheck.user?.id || 'admin';
+		} catch {
+			return 'system';
+		}
 	}
 
 	/**
@@ -181,33 +194,52 @@ export class BaseDAO {
 			pageSize = this.config.query.defaultPageSize,
 			search,
 			filters = {},
-			sortJson,  // ✅ 直接接收 sortJson 参数
-			foreignDB, // 连表配置（参数传入）
+			whereJson,  // ✅ 新增：支持直接传入 whereJson（SmartCrudPage 使用）
+			sortJson,   // ✅ 直接接收 sortJson 参数
+			foreignDB,  // 连表配置（参数传入）
 		} = params;
 
-		// 构建查询条件
-		const query = { ...this.config.query.baseFilter };
+		// ✅ 构建查询条件：优先使用 whereJson，其次使用 search + filters 构建
+		let query;
+		
+		if (whereJson) {
+			// SmartCrudPage 模式：直接使用已转换的 whereJson
+			query = { ...this.config.query.baseFilter, ...whereJson };
+		} else {
+			// 传统模式：使用 search 和 filters 构建查询
+			query = { ...this.config.query.baseFilter };
 
-		// 软删除过滤
-		if (this.config.softDelete) {
-			query.$or = [{ deletedAt: { $exists: false } }, { deletedAt: null }];
+			// 搜索条件
+			const searchQuery = this.buildSearchQuery(search);
+			if (searchQuery.$or) {
+				if (query.$or) {
+					// 合并 $or 条件
+					query.$and = [{ $or: query.$or }, searchQuery];
+					delete query.$or;
+				} else {
+					Object.assign(query, searchQuery);
+				}
+			}
+
+			// 额外过滤条件
+			const filtersQuery = this.buildFiltersQuery(filters);
+			Object.assign(query, filtersQuery);
 		}
 
-		// 搜索条件
-		const searchQuery = this.buildSearchQuery(search);
-		if (searchQuery.$or) {
-			if (query.$or) {
-				// 合并 $or 条件
-				query.$and = [{ $or: query.$or }, searchQuery];
-				delete query.$or;
+		// 软删除过滤（始终应用）
+		if (this.config.softDelete) {
+			if (query.$or || query.$and) {
+				// 如果已经有 $or 或 $and，需要合并
+				const softDeleteQuery = { $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] };
+				if (query.$and) {
+					query.$and.push(softDeleteQuery);
+				} else {
+					query.$and = [query, softDeleteQuery];
+				}
 			} else {
-				Object.assign(query, searchQuery);
+				query.$or = [{ deletedAt: { $exists: false } }, { deletedAt: null }];
 			}
 		}
-
-		// 额外过滤条件
-		const filtersQuery = this.buildFiltersQuery(filters);
-		Object.assign(query, filtersQuery);
 
 		// 排序：优先使用传入的 sortJson，否则使用 config 中的默认排序
 		const sortOption = sortJson || this.config.query.defaultSort || {};
@@ -760,22 +792,42 @@ export class BaseDAO {
  */
 export function createCrudActions(config) {
 	const dao = new BaseDAO(config);
-	const category = config.logCategory || config.collectionName;
+	const resourceType = config.collectionName;
 
 	return {
 		// 获取列表
 		getList: async (params) => {
 			const startTime = Date.now();
-			const requestTime = new Date();
+			const userId = await dao.getCurrentUserId(); // ✅ 获取实际用户ID
 			
 			try {
 				const result = await dao.getList(params);
-				logActionToConsole('getList', category, startTime, requestTime, params, result, !result.success);
+				
+				await logAction({
+					userId,
+					action: 'query',
+					resourceType,
+					params,
+					result,
+					success: result.success !== false,
+					duration: Date.now() - startTime,
+				});
+				
 				return result;
 			} catch (error) {
 				console.error('getList error:', error);
 				const errorResult = { success: false, error: error.message };
-				logActionToConsole('getList', category, startTime, requestTime, params, errorResult, true);
+				
+				await logAction({
+					userId,
+					action: 'query',
+					resourceType,
+					params,
+					result: errorResult,
+					success: false,
+					duration: Date.now() - startTime,
+				});
+				
 				return errorResult;
 			}
 		},
@@ -783,16 +835,38 @@ export function createCrudActions(config) {
 		// 获取详情
 		getDetail: async (id) => {
 			const startTime = Date.now();
-			const requestTime = new Date();
+			const userId = await dao.getCurrentUserId();
 			
 			try {
 				const result = await dao.getDetail(id);
-				logActionToConsole('getDetail', category, startTime, requestTime, { id }, result, !result.success);
+				
+				await logAction({
+					userId,
+					action: 'query',
+					resourceType,
+					resourceId: id,
+					params: { id },
+					result,
+					success: result.success !== false,
+					duration: Date.now() - startTime,
+				});
+				
 				return result;
 			} catch (error) {
 				console.error('getDetail error:', error);
 				const errorResult = { success: false, error: error.message };
-				logActionToConsole('getDetail', category, startTime, requestTime, { id }, errorResult, true);
+				
+				await logAction({
+					userId,
+					action: 'query',
+					resourceType,
+					resourceId: id,
+					params: { id },
+					result: errorResult,
+					success: false,
+					duration: Date.now() - startTime,
+				});
+				
 				return errorResult;
 			}
 		},
@@ -800,16 +874,36 @@ export function createCrudActions(config) {
 		// 创建
 		create: async (data) => {
 			const startTime = Date.now();
-			const requestTime = new Date();
 			
 			try {
 				const result = await dao.create(data);
-				logActionToConsole('create', category, startTime, requestTime, data, result, !result.success);
+				
+				await logAction({
+					userId: 'admin',
+					action: 'create',
+					resourceType,
+					resourceId: result.data?.insertedId,
+					params: data,
+					result,
+					success: result.success !== false,
+					duration: Date.now() - startTime,
+				});
+				
 				return result;
 			} catch (error) {
 				console.error('create error:', error);
 				const errorResult = { success: false, error: error.message };
-				logActionToConsole('create', category, startTime, requestTime, data, errorResult, true);
+				
+				await logAction({
+					userId: 'admin',
+					action: 'create',
+					resourceType,
+					params: data,
+					result: errorResult,
+					success: false,
+					duration: Date.now() - startTime,
+				});
+				
 				return errorResult;
 			}
 		},
@@ -817,16 +911,37 @@ export function createCrudActions(config) {
 		// 更新
 		update: async (id, data) => {
 			const startTime = Date.now();
-			const requestTime = new Date();
 			
 			try {
 				const result = await dao.update(id, data);
-				logActionToConsole('update', category, startTime, requestTime, { id, data }, result, !result.success);
+				
+				await logAction({
+					userId: 'admin',
+					action: 'update',
+					resourceType,
+					resourceId: id,
+					params: { id, data },
+					result,
+					success: result.success !== false,
+					duration: Date.now() - startTime,
+				});
+				
 				return result;
 			} catch (error) {
 				console.error('update error:', error);
 				const errorResult = { success: false, error: error.message };
-				logActionToConsole('update', category, startTime, requestTime, { id, data }, errorResult, true);
+				
+				await logAction({
+					userId: 'admin',
+					action: 'update',
+					resourceType,
+					resourceId: id,
+					params: { id, data },
+					result: errorResult,
+					success: false,
+					duration: Date.now() - startTime,
+				});
+				
 				return errorResult;
 			}
 		},
@@ -834,16 +949,37 @@ export function createCrudActions(config) {
 		// 删除
 		delete: async (id) => {
 			const startTime = Date.now();
-			const requestTime = new Date();
 			
 			try {
 				const result = await dao.delete(id);
-				logActionToConsole('delete', category, startTime, requestTime, { id }, result, !result.success);
+				
+				await logAction({
+					userId: 'admin',
+					action: 'delete',
+					resourceType,
+					resourceId: id,
+					params: { id },
+					result,
+					success: result.success !== false,
+					duration: Date.now() - startTime,
+				});
+				
 				return result;
 			} catch (error) {
 				console.error('delete error:', error);
 				const errorResult = { success: false, error: error.message };
-				logActionToConsole('delete', category, startTime, requestTime, { id }, errorResult, true);
+				
+				await logAction({
+					userId: 'admin',
+					action: 'delete',
+					resourceType,
+					resourceId: id,
+					params: { id },
+					result: errorResult,
+					success: false,
+					duration: Date.now() - startTime,
+				});
+				
 				return errorResult;
 			}
 		},
@@ -851,16 +987,35 @@ export function createCrudActions(config) {
 		// 批量更新
 		batchUpdate: async (ids, data) => {
 			const startTime = Date.now();
-			const requestTime = new Date();
 			
 			try {
 				const result = await dao.batchUpdate(ids, data);
-				logActionToConsole('batchUpdate', category, startTime, requestTime, { ids, data }, result, !result.success);
+				
+				await logAction({
+					userId: 'admin',
+					action: 'batch_update',
+					resourceType,
+					params: { ids, data },
+					result,
+					success: result.success !== false,
+					duration: Date.now() - startTime,
+				});
+				
 				return result;
 			} catch (error) {
 				console.error('batchUpdate error:', error);
 				const errorResult = { success: false, error: error.message };
-				logActionToConsole('batchUpdate', category, startTime, requestTime, { ids, data }, errorResult, true);
+				
+				await logAction({
+					userId: 'admin',
+					action: 'batch_update',
+					resourceType,
+					params: { ids, data },
+					result: errorResult,
+					success: false,
+					duration: Date.now() - startTime,
+				});
+				
 				return errorResult;
 			}
 		},
@@ -868,16 +1023,35 @@ export function createCrudActions(config) {
 		// 批量删除
 		batchDelete: async (ids) => {
 			const startTime = Date.now();
-			const requestTime = new Date();
 			
 			try {
 				const result = await dao.batchDelete(ids);
-				logActionToConsole('batchDelete', category, startTime, requestTime, { ids }, result, !result.success);
+				
+				await logAction({
+					userId: 'admin',
+					action: 'batch_delete',
+					resourceType,
+					params: { ids },
+					result,
+					success: result.success !== false,
+					duration: Date.now() - startTime,
+				});
+				
 				return result;
 			} catch (error) {
 				console.error('batchDelete error:', error);
 				const errorResult = { success: false, error: error.message };
-				logActionToConsole('batchDelete', category, startTime, requestTime, { ids }, errorResult, true);
+				
+				await logAction({
+					userId: 'admin',
+					action: 'batch_delete',
+					resourceType,
+					params: { ids },
+					result: errorResult,
+					success: false,
+					duration: Date.now() - startTime,
+				});
+				
 				return errorResult;
 			}
 		},

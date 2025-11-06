@@ -25,6 +25,7 @@ export const ADMIN_PAGES = [
 	// 系统管理
 	'/admin/system/settings',
 	'/admin/system/usage',
+	'/admin/system/action_logs',
 
 	// 示例页面
 	'/admin/example',
