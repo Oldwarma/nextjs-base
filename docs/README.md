@@ -1,6 +1,6 @@
 # 项目文档中心
 
-> **最后更新**: 2025-11-04  
+> **最后更新**: 2025-11-07  
 > **版本**: v2.0.0  
 > **项目**: Jimeng SaaS 管理系统
 
@@ -22,6 +22,7 @@
 |------|------|
 | [BaseDAO 文档](./admin/BASE_DAO.md) | 通用数据访问对象，支持 CRUD 和连表查询 |
 | [DB API 文档](./database/DB_API_GUIDE.md) | 数据库操作 API，包含 selects 连表方法 |
+| [Action Logger 文档](./admin/ACTION_LOGGER.md) | 管理操作日志记录系统 |
 
 ### 🔐 认证与权限
 
@@ -30,6 +31,7 @@
 | [后台认证文档](./admin/AUTH.md) | Better Auth 集成和管理员认证 |
 | [前端认证文档](./client/AUTH.md) | 前端用户认证和会话管理 |
 | [权限系统文档](./client/PERMISSIONS.md) | 前端权限检查和路由保护 |
+| [RBAC 实现指南](./rbac/RBAC_IMPLEMENTATION_GUIDE.md) | RBAC 权限系统技术实现 |
 
 ### 🌐 国际化
 
@@ -43,7 +45,6 @@
 |------|------|
 | [Markdown 编辑器指南](./admin/MARKDOWN_EDITOR_GUIDE.md) | Markdown 富文本编辑器使用 |
 | [菜单管理文档](./admin/MENU_MANAGEMENT.md) | 动态菜单管理系统 |
-| [操作日志文档](./admin/ACTION_LOGGER.md) | 管理操作日志记录 |
 | [Server Actions 文档](./client/SERVER_ACTIONS.md) | Next.js Server Actions 最佳实践 |
 
 ---
@@ -158,7 +159,61 @@ return author ? author.name : record.author_id;
 
 ---
 
+## 📊 文档结构
+
+```
+docs/
+├── README.md                    # 本文档（文档中心）
+├── NAMING_STANDARDS.md          # 字段命名规范
+├── RBAC_SYSTEM.md              # RBAC 系统配置指南
+│
+├── admin/                       # 后台管理相关文档
+│   ├── SMART_CRUD_GUIDE.md     # Smart CRUD 开发指南
+│   ├── BASE_DAO.md             # BaseDAO 文档
+│   ├── ACTION_LOGGER.md        # 操作日志系统
+│   ├── AUTH.md                 # 后台认证
+│   ├── MARKDOWN_EDITOR_GUIDE.md # Markdown 编辑器
+│   └── MENU_MANAGEMENT.md      # 菜单管理
+│
+├── client/                      # 前端相关文档
+│   ├── AUTH.md                 # 前端认证
+│   ├── PERMISSIONS.md          # 权限系统
+│   ├── I18N_GUIDE.md          # 国际化指南
+│   └── SERVER_ACTIONS.md       # Server Actions
+│
+├── database/                    # 数据库相关文档
+│   ├── README.md               # 数据库文档索引
+│   ├── DB_API_GUIDE.md         # DB API 完整指南
+│   ├── DB_API_VS_BASEDAO.md    # 对比分析
+│   └── FOREIGNDB_JOIN_GUIDE.md # 连表查询指南
+│
+└── rbac/                        # RBAC 系统相关文档
+    ├── README.md               # RBAC 文档索引
+    ├── RBAC_IMPLEMENTATION_GUIDE.md  # 实现指南
+    ├── RBAC_QUICK_REFERENCE.md       # 快速参考
+    ├── RBAC_TESTING_CHECKLIST.md     # 测试清单
+    ├── TESTING_GUIDE.md              # 测试指南
+    ├── PAGE_ACCESS_CONTROL.md        # 页面访问控制
+    ├── BACKEND_ACCESS_CONTROL.md     # 后台访问控制
+    └── PAGE_404_VS_403.md            # 404 vs 403 处理
+```
+
+---
+
 ## 🔄 版本历史
+
+### v2.0.0 (2025-11-07) - 文档重构
+
+**文档优化**：
+- ✅ 清理重复和过时文档
+- ✅ 合并同类文档
+- ✅ 优化文档结构
+- ✅ 更新文档索引
+
+**删除内容**：
+- ❌ 过时的调试和修复总结
+- ❌ 重复的开发指南
+- ❌ 临时的测试脚本
 
 ### v2.0.0 (2025-11-04) - 重大更新
 
@@ -178,12 +233,6 @@ return author ? author.name : record.author_id;
 - ❌ 手动拼接查询
 - ❌ 分散的文档
 
-### v1.0.0 (2025-01-XX) - 初始版本
-
-- ✅ 基础 CRUD 功能
-- ✅ RBAC 权限系统
-- ✅ Better Auth 集成
-
 ---
 
 ## 💡 快速链接
@@ -197,10 +246,10 @@ return author ? author.name : record.author_id;
 
 ### 参考示例
 
-- [Roles 管理页面](../app/(admin)/admin/roles/page.js)
-- [Users 管理页面](../app/(admin)/admin/users/page.js)
-- [Credits 管理页面](../app/(admin)/admin/credits/page.js)
-- [Permissions 管理页面](../app/(admin)/admin/permissions/page.js)
+- [Roles 管理页面](../app/(admin)/admin/rbac/roles/page.js)
+- [Users 管理页面](../app/(admin)/admin/rbac/users/page.js)
+- [Permissions 管理页面](../app/(admin)/admin/rbac/permissions/page.js)
+- [Menus 管理页面](../app/(admin)/admin/rbac/menus/page.js)
 
 ---
 
