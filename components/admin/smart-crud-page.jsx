@@ -84,6 +84,7 @@ export default function SmartCrudPage({
 	enableDetail = true,
 	enableEdit = true,
 	enableDelete = true,
+	enableIndexColumn = false, // 是否显示序号列
 	baseQuery = {},
 }) {
 	// 使用 Ant Design App hooks
@@ -123,8 +124,30 @@ export default function SmartCrudPage({
 
 	// 自动生成表格列（根据搜索表单展开状态）
 	const tableColumns = useMemo(() => {
-		return generateTableColumns(fieldsConfig, { searchExpanded });
-	}, [fieldsConfig, searchExpanded]);
+		const columns = generateTableColumns(fieldsConfig, { searchExpanded });
+		
+		// 如果启用序号列，添加到最前面
+		if (enableIndexColumn) {
+			const indexColumn = {
+				title: '#',
+				dataIndex: 'index',
+				key: 'index',
+				width: 50,
+				fixed: 'left',
+				search: false,
+				render: (_, __, index) => {
+					// 计算全局序号：(当前页码 - 1) * 每页条数 + 当前行序号 + 1
+					const pagination = actionRef.current?.pageInfo;
+					const current = pagination?.current || 1;
+					const pageSize = pagination?.pageSize || 20;
+					return (current - 1) * pageSize + index + 1;
+				},
+			};
+			return [indexColumn, ...columns];
+		}
+		
+		return columns;
+	}, [fieldsConfig, searchExpanded, enableIndexColumn]);
 
 	// 自动生成搜索配置
 	const searchConfig = useMemo(() => {
@@ -455,10 +478,12 @@ export default function SmartCrudPage({
 			messageApi.success(result.message || 'Deleted successfully');
 				actionRef.current?.reload();
 			} else {
+				console.error('Delete failed:', result.error);
 				messageApi.error(result.error || 'Failed to delete');
 			}
 		} catch (error) {
-			messageApi.error('An unexpected error occurred');
+			console.error('Delete error:', error);
+			messageApi.error(error.message || 'An unexpected error occurred');
 		}
 	};
 
@@ -573,20 +598,14 @@ export default function SmartCrudPage({
 			);
 		}
 
-		// 刷新按钮
-		buttons.push(
-			<Button
-				key='reload'
-				icon={<ReloadOutlined />}
-				onClick={() => actionRef.current?.reload()}
-			>
-				Refresh
-			</Button>
-		);
+		// 不再手动添加刷新按钮，ProTable 自带刷新功能
 
 		return buttons;
 	};
 
+	// 合并 tableProps，单独处理 pagination 和 scroll
+	const { pagination: userPagination, scroll: userScroll, ...restTableProps } = tableProps || {};
+	
 	return (
 		<>
 			<ProTable
@@ -594,15 +613,17 @@ export default function SmartCrudPage({
 				actionRef={actionRef}
 				request={request}
 				rowKey={rowKey}
-				pagination={{
-					pageSize: 20,
-					showSizeChanger: true,
-					showTotal: (total) => `Total ${total} items`,
-				}}
 				search={searchConfig}
 				dateFormatter='string'
 				headerTitle={title}
-				scroll={{ x: 1400 }}
+				pagination={{
+					defaultPageSize: 20, // 使用 defaultPageSize 让组件自己管理状态
+					showSizeChanger: true,
+					showTotal: (total) => `Total ${total} items`,
+					pageSizeOptions: [10, 20, 50, 100],
+					...userPagination, // 用户配置覆盖默认值
+				}}
+				scroll={{ x: 1400, ...userScroll }}
 				rowSelection={
 					batchActions.length > 0
 						? {
@@ -644,7 +665,7 @@ export default function SmartCrudPage({
 						: undefined
 				}
 				toolBarRender={toolBarRender}
-				{...tableProps}
+				{...restTableProps}
 			/>
 
 		{/* 编辑表单 */}

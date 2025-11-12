@@ -9,7 +9,9 @@
  * 5. 按需自定义页面选项
  */
 
-import { SmartCrudPage } from '@/components/admin/smart-crud-page';
+'use client';
+
+import SmartCrudPage from '@/components/admin/smart-crud-page';
 import { {RESOURCE_NAME}CrudConfig } from '@/app/(admin)/actions/{RESOURCE_NAME}/configs/{RESOURCE_NAME}-crud.config';
 import * as actions from '@/app/(admin)/actions/{RESOURCE_NAME}/admin-{RESOURCE_NAME}';
 
@@ -23,28 +25,52 @@ export default function {RESOURCE_LABEL}ManagementPage() {
 			fieldsConfig={{RESOURCE_NAME}CrudConfig.fieldsConfig}
 			actions={{
 				getList: actions.get{RESOURCE_LABEL}ListAction,
-				getDetail: actions.get{RESOURCE_LABEL}DetailAction,
+				// getDetail: actions.get{RESOURCE_LABEL}DetailAction, // 可选：如果需要查询完整数据或关联数据，取消注释
 				create: actions.create{RESOURCE_LABEL}Action,
 				update: actions.update{RESOURCE_LABEL}Action,
-				deleteItem: actions.delete{RESOURCE_LABEL}Action,
-				batchUpdate: actions.batchUpdate{RESOURCE_LABEL}sAction,
-				batchDelete: actions.batchDelete{RESOURCE_LABEL}sAction,
+				delete: actions.delete{RESOURCE_LABEL}Action, // 注意：属性名是 delete 不是 deleteItem
+				// batchUpdate: actions.batchUpdate{RESOURCE_LABEL}sAction, // 可选，需要同时在page中进行配置后方可显示复选框
+				// batchDelete: actions.batchDelete{RESOURCE_LABEL}sAction, // 可选，需要同时在page中进行配置后方可显示复选框
 			}}
-			// 可选配置
-			options={{
-				// 是否显示批量操作按钮
-				enableBatchOperations: true,
-				
-				// 是否显示导出按钮
-				enableExport: false,
-				
-				// 默认页面大小
-				defaultPageSize: 20,
-				
-				// 是否显示详情抽屉
-				enableDetail: true,
-				
-				// 表格滚动配置
+			// 功能开关
+			enableCreate={true}
+			enableEdit={true}
+			enableDelete={true}
+			enableDetail={true}
+			enableIndexColumn={true} // 显示序号列（可选）
+			// 批量操作（可选，配置后会显示多选框）
+			// batchActions={[
+			// 	{
+			// 		key: 'batchActivate',
+			// 		label: 'Batch Activate',
+			// 		action: async (selectedKeys) => {
+			// 			// 后端期望格式：{ ids, data }
+			// 			const result = await actions.batchUpdate{RESOURCE_LABEL}sAction({
+			// 				ids: selectedKeys,
+			// 				data: { status: 'active' }
+			// 			});
+			// 			return result;
+			// 		},
+			// 	},
+			// 	{
+			// 		key: 'batchDelete',
+			// 		label: 'Batch Delete',
+			// 		action: async (selectedKeys) => {
+			// 			// 后端期望格式：{ ids }
+			// 			const result = await actions.batchDelete{RESOURCE_LABEL}sAction({
+			// 				ids: selectedKeys
+			// 			});
+			// 			return result;
+			// 		},
+			// 	},
+			// ]}
+			// 表格配置
+			tableProps={{
+				pagination: {
+					defaultPageSize: 20, // 使用 defaultPageSize 而不是 pageSize
+					showSizeChanger: true,
+					pageSizeOptions: [10, 20, 50, 100], // 可选的页面大小
+				},
 				scroll: { x: 1200 },
 			}}
 		/>

@@ -1,21 +1,21 @@
+
 /**
- * CRUD Config Template
+ * Post CRUD Config
  * 
  * 使用方法：
  * 1. 复制此文件到你的 configs 目录
- * 2. 替换所有 {RESOURCE_NAME} 为你的资源名（复数，如 coupons）
  * 3. 配置 fieldsConfig（字段定义）
  * 4. 配置其他选项（可选）
  */
 
 /**
- * {RESOURCE_NAME} CRUD 配置
+ * Post CRUD 配置
  */
-export const {RESOURCE_NAME}CrudConfig = {
+export const postCrudConfig = {
 	/**
 	 * 数据库集合名称
 	 */
-	collectionName: '{RESOURCE_NAME}',
+	collectionName: 'post',
 
 	/**
 	 * 主键字段名称
