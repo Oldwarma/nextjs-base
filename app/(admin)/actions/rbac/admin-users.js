@@ -182,6 +182,11 @@ export async function updateUserInfoAction(userId, updateData) {
 
 /**
  * 重置用户密码
+ * 
+ * 根据 Better Auth 官方文档:
+ * - setUserPassword API 应该能自动为 OAuth 用户创建 credential account
+ * - 参数格式: { newPassword, userId }
+ * - 文档链接: https://better-auth.com/docs/plugins/admin
  */
 export async function resetUserPasswordAction(userId, newPassword) {
 	const backendCheck = await checkBackendAccess();
@@ -207,21 +212,48 @@ export async function resetUserPasswordAction(userId, newPassword) {
 			};
 		}
 
-		// 使用 Better Auth Admin Plugin 的 setUserPassword API
-		await auth.api.setUserPassword({
-			headers: await headers(),
-			body: {
-				userId,
-				newPassword,
-			},
-		});
+		console.log('[resetUserPasswordAction] Resetting password for user:', userId);
 
-		return {
-			success: true,
-			message: 'Password reset successfully',
-		};
+		// 优先使用 DAO 层方法（更可靠，直接操作数据库）
+		// 这个方法会自动为 OAuth 用户创建 credential account
+		try {
+			await userDao.resetUserPassword(userId, newPassword);
+			console.log('[resetUserPasswordAction] Password reset successfully via DAO');
+			
+			return {
+				success: true,
+				message: 'Password reset successfully',
+			};
+		} catch (daoError) {
+			console.error('[resetUserPasswordAction] DAO method failed:', daoError);
+			
+			// 如果 DAO 失败，尝试使用 Better Auth Admin API
+			console.log('[resetUserPasswordAction] Trying Better Auth API as fallback...');
+			
+			const result = await auth.api.setUserPassword({
+				headers: await headers(),
+				body: {
+					newPassword,
+					userId,
+				},
+			});
+
+			console.log('[resetUserPasswordAction] Better Auth API result:', result);
+
+			// 检查 Better Auth API 返回值
+			if (result?.error) {
+				console.error('[resetUserPasswordAction] Better Auth also failed:', result.error);
+				throw new Error(result.error.message || daoError.message || 'Failed to reset password');
+			}
+
+			console.log('[resetUserPasswordAction] Password reset successfully via Better Auth API');
+			return {
+				success: true,
+				message: 'Password reset successfully',
+			};
+		}
 	} catch (error) {
-		console.error('Failed to reset password:', error);
+		console.error('[resetUserPasswordAction] Failed to reset password:', error);
 		return {
 			success: false,
 			error: error.message || 'Failed to reset password',

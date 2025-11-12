@@ -333,36 +333,72 @@ export async function batchUpdateUsers(userIds, updateData) {
 
 /**
  * 重置用户密码
- * @param {string} userId - 用户ID
+ * @param {string} userId - 用户ID（可能是 ObjectId 字符串或 UUID）
  * @param {string} newPassword - 新密码
  * @returns {Promise<boolean>} 是否重置成功
  */
 export async function resetUserPassword(userId, newPassword) {
+	console.log('[DAO resetUserPassword] Starting password reset for user:', userId);
+
 	// 使用 Better Auth 的密码哈希
 	const { hashPassword } = await import('better-auth/crypto');
 	const hashedPassword = await hashPassword(newPassword);
 
 	const { ObjectId } = await import('mongodb');
-
-	// 查询用户以获取邮箱
+	const { fromObjectId } = await import('@/lib/database/mongodb');
+	
+	// 查询用户以获取完整信息
 	const user = await getUserById(userId);
 	if (!user) {
+		console.error('[DAO resetUserPassword] User not found:', userId);
 		throw new Error('User not found');
 	}
 
+	console.log('[DAO resetUserPassword] Found user:', {
+		id: user.id,
+		_id: user._id,
+		email: user.email,
+		name: user.name,
+	});
+
+	// 确定正确的 userId 用于 account 表
+	// account 表的 userId 字段存储的是 MongoDB ObjectId
+	let userObjectId;
+	try {
+		// 优先使用 _id（MongoDB ObjectId）
+		if (user._id) {
+			userObjectId = fromObjectId(user._id);
+			console.log('[DAO resetUserPassword] Using _id as userId for account:', userObjectId);
+		} else if (ObjectId.isValid(userId)) {
+			// 如果传入的 userId 是有效的 ObjectId 字符串
+			userObjectId = new ObjectId(userId);
+			console.log('[DAO resetUserPassword] Using userId as ObjectId:', userObjectId);
+		} else {
+			// 如果都不是，说明可能是 Better Auth 生成的 UUID
+			// 需要通过 _id 字段来查找
+			console.error('[DAO resetUserPassword] userId is not ObjectId format, but user._id is missing');
+			throw new Error('Cannot determine user ObjectId for account linking');
+		}
+	} catch (error) {
+		console.error('[DAO resetUserPassword] Error processing userId:', error);
+		throw new Error(`Invalid user ID format: ${userId}`);
+	}
+
 	// 查找 credential account
+	console.log('[DAO resetUserPassword] Searching for existing credential account with userId:', userObjectId);
 	const existingAccount = await selects({
 		dbName: 'account',
 		getOne: true,
 		whereJson: {
-			userId: new ObjectId(userId),
+			userId: userObjectId,
 			providerId: 'credential',
 		},
 	});
 
 	if (existingAccount) {
+		console.log('[DAO resetUserPassword] Found existing credential account:', existingAccount._id);
 		// 更新现有账户的密码
-		await updateOne({
+		const updateResult = await updateOne({
 			dbName: 'account',
 			whereJson: { _id: existingAccount._id },
 			dataJson: {
@@ -370,12 +406,19 @@ export async function resetUserPassword(userId, newPassword) {
 				updatedAt: new Date(),
 			},
 		});
+		console.log('[DAO resetUserPassword] Password updated successfully:', updateResult);
 	} else {
+		console.log('[DAO resetUserPassword] No credential account found, creating new one for OAuth user...');
+		console.log('[DAO resetUserPassword] Creating credential account with:');
+		console.log('  - userId (ObjectId):', userObjectId);
+		console.log('  - accountId (email):', user.email);
+		console.log('  - providerId: credential');
+		
 		// 创建新的 credential account（用户可能是通过 OAuth 注册的）
-		await add({
+		const insertResult = await add({
 			dbName: 'account',
 			dataJson: {
-				userId: new ObjectId(userId),
+				userId: userObjectId,
 				accountId: user.email,
 				providerId: 'credential',
 				password: hashedPassword,
@@ -383,8 +426,11 @@ export async function resetUserPassword(userId, newPassword) {
 				updatedAt: new Date(),
 			},
 		});
+		
+		console.log('[DAO resetUserPassword] New credential account created with _id:', insertResult);
 	}
 
+	console.log('[DAO resetUserPassword] Password reset completed successfully');
 	return true;
 }
 

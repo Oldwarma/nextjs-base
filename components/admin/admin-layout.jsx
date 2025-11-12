@@ -2,14 +2,11 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Avatar, Dropdown, Breadcrumb, Button, Spin } from 'antd';
-import { RightOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { Avatar, Dropdown, Breadcrumb, Button, Spin, Modal, Form, Input, message } from 'antd';
+import { RightOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LockOutlined } from '@ant-design/icons';
 
 // 动态导入 ProLayout，只在客户端渲染，避免 hydration 不匹配
-const ProLayout = dynamic(
-	() => import('@ant-design/pro-components').then((mod) => mod.ProLayout),
-	{ ssr: false }
-);
+const ProLayout = dynamic(() => import('@ant-design/pro-components').then((mod) => mod.ProLayout), { ssr: false });
 import * as Icons from '@ant-design/icons';
 import { UserOutlined, HomeOutlined, LogoutOutlined, LinkOutlined } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
@@ -17,6 +14,7 @@ import Link from 'next/link';
 import { signOutAction } from '@/app/(client)/actions/auth';
 import { getUserAccessibleMenusAction } from '@/app/(admin)/actions/rbac/user-permissions';
 import PageAccessGuard from './page-access-guard';
+import { authClient } from '@/lib/auth/auth-client';
 
 /**
  * 管理后台布局组件 - 使用 Pro Components
@@ -26,6 +24,9 @@ export default function AdminLayout({ children, user }) {
 	const [collapsed, setCollapsed] = useState(false);
 	const [menuData, setMenuData] = useState([]);
 	const [menuLoading, setMenuLoading] = useState(true);
+	const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+	const [passwordForm] = Form.useForm();
+	const [passwordLoading, setPasswordLoading] = useState(false);
 	const router = useRouter();
 
 	// 加载菜单数据 - 使用 RBAC 权限过滤
@@ -58,6 +59,50 @@ export default function AdminLayout({ children, user }) {
 		}
 	};
 
+	// 打开修改密码弹窗
+	const handleOpenPasswordModal = () => {
+		setPasswordModalOpen(true);
+		passwordForm.resetFields();
+	};
+
+	// 关闭修改密码弹窗
+	const handleClosePasswordModal = () => {
+		setPasswordModalOpen(false);
+		passwordForm.resetFields();
+	};
+
+	// 提交修改密码
+	const handleChangePassword = async (values) => {
+		const { currentPassword, newPassword, confirmPassword } = values;
+
+		if (newPassword !== confirmPassword) {
+			message.error('New password and confirm password do not match');
+			return;
+		}
+
+		setPasswordLoading(true);
+		try {
+			// 调用 better-auth 的 changePassword API
+			const result = await authClient.changePassword({
+				currentPassword,
+				newPassword,
+				revokeOtherSessions: false, // 不撤销其他会话
+			});
+
+			if (result.error) {
+				message.error(result.error.message || 'Failed to change password');
+			} else {
+				message.success('Password changed successfully');
+				handleClosePasswordModal();
+			}
+		} catch (error) {
+			console.error('Change password error:', error);
+			message.error('Failed to change password');
+		} finally {
+			setPasswordLoading(false);
+		}
+	};
+
 	// 将数据库菜单转换为 ProLayout 路由配置
 	const convertMenuToRoute = useCallback((menu) => {
 		// 获取图标组件
@@ -76,7 +121,7 @@ export default function AdminLayout({ children, user }) {
 		// 递归处理子菜单
 		if (menu.children && menu.children.length > 0) {
 			route.routes = menu.children
-				.filter(child => child.enable && !child.hidden) // ✅ 使用 enable（不是 enabled）
+				.filter((child) => child.enable && !child.hidden) // ✅ 使用 enable（不是 enabled）
 				.map(convertMenuToRoute);
 		}
 
@@ -93,7 +138,7 @@ export default function AdminLayout({ children, user }) {
 		}
 
 		const routes = menuData
-			.filter(menu => menu.enable && !menu.hidden) // ✅ 使用 enable（不是 enabled）
+			.filter((menu) => menu.enable && !menu.hidden) // ✅ 使用 enable（不是 enabled）
 			.map(convertMenuToRoute);
 
 		return {
@@ -111,10 +156,10 @@ export default function AdminLayout({ children, user }) {
 			onClick: () => router.push('/en'),
 		},
 		{
-			key: 'dashboard',
-			icon: <UserOutlined />,
-			label: 'User Dashboard',
-			onClick: () => router.push('/en/dashboard'),
+			key: 'change-password',
+			icon: <LockOutlined />,
+			label: 'Change Password',
+			onClick: handleOpenPasswordModal,
 		},
 		{
 			type: 'divider',
@@ -151,13 +196,13 @@ export default function AdminLayout({ children, user }) {
 		if (currentPathname && currentPathname !== '/admin') {
 			items.push({
 				title: (
-					<Link 
-						href="/admin" 
-						style={{ 
+					<Link
+						href='/admin'
+						style={{
 							color: '#8c8c8c',
 							fontSize: '14px',
 							transition: 'color 0.2s ease',
-							textDecoration: 'none'
+							textDecoration: 'none',
 						}}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = '#1890ff';
@@ -176,15 +221,17 @@ export default function AdminLayout({ children, user }) {
 		if (currentPathname && menuData.length > 0) {
 			const currentMenu = findMenuByPath(menuData, currentPathname);
 			const currentPageName = currentMenu?.name || currentPathname.split('/').pop() || '';
-			
+
 			if (currentPageName) {
 				items.push({
 					title: (
-						<span style={{ 
-							color: '#262626',
-							fontSize: '14px',
-							fontWeight: 500
-						}}>
+						<span
+							style={{
+								color: '#262626',
+								fontSize: '14px',
+								fontWeight: 500,
+							}}
+						>
 							{currentPageName}
 						</span>
 					),
@@ -195,17 +242,23 @@ export default function AdminLayout({ children, user }) {
 		return items;
 	}, [currentPathname, menuData, findMenuByPath]);
 
-		// 如果菜单正在加载，显示加载指示器
+	// 如果菜单正在加载，显示加载指示器
 	if (menuLoading) {
 		return (
-			<div style={{ 
-				display: 'flex', 
-				justifyContent: 'center', 
-				alignItems: 'center', 
-				height: '100vh',
-				background: '#f5f5f5'
-			}}>
-				<Spin size="large" spinning={true} tip="">
+			<div
+				style={{
+					display: 'flex',
+					justifyContent: 'center',
+					alignItems: 'center',
+					height: '100vh',
+					background: '#f5f5f5',
+				}}
+			>
+				<Spin
+					size='large'
+					spinning={true}
+					tip=''
+				>
 					<div style={{ minHeight: 100 }} />
 				</Spin>
 			</div>
@@ -213,58 +266,58 @@ export default function AdminLayout({ children, user }) {
 	}
 
 	return (
-		<ProLayout
-			title='Jimeng Admin'
-			logo='/logo.png'
-			layout='mix'
-			splitMenus={false}
-			route={route}
-			location={{ pathname: currentPathname }}
-			collapsed={collapsed}
-			onCollapse={setCollapsed}
-			collapseButtonRender={false}
-			menuExtraRender={false}
+		<>
+			<ProLayout
+				title='Jimeng Admin'
+				logo='/logo.png'
+				layout='mix'
+				splitMenus={false}
+				route={route}
+				location={{ pathname: currentPathname }}
+				collapsed={collapsed}
+				onCollapse={setCollapsed}
+				collapseButtonRender={false}
+				menuExtraRender={false}
 				fixSiderbar
 				fixedHeader
 				contentWidth='Fluid'
 				navTheme='light'
 				colorPrimary='#1890ff'
-		menuItemRender={(item, dom) => {
-			// item.path 已经是数据库中的 url 字段（在 convertMenuToRoute 中设置）
-			const linkPath = item.path || '/admin';
-			
-			// 检查是否是外部链接（以 http:// 或 https:// 开头）
-			const isExternalLink = linkPath.startsWith('http://') || linkPath.startsWith('https://');
-			
-			if (isExternalLink) {
-				// 外部链接：在新标签页打开，添加外部链接图标
-				return (
-					<a
-						href={linkPath}
-						target="_blank"
-						rel="noopener noreferrer"
-						style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-					>
-						{dom}
-						<LinkOutlined style={{ fontSize: '12px', opacity: 0.65 }} />
-					</a>
-				);
-			} else {
-				// 内部链接：使用 Next.js Link
-			return (
-				<Link href={linkPath}>
-					{dom}
-				</Link>
-			);
-			}
-		}}
+				menuItemRender={(item, dom) => {
+				// item.path 已经是数据库中的 url 字段（在 convertMenuToRoute 中设置）
+				const linkPath = item.path || '/admin';
+
+				// 检查是否是外部链接（以 http:// 或 https:// 开头）
+				const isExternalLink = linkPath.startsWith('http://') || linkPath.startsWith('https://');
+
+				if (isExternalLink) {
+					// 外部链接：在新标签页打开，添加外部链接图标
+					return (
+						<a
+							href={linkPath}
+							target='_blank'
+							rel='noopener noreferrer'
+							style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+						>
+							{dom}
+							<LinkOutlined style={{ fontSize: '12px', opacity: 0.65 }} />
+						</a>
+					);
+				} else {
+					// 内部链接：使用 Next.js Link
+					return <Link href={linkPath}>{dom}</Link>;
+				}
+			}}
 			avatarProps={{
 				src: user?.image,
 				icon: <UserOutlined />,
 				size: 'default',
 				title: user?.name || 'Admin',
 				render: (_, dom) => (
-					<Dropdown menu={{ items: userMenuItems }} placement='bottomRight'>
+					<Dropdown
+						menu={{ items: userMenuItems }}
+						placement='bottomRight'
+					>
 						<div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
 							{dom}
 							{/* <span style={{ fontWeight: 500 }}>{user?.name || 'Admin'}</span> */}
@@ -275,21 +328,21 @@ export default function AdminLayout({ children, user }) {
 			actionsRender={() => []}
 			headerTitleRender={(logo, title) => (
 				<div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-					<Link 
-						href='/admin' 
-						style={{ 
-							display: 'flex', 
-							alignItems: 'center', 
+					<Link
+						href='/admin'
+						style={{
+							display: 'flex',
+							alignItems: 'center',
 							gap: 8,
 							textDecoration: 'none',
-							color: 'inherit'
+							color: 'inherit',
 						}}
 					>
 						{logo}
 						{title}
 					</Link>
 					<Button
-						type="text"
+						type='text'
 						icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
 						onClick={() => setCollapsed(!collapsed)}
 						style={{
@@ -301,33 +354,35 @@ export default function AdminLayout({ children, user }) {
 							justifyContent: 'center',
 							width: 32,
 							height: 32,
-							padding: 0
+							padding: 0,
 						}}
 					/>
 					{breadcrumbItems.length > 0 && (
 						<>
-							<div 
-								style={{ 
-									width: 1, 
-									height: 16, 
-									background: '#e8e8e8', 
+							<div
+								style={{
+									width: 1,
+									height: 16,
+									background: '#e8e8e8',
 									margin: '0 16px',
-									flexShrink: 0
-								}} 
+									flexShrink: 0,
+								}}
 							/>
 							<Breadcrumb
 								items={breadcrumbItems}
 								separator={
-									<span style={{ 
-										color: '#d9d9d9',
-										margin: '0px',
-										fontSize: '8px'
-									}}>
+									<span
+										style={{
+											color: '#d9d9d9',
+											margin: '0px',
+											fontSize: '8px',
+										}}
+									>
 										<RightOutlined />
 									</span>
 								}
-								style={{ 
-									flex: 'none'
+								style={{
+									flex: 'none',
 								}}
 							/>
 						</>
@@ -363,12 +418,79 @@ export default function AdminLayout({ children, user }) {
 				height: '100vh',
 			}}
 		>
-			<div style={{ minHeight: '100%', background: '#f5f5f5' }}>
-				<PageAccessGuard>
-				{children}
-				</PageAccessGuard>
-			</div>
-		</ProLayout>
+				<div style={{ minHeight: '100%', background: '#f5f5f5' }}>
+					<PageAccessGuard>{children}</PageAccessGuard>
+				</div>
+			</ProLayout>
+
+		{/* 修改密码弹窗 */}
+		<Modal
+			title='Change Password'
+			open={passwordModalOpen}
+			onCancel={handleClosePasswordModal}
+			onOk={() => passwordForm.submit()}
+			confirmLoading={passwordLoading}
+			okText='Change'
+			cancelText='Cancel'
+			width={500}
+			destroyOnHidden
+		>
+				<Form
+					form={passwordForm}
+					layout='vertical'
+					onFinish={handleChangePassword}
+					autoComplete='off'
+				>
+					<Form.Item label='Account' style={{ marginBottom: 16 }}>
+						<Input value={user?.name || 'admin'} disabled style={{ backgroundColor: '#f5f5f5' }} />
+					</Form.Item>
+
+					<Form.Item
+						label='Current Password'
+						name='currentPassword'
+						rules={[
+							{ required: true, message: 'Please enter current password' },
+							{ min: 8, message: 'Password must be at least 8 characters' },
+						]}
+						style={{ marginBottom: 16 }}
+					>
+						<Input.Password placeholder='Please enter current password' />
+					</Form.Item>
+
+					<Form.Item
+						label='New Password'
+						name='newPassword'
+						rules={[
+							{ required: true, message: 'Please enter new password' },
+							{ min: 8, message: 'Password must be at least 8 characters' },
+						]}
+						style={{ marginBottom: 16 }}
+					>
+						<Input.Password placeholder='Please enter new password' />
+					</Form.Item>
+
+					<Form.Item
+						label='Confirm New Password'
+						name='confirmPassword'
+						dependencies={['newPassword']}
+						rules={[
+							{ required: true, message: 'Please confirm new password' },
+							{ min: 8, message: 'Password must be at least 8 characters' },
+							({ getFieldValue }) => ({
+								validator(_, value) {
+									if (!value || getFieldValue('newPassword') === value) {
+										return Promise.resolve();
+									}
+									return Promise.reject(new Error('The two passwords do not match'));
+								},
+							}),
+						]}
+						style={{ marginBottom: 0 }}
+					>
+						<Input.Password placeholder='Please confirm new password' />
+					</Form.Item>
+				</Form>
+			</Modal>
+		</>
 	);
 }
-
