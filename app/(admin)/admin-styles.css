@@ -82,8 +82,8 @@
 }
 
 .fullscreen-modal .ant-modal-body {
-	height: calc(100vh - 110px);
-	max-height: calc(100vh - 110px);
+	height: calc(100vh - 150px);
+	max-height: calc(100vh - 150px);
 }
 
 /* ============================================
@@ -95,12 +95,13 @@
 }
 
 /* ============================================
- * 标题栏边框
+ * 标题栏边框及按钮定位
  * ============================================ */
 
 .ant-modal-header {
 	border-bottom: 1px solid #f0f0f0 !important;
-	padding: 16px 24px !important;
+	padding: 0 0 16px 0 !important;
+	margin: -1px -5px 0 0; 
 }
 
 /* ============================================
@@ -109,7 +110,7 @@
 
 .ant-modal-footer {
 	border-top: 1px solid #f0f0f0 !important;
-	padding: 16px 24px !important;
+	padding: 16px 0 0 !important;
 }
 
 /* 全屏按钮样式 */
