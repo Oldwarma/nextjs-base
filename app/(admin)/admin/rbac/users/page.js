@@ -32,7 +32,7 @@ import {
 	unbanUserAction,
 } from '@/app/(admin)/actions/rbac/admin-users';
 
-import { getRoleListForSelectAction } from '@/app/(admin)/actions/rbac/admin-roles';
+import { getRoleListForSelectAction } from '@/app/(admin)/actions/rbac/crud-action.role';
 
 const { Option } = Select;
 
