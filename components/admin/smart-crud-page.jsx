@@ -70,7 +70,7 @@ export default function SmartCrudPage({
 	dataSource, // 可选：直接传入数据（不使用 request）
 	loading, // 可选：加载状态
 	title = 'Data Management',
-	rowKey = '_id',
+	rowKey = 'id',  // ✅ 默认使用 'id' 而不是 '_id'，兼容未来数据库迁移
 	tableProps = {},
 	formProps = {},
 	batchActions = [],
@@ -111,6 +111,7 @@ export default function SmartCrudPage({
 	const [editModalFullscreen, setEditModalFullscreen] = useState(false);
 	const [createModalFullscreen, setCreateModalFullscreen] = useState(false);
 	const [searchExpanded, setSearchExpanded] = useState(false); // 搜索表单展开状态
+	const [isTreeData, setIsTreeData] = useState(false); // ✅ 树形数据标识
 	const actionRef = useRef();
 	
 	// 表单实例引用（用于动态表单字段）
@@ -397,18 +398,31 @@ export default function SmartCrudPage({
 				sortJson,     // ✅ 统一使用 sortJson 传递排序条件
 			};
 
-			const result = await actions.getList(requestParams);
+		const result = await actions.getList(requestParams);
 
-			if (!result.success) {
-				messageApi.error(result.error || 'Failed to fetch data');
-				return { data: [], success: false, total: 0 };
+		if (!result.success) {
+			messageApi.error(result.error || 'Failed to fetch data');
+			return { data: [], success: false, total: 0 };
+		}
+
+		// ✅ 自动检测是否为树形数据（vk-unicloud 风格）
+		const dataList = result.data || [];
+		if (dataList.length > 0) {
+			const hasChildren = dataList.some(item => 
+				item.children && Array.isArray(item.children) && item.children.length > 0
+			);
+			if (hasChildren && !isTreeData) {
+				setIsTreeData(true);
+			} else if (!hasChildren && isTreeData) {
+				setIsTreeData(false);
 			}
+		}
 
-			return {
-				data: result.data || [],
-				success: true,
-				total: result.total || 0,
-			};
+		return {
+			data: dataList,
+			success: true,
+			total: result.total || 0,
+		};
 		} catch (error) {
 			console.error('Failed to fetch data:', error);
 			messageApi.error('An unexpected error occurred');
@@ -613,8 +627,17 @@ export default function SmartCrudPage({
 		return buttons;
 	};
 
-	// 合并 tableProps，单独处理 pagination 和 scroll
-	const { pagination: userPagination, scroll: userScroll, ...restTableProps } = tableProps || {};
+	// 合并 tableProps，单独处理 pagination、scroll 和 expandable
+	const { pagination: userPagination, scroll: userScroll, expandable: userExpandable, ...restTableProps } = tableProps || {};
+	
+	// ✅ 自动生成树形表格配置（vk-unicloud 风格）
+	const autoExpandable = isTreeData ? {
+		defaultExpandAllRows: false, // 默认不展开
+		indentSize: 24, // 缩进大小
+	} : undefined;
+	
+	// 用户配置优先，如果用户没有配置且检测到树形数据，则使用自动配置
+	const finalExpandable = userExpandable !== undefined ? userExpandable : autoExpandable;
 	
 	return (
 		<>
@@ -634,14 +657,18 @@ export default function SmartCrudPage({
 					showTotal: (total) => `Total ${total} items`,
 					pageSizeOptions: [10, 20, 50, 100],
 					...userPagination,
-				} : {
-					defaultPageSize: 20, // 使用 defaultPageSize 让组件自己管理状态
-					showSizeChanger: true,
-					showTotal: (total) => `Total ${total} items`,
-					pageSizeOptions: [10, 20, 50, 100],
-					...userPagination, // 用户配置覆盖默认值
-				}}
+				} : (
+					// ✅ 树形数据禁用分页
+					isTreeData ? false : {
+						defaultPageSize: 20, // 使用 defaultPageSize 让组件自己管理状态
+						showSizeChanger: true,
+						showTotal: (total) => `Total ${total} items`,
+						pageSizeOptions: [10, 20, 50, 100],
+						...userPagination, // 用户配置覆盖默认值
+					}
+				)}
 				scroll={{ x: 1400, ...userScroll }}
+				expandable={finalExpandable}
 				rowSelection={
 					batchActions.length > 0
 						? {
@@ -737,6 +764,7 @@ export default function SmartCrudPage({
 				fieldsConfig={fieldsConfig} 
 				formInstance={editFormRef.current}
 				isCreate={false}
+				actions={actions}
 			/>
 		</ModalForm>
 
@@ -791,6 +819,7 @@ export default function SmartCrudPage({
 					fieldsConfig={fieldsConfig} 
 					formInstance={createFormRef.current}
 					isCreate={true}
+					actions={actions}
 				/>
 			</ModalForm>
 		)}

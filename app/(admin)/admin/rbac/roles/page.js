@@ -33,19 +33,27 @@ import {
 } from '@/app/(admin)/actions/rbac/admin-roles';
 
 // Server Actions - Permissions & Menus
-import { getPermissionListForSelectAction } from '@/app/(admin)/actions/rbac/admin-permissions';
+import { getPermissionTreeForSelectAction } from '@/app/(admin)/actions/rbac/crud-action.permission';
 import { getMenuListForParentSelectAction } from '@/app/(admin)/actions/rbac/admin-menus';
 
 // Convert tree data to Ant Design Tree format (递归函数，移到组件外部)
-const convertToTreeData = (data, keyField) => {
+const convertToTreeData = (data, keyField = 'id') => {
 	if (!Array.isArray(data)) return [];
 
-	return data.map((item) => ({
-		title: item.label || item.name || item[keyField],
-		value: item[keyField],
-		key: item[keyField],
-		children: item.children && item.children.length > 0 ? convertToTreeData(item.children, keyField) : undefined,
-	}));
+	return data.map((item) => {
+		// 确保 key 是字符串类型
+		const keyValue = item[keyField];
+		const stringKey = keyValue ? String(keyValue) : String(Math.random());
+		
+		return {
+			title: item.label || item.name || item[keyField] || 'Unknown',
+			value: stringKey,
+			key: stringKey,
+			children: item.children && item.children.length > 0 
+				? convertToTreeData(item.children, keyField) 
+				: undefined,
+		};
+	});
 };
 
 export default function RolesManagementPage() {
@@ -68,9 +76,11 @@ export default function RolesManagementPage() {
 	// Load permission and menu trees
 	useEffect(() => {
 		const loadPermissionTree = async () => {
-			const result = await getPermissionListForSelectAction({ withLabel: true });
+			const result = await getPermissionTreeForSelectAction();
 			if (result.success) {
+				console.log('[Roles] Raw permission data:', result.data);
 				const treeData = convertToTreeData(result.data, 'id'); // ✅ 使用 id（UUID）
+				console.log('[Roles] Converted tree data:', treeData);
 				setPermissionTree(treeData);
 			}
 		};
@@ -101,7 +111,12 @@ export default function RolesManagementPage() {
 		// Get current permissions
 		const result = await getRoleDetailAction({ id: record.id });
 		if (result.success) {
-			setSelectedPermissions(result.data?.permission || []);
+			const currentPerms = result.data?.permission || [];
+			console.log('[Roles] Current permissions:', currentPerms);
+			// 确保权限ID是字符串数组
+			const permIds = currentPerms.map(p => String(typeof p === 'object' ? p.id || p._id : p));
+			console.log('[Roles] Converted permission IDs:', permIds);
+			setSelectedPermissions(permIds);
 		} else {
 			message.error(result.error || 'Failed to load permissions');
 		}

@@ -24,7 +24,7 @@ export const roleCrudConfig = {
 		creatable: ['name', 'remark', 'enable'],
 
 		// Updatable fields
-		updatable: ['name', 'remark', 'enable'],
+		updatable: ['name', 'remark', 'enable', 'permission', 'menu'],
 
 		// Searchable fields
 		searchable: ['name', 'remark'],

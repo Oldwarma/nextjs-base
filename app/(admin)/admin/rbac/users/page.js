@@ -112,12 +112,12 @@ export default function UsersManagementPage() {
 		}
 	}, [messageApi]);
 
-	// ✅ 延迟加载：只在搜索表单展开时加载角色选项
+	// ✅ 页面加载时立即加载角色数据（用于角色分配 Modal）
 	useEffect(() => {
-		if (searchExpanded && !rolesLoaded) {
+		if (!rolesLoaded) {
 			loadAllRoles();
 		}
-	}, [searchExpanded, rolesLoaded, loadAllRoles]);
+	}, [rolesLoaded, loadAllRoles]);
 
 	// Handle assign roles
 	const handleAssignRoles = async (record) => {

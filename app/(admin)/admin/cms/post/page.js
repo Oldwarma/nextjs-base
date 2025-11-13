@@ -25,10 +25,10 @@ export default function PostManagementPage() {
 			fieldsConfig={postCrudConfig.fieldsConfig}
 			actions={{
 				getList: actions.getPostListAction,
-				// getDetail: actions.getPostDetailAction, // 注释掉，直接使用表格数据展示详情
+				// getDetail: actions.getPostDetailAction, // 注释掉后，直接使用表格行内数据展示详情，否则将重新查询后展示
 				create: actions.createPostAction,
 				update: actions.updatePostAction,
-				delete: actions.deletePostAction, // 注意：属性名是 delete 不是 deleteItem
+				delete: actions.deletePostAction,
 				batchUpdate: actions.batchUpdatePostsAction,
 				batchDelete: actions.batchDeletePostsAction,
 			}}
@@ -37,7 +37,7 @@ export default function PostManagementPage() {
 			enableEdit={true}
 			enableDelete={true}
 			enableDetail={true}
-			enableIndexColumn={true} // 显示序号列
+			enableIndexColumn={true} // 显示序号列			
 			// 批量操作（启用后会显示多选框）
 			batchActions={[
 				{

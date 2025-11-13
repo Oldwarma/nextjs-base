@@ -119,14 +119,10 @@ export const assignPermissionsToRoleAction = wrapAdminAction(
 			};
 		}
 
-		// 更新角色的权限列表
-		const result = await crudActions._dao.update({
-			id: roleId,
-			data: { permission: permissionIds },
-			userId: context.userId,
-		});
+	// 更新角色的权限列表
+	const result = await crudActions._dao.update(roleId, { permission: permissionIds });
 
-		return result;
+	return result;
 	}
 );
 
@@ -146,11 +142,7 @@ export const assignMenusToRoleAction = wrapAdminAction(
 		}
 
 		// 更新角色的菜单列表
-		const result = await crudActions._dao.update({
-			id: roleId,
-			data: { menu: menuIds },
-			userId: context.userId,
-		});
+		const result = await crudActions._dao.update(roleId, { menu: menuIds });
 
 		return result;
 	}

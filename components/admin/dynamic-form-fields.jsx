@@ -3,6 +3,7 @@
  * 
  * 支持 showRule 和 disabled 条件渲染
  * 支持 watch 字段监听
+ * 支持 action 自动加载数据（vk-unicloud 风格）
  * 
  * 参考 vk-unicloud: https://vkdoc.fsq.pub/admin/components/0%E3%80%81public.html
  */
@@ -21,8 +22,9 @@ import { FIELD_TYPE_REGISTRY } from '@/lib/crud/field-types';
  * @param {Array} props.fieldsConfig - 字段配置
  * @param {Object} props.formInstance - antd Form 实例
  * @param {Boolean} props.isCreate - 是否是创建表单
+ * @param {Object} props.actions - Server Actions（用于 action 字符串加载数据）
  */
-export default function DynamicFormFields({ fieldsConfig, formInstance, isCreate = false }) {
+export default function DynamicFormFields({ fieldsConfig, formInstance, isCreate = false, actions = {} }) {
 	// 监听表单值变化
 	const [formData, setFormData] = useState({});
 	
@@ -40,6 +42,44 @@ export default function DynamicFormFields({ fieldsConfig, formInstance, isCreate
 		setFormData(watchedValues);
 	}, [watchedValues]);
 	
+	// ✅ 处理 action 自动加载数据（vk-unicloud 风格）
+	const [actionData, setActionData] = useState({});
+	const [loadingActions, setLoadingActions] = useState({});
+
+	// 收集所有需要通过 action 加载数据的字段
+	useEffect(() => {
+		const fieldsWithAction = fieldsConfig.filter(
+			field => field.form?.action && typeof field.form.action === 'string'
+		);
+
+		if (fieldsWithAction.length === 0) return;
+
+		// 加载所有 action 数据
+		fieldsWithAction.forEach(async (field) => {
+			const actionName = field.form.action;
+			const action = actions[actionName];
+
+			if (!action || typeof action !== 'function') {
+				console.warn(`Action "${actionName}" not found for field "${field.key}"`);
+				return;
+			}
+
+			// 标记加载中
+			setLoadingActions(prev => ({ ...prev, [field.key]: true }));
+
+			try {
+				const result = await action();
+				if (result.success && result.data) {
+					setActionData(prev => ({ ...prev, [field.key]: result.data }));
+				}
+			} catch (error) {
+				console.error(`Failed to load action "${actionName}" for field "${field.key}":`, error);
+			} finally {
+				setLoadingActions(prev => ({ ...prev, [field.key]: false }));
+			}
+		});
+	}, [fieldsConfig, actions]);
+
 	// 渲染单个字段
 	const renderField = (field, index) => {
 		const typeConfig = FIELD_TYPE_REGISTRY[field.type];
@@ -64,17 +104,32 @@ export default function DynamicFormFields({ fieldsConfig, formInstance, isCreate
 		if (field.disabled) {
 			isDisabled = evaluateRule(field.disabled, formData, field);
 		}
+
+		// ✅ 如果字段配置了 action，注入加载的数据
+		let processedField = field;
+		if (field.form?.action && actionData[field.key]) {
+			processedField = {
+				...field,
+				form: {
+					...field.form,
+					treeData: actionData[field.key], // 为 tree-select 提供数据
+					options: actionData[field.key],  // 为 select 提供数据
+					data: actionData[field.key],     // 通用数据字段
+				},
+				data: actionData[field.key], // 也注入到顶层
+			};
+		}
 		
 		// 获取字段组件
 		let fieldComponent = null;
 		
 		// 自定义表单组件
-		if (field.form?.render) {
-			fieldComponent = field.form.render(field);
+		if (processedField.form?.render) {
+			fieldComponent = processedField.form.render(processedField);
 		}
 		// 使用类型对应的表单组件
 		else if (typeConfig?.form) {
-			fieldComponent = typeConfig.form(field);
+			fieldComponent = typeConfig.form(processedField);
 		}
 		
 		if (!fieldComponent) return null;

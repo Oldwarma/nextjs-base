@@ -36,34 +36,25 @@ export const batchDeletePostsAction = crudActions.batchDelete;
  *
  * 示例：添加激活/停用功能
  */
-/*
+
 import { wrapAdminAction } from '@/lib/core/action-wrapper';
 
-export const activatePostAction = wrapAdminAction(
-    'activate',
-    'post',
-    async ({ id }, context) => {
-        const dao = crudActions._dao;
-        const result = await dao.update({
-            id,
-            data: { status: 'active' },
-            userId: context.userId,
-        });
-        return result;
-    }
-);
+export const activatePostAction = wrapAdminAction('activate', 'post', async ({ id }, context) => {
+	const dao = crudActions._dao;
+	const result = await dao.update({
+		id,
+		data: { status: 'active' },
+		userId: context.userId,
+	});
+	return result;
+});
 
-export const deactivatePostAction = wrapAdminAction(
-    'deactivate',
-    'post',
-    async ({ id }, context) => {
-        const dao = crudActions._dao;
-        const result = await dao.update({
-            id,
-            data: { status: 'inactive' },
-            userId: context.userId,
-        });
-        return result;
-    }
-);
-*/
+export const deactivatePostAction = wrapAdminAction('deactivate', 'post', async ({ id }, context) => {
+	const dao = crudActions._dao;
+	const result = await dao.update({
+		id,
+		data: { status: 'inactive' },
+		userId: context.userId,
+	});
+	return result;
+});
