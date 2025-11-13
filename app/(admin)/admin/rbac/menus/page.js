@@ -26,13 +26,7 @@ const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page')
 import { renderIcon } from '@/components/admin/icon-picker';
 
 // Server Actions
-import {
-	getMenuTreeAction as getList,
-	getMenuTreeForSelectAction,
-	createMenuAction as create,
-	updateMenuAction as update,
-	deleteMenuAction as deleteItem,
-} from '@/app/(admin)/actions/rbac/admin-menus';
+import * as menuActions from '@/app/(admin)/actions/rbac/crud-action.menu';
 
 export default function MenusManagementPage() {
 	const [menuTree, setMenuTree] = useState([]);
@@ -42,7 +36,7 @@ export default function MenusManagementPage() {
 		let isMounted = true;
 
 		const loadMenuTree = async () => {
-			const result = await getMenuTreeForSelectAction();
+			const result = await menuActions.getMenuTreeForSelectAction();
 			if (result.success && isMounted) {
 				setMenuTree(result.data);
 			}
@@ -86,9 +80,8 @@ export default function MenusManagementPage() {
 					},
 				},
 				search: {
-					fieldProps: {
-						placeholder: 'Search by name',
-					},
+					mode: 'like',
+					placeholder: 'Search by name',
 				},
 			},
 
@@ -320,24 +313,22 @@ export default function MenusManagementPage() {
 		<SmartCrudPage
 			fieldsConfig={fieldsConfig}
 			actions={{
-				getList,
-				create,
-				update,
-				delete: deleteItem,
+				getList: menuActions.getMenuTreeAction,
+				// getDetail: menuActions.getMenuDetailAction,
+				create: menuActions.createMenuAction,
+				update: menuActions.updateMenuAction,
+				delete: menuActions.deleteMenuAction,
 			}}
 			title='Menu Management'
-			rowKey='id' // ✅ 使用 UUID id 作为主键
 			enableCreate={true}
 			enableEdit={true}
 			enableDelete={true}
 			enableDetail={true}
+			expandable={{
+				defaultExpandAllRows: true,
+				indentSize: 24,
+			}}
 			tableProps={{
-				// 启用树形表格
-				expandable: {
-					defaultExpandAllRows: true,
-					// 可以通过 indentSize 调整缩进
-					indentSize: 24,
-				},
 				pagination: false, // 树形表格通常不需要分页
 			}}
 			formProps={{

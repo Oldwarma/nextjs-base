@@ -24,7 +24,7 @@ const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page')
 // Server Actions
 import * as roleActions from '@/app/(admin)/actions/rbac/crud-action.role';
 import { getPermissionTreeForSelectAction } from '@/app/(admin)/actions/rbac/crud-action.permission';
-import { getMenuTreeForSelectAction } from '@/app/(admin)/actions/rbac/admin-menus';
+import { getMenuTreeForSelectAction } from '@/app/(admin)/actions/rbac/crud-action.menu';
 
 export default function RolesManagementPage() {
 	const { message } = App.useApp();
