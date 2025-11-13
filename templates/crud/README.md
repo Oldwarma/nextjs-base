@@ -1,331 +1,512 @@
-# CRUD 模板使用指南
+# SmartCrudPage 模板使用指南
 
-快速创建完整的 CRUD 管理页面，只需 3 步 + 3 个文件。
-
----
-
-## 🚀 快速开始（3 步骤）
-
-### 步骤 1：创建配置文件
-
-复制 `crud-config.template.js` 并修改：
-
-```bash
-cp templates/crud/crud-config.template.js app/(admin)/actions/coupons/configs/coupon-crud.config.js
-```
-
-修改内容：
-- 替换 `{RESOURCE_NAME}` → `coupons`
-- 配置 `fieldsConfig`（字段定义）
-
-### 步骤 2：创建 Actions 文件
-
-复制 `crud-action.template.js` 并修改：
-
-```bash
-cp templates/crud/crud-action.template.js app/(admin)/actions/coupons/admin-coupons.js
-```
-
-修改内容：
-- 替换 `{RESOURCE_NAME}` → `coupon`
-- 替换 `{RESOURCE_LABEL}` → `Coupon`
-- 引入正确的 config
-
-### 步骤 3：创建前端页面
-
-复制 `crud-page.template.jsx` 并修改：
-
-```bash
-cp templates/crud/crud-page.template.jsx app/(admin)/admin/coupons/page.js
-```
-
-修改内容：
-- 替换 `{RESOURCE_NAME}` → `coupon`
-- 替换 `{RESOURCE_LABEL}` → `Coupon`
-- 引入正确的 actions
+> 基于 Permissions、Roles、Menus、Users 四个页面重构的最新模板
 
 ---
 
-## ✅ 完成！
+## 🎯 核心理念
 
-你现在拥有一个完整的 CRUD 页面，包括：
+### 1. 两个文件，完整功能
 
-- ✅ 列表展示（分页、排序、搜索）
-- ✅ 创建表单
-- ✅ 编辑表单
-- ✅ 删除操作
-- ✅ 批量更新
-- ✅ 批量删除
-- ✅ 详情查看
-- ✅ 权限验证
-- ✅ 操作日志
-- ✅ 字段验证
-- ✅ 错误处理
+```
+app/(admin)/
+├── admin/{resource}/
+│   └── page.js                    # 前端页面 + fieldsConfig
+└── actions/rbac/
+    └── crud-action.{resource}.js  # Server Actions + 配置
+```
 
-**代码量**：不到 100 行
+**不再需要**单独的 config 文件！
+
+### 2. 配置驱动 + 类型驱动
+
+- **配置驱动**: 一份 `fieldsConfig` 应用于 Table、Form、Search、Detail
+- **类型驱动**: 通过 `type` 字段自动渲染组件（参考 vk-unicloud）
 
 ---
 
-## 📖 详细配置说明
+## 🚀 快速开始
 
-### fieldsConfig 字段类型
+### 步骤 1: 复制模板文件
+
+```bash
+# 1. 复制 Page 模板
+cp templates/crud/page.template.js app/(admin)/admin/{resource}/page.js
+
+# 2. 复制 Action 模板
+cp templates/crud/action.template.js app/(admin)/actions/rbac/crud-action.{resource}.js
+```
+
+### 步骤 2: 批量替换变量
+
+在你的编辑器中，批量替换以下变量：
+
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `{RESOURCE_NAME}` | 资源名(小写单数) | `coupon` |
+| `{RESOURCE_LABEL}` | 资源标签(首字母大写) | `Coupon` |
+| `{COLLECTION_NAME}` | MongoDB 集合名(小写复数) | `coupons` |
+
+**快捷替换命令**（macOS/Linux）：
+
+```bash
+# 在文件中替换
+sed -i '' 's/{RESOURCE_NAME}/coupon/g' page.js
+sed -i '' 's/{RESOURCE_LABEL}/Coupon/g' page.js
+sed -i '' 's/{COLLECTION_NAME}/coupons/g' crud-action.coupon.js
+```
+
+### 步骤 3: 配置字段
+
+在 `page.js` 中，修改 `fieldsConfig` 数组，定义你的字段。
+
+---
+
+## 📋 fieldsConfig 配置详解
+
+### 基础结构
+
+```javascript
+const fieldsConfig = [
+  {
+    key: 'fieldName',        // 字段名（必需）
+    title: 'Field Label',    // 显示标签（必需）
+    type: 'text',            // 字段类型（必需）
+    
+    // 表格配置
+    table: {
+      width: 150,
+      sorter: true,
+      copyable: true,
+    },
+    
+    // 表单配置
+    form: {
+      required: true,
+      placeholder: 'Enter value',
+    },
+    
+    // 搜索配置
+    search: {
+      enabled: true,
+      mode: 'like',
+    },
+    
+    // 详情配置
+    detail: {
+      render: (value) => value,
+    },
+  },
+];
+```
+
+### 支持的字段类型
 
 #### 1. 文本类型
 
 ```javascript
-{
-    type: 'text',        // 单行文本
-    type: 'textarea',    // 多行文本
-    type: 'password',    // 密码输入
-    type: 'email',       // 邮箱输入
-    type: 'url',         // URL 输入
-}
+{ type: 'text' }       // 单行文本
+{ type: 'textarea' }   // 多行文本
+{ type: 'password' }   // 密码
 ```
 
 #### 2. 数字类型
 
 ```javascript
-{
-    type: 'number',      // 数字输入
-    type: 'slider',      // 滑块选择
-}
+{ type: 'number' }     // 数字输入
 ```
 
 #### 3. 选择类型
 
 ```javascript
 {
-    type: 'select',      // 下拉选择
-    type: 'radio',       // 单选按钮
-    type: 'checkbox',    // 多选框
-    options: [
-        { label: 'Option 1', value: 'value1' },
-        { label: 'Option 2', value: 'value2' },
-    ],
+  type: 'select',
+  options: [
+    { label: 'Option 1', value: '1', color: 'blue' },
+    { label: 'Option 2', value: '2', color: 'green' },
+  ],
 }
+
+{ type: 'radio' }      // 单选
 ```
 
-#### 4. 日期类型
+#### 4. 树形选择
 
 ```javascript
 {
-    type: 'date',        // 日期选择
-    type: 'dateRange',   // 日期范围
-    type: 'time',        // 时间选择
-    type: 'datetime',    // 日期时间
+  type: 'tree-select',
+  form: {
+    action: getResourceTreeForSelectAction, // 动态加载树形数据
+  },
 }
 ```
 
-#### 5. 特殊类型
+#### 5. 日期类型
+
+```javascript
+{ type: 'date' }       // 日期
+{ type: 'datetime' }   // 日期时间
+{ type: 'dateRange' }  // 日期范围
+```
+
+#### 6. 布尔类型
 
 ```javascript
 {
-    type: 'switch',      // 开关
-    type: 'upload',      // 文件上传
-    type: 'image',       // 图片上传
-    type: 'markdown',    // Markdown 编辑器
-    type: 'json',        // JSON 编辑器
-    type: 'color',       // 颜色选择器
+  type: 'switch',
+  table: {
+    trueText: 'Enabled',
+    falseText: 'Disabled',
+  },
 }
 ```
 
-### 字段显示控制
+#### 7. 数组类型
 
 ```javascript
 {
-    tableShow: true,     // 表格中显示
-    formShow: true,      // 表单中显示
-    searchShow: true,    // 搜索中显示
-    detailShow: true,    // 详情中显示
-    
-    // 条件显示（根据其他字段的值）
-    showRule: {
-        field: 'type',
-        operator: 'eq',
-        value: 'custom',
-    },
+  type: 'array',
+  form: {
+    placeholder: 'Enter item',
+    addButtonText: 'Add Item',
+  },
 }
 ```
 
-### 验证规则
+#### 8. 其他类型
 
 ```javascript
-rules: [
-    { required: true, message: 'This field is required' },
-    { min: 2, max: 50, message: 'Length: 2-50 characters' },
-    { pattern: /^[a-zA-Z0-9]+$/, message: 'Only letters and numbers' },
-    { type: 'email', message: 'Invalid email format' },
-    { type: 'url', message: 'Invalid URL format' },
-    { 
-        validator: (rule, value) => {
-            if (value < 0) return Promise.reject('Must be positive');
-            return Promise.resolve();
-        }
-    },
-]
+{ type: 'image' }      // 图片
+{ type: 'upload' }     // 文件上传
+{ type: 'json' }       // JSON 编辑器
+{ type: 'markdown' }   // Markdown 编辑器
 ```
 
 ---
 
-## 🔧 高级功能
+## 🎨 配置示例
 
-### 1. 添加自定义 Action
-
-在 Actions 文件中：
+### 1. 基础 CRUD 页面
 
 ```javascript
-import { wrapAdminAction } from '@/lib/core/action-wrapper';
-
-export const activateCouponAction = wrapAdminAction(
-    'activate',
-    'coupon',
-    async ({ id }, context) => {
-        const dao = crudActions._dao;
-        return await dao.update({
-            id,
-            data: { status: 'active' },
-            userId: context.userId,
-        });
-    }
-);
+const fieldsConfig = [
+  {
+    key: 'name',
+    title: 'Name',
+    type: 'text',
+    table: { width: 200, sorter: true },
+    form: { required: true },
+    search: { enabled: true, mode: 'like' },
+  },
+  {
+    key: 'status',
+    title: 'Status',
+    type: 'select',
+    options: [
+      { label: 'Active', value: 'active', color: 'green' },
+      { label: 'Inactive', value: 'inactive', color: 'red' },
+    ],
+    table: { width: 100 },
+    form: { required: true },
+    search: { enabled: true, mode: 'exact' },
+  },
+];
 ```
 
-### 2. 添加钩子函数
+### 2. 树形结构页面
 
 ```javascript
-import { createCrudActionsWithHooks } from '@/lib/core/crud-helper';
-
-const crudActions = createCrudActionsWithHooks(config, {
-    beforeCreate: async (params, context) => {
-        console.log('Creating...', params);
+const fieldsConfig = [
+  {
+    key: 'parent_id',
+    title: 'Parent',
+    type: 'tree-select',
+    table: false,
+    form: {
+      action: getResourceTreeForSelectAction,
+      placeholder: 'Select parent',
     },
-    afterCreate: async (result, context) => {
-        // 发送通知
-        await sendNotification(result);
-    },
-});
+  },
+  // ... 其他字段
+];
 ```
 
-### 3. 连表查询
-
-在 config 中：
+### 3. 自定义渲染
 
 ```javascript
-foreignDB: [
-    {
-        dbName: 'users',
-        localKey: 'userId',
-        foreignKey: 'id',
-        as: 'user',
-        fieldJson: { id: 1, name: 1, email: 1 },
-    },
-]
+{
+  key: 'avatar',
+  title: 'Avatar',
+  type: 'image',
+  table: {
+    width: 80,
+    render: (url, record) => (
+      <Avatar src={url} size={40}>
+        {record.name?.[0]}
+      </Avatar>
+    ),
+  },
+}
 ```
 
-### 4. 自定义页面按钮
+---
 
-在 Page 中：
+## 🔧 高级配置
+
+### 1. 动态选项加载
+
+```javascript
+const [options, setOptions] = useState([]);
+
+useEffect(() => {
+  loadOptions();
+}, []);
+
+const fieldsConfig = useMemo(() => [
+  {
+    key: 'category',
+    type: 'select',
+    options: options, // 动态选项
+  },
+], [options]);
+```
+
+### 2. 条件显示字段
+
+```javascript
+{
+  key: 'customField',
+  title: 'Custom Field',
+  type: 'text',
+  form: {
+    showRule: (formData) => formData.type === 'custom',
+  },
+}
+```
+
+### 3. 自定义操作
+
+```javascript
+const customRowActions = [
+  {
+    key: 'activate',
+    text: 'Activate',
+    onClick: async (record) => {
+      await activateAction(record.id);
+    },
+  },
+];
+
+<SmartCrudPage
+  customRowActions={customRowActions}
+  // ...
+/>
+```
+
+### 4. 树形表格
 
 ```javascript
 <SmartCrudPage
-    // ... 其他配置
-    customActions={[
-        {
-            key: 'activate',
-            label: 'Activate',
-            onClick: async (record) => {
-                await activateCouponAction({ id: record.id });
-            },
-        },
-    ]}
+  expandable={{
+    defaultExpandAllRows: true,
+    childrenColumnName: 'children',
+  }}
+  // ...
 />
 ```
 
 ---
 
-## 📚 相关文档
+## 📚 完整示例
 
-- [核心库文档](../../lib/core/README.md)
-- [SmartCrudPage 使用指南](../../docs/admin/SMART_CRUD_GUIDE.md)
-- [BaseDAO 文档](../../docs/admin/BASE_DAO.md)
+### 示例 1: Permissions 页面
+
+参考：`app/(admin)/admin/rbac/permissions/page.js`
+
+**特点**：
+- 树形结构
+- 父级选择
+- 动作数组字段
+
+### 示例 2: Roles 页面
+
+参考：`app/(admin)/admin/rbac/roles/page.js`
+
+**特点**：
+- 自定义操作（分配权限/菜单）
+- 树形模态框
+- 多选数据
+
+### 示例 3: Menus 页面
+
+参考：`app/(admin)/admin/rbac/menus/page.js`
+
+**特点**：
+- 树形表格
+- 图标选择
+- URL 配置
+
+### 示例 4: Users 页面
+
+参考：`app/(admin)/admin/rbac/users/page.js`
+
+**特点**：
+- Better Auth 集成
+- 自定义创建模态框
+- 角色绑定
+- 密码重置
+- 用户封禁
 
 ---
 
-## 💡 最佳实践
+## 🎯 最佳实践
 
-### 1. 文件组织
+### 1. 文件命名
 
 ```
-app/(admin)/
-├── actions/
-│   └── coupons/
-│       ├── configs/
-│       │   └── coupon-crud.config.js  # 配置
-│       └── admin-coupons.js           # Actions
-└── admin/
-    └── coupons/
-        └── page.js                     # 页面
+✅ 推荐
+page.js
+crud-action.permission.js
+crud-action.role.js
+
+❌ 不推荐
+permissions-page.js
+admin-permissions.js
+permission-crud.config.js (不需要单独的 config)
 ```
 
-### 2. 命名规范
-
-- **集合名**：复数，小写，如 `coupons`
-- **配置名**：`{resource}CrudConfig`，如 `couponCrudConfig`
-- **Action名**：`{action}{Resource}Action`，如 `createCouponAction`
-- **文件名**：kebab-case，如 `admin-coupons.js`
-
-### 3. 权限配置
+### 2. 字段顺序
 
 ```javascript
-permissions: {
-    create: 'coupon:create',  // 具体权限
-    update: 'coupon:update',
-    delete: 'coupon:delete',
-    read: 'admin',            // 或要求管理员
+const fieldsConfig = [
+  // 1. 隐藏字段（ID）
+  { key: 'id', table: false, form: false },
+  
+  // 2. 主要字段（名称、编码）
+  { key: 'name' },
+  { key: 'code' },
+  
+  // 3. 状态字段
+  { key: 'enable' },
+  { key: 'status' },
+  
+  // 4. 描述字段
+  { key: 'description' },
+  { key: 'remark' },
+  
+  // 5. 时间字段
+  { key: 'createdAt' },
+  { key: 'updatedAt' },
+];
+```
+
+### 3. rowKey 配置
+
+```javascript
+// ✅ 正确：使用字符串
+<SmartCrudPage rowKey='id' />
+
+// ❌ 错误：不要使用函数
+<SmartCrudPage rowKey={(record) => record.id} />
+```
+
+### 4. Actions 命名
+
+```javascript
+// ✅ 统一命名规范
+export const getResourceListAction = ...;
+export const getResourceDetailAction = ...;
+export const createResourceAction = ...;
+export const updateResourceAction = ...;
+export const deleteResourceAction = ...;
+```
+
+### 5. 搜索模式
+
+```javascript
+search: {
+  mode: 'like',   // 模糊搜索（文本）
+  mode: 'exact',  // 精确搜索（状态、布尔值）
+  mode: 'in',     // 数组包含（多选）
 }
 ```
 
-### 4. 搜索优化
+---
+
+## 🐛 常见问题
+
+### 1. 删除时提示 "ID is required"
+
+**原因**: `rowKey` 配置错误
 
 ```javascript
-// 只对常用字段启用搜索
-searchFields: ['name', 'code', 'status'],
+// ❌ 错误
+rowKey={(record) => record.id}
 
-// 不要对所有字段都启用搜索
-// searchFields: Object.keys(fieldsConfig), // ❌ 不推荐
+// ✅ 正确
+rowKey='id'
+```
+
+### 2. 搜索时报错 "$regex has to be a string"
+
+**原因**: DAO 层重复包装 `$regex`
+
+**解决**: 在 DAO 中检查是否已经是对象：
+
+```javascript
+if (filters.name) {
+  query.name = typeof filters.name === 'object' 
+    ? filters.name 
+    : { $regex: filters.name, $options: 'i' };
+}
+```
+
+### 3. TreeSelect 警告 "value is invalidate: undefined"
+
+**原因**: Root 节点的 `value` 是 `null` 或 `undefined`
+
+**解决**: 使用空字符串：
+
+```javascript
+const treeData = [
+  { title: '--- Root ---', value: '', key: '' }, // ✅ 使用空字符串
+  ...otherNodes,
+];
+```
+
+### 4. Select 没有 placeholder
+
+**原因**: `placeholder` 放在了顶层 props
+
+**解决**: 放在 `fieldProps` 中：
+
+```javascript
+form: {
+  placeholder: 'Select option', // ❌ 无效
+  fieldProps: {
+    placeholder: 'Select option', // ✅ 有效
+  },
+}
 ```
 
 ---
 
-## 🎯 模板变量替换表
+## 📖 相关文档
 
-| 变量 | 说明 | 示例 |
-|------|------|------|
-| `{RESOURCE_NAME}` | 资源名（小写，单数） | `coupon` |
-| `{RESOURCE_LABEL}` | 资源标签（首字母大写） | `Coupon` |
-| `{RESOURCE_NAME}s` | 资源名（小写，复数） | `coupons` |
-
-### 批量替换命令
-
-```bash
-# macOS/Linux
-sed -i '' 's/{RESOURCE_NAME}/coupon/g' your-file.js
-sed -i '' 's/{RESOURCE_LABEL}/Coupon/g' your-file.js
-
-# 或使用你的编辑器的查找替换功能
-```
+- [SmartCrudPage 完整指南](../../docs/SMART_CRUD_COMPLETE_GUIDE.md)
+- [字段类型参考](../../lib/crud/field-types.js)
+- [CRUD Helper 文档](../../lib/crud/crud-helper.js)
 
 ---
 
 ## ✨ 总结
 
-使用模板创建 CRUD 页面的优势：
+使用 SmartCrudPage 模板的优势：
 
-- 🚀 **快速** - 3 个文件，不到 5 分钟
-- 🔐 **安全** - 自动权限验证
-- 📝 **规范** - 自动日志记录
-- ⚡ **高效** - 统一的代码风格
-- 🎯 **专注** - 只需关注业务逻辑
+- 🚀 **快速开发** - 2 个文件，10 分钟完成
+- 📦 **代码复用** - 减少 50-60% 代码量
+- 🎯 **统一规范** - 所有页面结构一致
+- 🔧 **易于维护** - 配置集中，修改方便
+- ⚡ **类型驱动** - 自动渲染，开箱即用
 
-**开发效率提升 10 倍！** 🎉
-
+**开始使用模板，提升 10 倍开发效率！** 🎉
