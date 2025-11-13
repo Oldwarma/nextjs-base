@@ -1,9 +1,14 @@
 'use server';
 
 /**
- * 后台用户管理 Server Actions
- * 集成 Better Auth 的用户创建、更新等功能
- * 使用 DAO 层进行数据操作
+ * User CRUD Actions
+ * 
+ * 本文件整合了 User 相关的所有 Server Actions：
+ * 1. 标准 CRUD 操作
+ * 2. Better Auth 集成操作
+ * 3. 角色绑定操作
+ * 
+ * fieldsConfig 在 crud-config.user.js 中（客户端文件）
  */
 
 import { auth } from '@/lib/auth/auth';
@@ -40,6 +45,10 @@ async function checkBackendAccess() {
 		user: session.user,
 	};
 }
+
+// ============================================
+// 标准 CRUD Actions
+// ============================================
 
 /**
  * 创建用户（后台管理员使用）
@@ -125,6 +134,78 @@ export async function createUserAction(userData) {
 }
 
 /**
+ * 获取用户列表（分页）
+ * 兼容 SmartCrudPage 的参数格式
+ */
+export const getUserListAction = wrapQueryAction('user', async (params = {}) => {
+	const pageIndex = params.pageIndex || params.page || 1;
+	const pageSize = params.pageSize || 20;
+	const sortJson = params.sortJson || params.sort || { createdAt: -1 };
+	
+	// 提取搜索条件
+	const { pageIndex: _, page: __, pageSize: ___, sortJson: ____, sort: _____, whereJson: ______, filters: _______, ...searchFields } = params;
+	const conditions = params.whereJson || params.filters || searchFields;
+
+	// 使用 DAO 获取用户列表
+	const result = await userDao.getUserList({
+		page: pageIndex,
+		pageSize,
+		filters: conditions,
+		sort: sortJson,
+	});
+
+	return {
+		success: true,
+		data: result.data,
+		total: result.total,
+		page: result.page,
+		pageSize: result.pageSize,
+	};
+});
+
+/**
+ * 获取单个用户详情
+ */
+export async function getUserDetailAction(userId) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+		}
+
+		const user = await userDao.getUserById(userId);
+
+		if (!user) {
+			return {
+				success: false,
+				error: 'User not found',
+			};
+		}
+
+		return {
+			success: true,
+			data: user,
+		};
+	} catch (error) {
+		console.error('Failed to get user:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to get user',
+		};
+	}
+}
+
+/**
  * 更新用户信息
  */
 export async function updateUserAction(userId, updateData) {
@@ -149,7 +230,7 @@ export async function updateUserAction(userId, updateData) {
 			headers: await headers(),
 			body: {
 				userId,
-				data: updateData, // Better Auth 会自动更新 additionalFields 中定义的字段
+				data: updateData,
 			},
 		});
 
@@ -174,19 +255,90 @@ export async function updateUserAction(userId, updateData) {
 }
 
 /**
- * 更新用户信息（别名，兼容旧代码）
+ * 删除用户
  */
-export async function updateUserInfoAction(userId, updateData) {
-	return await updateUserAction(userId, updateData);
+export async function deleteUserAction(id) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!id) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+		}
+
+		// ✅ Better Auth 的 removeUser 需要 userId 参数
+		await auth.api.removeUser({
+			headers: await headers(),
+			body: {
+				userId: id,
+			},
+		});
+
+		return {
+			success: true,
+			message: 'User deleted successfully',
+		};
+	} catch (error) {
+		console.error('Failed to delete user:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to delete user',
+		};
+	}
 }
 
 /**
+ * 批量更新用户
+ */
+export async function batchUpdateUsersAction(userIds, updateData) {
+	const backendCheck = await checkBackendAccess();
+	if (!backendCheck.hasAccess) {
+		return {
+			success: false,
+			error: backendCheck.error,
+		};
+	}
+
+	try {
+		if (!Array.isArray(userIds) || userIds.length === 0) {
+			return {
+				success: false,
+				error: 'User IDs array is required',
+			};
+		}
+
+		const modifiedCount = await userDao.batchUpdateUsers(userIds, updateData);
+
+		return {
+			success: true,
+			data: {
+				modifiedCount,
+				matchedCount: userIds.length,
+			},
+		};
+	} catch (error) {
+		console.error('Failed to batch update users:', error);
+		return {
+			success: false,
+			error: error.message || 'Failed to batch update users',
+		};
+	}
+}
+
+// ============================================
+// 特殊 User Actions
+// ============================================
+
+/**
  * 重置用户密码
- * 
- * 根据 Better Auth 官方文档:
- * - setUserPassword API 应该能自动为 OAuth 用户创建 credential account
- * - 参数格式: { newPassword, userId }
- * - 文档链接: https://better-auth.com/docs/plugins/admin
  */
 export async function resetUserPasswordAction(userId, newPassword) {
 	const backendCheck = await checkBackendAccess();
@@ -212,24 +364,15 @@ export async function resetUserPasswordAction(userId, newPassword) {
 			};
 		}
 
-		console.log('[resetUserPasswordAction] Resetting password for user:', userId);
-
-		// 优先使用 DAO 层方法（更可靠，直接操作数据库）
-		// 这个方法会自动为 OAuth 用户创建 credential account
+		// 优先使用 DAO 层方法
 		try {
 			await userDao.resetUserPassword(userId, newPassword);
-			console.log('[resetUserPasswordAction] Password reset successfully via DAO');
-			
 			return {
 				success: true,
 				message: 'Password reset successfully',
 			};
 		} catch (daoError) {
-			console.error('[resetUserPasswordAction] DAO method failed:', daoError);
-			
 			// 如果 DAO 失败，尝试使用 Better Auth Admin API
-			console.log('[resetUserPasswordAction] Trying Better Auth API as fallback...');
-			
 			const result = await auth.api.setUserPassword({
 				headers: await headers(),
 				body: {
@@ -238,184 +381,20 @@ export async function resetUserPasswordAction(userId, newPassword) {
 				},
 			});
 
-			console.log('[resetUserPasswordAction] Better Auth API result:', result);
-
-			// 检查 Better Auth API 返回值
 			if (result?.error) {
-				console.error('[resetUserPasswordAction] Better Auth also failed:', result.error);
 				throw new Error(result.error.message || daoError.message || 'Failed to reset password');
 			}
 
-			console.log('[resetUserPasswordAction] Password reset successfully via Better Auth API');
 			return {
 				success: true,
 				message: 'Password reset successfully',
 			};
 		}
 	} catch (error) {
-		console.error('[resetUserPasswordAction] Failed to reset password:', error);
+		console.error('Failed to reset password:', error);
 		return {
 			success: false,
 			error: error.message || 'Failed to reset password',
-		};
-	}
-}
-
-/**
- * 删除用户
- */
-export async function deleteUserAction(userId) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return {
-			success: false,
-			error: backendCheck.error,
-		};
-	}
-
-	try {
-		if (!userId) {
-			return {
-				success: false,
-				error: 'User ID is required',
-			};
-		}
-
-		// 使用 Better Auth Admin Plugin 的 removeUser API
-		await auth.api.removeUser({
-			headers: await headers(),
-			body: {
-				userId,
-			},
-		});
-
-		return {
-			success: true,
-			message: 'User deleted successfully',
-		};
-	} catch (error) {
-		console.error('Failed to delete user:', error);
-		return {
-			success: false,
-			error: error.message || 'Failed to delete user',
-		};
-	}
-}
-
-/**
- * 获取用户列表（分页）
- * 兼容 SmartCrudPage 的参数格式
- * 参数格式: { pageIndex, pageSize, whereJson, sortJson }
- */
-export const getUserListAction = wrapQueryAction('user', async (params = {}) => {
-	// 兼容两种参数格式
-	// 格式 1（SmartCrudPage）: { pageIndex, pageSize, ...searchFields, sortJson }
-	// 格式 2（标准格式）: { pageIndex, pageSize, whereJson, sortJson }
-	const pageIndex = params.pageIndex || params.page || 1;
-	const pageSize = params.pageSize || 20;
-	const sortJson = params.sortJson || params.sort || { createdAt: -1 };
-	
-	// 提取搜索条件（排除分页和排序参数）
-	const { pageIndex: _, page: __, pageSize: ___, sortJson: ____, sort: _____, whereJson: ______, filters: _______, ...searchFields } = params;
-	
-	// 优先使用 whereJson，其次是 filters，最后是顶层的搜索字段
-	const conditions = params.whereJson || params.filters || searchFields;
-
-	// 使用 DAO 获取用户列表
-	const result = await userDao.getUserList({
-		page: pageIndex,
-		pageSize,
-		filters: conditions,
-		sort: sortJson,
-	});
-
-	return {
-		success: true,
-		data: result.data,
-		total: result.total,
-		page: result.page,
-		pageSize: result.pageSize,
-	};
-});
-
-/**
- * 获取单个用户详情
- */
-export async function getUserByIdAction(userId) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return {
-			success: false,
-			error: backendCheck.error,
-		};
-	}
-
-	try {
-		if (!userId) {
-			return {
-				success: false,
-				error: 'User ID is required',
-			};
-}
-
-		// 使用 DAO 获取用户
-		const user = await userDao.getUserById(userId);
-
-		if (!user) {
-			return {
-				success: false,
-				error: 'User not found',
-			};
-		}
-
-		return {
-			success: true,
-			data: user,
-		};
-	} catch (error) {
-		console.error('Failed to get user:', error);
-		return {
-			success: false,
-			error: error.message || 'Failed to get user',
-		};
-	}
-}
-
-/**
- * 批量更新用户
- */
-export async function batchUpdateUsersAction(userIds, updateData) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return {
-			success: false,
-			error: backendCheck.error,
-		};
-	}
-
-	try {
-		if (!Array.isArray(userIds) || userIds.length === 0) {
-			return {
-				success: false,
-				error: 'User IDs array is required',
-			};
-		}
-
-		// 使用 DAO 批量更新
-		const modifiedCount = await userDao.batchUpdateUsers(userIds, updateData);
-
-		return {
-			success: true,
-			data: {
-				modifiedCount,
-				matchedCount: userIds.length,
-			},
-		};
-	} catch (error) {
-		console.error('Failed to batch update users:', error);
-		return {
-			success: false,
-			error: error.message || 'Failed to batch update users',
 		};
 	}
 }
@@ -440,7 +419,6 @@ export async function bindUserRolesAction(userId, roleIds, reset = false) {
 			};
 		}
 
-		// 使用 DAO 绑定角色
 		await userDao.bindUserRoles(userId, roleIds, reset);
 
 		return {
@@ -476,7 +454,6 @@ export async function getUserRolesAction(userId) {
 			};
 		}
 
-		// 使用 DAO 获取角色
 		const roles = await userDao.getUserRoles(userId);
 
 		return {
@@ -512,7 +489,6 @@ export async function banUserAction(userId, banReason, banExpiresIn) {
 			};
 		}
 
-		// 使用 Better Auth Admin Plugin 的 banUser API
 		await auth.api.banUser({
 			headers: await headers(),
 			body: {
@@ -555,7 +531,6 @@ export async function unbanUserAction(userId) {
 			};
 		}
 
-		// 使用 Better Auth Admin Plugin 的 unbanUser API
 		await auth.api.unbanUser({
 			headers: await headers(),
 			body: {
@@ -589,7 +564,6 @@ export async function getUserStatsAction() {
 	}
 
 	try {
-		// 使用 DAO 获取统计
 		const stats = await userDao.getUserStats();
 
 		return {

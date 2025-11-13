@@ -1,8 +1,5 @@
 /**
- * 用户管理页面 - Smart CRUD 版本
- * 
- * 使用 Smart CRUD 重构，代码量从 477 行减少到约 150 行
- * 减少了 68% 的代码量
+ * 用户管理页面
  */
 
 'use client';
@@ -18,19 +15,8 @@ const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page')
 	loading: () => <div style={{ padding: 24, textAlign: 'center' }}>Loading...</div>,
 });
 
-// Server Actions
-import {
-	createUserAction,
-	getUserListAction as getList,
-	updateUserInfoAction as update,
-	deleteUserAction as deleteItem,
-	batchUpdateUsersAction as batchUpdate,
-	resetUserPasswordAction,
-	bindUserRolesAction,
-	getUserRolesAction,
-	banUserAction,
-	unbanUserAction,
-} from '@/app/(admin)/actions/rbac/admin-users';
+// Server Actions - 统一从 crud-action.user.js 导入
+import * as userActions from '@/app/(admin)/actions/rbac/crud-action.user';
 
 import { getRoleListForSelectAction } from '@/app/(admin)/actions/rbac/crud-action.role';
 
@@ -71,34 +57,34 @@ export default function UsersManagementPage() {
 		try {
 			// 使用专门的选择器 Action，统一格式
 			const result = await getRoleListForSelectAction({ withLabel: true });
-			
+
 			if (result.success) {
 				const roles = result.data || [];
 				console.log('[Users] Loaded roles:', roles);
 				setAllRoles(roles);
-				
+
 				// Convert to tree data for Tree component (角色绑定模态框)
 				const treeData = roles
-					.filter(role => role && role.id) // 过滤无效数据
-					.map(role => ({
+					.filter((role) => role && role.id) // 过滤无效数据
+					.map((role) => ({
 						title: String(role.label || role.name || 'Unknown'), // 确保是字符串
 						value: String(role.id), // 确保是字符串
-						key: String(role.id),   // 确保是字符串
+						key: String(role.id), // 确保是字符串
 						disabled: !role.enable,
 					}));
-				
+
 				console.log('[Users] Tree data:', treeData);
 				setRoleTree(treeData);
-				
+
 				// 为搜索表单准备选项数据（只包含启用的角色）
 				const searchOptions = roles
-					.filter(role => role && role.id && role.enable)
-					.map(role => ({
+					.filter((role) => role && role.id && role.enable)
+					.map((role) => ({
 						label: String(role.label || role.name || 'Unknown'),
 						value: String(role.id),
 					}));
 				setRoleOptions(searchOptions);
-				
+
 				setRolesLoaded(true);
 			} else {
 				console.error('[Users] Failed to load roles:', result.error);
@@ -123,34 +109,36 @@ export default function UsersManagementPage() {
 	const handleAssignRoles = async (record) => {
 		// Better Auth 应该使用 id 字段，但如果没有则使用 _id
 		const userId = record.id || record._id;
-		
+
 		if (!userId) {
 			messageApi.error('User ID is missing');
 			return;
 		}
-		
+
 		setSelectedUser(record);
 		setRoleModalVisible(true);
 		setRoleLoading(true);
 
 		try {
 			// Get current user roles (使用 Better Auth 的 id 字段，或 _id 作为后备)
-			const result = await getUserRolesAction(userId);
-			
+			const result = await userActions.getUserRolesAction(userId);
+
 			if (result.success) {
 				const userRoles = result.data || [];
 				console.log('[Users] User roles:', userRoles);
-				
+
 				// 将角色对象数组转换为 ID 字符串数组
 				// getUserRolesAction 返回的是角色对象数组，需要提取 id
-				const roleIds = userRoles.map(role => {
-					// 兼容不同的数据格式
-					if (typeof role === 'string') {
-						return role; // 已经是字符串 ID
-					}
-					return String(role.id || role._id || '');
-				}).filter(id => id); // 过滤空值
-				
+				const roleIds = userRoles
+					.map((role) => {
+						// 兼容不同的数据格式
+						if (typeof role === 'string') {
+							return role; // 已经是字符串 ID
+						}
+						return String(role.id || role._id || '');
+					})
+					.filter((id) => id); // 过滤空值
+
 				console.log('[Users] Role IDs:', roleIds);
 				setSelectedRoles(roleIds);
 			} else {
@@ -171,7 +159,7 @@ export default function UsersManagementPage() {
 
 		// Better Auth 应该使用 id 字段，但如果没有则使用 _id
 		const userId = selectedUser.id || selectedUser._id;
-		
+
 		if (!userId) {
 			messageApi.error('User ID is missing');
 			return;
@@ -181,7 +169,7 @@ export default function UsersManagementPage() {
 
 		try {
 			// 使用 Better Auth 的 id 字段，或 _id 作为后备
-			const result = await bindUserRolesAction(userId, selectedRoles, true);
+			const result = await userActions.bindUserRolesAction(userId, selectedRoles, true);
 
 			if (result.success) {
 				messageApi.success('Roles assigned successfully');
@@ -202,7 +190,7 @@ export default function UsersManagementPage() {
 	const handleCreateUser = async (values) => {
 		setCreateLoading(true);
 		try {
-			const result = await createUserAction(values);
+			const result = await userActions.createUserAction(values);
 			if (result.success) {
 				messageApi.success('User created successfully');
 				setCreateModalVisible(false);
@@ -223,7 +211,7 @@ export default function UsersManagementPage() {
 	const handleResetPassword = async (values) => {
 		setPasswordLoading(true);
 		try {
-			const result = await resetUserPasswordAction(selectedUserId, values.password);
+			const result = await userActions.resetUserPasswordAction(selectedUserId, values.password);
 			if (result.success) {
 				messageApi.success('Password reset successfully');
 				setPasswordModalVisible(false);
@@ -254,10 +242,10 @@ export default function UsersManagementPage() {
 			let result;
 			if (isBanned) {
 				// 解封用户
-				result = await unbanUserAction(userId);
+				result = await userActions.unbanUserAction(userId);
 			} else {
 				// 封禁用户
-				result = await banUserAction(userId, 'Banned by administrator');
+				result = await userActions.banUserAction(userId, 'Banned by administrator');
 			}
 
 			if (result.success) {
@@ -275,404 +263,413 @@ export default function UsersManagementPage() {
 	// ============================================
 	// 统一字段配置
 	// ============================================
-	const fieldsConfig = useMemo(() => [
-		// Better Auth 主键 (id)
-		{
-			key: 'id',
-			title: 'ID',
-			type: 'text',
-			table: false,
-			form: false,
-			search: false
-		},
-		// MongoDB _id
-		{
-			key: '_id',
-			title: 'MongoDB ID',
-			type: 'text',
-			table: false,
-			form: false,
-			search: false
-		},
-		// 头像
-		{
-			key: 'image',
-			title: 'Avatar',
-			type: 'image',
-			table: {
-				width: 80,
-				render: (image, record) => (
-					<Avatar src={image} icon={<UserOutlined />} size={40}>
-						{record.name?.[0]?.toUpperCase()}
-					</Avatar>
-				),
+	const fieldsConfig = useMemo(
+		() => [
+			// Better Auth 主键 (id)
+			{
+				key: 'id',
+				title: 'ID',
+				type: 'text',
+				table: false,
+				form: false,
+				search: false,
 			},
-			form: false,
-			search: false,
-		},
-		
-		// 姓名和用户名（联合显示）
-		{
-			key: 'name',
-			title: 'Name',
-			type: 'text',
-			table: {
-				width: 120,
-				copyable: true,
-				ellipsis: true,
-				render: (name, record) => (
-					<div>
-						<div style={{ fontWeight: 500 }}>{name || 'N/A'}</div>
-						<div style={{ fontSize: 12, color: '#999' }}>
-							@{record.username || 'N/A'}
-						</div>
-					</div>
-				),
+			// MongoDB _id
+			{
+				key: '_id',
+				title: 'MongoDB ID',
+				type: 'text',
+				table: false,
+				form: false,
+				search: false,
 			},
-			form: {
-				required: true,
-				placeholder: 'Enter name',
-				minLength: 2,
-				maxLength: 50,
-			},
-			search: {
-				enabled: true,
-				mode: 'like',
-			},
-		},
-		
-		// 邮箱
-		{
-			key: 'email',
-			title: 'Email',
-			type: 'text',
-			table: {
-				width: 150,
-				copyable: true,
-				ellipsis: true,
-			},
-			form: {
-				required: true,
-				placeholder: 'user@example.com',
-				pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-				patternMessage: 'Invalid email format',
-			},
-			search: {
-				enabled: true,
-				mode: 'like',
-			},
-		},
-		
-		// 用户名（仅表单）
-		{
-			key: 'username',
-			title: 'Username',
-			type: 'text',
-			table: false, // 已经在 name 列中显示
-			form: {
-				required: false,
-				placeholder: 'username',
-				pattern: /^[a-zA-Z0-9_]{3,20}$/,
-				patternMessage: 'Username must be 3-20 characters (letters, numbers, underscores)',
-			},
-			detail: {
-				render: (value) => `@${value || 'N/A'}`,
-			},
-		},
-		
-		// Better Auth 角色 (单一角色: admin/user)
-		{
-			key: 'role',
-			title: 'Auth Role',
-			type: 'select',
-			options: [
-				{ label: 'Admin', value: 'admin', color: 'blue' },
-				{ label: 'User', value: 'user', color: 'default' },
-			],
-			table: {
-				width: 100,
-			},
-			form: {
-				required: true,
-			},
-			search: {
-				enabled: true,
-				mode: 'exact',
-			},
-		},
-		
-		// 后台访问权限
-		{
-			key: 'isBackendAllowed',
-			title: 'Backend Access',
-			type: 'switch',
-			table: {
-				width: 140,
-				trueText: 'Allowed',
-				falseText: 'Denied',
-			},
-			form: {
-				required: true,
-			},
-			search: {
-				enabled: true,
-				mode: 'exact',
-				trueText: 'Allowed',
-				falseText: 'Denied',
-			},
-		},
-		
-		// RBAC 角色 (多角色数组)
-		{
-			key: 'roles',
-			title: 'RBAC Roles',
-			type: 'select',  // ✅ 改为 select 类型
-			options: roleOptions,  // ✅ 使用动态加载的选项
-			form: {
-				mode: 'multiple',  // 多选模式
-				placeholder: 'Select roles',
-			},
-			table: {
-				width: 100,
-				ellipsis: true,
-				render: (value, record) => {
-					const roles = record.roleList || value || [];
-					if (!Array.isArray(roles) || roles.length === 0) {
-						return <span style={{ color: '#999' }}>No roles assigned</span>;
-					}
-					return (
-						<Space wrap>
-							{roles.map((item, index) => {
-								// 如果是对象（连表数据），取 name；否则显示原值（UUID）
-								const displayText = item?.name || item;
-								const key = item?.id || item;
-								return (
-									<Tag key={key || index} color='blue'>
-										{displayText}
-									</Tag>
-								);
-							})}
-						</Space>
-					);
+			// 头像
+			{
+				key: 'image',
+				title: 'Avatar',
+				type: 'image',
+				table: {
+					width: 80,
+					render: (image, record) => (
+						<Avatar
+							src={image}
+							icon={<UserOutlined />}
+							size={40}
+						>
+							{record.name?.[0]?.toUpperCase()}
+						</Avatar>
+					),
 				},
+				form: false,
+				search: false,
 			},
-			search: {
-				enabled: true,
-				mode: 'in',  // 数组包含查询（MongoDB $in 操作符）
-				placeholder: 'Filter by roles',
-				lazyLoad: true,  // ✅ 延迟加载：只在搜索表单展开时显示
-				fieldProps: {
-					mode: 'multiple',  // 搜索时也支持多选
-					loading: searchExpanded && !rolesLoaded,  // 展开且未加载时显示 loading
-				},
-			},
-			detail: {
-				render: (value, record) => {
-					// 优先使用连表数据 roleList，fallback 到原始字段 roles
-					const roles = record.roleList || value || [];
-					
-					if (!Array.isArray(roles) || roles.length === 0) {
-						return <span style={{ color: '#999' }}>No roles assigned</span>;
-					}
-					
-					return (
-						<Space wrap>
-							{roles.map((item, index) => {
-								// 如果是对象（连表数据），取 name；否则显示原值（UUID）
-								const displayText = item?.name || item;
-								const key = item?.id || item;
-								return (
-									<Tag key={key || index} color='blue'>
-										{displayText}
-									</Tag>
-								);
-							})}
-						</Space>
-					);
-				},
-			},
-		},
 
-		// ban state
-		{
-			key: 'banned',
-			title: 'Ban State',
-			type: 'switch',
-			table: {
-				width: 100,
+			// 姓名和用户名（联合显示）
+			{
+				key: 'name',
+				title: 'Name',
+				type: 'text',
+				table: {
+					width: 120,
+					copyable: true,
+					ellipsis: true,
+					render: (name, record) => (
+						<div>
+							<div style={{ fontWeight: 500 }}>{name || 'N/A'}</div>
+							<div style={{ fontSize: 12, color: '#999' }}>@{record.username || 'N/A'}</div>
+						</div>
+					),
+				},
+				form: {
+					required: true,
+					placeholder: 'Enter name',
+					fieldProps: {
+						minLength: 2,
+						maxLength: 50,
+					},
+				},
+				search: {
+					enabled: true,
+					mode: 'like',
+				},
 			},
-			form: false,
-			search: {
-				enabled: true,
-				mode: 'exact',
+
+			// 邮箱
+			{
+				key: 'email',
+				title: 'Email',
+				type: 'text',
+				table: {
+					width: 150,
+					copyable: true,
+					ellipsis: true,
+				},
+				form: {
+					required: true,
+					placeholder: 'user@example.com',
+					rules: [
+						{
+							type: 'email',
+							message: 'Invalid email format',
+						},
+					],
+				},
+				search: {
+					enabled: true,
+					mode: 'like',
+				},
 			},
-		},
-		
-		// 积分
-		{
-			key: 'credits',
-			title: 'Credits',
-			type: 'number',
-			table: {
-				width: 100,
-				sorter: true,
-				render: (credits) => (
-					<span style={{ 
-						fontWeight: 500, 
-						color: credits > 0 ? '#52c41a' : '#999' 
-					}}>
-						{credits || 0}
-					</span>
-				),
+
+			// 用户名（仅表单）
+			{
+				key: 'username',
+				title: 'Username',
+				type: 'text',
+				table: false, // 已经在 name 列中显示
+				form: {
+					required: false,
+					placeholder: 'username',
+					rules: [
+						{
+							pattern: /^[a-zA-Z0-9_]{3,20}$/,
+							message: 'Username must be 3-20 characters (letters, numbers, underscores)',
+						},
+					],
+				},
+				detail: {
+					render: (value) => `@${value || 'N/A'}`,
+				},
 			},
-			form: {
-				disabled: true,
-				props: {
+
+			// Better Auth 角色 (单一角色: admin/user)
+			{
+				key: 'role',
+				title: 'Auth Role',
+				type: 'select',
+				options: [
+					{ label: 'Admin', value: 'admin', color: 'blue' },
+					{ label: 'User', value: 'user', color: 'default' },
+				],
+				table: {
+					width: 100,
+				},
+				form: {
+					required: true,
+				},
+				search: {
+					enabled: true,
+					mode: 'exact',
+				},
+			},
+
+			// 后台访问权限
+			{
+				key: 'isBackendAllowed',
+				title: 'Backend Access',
+				type: 'switch',
+				table: {
+					width: 140,
+				},
+				form: {
+					required: true,
+					fieldProps: {
+						checkedChildren: 'Allowed',
+						unCheckedChildren: 'Denied',
+					},
+				},
+				search: {
+					enabled: true,
+					mode: 'exact',
+				},
+			},
+
+			// RBAC 角色 (多角色数组)
+			{
+				key: 'roles',
+				title: 'RBAC Roles',
+				type: 'select',
+				options: roleOptions,
+				form: {
+					fieldProps: {
+						mode: 'multiple',
+					},
+					placeholder: 'Select roles',
+				},
+				table: {
+					width: 100,
+					ellipsis: true,
+					render: (value, record) => {
+						const roles = record.roleList || value || [];
+						if (!Array.isArray(roles) || roles.length === 0) {
+							return <span style={{ color: '#999' }}>No roles assigned</span>;
+						}
+						return (
+							<Space wrap>
+								{roles.map((item, index) => {
+									const displayText = item?.name || item;
+									const key = item?.id || item;
+									return (
+										<Tag
+											key={key || index}
+											color='blue'
+										>
+											{displayText}
+										</Tag>
+									);
+								})}
+							</Space>
+						);
+					},
+				},
+				search: {
+					enabled: true,
+					mode: 'in',
+					placeholder: 'Filter by roles',
+					lazyLoad: true,
+					fieldProps: {
+						mode: 'multiple',
+						loading: searchExpanded && !rolesLoaded,
+					},
+				},
+				detail: {
+					render: (value, record) => {
+						const roles = record.roleList || value || [];
+						if (!Array.isArray(roles) || roles.length === 0) {
+							return <span style={{ color: '#999' }}>No roles assigned</span>;
+						}
+						return (
+							<Space wrap>
+								{roles.map((item, index) => {
+									const displayText = item?.name || item;
+									const key = item?.id || item;
+									return (
+										<Tag
+											key={key || index}
+											color='blue'
+										>
+											{displayText}
+										</Tag>
+									);
+								})}
+							</Space>
+						);
+					},
+				},
+			},
+
+			// ban state
+			{
+				key: 'banned',
+				title: 'Ban State',
+				type: 'switch',
+				table: {
+					width: 100,
+				},
+				form: false,
+				search: {
+					enabled: true,
+					mode: 'exact',
+				},
+			},
+
+			// 积分
+			{
+				key: 'credits',
+				title: 'Credits',
+				type: 'number',
+				table: {
+					width: 100,
+					sorter: true,
+					render: (credits) => (
+						<span
+							style={{
+								fontWeight: 500,
+								color: credits > 0 ? '#52c41a' : '#999',
+							}}
+						>
+							{credits || 0}
+						</span>
+					),
+				},
+				form: {
+					disabled: true,
 					tooltip: 'Credits can only be adjusted through Credits Management',
 				},
+				search: false,
 			},
-			search: false,
-		},
-		
-		// 邮箱验证状态
-		{
-			key: 'emailVerified',
-			title: 'Email Verified',
-			type: 'switch',
-			table: {
-				width: 120,
-				trueText: 'Verified',
-				falseText: 'Unverified',
-			},
-			hideInTable: true, // 只在详情和表单中显示
-			form: {
-				required: true,
-			},
-			search: {
-				enabled: true,
-				mode: 'exact',
-				trueText: 'Verified',
-				falseText: 'Unverified',
-			},
-		},
-		
-		// 创建时间
-		{
-			key: 'createdAt',
-			title: 'Created At',
-			type: 'datetime',
-			table: {
-				width: 180,
-				sorter: true,
-				defaultSort: 'desc',
-			},
-			form: false,
-			search: false,
-		},
-		
-		// 最后登录时间
-		{
-			key: 'lastLoginAt',
-			title: 'Last Login',
-			type: 'datetime',
-			table: {
-				width: 180,
-				sorter: true,
-			},
-			hideInTable: true, // 只在详情中显示
-			form: false,
-			detail: {
-				render: (value) => value || 'Never',
-			},
-		},
-		
-		// 累计获得积分
-		{
-			key: 'totalCreditsEarned',
-			title: 'Total Credits Earned',
-			type: 'number',
-			table: false,
-			form: false,
-			hideInTable: true, // 只在详情中显示
-			detail: {
-				render: (value) => value || 0,
-			},
-		},
-		
-		// 累计使用积分
-		{
-			key: 'totalCreditsUsed',
-			title: 'Total Credits Used',
-			type: 'number',
-			table: false,
-			form: false,
-			hideInTable: true, // 只在详情中显示
-			detail: {
-				render: (value) => value || 0,
-			},
-		},
-		
-		// 当前套餐
-		{
-			key: 'currentPackageId',
-			title: 'Current Package',
-			type: 'text',
-			table: false,
-			form: false,
-			hideInTable: true, // 只在详情中显示
-			detail: {
-				render: (value) => value || 'None',
-			},
-		},
-		
-		// 套餐过期时间
-		{
-			key: 'packageExpireAt',
-			title: 'Package Expires At',
-			type: 'datetime',
-			table: false,
-			form: false,
-			hideInTable: true, // 只在详情中显示
-			detail: {
-				render: (value) => {
-					if (!value) return 'N/A';
-					try {
-						const date = value instanceof Date ? value : new Date(value);
-						return date.toLocaleString('zh-CN', {
-							year: 'numeric',
-							month: '2-digit',
-							day: '2-digit',
-							hour: '2-digit',
-							minute: '2-digit',
-							second: '2-digit',
-						});
-					} catch (e) {
-						return String(value);
-					}
+
+			// 邮箱验证状态
+			{
+				key: 'emailVerified',
+				title: 'Email Verified',
+				type: 'switch',
+				table: {
+					width: 120,
+				},
+				hideInTable: true,
+				form: {
+					required: true,
+					fieldProps: {
+						checkedChildren: 'Verified',
+						unCheckedChildren: 'Unverified',
+					},
+				},
+				search: {
+					enabled: true,
+					mode: 'exact',
 				},
 			},
-		},
-		
-		// 更新时间
-		{
-			key: 'updatedAt',
-			title: 'Updated At',
-			type: 'datetime',
-			table: false,
-			form: false,
-			hideInTable: true, // 只在详情中显示
-		},
-	], [roleOptions, rolesLoaded, searchExpanded]);  // ✅ 依赖动态选项和搜索展开状态
-	
-	// ============================================
-	// Actions 配置
-	// ============================================
-	const actions = {
-		getList,
-		update,
-		delete: deleteItem,
-	};
-	
+
+			// 创建时间
+			{
+				key: 'createdAt',
+				title: 'Created At',
+				type: 'datetime',
+				table: {
+					width: 180,
+					sorter: true,
+					defaultSort: 'desc',
+				},
+				form: false,
+				search: false,
+			},
+
+			// 最后登录时间
+			{
+				key: 'lastLoginAt',
+				title: 'Last Login',
+				type: 'datetime',
+				table: {
+					width: 180,
+					sorter: true,
+				},
+				hideInTable: true,
+				form: false,
+				detail: {
+					render: (value) => value || 'Never',
+				},
+			},
+
+			// 累计获得积分
+			{
+				key: 'totalCreditsEarned',
+				title: 'Total Credits Earned',
+				type: 'number',
+				table: false,
+				form: false,
+				hideInTable: true,
+				detail: {
+					render: (value) => value || 0,
+				},
+			},
+
+			// 累计使用积分
+			{
+				key: 'totalCreditsUsed',
+				title: 'Total Credits Used',
+				type: 'number',
+				table: false,
+				form: false,
+				hideInTable: true,
+				detail: {
+					render: (value) => value || 0,
+				},
+			},
+
+			// 当前套餐
+			{
+				key: 'currentPackageId',
+				title: 'Current Package',
+				type: 'text',
+				table: false,
+				form: false,
+				hideInTable: true,
+				detail: {
+					render: (value) => value || 'None',
+				},
+			},
+
+			// 套餐过期时间
+			{
+				key: 'packageExpireAt',
+				title: 'Package Expires At',
+				type: 'datetime',
+				table: false,
+				form: false,
+				hideInTable: true,
+				detail: {
+					render: (value) => {
+						if (!value) return 'N/A';
+						try {
+							const date = value instanceof Date ? value : new Date(value);
+							return date.toLocaleString('zh-CN', {
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit',
+								hour: '2-digit',
+								minute: '2-digit',
+								second: '2-digit',
+							});
+						} catch (e) {
+							return String(value);
+						}
+					},
+				},
+			},
+
+			// 更新时间
+			{
+				key: 'updatedAt',
+				title: 'Updated At',
+				type: 'datetime',
+				table: false,
+				form: false,
+				hideInTable: true,
+			},
+		],
+		[roleOptions, rolesLoaded, searchExpanded]
+	);
+
 	// ============================================
 	// 批量操作
 	// ============================================
@@ -680,26 +677,28 @@ export default function UsersManagementPage() {
 		{
 			key: 'verifyEmail',
 			label: 'Verify Email',
-			action: batchUpdate,
+			action: userActions.batchUpdateUsersAction,
 			params: { emailVerified: true },
 		},
 	];
-	
+
 	// ============================================
 	// 自定义详情头部
 	// ============================================
 	const renderDetailHeader = (record) => (
 		<div style={{ textAlign: 'center', marginBottom: 24 }}>
-			<Avatar src={record.image} size={80} icon={<UserOutlined />}>
+			<Avatar
+				src={record.image}
+				size={80}
+				icon={<UserOutlined />}
+			>
 				{record.name?.[0]?.toUpperCase()}
 			</Avatar>
-			<div style={{ marginTop: 12, fontSize: 18, fontWeight: 500 }}>
-				{record.name || 'N/A'}
-			</div>
+			<div style={{ marginTop: 12, fontSize: 18, fontWeight: 500 }}>{record.name || 'N/A'}</div>
 			<div style={{ color: '#999' }}>@{record.username || 'N/A'}</div>
 		</div>
 	);
-	
+
 	// ============================================
 	// 自定义行操作
 	// ============================================
@@ -728,7 +727,7 @@ export default function UsersManagementPage() {
 		},
 		{
 			key: 'toggle-ban',
-			text: (record) => record.banned ? 'Unban User' : 'Ban User',
+			text: (record) => (record.banned ? 'Unban User' : 'Ban User'),
 			icon: <StopOutlined />,
 			danger: (record) => !record.banned,
 			showText: true,
@@ -736,7 +735,7 @@ export default function UsersManagementPage() {
 			// 使用新的 confirm 配置，支持动态内容
 			confirm: (record) => ({
 				title: record.banned ? 'Unban User' : 'Ban User',
-				description: record.banned 
+				description: record.banned
 					? `Are you sure you want to unban "${record.name || record.email}"? They will be able to sign in again.`
 					: `Are you sure you want to ban "${record.name || record.email}"? This will revoke all active sessions and prevent sign-in.`,
 				okText: record.banned ? 'Unban' : 'Ban',
@@ -755,40 +754,38 @@ export default function UsersManagementPage() {
 		<>
 			<SmartCrudPage
 				fieldsConfig={fieldsConfig}
-				actions={actions}
+				actions={{
+					getList: userActions.getUserListAction,
+					getDetail: userActions.getUserDetailAction,
+					update: userActions.updateUserAction,
+					delete: userActions.deleteUserAction,
+				}}
 				title='User Management'
-				rowKey={(record) => record.id || record._id}
-				
+				rowKey='id'
 				// 批量操作
 				batchActions={batchActions}
-				
 				// 自定义详情头部
 				renderDetailHeader={renderDetailHeader}
-				
 				// 自定义行操作
 				customRowActions={customRowActions}
-				
 				// ✅ 监听搜索表单展开状态
 				onSearchExpandChange={setSearchExpanded}
-				
 				// 功能开关
-				enableCreate={false}  // ✅ 关闭默认创建，使用自定义模态框
+				enableCreate={false} // ✅ 关闭默认创建，使用自定义模态框
 				enableDetail={true}
 				enableEdit={true}
 				enableDelete={true}
-				
 				// 自定义工具栏按钮
 				customToolbarButtons={[
 					<Button
-						key="create"
-						type="primary"
+						key='create'
+						type='primary'
 						icon={<PlusOutlined />}
 						onClick={() => setCreateModalVisible(true)}
 					>
 						Create User
 					</Button>,
 				]}
-				
 				// 表格配置
 				tableProps={{
 					scroll: { x: 1400 },
@@ -796,19 +793,17 @@ export default function UsersManagementPage() {
 						showTotal: (total) => `Total ${total} users`,
 					},
 				}}
-				
 				// 表单配置
 				formProps={{
 					width: 600,
 				}}
-				
 				// 刷新触发器
 				refreshTrigger={refreshTrigger}
 			/>
 
 			{/* Create User Modal */}
 			<Modal
-				title="Create User"
+				title='Create User'
 				open={createModalVisible}
 				onOk={() => createForm.submit()}
 				onCancel={() => {
@@ -820,80 +815,86 @@ export default function UsersManagementPage() {
 			>
 				<Form
 					form={createForm}
-					layout="vertical"
+					layout='vertical'
 					onFinish={handleCreateUser}
 				>
 					<Form.Item
-						name="email"
-						label="Email"
+						name='email'
+						label='Email'
 						rules={[
 							{ required: true, message: 'Please enter email' },
 							{ type: 'email', message: 'Invalid email format' },
 						]}
 					>
-						<Input placeholder="user@example.com" />
+						<Input placeholder='user@example.com' />
 					</Form.Item>
 
 					<Form.Item
-						name="password"
-						label="Password"
+						name='password'
+						label='Password'
 						rules={[
 							{ required: true, message: 'Please enter password' },
 							{ min: 8, message: 'Password must be at least 8 characters' },
 						]}
 					>
-						<Input.Password placeholder="Enter password" />
+						<Input.Password placeholder='Enter password' />
 					</Form.Item>
 
 					<Form.Item
-						name="name"
-						label="Name"
+						name='name'
+						label='Name'
 						rules={[{ required: true, message: 'Please enter name' }]}
 					>
-						<Input placeholder="Full name" />
+						<Input placeholder='Full name' />
 					</Form.Item>
 
 					<Form.Item
-						name="username"
-						label="Username"
+						name='username'
+						label='Username'
 					>
-						<Input placeholder="username" />
+						<Input placeholder='username' />
 					</Form.Item>
 
 					<Form.Item
-						name="role"
-						label="System Role"
-						initialValue="user"
+						name='role'
+						label='System Role'
+						initialValue='user'
 						rules={[{ required: true, message: 'Please select role' }]}
 					>
 						<Select>
-							<Option value="user">User</Option>
-							<Option value="admin">Admin</Option>
+							<Option value='user'>User</Option>
+							<Option value='admin'>Admin</Option>
 						</Select>
 					</Form.Item>
 
 					<Form.Item
-						name="isBackendAllowed"
-						label="Backend Access"
-						valuePropName="checked"
+						name='isBackendAllowed'
+						label='Backend Access'
+						valuePropName='checked'
 						initialValue={false}
 					>
-						<Switch checkedChildren="Allowed" unCheckedChildren="Denied" />
+						<Switch
+							checkedChildren='Allowed'
+							unCheckedChildren='Denied'
+						/>
 					</Form.Item>
 
 					<Form.Item
-						name="credits"
-						label="Initial Credits"
+						name='credits'
+						label='Initial Credits'
 						initialValue={0}
 					>
-						<InputNumber min={0} style={{ width: '100%' }} />
+						<InputNumber
+							min={0}
+							style={{ width: '100%' }}
+						/>
 					</Form.Item>
 				</Form>
 			</Modal>
 
 			{/* Reset Password Modal */}
 			<Modal
-				title="Reset Password"
+				title='Reset Password'
 				open={passwordModalVisible}
 				onOk={() => passwordForm.submit()}
 				onCancel={() => {
@@ -905,18 +906,18 @@ export default function UsersManagementPage() {
 			>
 				<Form
 					form={passwordForm}
-					layout="vertical"
+					layout='vertical'
 					onFinish={handleResetPassword}
 				>
 					<Form.Item
-						name="password"
-						label="New Password"
+						name='password'
+						label='New Password'
 						rules={[
 							{ required: true, message: 'Please enter new password' },
 							{ min: 8, message: 'Password must be at least 8 characters' },
 						]}
 					>
-						<Input.Password placeholder="Enter new password" />
+						<Input.Password placeholder='Enter new password' />
 					</Form.Item>
 				</Form>
 			</Modal>
@@ -932,9 +933,7 @@ export default function UsersManagementPage() {
 				okButtonProps={{ disabled: !rolesLoaded || roleLoading }}
 			>
 				{!rolesLoaded || roleLoading ? (
-					<div style={{ textAlign: 'left' }}>
-						{!rolesLoaded ? 'Loading available roles...' : 'Loading user roles...'}
-					</div>
+					<div style={{ textAlign: 'left' }}>{!rolesLoaded ? 'Loading available roles...' : 'Loading user roles...'}</div>
 				) : roleTree.length > 0 ? (
 					<Tree
 						checkable
@@ -950,4 +949,3 @@ export default function UsersManagementPage() {
 		</>
 	);
 }
-

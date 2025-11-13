@@ -248,11 +248,13 @@ export async function getUserList({ page = 1, pageSize = 20, filters = {}, sort 
 
 	// 处理特定字段的搜索
 	if (filters.email) {
-		query.email = { $regex: filters.email, $options: 'i' };
+		// ✅ 如果已经是对象（如 { $regex: ..., $options: 'i' }），直接使用
+		query.email = typeof filters.email === 'object' ? filters.email : { $regex: filters.email, $options: 'i' };
 	}
 
 	if (filters.name) {
-		query.name = { $regex: filters.name, $options: 'i' };
+		// ✅ 如果已经是对象（如 { $regex: ..., $options: 'i' }），直接使用
+		query.name = typeof filters.name === 'object' ? filters.name : { $regex: filters.name, $options: 'i' };
 	}
 
 	if (filters.role) {
