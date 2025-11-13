@@ -119,6 +119,17 @@ export const postCrudConfig = {
 			search: false,
 			rules: [{ max: 500, message: 'Description max length: 500' }],
 		},
+
+		// 富文本正文
+		{
+			key: 'content',
+			type: 'markdown',
+			title: 'Content',
+			required: false,
+			hideInTable: true, // 不在表格显示
+			search: false,
+			rules: [{ max: 500, message: 'Content max length: 500' }],
+		},
 	],
 
 	/**

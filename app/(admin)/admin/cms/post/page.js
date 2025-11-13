@@ -82,7 +82,7 @@ export default function PostManagementPage() {
 			// 表格配置
 			tableProps={{
 				pagination: {
-					defaultPageSize: 20, // 使用 defaultPageSize 而不是 pageSize
+					defaultPageSize: 10, // 使用 defaultPageSize 而不是 pageSize
 					showSizeChanger: true,
 					pageSizeOptions: [10, 20, 50, 100], // 可选的页面大小
 				},

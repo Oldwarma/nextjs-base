@@ -67,6 +67,8 @@ import DynamicFormFields from '@/components/admin/dynamic-form-fields';
 export default function SmartCrudPage({
 	fieldsConfig,
 	actions,
+	dataSource, // 可选：直接传入数据（不使用 request）
+	loading, // 可选：加载状态
 	title = 'Data Management',
 	rowKey = '_id',
 	tableProps = {},
@@ -179,6 +181,14 @@ export default function SmartCrudPage({
 
 	// 添加操作列
 	const columnsWithActions = useMemo(() => {
+		// 检查是否有任何操作按钮需要显示
+		const hasAnyAction = enableDetail || enableEdit || enableDelete || (customRowActions && customRowActions.length > 0);
+		
+		// 如果没有任何操作，不添加 Actions 列
+		if (!hasAnyAction) {
+			return tableColumns;
+		}
+		
 		return [
 			...tableColumns,
 			{
@@ -611,12 +621,20 @@ export default function SmartCrudPage({
 			<ProTable
 				columns={columnsWithActions}
 				actionRef={actionRef}
-				request={request}
+				// 如果提供了 dataSource，使用静态数据模式；否则使用 request 模式
+				{...(dataSource ? { dataSource } : { request })}
+				loading={loading} // 加载状态
 				rowKey={rowKey}
-				search={searchConfig}
+				search={dataSource ? false : searchConfig} // 静态数据模式禁用搜索
 				dateFormatter='string'
 				headerTitle={title}
-				pagination={{
+				pagination={dataSource ? {
+					defaultPageSize: 20,
+					showSizeChanger: true,
+					showTotal: (total) => `Total ${total} items`,
+					pageSizeOptions: [10, 20, 50, 100],
+					...userPagination,
+				} : {
 					defaultPageSize: 20, // 使用 defaultPageSize 让组件自己管理状态
 					showSizeChanger: true,
 					showTotal: (total) => `Total ${total} items`,
