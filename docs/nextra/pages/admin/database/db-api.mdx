@@ -1,0 +1,694 @@
+# DB API 数据库操作指南
+
+> 统一的数据库操作接口,简洁高效
+
+**DB API** 是一个统一的数据库操作接口层,参考 VK Framework 设计理念,提供简洁、一致的 API,减少重复代码。
+
+---
+
+## 🎯 核心特点
+
+- **统一接口**: 所有数据库操作使用一致的参数命名和返回格式
+- **自动时间戳**: 增改操作自动添加 `createdAt` 和 `updatedAt`
+- **ObjectId 处理**: 自动处理 MongoDB ObjectId 与字符串的转换
+- **类型安全**: 完善的参数验证和错误提示
+- **兼容原生**: 完全兼容 MongoDB 原生查询语法
+
+---
+
+## 🆚 DB API vs BaseDAO
+
+| 特性 | DB API | BaseDAO |
+|------|--------|---------|
+| **适用场景** | 简单 CRUD,统计查询 | 复杂业务,权限控制 |
+| **配置方式** | 无需配置,直接调用 | 需要配置文件 |
+| **权限控制** | 手动检查 | 自动检查 |
+| **数据验证** | 手动验证 | 自动验证 |
+| **生命周期钩子** | 无 | 有 |
+| **软删除** | 不支持 | 支持 |
+
+**推荐使用策略**:
+
+- **DB API**: 前端 Server Actions,简单查询和统计
+- **BaseDAO**: 后台管理的标准 CRUD 操作
+
+---
+
+## 🚀 快速开始
+
+### 安装
+
+DB API 已集成在项目中,无需额外安装。
+
+```javascript
+// 引入方式
+import { add, getOne, getPage, count } from '@/lib/database/db-api';
+```
+
+### 基础示例
+
+```javascript
+'use server';
+
+import { add, getOne, update, del } from '@/lib/database/db-api';
+
+// 创建用户
+export async function createUserAction(userData) {
+  try {
+    const userId = await add({
+      dbName: 'users',
+      dataJson: {
+        name: userData.name,
+        email: userData.email,
+        role: 'user',
+      },
+    });
+
+    return { success: true, data: { userId } };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// 查询用户
+export async function getUserAction(email) {
+  const user = await getOne({
+    dbName: 'users',
+    whereJson: { email },
+  });
+
+  return { success: true, data: user };
+}
+
+// 更新用户
+export async function updateUserAction(userId, data) {
+  await update({
+    dbName: 'users',
+    _id: userId,
+    dataJson: data,
+  });
+
+  return { success: true };
+}
+
+// 删除用户
+export async function deleteUserAction(userId) {
+  await del({
+    dbName: 'users',
+    _id: userId,
+  });
+
+  return { success: true };
+}
+```
+
+---
+
+## 📚 API 参考
+
+### 增 (Create)
+
+#### add - 单条记录
+
+```javascript
+const userId = await add({
+  dbName: 'users',
+  dataJson: {
+    name: 'John Doe',
+    email: 'john@example.com',
+  },
+  cancelAddTime: false,  // 是否取消自动时间戳(可选)
+});
+
+// 返回: 新记录的 _id 字符串
+```
+
+#### adds - 批量添加
+
+```javascript
+const ids = await adds({
+  dbName: 'users',
+  dataJson: [
+    { name: 'Alice', email: 'alice@example.com' },
+    { name: 'Bob', email: 'bob@example.com' },
+  ],
+});
+
+// 返回: _id 字符串数组
+```
+
+---
+
+### 删 (Delete)
+
+#### del - 根据 _id 删除
+
+```javascript
+const count = await del({
+  dbName: 'users',
+  _id: '507f1f77bcf86cd799439011',
+});
+
+// 返回: 删除的记录数(0 或 1)
+```
+
+#### remove - 根据条件删除单条
+
+```javascript
+const count = await remove({
+  dbName: 'users',
+  whereJson: { email: 'john@example.com' },
+});
+```
+
+#### delMany - 批量删除
+
+```javascript
+const count = await delMany({
+  dbName: 'users',
+  whereJson: {
+    createdAt: { $lt: new Date('2024-01-01') },
+  },
+});
+
+// 返回: 删除的记录数
+```
+
+---
+
+### 改 (Update)
+
+#### update - 根据 _id 修改
+
+```javascript
+const count = await update({
+  dbName: 'users',
+  _id: 'user-id',
+  dataJson: {
+    name: 'John Updated',
+    age: 26,
+  },
+  cancelUpdateTime: false,  // 是否取消自动更新时间戳(可选)
+});
+
+// 返回: 修改的记录数
+```
+
+#### updateOne - 根据条件修改单条
+
+```javascript
+const count = await updateOne({
+  dbName: 'users',
+  whereJson: { email: 'john@example.com' },
+  dataJson: {
+    emailVerified: true,
+  },
+});
+```
+
+#### updateMany - 批量修改
+
+```javascript
+const count = await updateMany({
+  dbName: 'users',
+  whereJson: {
+    role: 'trial',
+    createdAt: { $lt: new Date('2024-01-01') },
+  },
+  dataJson: {
+    role: 'user',
+    upgraded: true,
+  },
+});
+
+// 返回: 修改的记录数
+```
+
+#### inc - 字段自增/自减
+
+```javascript
+// 增加积分
+await inc({
+  dbName: 'users',
+  whereJson: { _id: 'user-id' },
+  fieldName: 'credits',
+  num: 100,
+});
+
+// 减少库存
+await inc({
+  dbName: 'products',
+  whereJson: { sku: 'PROD001' },
+  fieldName: 'stock',
+  num: -1,
+});
+```
+
+#### push / pull - 数组操作
+
+```javascript
+// 添加元素
+await push({
+  dbName: 'posts',
+  whereJson: { _id: 'post-id' },
+  fieldName: 'tags',
+  value: 'javascript',
+});
+
+// 删除元素
+await pull({
+  dbName: 'posts',
+  whereJson: { _id: 'post-id' },
+  fieldName: 'tags',
+  value: 'outdated',
+});
+```
+
+---
+
+### 查 (Read)
+
+#### findById - 根据 _id 查询
+
+```javascript
+const user = await findById({
+  dbName: 'users',
+  _id: '507f1f77bcf86cd799439011',
+});
+
+// 返回: 记录对象或 null
+```
+
+#### getOne - 查询单条记录
+
+```javascript
+const user = await getOne({
+  dbName: 'users',
+  whereJson: { email: 'john@example.com' },
+  fieldJson: { name: 1, email: 1 },  // 只返回指定字段(可选)
+  sortJson: { createdAt: -1 },  // 排序(可选)
+});
+
+// 返回: 记录对象或 null
+```
+
+#### getList - 查询列表(不分页)
+
+```javascript
+const users = await getList({
+  dbName: 'users',
+  whereJson: { role: 'admin' },
+  sortJson: { createdAt: -1 },
+  limit: 10,  // 限制条数(可选)
+});
+
+// 返回: 记录数组
+```
+
+#### getPage - 分页查询
+
+```javascript
+const result = await getPage({
+  dbName: 'users',
+  whereJson: { role: 'user' },
+  sortJson: { createdAt: -1 },
+  pageIndex: 1,  // 页码(从 1 开始)
+  pageSize: 20,  // 每页条数
+});
+
+// 返回:
+// {
+//   code: 0,
+//   msg: 'ok',
+//   rows: [...],         // 当前页数据
+//   total: 100,          // 总记录数
+//   pageIndex: 1,
+//   pageSize: 20,
+//   totalPages: 5,
+//   hasNext: true,
+//   hasPrev: false,
+// }
+```
+
+#### getPageWithLookup - 连表分页查询
+
+```javascript
+const result = await getPageWithLookup({
+  dbName: 'orders',
+  whereJson: { status: 'completed' },
+  foreignDB: [
+    {
+      from: 'users',          // 关联表
+      localField: 'userId',   // 本地字段
+      foreignField: '_id',    // 外键字段
+      as: 'userInfo',         // 结果字段名
+      single: true,           // 只取第一个匹配项
+    },
+  ],
+  pageIndex: 1,
+  pageSize: 20,
+});
+
+// 返回数据包含关联信息
+// order.userInfo = { _id, name, email }
+```
+
+---
+
+### 统计
+
+#### count - 统计数量
+
+```javascript
+// 统计总用户数
+const total = await count({
+  dbName: 'users',
+});
+
+// 条件统计
+const adminCount = await count({
+  dbName: 'users',
+  whereJson: { role: 'admin' },
+});
+
+// 返回: 数字
+```
+
+#### sum - 求和
+
+```javascript
+const totalCredits = await sum({
+  dbName: 'users',
+  fieldName: 'credits',
+  whereJson: { role: 'user' },
+});
+
+// 返回: 数字
+```
+
+#### max / min - 最大值/最小值
+
+```javascript
+const maxPrice = await max({
+  dbName: 'products',
+  fieldName: 'price',
+});
+
+const minPrice = await min({
+  dbName: 'products',
+  fieldName: 'price',
+  whereJson: { status: 'active' },
+});
+```
+
+#### avg - 平均值
+
+```javascript
+const avgAge = await avg({
+  dbName: 'users',
+  fieldName: 'age',
+});
+```
+
+#### distinct - 去重查询
+
+```javascript
+const categories = await distinct({
+  dbName: 'posts',
+  fieldName: 'category',
+});
+
+// 返回: ['tech', 'lifestyle', 'business']
+```
+
+#### sample - 随机取 N 条
+
+```javascript
+const randomUsers = await sample({
+  dbName: 'users',
+  size: 5,
+  whereJson: { status: 'active' },
+});
+
+// 返回: 随机的 5 条记录数组
+```
+
+---
+
+## 💡 实战示例
+
+### 示例 1: 用户注册
+
+```javascript
+'use server';
+
+import { add, exists } from '@/lib/database/db-api';
+
+export async function registerAction(userData) {
+  try {
+    // 1. 检查邮箱是否已存在
+    const emailExists = await exists({
+      dbName: 'users',
+      whereJson: { email: userData.email },
+    });
+
+    if (emailExists) {
+      return { success: false, error: 'Email already registered' };
+    }
+
+    // 2. 创建用户
+    const userId = await add({
+      dbName: 'users',
+      dataJson: {
+        username: userData.username,
+        email: userData.email,
+        password: await hashPassword(userData.password),
+        role: 'user',
+        credits: 0,
+      },
+    });
+
+    return { success: true, data: { userId } };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+```
+
+### 示例 2: 积分充值
+
+```javascript
+'use server';
+
+import { getOne, inc, add } from '@/lib/database/db-api';
+
+export async function rechargeCreditsAction(packageId) {
+  const session = await auth.api.getSession();
+  
+  try {
+    // 1. 获取套餐信息
+    const package = await getOne({
+      dbName: 'packages',
+      whereJson: { _id: packageId, enabled: true },
+    });
+
+    if (!package) {
+      return { success: false, error: 'Package not found' };
+    }
+
+    // 2. 增加用户积分
+    await inc({
+      dbName: 'users',
+      whereJson: { _id: session.user.id },
+      fieldName: 'credits',
+      num: package.credits,
+    });
+
+    // 3. 记录交易
+    await add({
+      dbName: 'credit_transactions',
+      dataJson: {
+        userId: session.user.id,
+        type: 'recharge',
+        amount: package.credits,
+        packageId: package._id,
+        price: package.price,
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+```
+
+### 示例 3: 数据统计面板
+
+```javascript
+'use server';
+
+import { count, sum, avg, getList } from '@/lib/database/db-api';
+
+export async function getDashboardStatsAction() {
+  try {
+    const today = new Date(new Date().setHours(0, 0, 0, 0));
+
+    // 并行查询
+    const [
+      totalUsers,
+      todayNewUsers,
+      totalRevenue,
+      avgOrderAmount,
+      recentOrders,
+    ] = await Promise.all([
+      count({ dbName: 'users' }),
+      count({
+        dbName: 'users',
+        whereJson: { createdAt: { $gte: today } },
+      }),
+      sum({
+        dbName: 'orders',
+        fieldName: 'amount',
+        whereJson: { status: 'paid' },
+      }),
+      avg({
+        dbName: 'orders',
+        fieldName: 'amount',
+        whereJson: { status: 'paid' },
+      }),
+      getList({
+        dbName: 'orders',
+        whereJson: { status: 'paid' },
+        sortJson: { createdAt: -1 },
+        limit: 10,
+      }),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        totalUsers,
+        todayNewUsers,
+        totalRevenue,
+        avgOrderAmount,
+        recentOrders,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+```
+
+---
+
+## ✅ 最佳实践
+
+### 1. 错误处理
+
+```javascript
+// ✅ 始终使用 try-catch
+export async function myAction() {
+  try {
+    const result = await getOne({
+      dbName: 'users',
+      whereJson: { email: 'test@example.com' },
+    });
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('myAction error:', error);
+    return { success: false, error: error.message };
+  }
+}
+```
+
+### 2. 参数验证
+
+```javascript
+// ✅ 在调用前验证参数
+export async function getUserAction(userId) {
+  if (!userId || typeof userId !== 'string') {
+    return { success: false, error: 'Invalid user ID' };
+  }
+  
+  // 继续操作...
+}
+```
+
+### 3. 查询优化
+
+```javascript
+// ✅ 使用索引字段查询
+const user = await getOne({
+  dbName: 'users',
+  whereJson: { email: 'john@example.com' }, // email 有索引
+});
+
+// ✅ 限制返回字段
+const users = await getList({
+  dbName: 'users',
+  fieldJson: { name: 1, email: 1 }, // 只返回需要的字段
+});
+```
+
+### 4. 批量操作
+
+```javascript
+// ✅ 使用批量操作而非循环
+await updateMany({
+  dbName: 'users',
+  whereJson: { _id: { $in: userIds } },
+  dataJson: { status: 'active' },
+});
+
+// ❌ 避免循环调用
+for (const userId of userIds) {
+  await update({ dbName: 'users', _id: userId, dataJson: { status: 'active' } });
+}
+```
+
+### 5. 利用自动时间戳
+
+```javascript
+// ✅ 自动添加 createdAt 和 updatedAt
+const userId = await add({
+  dbName: 'users',
+  dataJson: { name: 'John' },
+});
+
+// ⚠️ 特殊情况: 不需要时间戳
+const configId = await add({
+  dbName: 'configs',
+  dataJson: { key: 'value' },
+  cancelAddTime: true, // 取消时间戳
+});
+```
+
+---
+
+## 📖 相关文档
+
+- [BaseDAO 指南](/admin/database/base-dao) - 复杂业务的 CRUD 方案
+- [DB API vs BaseDAO](/admin/database/comparison) - 详细对比
+- [连表查询](/admin/database/foreign-db) - foreignDB 详解
+- [聚合查询](/admin/database/aggregation) - aggregate 详解
+
+---
+
+## 💭 总结
+
+DB API 的核心优势:
+
+- ✅ 统一的接口命名
+- ✅ 自动时间戳管理
+- ✅ ObjectId 自动转换
+- ✅ 完全兼容 MongoDB
+- ✅ 丰富的统计方法
+
+**使用建议**:
+
+- 简单场景用 DB API
+- 复杂业务用 BaseDAO
+- 两者混合使用,发挥各自优势
+

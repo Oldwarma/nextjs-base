@@ -38,7 +38,7 @@ export async function generateMetadata({ params }) {
 	const { locale } = await params;
 
 	return {
-		title: 'Jimeng SaaS - AI Image Generation',
+		title: 'NextJS Base - AI Image Generation',
 		description: 'AI-powered image generation platform',
 		alternates: {
 			canonical: `/${locale}`,

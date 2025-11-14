@@ -19,7 +19,7 @@ export default function AdminDashboard() {
 					Dashboard Overview
 				</h1>
 				<p style={{ color: '#666', marginTop: 8 }}>
-					Welcome to Jimeng SaaS Admin Panel
+					Welcome to NextJS Base Admin Panel
 				</p>
 			</div>
 

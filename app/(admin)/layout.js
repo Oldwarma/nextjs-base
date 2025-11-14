@@ -31,8 +31,8 @@ const harmonyOS = localFont({
 });
 
 export const metadata = {
-	title: 'Admin Panel - Jimeng SaaS',
-	description: 'Administration panel for Jimeng SaaS',
+	title: 'Admin Panel - NextJS Base',
+	description: 'Administration panel for NextJS Base',
 };
 
 /**
