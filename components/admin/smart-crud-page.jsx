@@ -36,6 +36,31 @@ import { buildSortCondition } from '@/lib/crud/search-transformer';
 import DynamicFormFields from '@/components/admin/dynamic-form-fields';
 
 /**
+ * 清理表单数据中的空 array 项
+ * @param {Object} values - 表单数据
+ * @returns {Object} 清理后的数据
+ */
+function cleanArrayFields(values) {
+	const cleaned = { ...values };
+	
+	Object.keys(cleaned).forEach(key => {
+		const value = cleaned[key];
+		// 如果是数组，过滤掉空值、空字符串和只有空格的项
+		if (Array.isArray(value)) {
+			cleaned[key] = value.filter(item => {
+				if (item === null || item === undefined) return false;
+				if (typeof item === 'string') {
+					return item.trim().length > 0;
+				}
+				return true;
+			});
+		}
+	});
+	
+	return cleaned;
+}
+
+/**
  * SmartCrudPage 组件参数
  *
  * @param {Array} fieldsConfig - 统一的字段配置 (核心)
@@ -499,12 +524,12 @@ export default function SmartCrudPage({
 			const result = await actions.delete(id);
 
 			if (result.success) {
-			messageApi.success(result.message || 'Deleted successfully');
-				actionRef.current?.reload();
-			} else {
-				console.error('Delete failed:', result.error);
-				messageApi.error(result.error || 'Failed to delete');
-			}
+		messageApi.success(result.message || 'Deleted successfully');
+			actionRef.current?.reload();
+		} else {
+			// 业务失败，只显示用户友好的提示，不触发 Next.js 错误覆盖层
+			messageApi.error(result.error || 'Failed to delete');
+		}
 		} catch (error) {
 			console.error('Delete error:', error);
 			messageApi.error(error.message || 'An unexpected error occurred');
@@ -514,12 +539,15 @@ export default function SmartCrudPage({
 	// 保存（编辑）
 	const handleSave = async (values) => {
 		try {
+			// 清理 array 类型字段的空值
+			const cleanedValues = cleanArrayFields(values);
+			
 			// 编辑前处理（可以转换数据格式）
-			let processedValues = values;
+			let processedValues = cleanedValues;
 			if (beforeCreate) {
-				const processed = await beforeCreate(values);
+				const processed = await beforeCreate(cleanedValues);
 				if (processed === false) return false;
-				processedValues = processed || values;
+				processedValues = processed || cleanedValues;
 			}
 			
 			// 获取 row 的 key（支持 string 或 function）
@@ -551,15 +579,18 @@ export default function SmartCrudPage({
 		return false;
 	}
 
+		// 清理 array 类型字段的空值
+		let cleanedValues = cleanArrayFields(values);
+
 		// 创建前回调
 		if (beforeCreate) {
-			const processed = await beforeCreate(values);
+			const processed = await beforeCreate(cleanedValues);
 			if (processed === false) return false;
-			values = processed || values;
+			cleanedValues = processed || cleanedValues;
 		}
 
 		try {
-			const result = await actions.create(values);
+			const result = await actions.create(cleanedValues);
 
 			if (result.success) {
 		messageApi.success(result.message || 'Created successfully');

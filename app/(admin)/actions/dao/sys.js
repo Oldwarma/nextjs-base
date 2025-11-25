@@ -863,6 +863,60 @@ export async function checkUserHasActionPermission(userId, actionPath) {
 }
 
 /**
+ * 检查用户是否有 API 访问权限
+ * @param {String} userId - 用户ID
+ * @param {String} apiPath - API 路径 (如 '/api/v1/users/123')
+ * @returns {Promise<Boolean>}
+ */
+export async function checkUserHasApiPermission(userId, apiPath) {
+	const userPermissionIds = await getUserPermissionIds(userId);
+
+	// 超级权限
+	if (userPermissionIds.includes('*')) {
+		return true;
+	}
+
+	if (userPermissionIds.length === 0) {
+		return false;
+	}
+
+	// 获取所有权限的 apis 配置
+	const apis = await getApisByPermissionIds(userPermissionIds);
+
+	if (apis.length === 0) {
+		return false;
+	}
+
+	// 检查是否匹配（复用通配符匹配逻辑）
+	return matchActionPath(apiPath, apis);
+}
+
+/**
+ * 根据权限ID获取 API 配置
+ * @param {Array<String>} permissionIds
+ * @returns {Promise<Array<String>>}
+ */
+async function getApisByPermissionIds(permissionIds) {
+	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
+	const permissions = await collection
+		.find({
+			id: { $in: permissionIds },
+			enable: true,
+			apis: { $exists: true, $ne: null, $not: { $size: 0 } },
+		})
+		.toArray();
+
+	const allApis = [];
+	permissions.forEach((perm) => {
+		if (Array.isArray(perm.apis)) {
+			allApis.push(...perm.apis);
+		}
+	});
+
+	return [...new Set(allApis)];
+}
+
+/**
  * 匹配action路径（支持通配符）
  * @param {String} actionPath - 待检查的action路径
  * @param {Array<String>} patterns - 权限配置的路径模式数组
@@ -889,16 +943,24 @@ function matchActionPath(actionPath, patterns) {
 
 /**
  * 将通配符模式转换为正则表达式
- * @param {String} pattern - 通配符模式，如 '/admin/actions/user/*'
+ * @param {String} pattern - 通配符模式，如 '/admin/actions/user/ *' 或 '** /create*Action'
  * @returns {RegExp} 正则表达式
  */
 function patternToRegex(pattern) {
-	// 转义特殊字符，但保留 * 和 **
+	// 转义特殊字符，但保留 * 和 * *
 	let regexStr = pattern
 		.replace(/[.+?^${}()|[\]\\]/g, '\\$&') // 转义特殊字符
-		.replace(/\*\*/g, '__DOUBLE_STAR__') // 临时替换 **
-		.replace(/\*/g, '[^/]*') // * 匹配单层路径
-		.replace(/__DOUBLE_STAR__/g, '.*'); // ** 匹配任意层级
+		.replace(/\*\*/g, '__DOUBLE_STAR__') // 临时替换 * *
+		.replace(/\*/g, '[^/]*') // * 匹配单层路径（不包含 /）
+		.replace(/__DOUBLE_STAR__/g, '.*'); // * * 匹配任意层级（包括空）
+	
+	// 特殊处理：如果模式以 * * / 开头，让它也能匹配没有路径前缀的情况
+	// 例如：* * /createAction 应该匹配 createAction（没有前导路径）
+	// 注意：此时 regexStr 还没有添加 ^ 前缀，所以检查 .* / 而不是 ^ .* /
+	if (regexStr.startsWith('.*/')) {
+		// 将 .* / 改为 (.*/ )?，表示前面的路径部分是可选的
+		regexStr = '(.*/)?' + regexStr.substring(3);
+	}
 
 	return new RegExp(`^${regexStr}$`);
 }

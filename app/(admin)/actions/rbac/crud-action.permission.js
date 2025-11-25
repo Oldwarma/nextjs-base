@@ -29,8 +29,8 @@ const permissionConfig = {
 	 * BaseDAO 字段配置
 	 */
 	fields: {
-		creatable: ['name', 'parent_id', 'remark', 'enable', 'sort', 'crud_category', 'level', 'actions'],
-		updatable: ['name', 'parent_id', 'remark', 'enable', 'sort', 'crud_category', 'level', 'actions'],
+		creatable: ['name', 'parent_id', 'remark', 'enable', 'sort', 'crud_category', 'level', 'actions', 'apis'],
+		updatable: ['name', 'parent_id', 'remark', 'enable', 'sort', 'crud_category', 'level', 'actions', 'apis'],
 		searchable: ['name', 'remark'],
 	},
 
@@ -124,13 +124,32 @@ const permissionConfig = {
 				if (!value || !Array.isArray(value)) return true;
 				const uniqueValues = new Set(value);
 				if (uniqueValues.size !== value.length) {
-					throw new Error('Duplicate action paths detected');
+					throw new Error('Duplicate action patterns detected');
+				}
+				for (const pattern of value) {
+					if (typeof pattern !== 'string') throw new Error('Action pattern must be a string');
+					if (pattern.includes(' ')) throw new Error(`Action pattern cannot contain spaces: ${pattern}`);
+					if (pattern.length > 200) throw new Error(`Action pattern too long (max 200 chars): ${pattern}`);
+				}
+				return true;
+			},
+		},
+		apis: {
+			required: false,
+			type: 'array',
+			maxLength: 50,
+			itemType: 'string',
+			custom: async (value) => {
+				if (!value || !Array.isArray(value)) return true;
+				const uniqueValues = new Set(value);
+				if (uniqueValues.size !== value.length) {
+					throw new Error('Duplicate API paths detected');
 				}
 				for (const path of value) {
-					if (typeof path !== 'string') throw new Error('Action path must be a string');
-					if (!path.startsWith('/')) throw new Error(`Action path must start with /: ${path}`);
-					if (path.includes(' ')) throw new Error(`Action path cannot contain spaces: ${path}`);
-					if (path.length > 200) throw new Error(`Action path too long (max 200 chars): ${path}`);
+					if (typeof path !== 'string') throw new Error('API path must be a string');
+					if (!path.startsWith('/api/')) throw new Error(`API path must start with /api/: ${path}`);
+					if (path.includes(' ')) throw new Error(`API path cannot contain spaces: ${path}`);
+					if (path.length > 200) throw new Error(`API path too long (max 200 chars): ${path}`);
 				}
 				return true;
 			},

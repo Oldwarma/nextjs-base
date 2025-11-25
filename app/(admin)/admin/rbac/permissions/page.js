@@ -152,12 +152,47 @@ export default function PermissionsManagementPage() {
 
 		{
 			key: 'actions',
-			title: 'Actions',
-			type: 'array',  // ✅ 使用 array 类型
-			table: false,  // ✅ 暂时隐藏，避免显示问题
+			title: 'Server Actions',
+			type: 'array',
+			table: false,
 			form: {
-				placeholder: 'Enter action path (e.g., /api/users)',
+				placeholder: 'e.g., create*Action (推荐) or **/create*Action (兼容)',
 				addButtonText: 'Add Action',
+				max: 50,
+				min: 0,
+				showCopy: false,
+				tooltip: '推荐使用简洁写法（不带 **/），如: create*Action, get*Action 等。带 **/ 前缀的写法也支持（兼容性），但效果相同。',
+			},
+			search: false,
+			detail: {
+				render: (value) => {
+					if (!value || !Array.isArray(value) || value.length === 0) {
+						return <span style={{ color: '#999' }}>-</span>;
+					}
+					const stringValues = value.map(item => {
+						if (typeof item === 'string') return item;
+						if (typeof item === 'object' && item !== null) {
+							return item.value || item.name || JSON.stringify(item);
+						}
+						return String(item);
+					});
+					return (
+						<div style={{ whiteSpace: 'pre-wrap' }}>
+							{stringValues.join('\n')}
+						</div>
+					);
+				},
+			},
+		},
+
+		{
+			key: 'apis',
+			title: 'API Routes',
+			type: 'array',
+			table: false,
+			form: {
+				placeholder: 'e.g., /api/v1/users/*',
+				addButtonText: 'Add API Route',
 				max: 50,
 				min: 0,
 				showCopy: false,

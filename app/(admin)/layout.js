@@ -1,5 +1,5 @@
 import localFont from 'next/font/local';
-import { checkAdmin } from '@/lib/auth/admin-auth';
+import { checkBackendAccess } from '@/lib/auth/admin-auth';
 import { Toaster } from '@/components/ui/sonner';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import AdminLayout from '@/components/admin/admin-layout';
@@ -38,11 +38,11 @@ export const metadata = {
 /**
  * Admin Layout Root - 不使用多语言
  * 管理后台始终使用英文界面
- * 需要管理员权限才能访问
+ * 需要后台访问权限：admin 角色 或 user + isBackendAllowed
  */
 export default async function AdminLayoutRoot({ children }) {
-	// 验证管理员权限
-	const session = await checkAdmin();
+	// 验证后台访问权限
+	const session = await checkBackendAccess();
 
 	return (
 		<html lang='en' suppressHydrationWarning>

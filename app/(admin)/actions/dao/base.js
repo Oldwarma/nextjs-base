@@ -1,11 +1,15 @@
 import { getCollection, generateId, fromObjectId } from '@/lib/database/mongodb';
-import { checkAdminAction } from '@/lib/auth/admin-auth';
+import { checkBackendAccessAction, checkIsAdminAction } from '@/lib/auth/admin-auth';
 import { logAction } from '@/lib/logging/action-logger';
 import { selects } from '@/lib/database/db-api';
 
 /**
  * BaseDAO - 通用数据访问对象基类
  * 提供标准的 CRUD 操作，减少重复代码
+ * 
+ * 权限逻辑：
+ * - 默认检查后台访问权限（admin 或 isBackendAllowed）
+ * - 可选配置 requireAdmin: true 强制要求 admin 角色
  */
 export class BaseDAO {
 	/**
@@ -22,6 +26,7 @@ export class BaseDAO {
 			hooks: config.hooks || {},
 			transforms: config.transforms || {},
 			softDelete: config.softDelete !== false, // 默认启用软删除
+			requireAdmin: config.requireAdmin || false, // 是否要求 admin 角色
 		};
 
 		// 设置默认值
@@ -38,14 +43,25 @@ export class BaseDAO {
 
 	/**
 	 * 统一的权限检查
-	 * @returns {Promise<Object>} 管理员信息 { user: { id, ... }, isAdmin: true }
+	 * 根据配置选择：后台访问权限 或 仅 admin 权限
+	 * @returns {Promise<Object>} 权限信息 { hasAccess/isAdmin: true, userId, user, isAdmin }
 	 */
 	async checkPermission() {
-		const adminCheck = await checkAdminAction();
-		if (!adminCheck.isAdmin) {
-			throw new Error(adminCheck.error);
+		if (this.config.requireAdmin) {
+			// 要求 admin 角色
+			const adminCheck = await checkIsAdminAction();
+			if (!adminCheck.isAdmin) {
+				throw new Error(adminCheck.error);
+			}
+			return adminCheck;
+		} else {
+			// 后台访问权限（admin 或 isBackendAllowed）
+			const backendCheck = await checkBackendAccessAction();
+			if (!backendCheck.hasAccess) {
+				throw new Error(backendCheck.error);
+			}
+			return backendCheck;
 		}
-		return adminCheck;
 	}
 	
 	/**
@@ -54,8 +70,8 @@ export class BaseDAO {
 	 */
 	async getCurrentUserId() {
 		try {
-			const adminCheck = await checkAdminAction();
-			return adminCheck.user?.id || 'admin';
+			const backendCheck = await checkBackendAccessAction();
+			return backendCheck.user?.id || backendCheck.userId || 'backend_user';
 		} catch {
 			return 'system';
 		}
@@ -446,9 +462,16 @@ export class BaseDAO {
 
 		// 前置钩子（可用于检查关联数据）
 		if (this.config.hooks?.beforeDelete) {
-			const canDelete = await this.config.hooks.beforeDelete(id, existing);
-			if (canDelete === false) {
-				throw new Error('Cannot delete this record');
+			try {
+				const canDelete = await this.config.hooks.beforeDelete(id, existing);
+				if (canDelete === false) {
+					throw new Error('Cannot delete this record');
+				}
+			} catch (error) {
+				// 将业务错误标记为 BusinessError，避免作为系统错误处理
+				const businessError = new Error(error.message);
+				businessError.name = 'BusinessError';
+				throw businessError;
 			}
 		}
 

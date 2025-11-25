@@ -13,11 +13,12 @@
 
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
-import { wrapQueryAction } from '@/lib/core/action-wrapper';
+import { wrapQueryAction, wrapAdminAction } from '@/lib/core/action-wrapper';
 import * as userDao from '@/app/(admin)/actions/dao/user';
 
 /**
  * 检查是否有后台访问权限
+ * 条件：admin 角色 OR (user 角色 + isBackendAllowed = true)
  */
 async function checkBackendAccess() {
 	const session = await auth.api.getSession({
@@ -31,8 +32,13 @@ async function checkBackendAccess() {
 		};
 	}
 
-	// 检查是否允许访问后台
-	if (!session.user.isBackendAllowed) {
+	const { role, isBackendAllowed } = session.user;
+	const isAdmin = role === 'admin';
+
+	// 检查后台访问权限
+	// 1. admin 角色自动通过
+	// 2. user 角色需要 isBackendAllowed = true
+	if (!isAdmin && !isBackendAllowed) {
 		return {
 			hasAccess: false,
 			error: 'Forbidden: Backend access not allowed',
@@ -41,7 +47,8 @@ async function checkBackendAccess() {
 
 	return {
 		hasAccess: true,
-		isAdmin: session.user.role === 'admin',
+		isAdmin,
+		userId: session.user.id,
 		user: session.user,
 	};
 }
@@ -339,17 +346,12 @@ export async function batchUpdateUsersAction(userIds, updateData) {
 
 /**
  * 重置用户密码
+ * 权限检查：根据 actions 模式匹配 (如 ** /resetUserPassword*Action)
  */
-export async function resetUserPasswordAction(userId, newPassword) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return {
-			success: false,
-			error: backendCheck.error,
-		};
-	}
-
-	try {
+export const resetUserPasswordAction = wrapAdminAction(
+	'set_password',
+	'user',
+	async (userId, newPassword, { userId: operatorId, isAdmin }) => {
 		if (!userId || !newPassword) {
 			return {
 				success: false,
@@ -370,6 +372,7 @@ export async function resetUserPasswordAction(userId, newPassword) {
 			return {
 				success: true,
 				message: 'Password reset successfully',
+				data: { userId },
 			};
 		} catch (daoError) {
 			// 如果 DAO 失败，尝试使用 Better Auth Admin API
@@ -388,30 +391,24 @@ export async function resetUserPasswordAction(userId, newPassword) {
 			return {
 				success: true,
 				message: 'Password reset successfully',
+				data: { userId },
 			};
 		}
-	} catch (error) {
-		console.error('Failed to reset password:', error);
-		return {
-			success: false,
-			error: error.message || 'Failed to reset password',
-		};
+	},
+	{
+		permissionId: 'resetUserPasswordAction', // action 函数名，用于匹配 actions 模式
+		skipLog: false,
 	}
-}
+);
 
 /**
  * 为用户绑定角色
+ * 权限检查：根据 actions 模式匹配 (如 ** /bindUser*Action 或 ** /updateUser*Action)
  */
-export async function bindUserRolesAction(userId, roleIds, reset = false) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return {
-			success: false,
-			error: backendCheck.error,
-		};
-	}
-
-	try {
+export const bindUserRolesAction = wrapAdminAction(
+	'update',
+	'user_roles',
+	async (userId, roleIds, reset = false, { userId: operatorId, isAdmin }) => {
 		if (!userId) {
 			return {
 				success: false,
@@ -424,15 +421,14 @@ export async function bindUserRolesAction(userId, roleIds, reset = false) {
 		return {
 			success: true,
 			message: 'Roles assigned successfully',
+			data: { userId, roleIds, reset },
 		};
-	} catch (error) {
-		console.error('Failed to bind user roles:', error);
-		return {
-			success: false,
-			error: error.message || 'Failed to bind user roles',
-		};
+	},
+	{
+		permissionId: 'bindUserRolesAction', // action 函数名，用于匹配 actions 模式
+		skipLog: false,
 	}
-}
+);
 
 /**
  * 获取用户的角色列表
@@ -471,17 +467,12 @@ export async function getUserRolesAction(userId) {
 
 /**
  * 封禁用户
+ * 权限检查：根据 actions 模式匹配 (如 ** /banUser*Action)
  */
-export async function banUserAction(userId, banReason, banExpiresIn) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return {
-			success: false,
-			error: backendCheck.error,
-		};
-	}
-
-	try {
+export const banUserAction = wrapAdminAction(
+	'ban',
+	'user',
+	async (userId, banReason, banExpiresIn, { userId: operatorId, isAdmin }) => {
 		if (!userId) {
 			return {
 				success: false,
@@ -501,29 +492,23 @@ export async function banUserAction(userId, banReason, banExpiresIn) {
 		return {
 			success: true,
 			message: 'User banned successfully',
+			data: { userId, banReason, banExpiresIn },
 		};
-	} catch (error) {
-		console.error('Failed to ban user:', error);
-		return {
-			success: false,
-			error: error.message || 'Failed to ban user',
-		};
+	},
+	{
+		permissionId: 'banUserAction', // action 函数名，用于匹配 actions 模式
+		skipLog: false,
 	}
-}
+);
 
 /**
  * 解封用户
+ * 权限检查：根据 actions 模式匹配 (如 ** /unbanUser*Action)
  */
-export async function unbanUserAction(userId) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return {
-			success: false,
-			error: backendCheck.error,
-		};
-	}
-
-	try {
+export const unbanUserAction = wrapAdminAction(
+	'unban',
+	'user',
+	async (userId, { userId: operatorId, isAdmin }) => {
 		if (!userId) {
 			return {
 				success: false,
@@ -541,15 +526,14 @@ export async function unbanUserAction(userId) {
 		return {
 			success: true,
 			message: 'User unbanned successfully',
+			data: { userId },
 		};
-	} catch (error) {
-		console.error('Failed to unban user:', error);
-		return {
-			success: false,
-			error: error.message || 'Failed to unban user',
-		};
+	},
+	{
+		permissionId: 'unbanUserAction', // action 函数名，用于匹配 actions 模式
+		skipLog: false,
 	}
-}
+);
 
 /**
  * 获取用户统计信息

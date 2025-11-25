@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Avatar, Dropdown, Breadcrumb, Button, Spin, Modal, Form, Input, message } from 'antd';
+import { Avatar, Dropdown, Breadcrumb, Button, Spin, Modal, Form, Input, App } from 'antd';
 import { RightOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LockOutlined } from '@ant-design/icons';
 
 // 动态导入 ProLayout，只在客户端渲染，避免 hydration 不匹配
@@ -20,6 +20,7 @@ import { authClient } from '@/lib/auth/auth-client';
  * 管理后台布局组件 - 使用 Pro Components
  */
 export default function AdminLayout({ children, user }) {
+	const { message } = App.useApp(); // ✅ 使用 App context 提供的 message API
 	const currentPathname = usePathname(); // ✅ 直接使用 usePathname hook
 	const [collapsed, setCollapsed] = useState(false);
 	const [menuData, setMenuData] = useState([]);
