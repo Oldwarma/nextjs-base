@@ -18,9 +18,9 @@
 'use client';
 
 import React, { useState, useRef, useMemo } from 'react';
-import { ProTable, ModalForm, DrawerForm } from '@ant-design/pro-components';
-import { Button, Modal, Space, Dropdown, Popconfirm, message, Descriptions, App } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, ReloadOutlined, MoreOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
+import { ProTable, DrawerForm } from '@ant-design/pro-components';
+import { Button, Space, Dropdown, Popconfirm, Descriptions, App } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, MoreOutlined } from '@ant-design/icons';
 
 // 导入字段生成器
 import {
@@ -32,33 +32,9 @@ import {
 } from '@/lib/crud/field-generator';
 import { buildSortCondition } from '@/lib/crud/search-transformer';
 
-// 导入动态表单字段组件
-import DynamicFormFields from '@/components/admin/dynamic-form-fields';
+// 导入万能表单组件
+import { SmartModalForm } from '@/components/admin/smart-form';
 
-/**
- * 清理表单数据中的空 array 项
- * @param {Object} values - 表单数据
- * @returns {Object} 清理后的数据
- */
-function cleanArrayFields(values) {
-	const cleaned = { ...values };
-	
-	Object.keys(cleaned).forEach(key => {
-		const value = cleaned[key];
-		// 如果是数组，过滤掉空值、空字符串和只有空格的项
-		if (Array.isArray(value)) {
-			cleaned[key] = value.filter(item => {
-				if (item === null || item === undefined) return false;
-				if (typeof item === 'string') {
-					return item.trim().length > 0;
-				}
-				return true;
-			});
-		}
-	});
-	
-	return cleaned;
-}
 
 /**
  * SmartCrudPage 组件参数
@@ -133,15 +109,9 @@ export default function SmartCrudPage({
 	const [detailDrawerVisible, setDetailDrawerVisible] = useState(false);
 	const [currentRow, setCurrentRow] = useState(null);
 	const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-	const [editModalFullscreen, setEditModalFullscreen] = useState(false);
-	const [createModalFullscreen, setCreateModalFullscreen] = useState(false);
 	const [searchExpanded, setSearchExpanded] = useState(false); // 搜索表单展开状态
 	const [isTreeData, setIsTreeData] = useState(false); // ✅ 树形数据标识
 	const actionRef = useRef();
-	
-	// 表单实例引用（用于动态表单字段）
-	const editFormRef = useRef(null);
-	const createFormRef = useRef(null);
 	
 	// 当 actionRef 准备好时，通知父组件
 	useMemo(() => {
@@ -536,76 +506,53 @@ export default function SmartCrudPage({
 		}
 	};
 
-	// 保存（编辑）
+	// 保存（编辑）- SmartModalForm 内部已处理 cleanArrayFields
 	const handleSave = async (values) => {
 		try {
-			// 清理 array 类型字段的空值
-			const cleanedValues = cleanArrayFields(values);
-			
-			// 编辑前处理（可以转换数据格式）
-			let processedValues = cleanedValues;
-			if (beforeCreate) {
-				const processed = await beforeCreate(cleanedValues);
-				if (processed === false) return false;
-				processedValues = processed || cleanedValues;
-			}
-			
 			// 获取 row 的 key（支持 string 或 function）
 			const id = typeof rowKey === 'function' ? rowKey(currentRow) : currentRow[rowKey];
 			
-			const result = await actions.update(id, processedValues);
+			const result = await actions.update(id, values);
 
 			if (result.success) {
-			messageApi.success(result.message || 'Updated successfully');
-				setEditModalVisible(false);
+				messageApi.success(result.message || 'Updated successfully');
 				setCurrentRow(null);
 				actionRef.current?.reload();
 				return true;
-		} else {
-			messageApi.error(result.error || 'Failed to update');
+			} else {
+				messageApi.error(result.error || 'Failed to update');
+				return false;
+			}
+		} catch (error) {
+			console.error('Failed to update:', error);
+			messageApi.error('An unexpected error occurred');
 			return false;
 		}
-	} catch (error) {
-		console.error('Failed to update:', error);
-		messageApi.error('An unexpected error occurred');
-		return false;
-	}
 	};
 
-	// 创建
+	// 创建 - SmartModalForm 内部已处理 cleanArrayFields
 	const handleCreate = async (values) => {
-	if (!actions.create) {
-		messageApi.error('Create action not provided');
-		return false;
-	}
-
-		// 清理 array 类型字段的空值
-		let cleanedValues = cleanArrayFields(values);
-
-		// 创建前回调
-		if (beforeCreate) {
-			const processed = await beforeCreate(cleanedValues);
-			if (processed === false) return false;
-			cleanedValues = processed || cleanedValues;
+		if (!actions.create) {
+			messageApi.error('Create action not provided');
+			return false;
 		}
 
 		try {
-			const result = await actions.create(cleanedValues);
+			const result = await actions.create(values);
 
 			if (result.success) {
-		messageApi.success(result.message || 'Created successfully');
-				setCreateModalVisible(false);
+				messageApi.success(result.message || 'Created successfully');
 				actionRef.current?.reload();
 				return true;
-		} else {
-			messageApi.error(result.error || 'Failed to create');
+			} else {
+				messageApi.error(result.error || 'Failed to create');
+				return false;
+			}
+		} catch (error) {
+			console.error('Failed to create:', error);
+			messageApi.error('An unexpected error occurred');
 			return false;
 		}
-	} catch (error) {
-		console.error('Failed to create:', error);
-		messageApi.error('An unexpected error occurred');
-		return false;
-	}
 	};
 
 	// 批量操作
@@ -744,115 +691,35 @@ export default function SmartCrudPage({
 				{...restTableProps}
 			/>
 
-		{/* 编辑表单 */}
-		<ModalForm
-			title={
-				<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingRight: 48 }}>
-					<span>Edit</span>
-					<Button
-						type="text"
-						size="small"
-						icon={editModalFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
-						onClick={() => setEditModalFullscreen(!editModalFullscreen)}
-						style={{ marginRight: -20, marginTop: -5, color: '#666' }}
-					/>
-				</div>
-			}
+		{/* 编辑表单 - 使用 SmartModalForm */}
+		<SmartModalForm
+			title="Edit"
 			open={editModalVisible}
-			onOpenChange={(visible) => {
-				setEditModalVisible(visible);
-				if (!visible) setEditModalFullscreen(false);
-			}}
+			onOpenChange={setEditModalVisible}
+			fieldsConfig={fieldsConfig}
 			initialValues={currentRow}
 			onFinish={handleSave}
-			width={editModalFullscreen ? '100vw' : (formProps.width || 800)}
-			formRef={editFormRef}
-			grid={false}
-			modalProps={{
-				centered: !editModalFullscreen,
-				wrapClassName: editModalFullscreen ? 'fullscreen-modal' : '',
-				style: editModalFullscreen ? {
-					top: 0,
-					maxWidth: '100vw',
-					height: '100vh',
-					margin: 0,
-					paddingBottom: 0,
-				} : {},
-				styles: {
-					body: {
-						maxHeight: editModalFullscreen ? 'calc(100vh - 110px)' : 'calc(90vh - 110px)',
-						overflowY: 'auto',
-						overflowX: 'hidden',
-						paddingLeft: 32,
-						paddingRight: 32,
-					},
-				},
-				destroyOnHidden: true,
-			}}
-			{...formProps}
-		>
-			<DynamicFormFields 
-				fieldsConfig={fieldsConfig} 
-				formInstance={editFormRef.current}
-				isCreate={false}
-				actions={actions}
-			/>
-		</ModalForm>
+			beforeSubmit={beforeCreate}
+			actions={actions}
+			isCreate={false}
+			width={formProps.width || 800}
+			enableFullscreen={true}
+		/>
 
-		{/* 创建表单 */}
+		{/* 创建表单 - 使用 SmartModalForm */}
 		{enableCreate && actions.create && (
-			<ModalForm
-				title={
-					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingRight: 48 }}>
-						<span>Create</span>
-						<Button
-							type="text"
-							size="small"
-							icon={createModalFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
-							onClick={() => setCreateModalFullscreen(!createModalFullscreen)}
-							style={{ marginRight: -20, marginTop: -5, color: '#666' }}
-						/>
-					</div>
-				}
+			<SmartModalForm
+				title="Create"
 				open={createModalVisible}
-				onOpenChange={(visible) => {
-					setCreateModalVisible(visible);
-					if (!visible) setCreateModalFullscreen(false);
-				}}
+				onOpenChange={setCreateModalVisible}
+				fieldsConfig={fieldsConfig}
 				onFinish={handleCreate}
-			width={createModalFullscreen ? '100vw' : (formProps.width || 800)}
-			formRef={createFormRef}
-			grid={false}
-			modalProps={{
-					centered: !createModalFullscreen,
-					wrapClassName: createModalFullscreen ? 'fullscreen-modal' : '',
-					style: createModalFullscreen ? {
-						top: 0,
-						maxWidth: '100vw',
-						height: '100vh',
-						margin: 0,
-						paddingBottom: 0,
-					} : {},
-					styles: {
-						body: {
-							maxHeight: createModalFullscreen ? 'calc(100vh - 110px)' : 'calc(90vh - 110px)',
-							overflowY: 'auto',
-							overflowX: 'hidden',
-							paddingLeft: 32,
-							paddingRight: 32,
-						},
-					},
-					destroyOnHidden: true,
-				}}
-				{...formProps}
-			>
-				<DynamicFormFields 
-					fieldsConfig={fieldsConfig} 
-					formInstance={createFormRef.current}
-					isCreate={true}
-					actions={actions}
-				/>
-			</ModalForm>
+				beforeSubmit={beforeCreate}
+				actions={actions}
+				isCreate={true}
+				width={formProps.width || 800}
+				enableFullscreen={true}
+			/>
 		)}
 
 			{/* 详情抽屉 */}

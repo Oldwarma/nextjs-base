@@ -18,19 +18,24 @@
 ### Smart CRUD 系统
 1. **[SMART_CRUD_README.md](./SMART_CRUD_README.md)** - 系统总览⭐
 2. **[SMART_CRUD.md](./SMART_CRUD.md)** - 完整使用指南⭐
-3. **[SMART_CRUD_QUICKSTART.md](./SMART_CRUD_QUICKSTART.md)** - 快速参考
-4. **[SMART_CRUD_VK_FEATURES.md](./SMART_CRUD_VK_FEATURES.md)** - VK 特性 (v1.1.0)
-5. **[SMART_CRUD_NEW_COMPONENTS.md](./SMART_CRUD_NEW_COMPONENTS.md)** - 新增组件 (v1.2.0)
-6. **[SMART_CRUD_ADVANCED_COMPONENTS.md](./SMART_CRUD_ADVANCED_COMPONENTS.md)** - 高级组件 (v1.3.0)
-7. **[MARKDOWN_EDITOR_GUIDE.md](./MARKDOWN_EDITOR_GUIDE.md)** - Markdown 编辑器指南 🆕
-8. **[EXAMPLE_PAGE_GUIDE.md](./EXAMPLE_PAGE_GUIDE.md)** - 示例页面使用指南 🆕
-9. **[SMART_CRUD_FINAL_SUMMARY.md](./SMART_CRUD_FINAL_SUMMARY.md)** - 系统总结与最佳实践
-10. **[CHANGELOG.md](./CHANGELOG.md)** - 更新日志
+3. **[SMART_CRUD_GUIDE.md](./SMART_CRUD_GUIDE.md)** - Smart CRUD 完整开发指南⭐
+4. **[SMART_CRUD_QUICKSTART.md](./SMART_CRUD_QUICKSTART.md)** - 快速参考
+5. **[SMART_CRUD_VK_FEATURES.md](./SMART_CRUD_VK_FEATURES.md)** - VK 特性 (v1.1.0)
+6. **[SMART_CRUD_NEW_COMPONENTS.md](./SMART_CRUD_NEW_COMPONENTS.md)** - 新增组件 (v1.2.0)
+7. **[SMART_CRUD_ADVANCED_COMPONENTS.md](./SMART_CRUD_ADVANCED_COMPONENTS.md)** - 高级组件 (v1.3.0)
+8. **[MARKDOWN_EDITOR_GUIDE.md](./MARKDOWN_EDITOR_GUIDE.md)** - Markdown 编辑器指南
+9. **[EXAMPLE_PAGE_GUIDE.md](./EXAMPLE_PAGE_GUIDE.md)** - 示例页面使用指南
+10. **[SMART_CRUD_FINAL_SUMMARY.md](./SMART_CRUD_FINAL_SUMMARY.md)** - 系统总结与最佳实践
+11. **[CHANGELOG.md](./CHANGELOG.md)** - 更新日志
+
+### SmartForm 万能表单 🆕
+12. **[SMART_FORM_GUIDE.md](./SMART_FORM_GUIDE.md)** - SmartForm 使用指南⭐
+13. **[SMART_FORM_VK_COMPARISON.md](./SMART_FORM_VK_COMPARISON.md)** - 与 VK 对比指南
 
 ### 其他文档
-11. **[README.md](./README.md)** - 本文档（总览和快速开始）
-12. **[BASE_DAO.md](./BASE_DAO.md)** - BaseDAO 完整文档
-13. **[CRUD_GUIDE.md](./CRUD_GUIDE.md)** - CRUD 开发指南（参考）
+14. **[README.md](./README.md)** - 本文档（总览和快速开始）
+15. **[BASE_DAO.md](./BASE_DAO.md)** - BaseDAO 完整文档
+16. **[CRUD_GUIDE.md](./CRUD_GUIDE.md)** - CRUD 开发指南（参考）
 
 ---
 
@@ -120,7 +125,13 @@ nextjs-base/
 │       └── layout.js              # 后台布局
 │
 ├── components/admin/
-│   └── smart-crud-page.jsx        # Smart CRUD 核心组件⭐
+│   ├── smart-crud-page.jsx        # Smart CRUD 核心组件⭐
+│   ├── smart-form/                # SmartForm 万能表单组件 🆕
+│   │   ├── smart-form.jsx         # 基础表单
+│   │   ├── smart-modal-form.jsx   # 模态框表单
+│   │   ├── smart-drawer-form.jsx  # 抽屉表单
+│   │   └── index.js               # 统一导出
+│   └── dynamic-form-fields.jsx    # 动态表单字段组件
 │
 ├── lib/admin/crud/
 │   ├── field-types.js             # 字段类型注册表（16 种内置类型）

@@ -1177,6 +1177,55 @@ export default function ArticlesManagementPage() {
 | `color` | 颜色选择 | 颜色配置 |
 | `json` | JSON 编辑器 | 配置数据 |
 | `array` | 数组编辑器 | 列表数据 |
+| `icon` | 图标选择 | 菜单图标 |
+| `markdown` | Markdown 编辑器 | 文档内容 |
+
+### 布局类型
+
+| 类型 | 说明 | 适用场景 |
+|------|------|---------|
+| `group` | 分组容器 | 将表单字段分组显示 |
+
+#### 分组布局 (group) 详解
+
+`group` 类型用于在表单中对字段进行分组，支持栅格布局：
+
+```javascript
+{
+  key: 'basic-group',
+  title: '📋 基础信息',
+  type: 'group',
+  tips: '请填写基础信息',  // 可选：提示文字
+  columns: [
+    { key: 'title', title: 'Title', type: 'text', col: { span: 16 } },
+    { key: 'status', title: 'Status', type: 'select', col: { span: 8 } },
+  ],
+}
+```
+
+**分组配置说明：**
+
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `key` | string | 分组唯一标识 |
+| `title` | string | 分组标题（支持 emoji） |
+| `type` | `'group'` | 固定值 |
+| `tips` | string | 分组提示文字（可选） |
+| `columns` | array | 分组内的字段配置 |
+
+**栅格宽度：** 每个字段通过 `col.span` 设置宽度（1-24），默认为 12（50%）
+
+```javascript
+{ key: 'field1', col: { span: 24 } }  // 100% 宽度（整行）
+{ key: 'field2', col: { span: 12 } }  // 50% 宽度（半行）
+{ key: 'field3', col: { span: 8 } }   // 33.3% 宽度（三分之一）
+{ key: 'field4', col: { span: 6 } }   // 25% 宽度（四分之一）
+```
+
+**注意事项：**
+- `group` 不会在表格和详情中显示，仅用于表单布局
+- 分组内的字段支持 `showRule`、`watch`、`disabled` 等高级功能
+- 我们使用自定义分组实现（Divider + Row/Col）而非 ProFormGroup，以支持精确的栅格宽度控制
 
 ---
 
