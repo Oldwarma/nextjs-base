@@ -37,7 +37,7 @@
 
 /* 表单弹窗内的滚动条（更细更优雅）*/
 .ant-modal-body::-webkit-scrollbar {
-	width: 6px;
+	width: 4px;
 	height: 6px;
 }
 
@@ -91,7 +91,7 @@
  * ============================================ */
 
 .ant-modal-body {
-	padding: 24px 32px !important;
+	padding: 12px!important;
 }
 
 /* ============================================

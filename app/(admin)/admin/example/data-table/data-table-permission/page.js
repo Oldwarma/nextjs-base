@@ -720,6 +720,74 @@ export default function ExamplePermissionPage() {
 			},
 
 			// ============================================
+			// 分组 9.5: 文件选择（从文件库选择）
+			// ============================================
+			{
+				key: 'file-select-group',
+				title: '📂 File Select (From Library)',
+				type: 'group',
+				tips: 'Select files from the uploaded file library instead of uploading new ones.',
+				columns: [
+					// 单图选择
+					{
+						key: 'selectedImage',
+						title: 'Selected Image (Single)',
+						type: 'image-select',
+						table: {
+							width: 80,
+						},
+						form: {
+							accept: 'image/*',
+							fileType: 'image',
+						},
+						col: { span: 8 },
+					},
+					// 多图选择
+					{
+						key: 'selectedGallery',
+						title: 'Selected Gallery (Multiple)',
+						type: 'images-select',
+						table: {
+							width: 120,
+						},
+						form: {
+							max: 6,
+							accept: 'image/*',
+							fileType: 'image',
+						},
+						col: { span: 8 },
+					},
+					// 头像选择
+					{
+						key: 'selectedAvatar',
+						title: 'Selected Avatar',
+						type: 'avatar-select',
+						table: {
+							width: 60,
+						},
+						form: {
+							accept: 'image/*',
+							fileType: 'avatar',
+						},
+						col: { span: 8 },
+					},
+					// 文件选择
+					{
+						key: 'selectedFiles',
+						title: 'Selected Files',
+						type: 'file-select',
+						table: false,
+						form: {
+							max: 5,
+							accept: '.pdf,.doc,.docx',
+							fileType: 'file',
+						},
+						col: { span: 24 },
+					},
+				],
+			},
+
+			// ============================================
 			// 分组 10: 高级字段
 			// ============================================
 			{
