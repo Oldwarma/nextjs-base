@@ -13,9 +13,6 @@ import * as sysDao from '@/app/(admin)/actions/dao/sys';
 
 /**
  * Permission CRUD 配置
- *
- * ✅ 所有服务端配置集中在这里
- * ✅ 不需要单独的 config 文件
  */
 const permissionConfig = {
 	/**
@@ -45,6 +42,17 @@ const permissionConfig = {
 
 	/**
 	 * 字段验证规则
+	 * 
+	 * 支持的配置项：
+	 * - required: 是否必填（create 时生效）
+	 * - type: 类型（string, number, boolean, array, date, email, url）
+	 * - minLength/maxLength: 长度限制
+	 * - min/max: 数值范围
+	 * - pattern: 正则表达式
+	 * - enum: 枚举值
+	 * - itemType: 数组元素类型
+	 * - default: 默认值
+	 * - message: 自定义错误消息
 	 */
 	validation: {
 		name: {
@@ -57,34 +65,6 @@ const permissionConfig = {
 		parent_id: {
 			required: false,
 			type: 'string',
-			custom: async (value, context) => {
-				if (!value) return true;
-
-				const { getCollection } = await import('@/lib/database/mongodb');
-				const collection = await getCollection(permissionConfig.collectionName);
-				const parent = await collection.findOne({ id: value });
-
-				if (!parent) {
-					throw new Error('Parent permission does not exist');
-				}
-
-				if (context.id && value === context.id) {
-					throw new Error('Cannot set permission as its own parent');
-				}
-
-				const checkCircular = async (parentId, targetId) => {
-					if (parentId === targetId) return true;
-					const parent = await collection.findOne({ id: parentId });
-					if (!parent || !parent.parent_id) return false;
-					return checkCircular(parent.parent_id, targetId);
-				};
-
-				if (context.id && (await checkCircular(value, context.id))) {
-					throw new Error('Circular reference detected in parent hierarchy');
-				}
-
-				return true;
-			},
 		},
 		remark: {
 			required: false,
@@ -118,41 +98,14 @@ const permissionConfig = {
 		actions: {
 			required: false,
 			type: 'array',
-			maxLength: 50,
 			itemType: 'string',
-			custom: async (value) => {
-				if (!value || !Array.isArray(value)) return true;
-				const uniqueValues = new Set(value);
-				if (uniqueValues.size !== value.length) {
-					throw new Error('Duplicate action patterns detected');
-				}
-				for (const pattern of value) {
-					if (typeof pattern !== 'string') throw new Error('Action pattern must be a string');
-					if (pattern.includes(' ')) throw new Error(`Action pattern cannot contain spaces: ${pattern}`);
-					if (pattern.length > 200) throw new Error(`Action pattern too long (max 200 chars): ${pattern}`);
-				}
-				return true;
-			},
+			maxLength: 50,
 		},
 		apis: {
 			required: false,
 			type: 'array',
-			maxLength: 50,
 			itemType: 'string',
-			custom: async (value) => {
-				if (!value || !Array.isArray(value)) return true;
-				const uniqueValues = new Set(value);
-				if (uniqueValues.size !== value.length) {
-					throw new Error('Duplicate API paths detected');
-				}
-				for (const path of value) {
-					if (typeof path !== 'string') throw new Error('API path must be a string');
-					if (!path.startsWith('/api/')) throw new Error(`API path must start with /api/: ${path}`);
-					if (path.includes(' ')) throw new Error(`API path cannot contain spaces: ${path}`);
-					if (path.length > 200) throw new Error(`API path too long (max 200 chars): ${path}`);
-				}
-				return true;
-			},
+			maxLength: 50,
 		},
 	},
 
@@ -179,6 +132,26 @@ const permissionConfig = {
 		beforeUpdate: async (id, data) => {
 			const { getCollection } = await import('@/lib/database/mongodb');
 			const collection = await getCollection(permissionConfig.collectionName);
+			
+			// 检查循环引用
+			if (data.parent_id) {
+				if (data.parent_id === id) {
+					throw new Error('Cannot set permission as its own parent');
+				}
+				
+				const checkCircular = async (parentId, targetId) => {
+					if (parentId === targetId) return true;
+					const parent = await collection.findOne({ id: parentId });
+					if (!parent || !parent.parent_id) return false;
+					return checkCircular(parent.parent_id, targetId);
+				};
+				
+				if (await checkCircular(data.parent_id, id)) {
+					throw new Error('Circular reference detected in parent hierarchy');
+				}
+			}
+			
+			// 检查名称唯一性
 			if (data.name !== undefined || data.parent_id !== undefined) {
 				const current = await collection.findOne({ id });
 				if (!current) throw new Error('Permission not found');

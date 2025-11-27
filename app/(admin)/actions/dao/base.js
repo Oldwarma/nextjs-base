@@ -2,6 +2,7 @@ import { getCollection, generateId, fromObjectId } from '@/lib/database/mongodb'
 import { checkBackendAccessAction, checkIsAdminAction } from '@/lib/auth/admin-auth';
 import { logAction } from '@/lib/logging/action-logger';
 import { selects } from '@/lib/database/db-api';
+import { validateWithConfig, runCustomValidators } from '@/lib/validation/auto-schema';
 
 /**
  * BaseDAO - 通用数据访问对象基类
@@ -10,11 +11,18 @@ import { selects } from '@/lib/database/db-api';
  * 权限逻辑：
  * - 默认检查后台访问权限（admin 或 isBackendAllowed）
  * - 可选配置 requireAdmin: true 强制要求 admin 角色
+ * 
+ * 验证支持：
+ * - 支持简单的 validation 配置对象（自动转换为 Zod Schema）
+ * - 也支持直接传入 Zod Schema（高级用法）
  */
 export class BaseDAO {
 	/**
 	 * 构造函数
 	 * @param {Object} config - DAO 配置对象
+	 * @param {Object} config.validation - 验证配置对象（推荐，简单直观）
+	 * @param {Object} config.schemas - Zod Schema 配置（可选，高级用法）
+	 * @param {Array<string>} config.uniqueFields - 需要唯一性验证的字段（数据库级别）
 	 */
 	constructor(config) {
 		this.config = {
@@ -22,7 +30,9 @@ export class BaseDAO {
 			primaryKey: config.primaryKey || 'id',
 			fields: config.fields || {},
 			query: config.query || {},
-			validation: config.validation || {},
+			validation: config.validation || {}, // 简单验证配置
+			schemas: config.schemas || {}, // Zod Schema（可选）
+			uniqueFields: config.uniqueFields || [], // 唯一性验证字段
 			hooks: config.hooks || {},
 			transforms: config.transforms || {},
 			softDelete: config.softDelete !== false, // 默认启用软删除
@@ -100,43 +110,45 @@ export class BaseDAO {
 
 	/**
 	 * 数据验证
+	 * 
+	 * 验证逻辑：
+	 * 1. 使用 Zod Schema 验证（config.schemas 或自动转换的 config.validation）
+	 * 2. 执行自定义验证器（validator/custom 函数）
+	 * 3. 数据库级别的唯一性验证（uniqueFields）
+	 * 
 	 * @param {Object} data - 待验证数据
 	 * @param {String} action - 操作类型：create, update
 	 * @param {String} recordId - 记录ID（用于唯一性验证时排除自身）
+	 * @returns {Object} 验证后的数据
 	 */
 	async validate(data, action, recordId = null) {
-		const rules = this.config.validation || {};
+		// 1. 使用自动 Schema 验证（支持 validation 配置和 Zod Schema）
+		const result = validateWithConfig(this.config, data, action);
+		if (!result.success) {
+			const error = new Error(result.error);
+			error.name = 'ValidationError';
+			error.errors = result.errors;
+			throw error;
+		}
+		
+		let validatedData = result.data;
 
-		for (const [field, rule] of Object.entries(rules)) {
-			const value = data[field];
+		// 2. 执行自定义验证器（validator/custom 函数）
+		if (this.config.validation) {
+			await runCustomValidators(this.config.validation, validatedData, action, {
+				recordId,
+				collectionName: this.config.collectionName,
+			});
+		}
 
-			// 必填验证
-			if (rule.required && action === 'create') {
-				if (value === undefined || value === null || value === '') {
-					throw new Error(`${field} is required`);
-				}
-			}
-
-			// 如果字段不存在且不是必填，跳过后续验证
+		// 3. 数据库级别验证（唯一性检查）
+		const uniqueFields = this.config.uniqueFields || [];
+		for (const field of uniqueFields) {
+			const value = validatedData[field];
 			if (value === undefined || value === null || value === '') {
 				continue;
 			}
 
-			// 长度验证
-			if (rule.minLength && value.length < rule.minLength) {
-				throw new Error(`${field} must be at least ${rule.minLength} characters`);
-			}
-			if (rule.maxLength && value.length > rule.maxLength) {
-				throw new Error(`${field} must be at most ${rule.maxLength} characters`);
-			}
-
-			// 正则验证
-			if (rule.pattern && !rule.pattern.test(value)) {
-				throw new Error(rule.message || `${field} format is invalid`);
-			}
-
-		// 唯一性验证
-		if (rule.unique) {
 			const collection = await getCollection(this.config.collectionName);
 			const query = { [field]: value };
 
@@ -146,20 +158,12 @@ export class BaseDAO {
 			}
 
 			const exists = await collection.findOne(query);
-			
 			if (exists) {
 				throw new Error(`${field} already exists`);
 			}
 		}
 
-			// 自定义验证函数
-			if (rule.validator) {
-				const isValid = await rule.validator(value, data);
-				if (!isValid) {
-					throw new Error(rule.message || `${field} validation failed`);
-				}
-			}
-		}
+		return validatedData;
 	}
 
 	/**
@@ -342,8 +346,8 @@ export class BaseDAO {
 			filtered = this.config.transforms.input(filtered);
 		}
 
-		// 验证
-		await this.validate(filtered, 'create');
+		// 验证（返回验证后的数据，可能经过 Zod 转换）
+		filtered = await this.validate(filtered, 'create');
 
 		// 前置钩子
 		if (this.config.hooks?.beforeCreate) {
@@ -413,8 +417,8 @@ export class BaseDAO {
 			filtered = this.config.transforms.input(filtered);
 		}
 
-		// 验证（传入 id 用于唯一性验证时排除自身）
-		await this.validate(filtered, 'update', id);
+		// 验证（传入 id 用于唯一性验证时排除自身，返回验证后的数据）
+		filtered = await this.validate(filtered, 'update', id);
 
 		// 前置钩子
 		if (this.config.hooks?.beforeUpdate) {

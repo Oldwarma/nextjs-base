@@ -5,12 +5,12 @@
  * 1. 替换 {RESOURCE_NAME} → 资源名(小写单数), 如: permission
  * 2. 替换 {RESOURCE_LABEL} → 资源标签(首字母大写), 如: Permission  
  * 3. 替换 {COLLECTION_NAME} → MongoDB 集合名(小写复数), 如: permissions
- * 4. 配置验证规则、钩子函数等
+ * 4. 根据需要配置 validation 验证规则
  */
 
 'use server';
 
-import { createCrudActions } from '@/lib/crud/crud-helper';
+import { createCrudActions } from '@/lib/core/crud-helper';
 
 // ============================================
 // 配置对象
@@ -19,7 +19,7 @@ const {RESOURCE_NAME}Config = {
 	// 集合名称
 	collectionName: '{COLLECTION_NAME}',
 	
-	// 主键字段
+	// 主键字段（使用 'id' 或 '_id'）
 	primaryKey: 'id',
 	
 	// 字段配置
@@ -48,15 +48,40 @@ const {RESOURCE_NAME}Config = {
 		},
 	},
 	
-	// 数据验证规则
+	/**
+	 * 数据验证规则
+	 * 
+	 * 支持的配置项：
+	 * - required: 是否必填（create 时生效）
+	 * - type: 类型（string, number, boolean, array, date, email, url）
+	 * - minLength/maxLength: 长度限制（字符串/数组）
+	 * - min/max: 数值范围
+	 * - pattern: 正则表达式
+	 * - enum: 枚举值数组
+	 * - itemType: 数组元素类型（string, number）
+	 * - default: 默认值
+	 * - message: 自定义错误消息
+	 */
 	validation: {
 		name: {
 			required: true,
+			type: 'string',
 			minLength: 2,
 			maxLength: 50,
 			message: 'Name must be between 2 and 50 characters',
 		},
+		enable: {
+			type: 'boolean',
+			default: true,
+		},
+		remark: {
+			type: 'string',
+			maxLength: 500,
+		},
 	},
+	
+	// 唯一性验证字段（数据库级别）
+	// uniqueFields: ['code'],
 	
 	// 生命周期钩子
 	hooks: {
@@ -150,4 +175,3 @@ export async function getEnabled{RESOURCE_LABEL}sAction() {
 		data: result.rows || [],
 	};
 }
-

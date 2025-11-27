@@ -22,30 +22,47 @@ export const packageCrudConfig = {
 	validation: {
 		name: {
 			required: true,
+			type: 'string',
 			minLength: 1,
 			maxLength: 100,
 			message: 'Package name must be 1-100 characters',
 		},
+		description: {
+			type: 'string',
+			maxLength: 500,
+		},
 		price: {
 			required: true,
-			validator: async (value) => {
-				return typeof value === 'number' && value >= 0;
-			},
+			type: 'number',
+			min: 0,
 			message: 'Price must be a non-negative number',
 		},
 		credits: {
 			required: true,
-			validator: async (value) => {
-				return typeof value === 'number' && value >= 0 && Number.isInteger(value);
-			},
+			type: 'number',
+			min: 0,
+			int: true,
 			message: 'Credits must be a non-negative integer',
 		},
 		validDays: {
 			required: true,
-			validator: async (value) => {
-				return typeof value === 'number' && value >= 0 && Number.isInteger(value);
-			},
+			type: 'number',
+			min: 0,
+			int: true,
 			message: 'Valid days must be a non-negative integer',
+		},
+		features: {
+			type: 'array',
+			itemType: 'string',
+		},
+		isActive: {
+			type: 'boolean',
+			default: true,
+		},
+		sort: {
+			type: 'number',
+			min: 0,
+			default: 0,
 		},
 	},
 
@@ -79,14 +96,6 @@ export const packageCrudConfig = {
 		},
 		beforeDelete: async (id, existing) => {
 			// TODO: 可以检查是否有用户正在使用此套餐
-			// const usersCollection = await getCollection('user_packages');
-			// const activeUsers = await usersCollection.count({
-			// 	packageId: id,
-			// 	status: 'active'
-			// });
-			// if (activeUsers > 0) {
-			// 	throw new Error('Cannot delete package with active users');
-			// }
 			return true;
 		},
 	},
@@ -109,4 +118,3 @@ export const packageCrudConfig = {
 	// 软删除配置
 	softDelete: false, // 套餐不使用软删除，直接删除或设置 isActive=false
 };
-

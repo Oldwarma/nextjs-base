@@ -1,14 +1,13 @@
 /**
  * Post CRUD Actions
  * 
- * 重构为符合最新 SmartCrudPage 架构
- * - 使用 createCrudActions 生成标准 CRUD Actions
- * - 配置对象直接定义在此文件中
+ * 使用 createCrudActions 生成标准 CRUD Actions
  */
 
 'use server';
 
 import { createCrudActions } from '@/lib/core/crud-helper';
+import { wrapAdminAction } from '@/lib/core/action-wrapper';
 
 // ============================================
 // 配置对象
@@ -45,24 +44,30 @@ const postConfig = {
 	validation: {
 		name: {
 			required: true,
+			type: 'string',
 			minLength: 2,
 			maxLength: 50,
 			message: 'Name must be between 2 and 50 characters',
 		},
 		status: {
 			required: true,
+			type: 'string',
+			enum: ['active', 'inactive', 'draft'],
 			message: 'Status is required',
 		},
 		order: {
 			type: 'number',
 			min: 0,
+			default: 0,
 			message: 'Order must be >= 0',
 		},
 		description: {
+			type: 'string',
 			maxLength: 500,
 			message: 'Description max length: 500',
 		},
 		content: {
+			type: 'string',
 			maxLength: 5000,
 			message: 'Content max length: 5000',
 		},
@@ -139,8 +144,6 @@ export const batchDeletePostsAction = crudActions.batchDelete;
 // ============================================
 // 自定义 Actions（可选）
 // ============================================
-
-import { wrapAdminAction } from '@/lib/core/action-wrapper';
 
 /**
  * 激活 Post

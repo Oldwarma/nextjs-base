@@ -38,6 +38,11 @@ lib/
 │   ├── search-transformer.js  # 搜索转换器
 │   └── README.md
 │
+├── validation/          # ✅ 数据验证
+│   ├── auto-schema.js   # 自动 Schema 转换（validation → Zod）
+│   ├── index.js         # 导出入口
+│   └── README.md
+│
 └── utils.js             # 🔧 通用工具函数
 ```
 
@@ -107,6 +112,16 @@ import { evaluateRule } from '@/lib/crud/rule-evaluator';
 import { FIELD_TYPE_REGISTRY } from '@/lib/crud/field-types';
 ```
 
+### 数据验证
+
+```javascript
+// 验证配置自动转换为 Zod Schema
+import { validateWithConfig, runCustomValidators } from '@/lib/validation';
+
+// 高级用法：直接使用 Zod
+import { z } from '@/lib/validation';
+```
+
 ## 📖 详细文档
 
 每个子目录都有详细的 README.md 文档：
@@ -116,6 +131,7 @@ import { FIELD_TYPE_REGISTRY } from '@/lib/crud/field-types';
 - [📝 日志系统 (logging/)](./logging/README.md)
 - [💼 业务逻辑 (business/)](./business/README.md)
 - [🎨 CRUD 工具 (crud/)](./crud/README.md)
+- [✅ 数据验证 (validation/)](./validation/README.md)
 
 ## 🔗 依赖关系图
 

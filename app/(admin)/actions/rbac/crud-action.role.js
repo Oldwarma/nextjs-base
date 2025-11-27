@@ -5,9 +5,6 @@ import { wrapQueryAction, wrapAdminAction } from '@/lib/core/action-wrapper';
 
 /**
  * Role CRUD 配置
- *
- * ✅ 所有服务端配置集中在这里
- * ✅ 不需要单独的 config 文件
  */
 const roleConfig = {
 	/**
@@ -24,6 +21,39 @@ const roleConfig = {
 		creatable: ['name', 'remark', 'enable'],
 		updatable: ['name', 'remark', 'enable', 'permission', 'menu'],
 		searchable: ['name', 'remark'],
+	},
+
+	/**
+	 * 字段验证规则
+	 */
+	validation: {
+		name: {
+			required: true,
+			type: 'string',
+			minLength: 2,
+			maxLength: 100,
+			message: 'Role name must be between 2 and 100 characters',
+		},
+		remark: {
+			required: false,
+			type: 'string',
+			maxLength: 500,
+		},
+		enable: {
+			required: false,
+			type: 'boolean',
+			default: true,
+		},
+		permission: {
+			required: false,
+			type: 'array',
+			itemType: 'string',
+		},
+		menu: {
+			required: false,
+			type: 'array',
+			itemType: 'string',
+		},
 	},
 
 	/**
@@ -49,29 +79,6 @@ const roleConfig = {
 				fieldJson: { id: 1, name: 1 },
 			},
 		],
-	},
-
-	/**
-	 * 字段验证规则
-	 */
-	validation: {
-		name: {
-			required: true,
-			type: 'string',
-			minLength: 2,
-			maxLength: 100,
-			message: 'Role name must be between 2 and 100 characters',
-		},
-		enable: {
-			required: false,
-			type: 'boolean',
-			default: true,
-		},
-		remark: {
-			required: false,
-			type: 'string',
-			maxLength: 500,
-		},
 	},
 
 	/**
@@ -282,14 +289,18 @@ export const getRoleListForSelectAction = wrapQueryAction('role', async ({ withL
 /**
  * 分配权限给角色
  */
-export const assignPermissionsToRoleAction = wrapAdminAction('assign_permissions', 'role', async ({ roleId, permissionIds }) => {
-	// 验证输入
-	if (!roleId || !Array.isArray(permissionIds)) {
+export const assignPermissionsToRoleAction = wrapAdminAction('assign_permissions', 'role', async (params) => {
+	// 使用 Zod Schema 验证输入
+	const validationResult = validate(assignPermissionsSchema, params);
+	if (!validationResult.success) {
 		return {
 			success: false,
-			error: 'Invalid parameters: roleId and permissionIds (array) are required',
+			error: validationResult.error,
+			errors: validationResult.errors,
 		};
 	}
+
+	const { roleId, permissionIds } = validationResult.data;
 
 	// 更新角色的权限列表
 	const result = await crudActions._dao.update(roleId, { permission: permissionIds });
@@ -300,14 +311,18 @@ export const assignPermissionsToRoleAction = wrapAdminAction('assign_permissions
 /**
  * 分配菜单给角色
  */
-export const assignMenusToRoleAction = wrapAdminAction('assign_menus', 'role', async ({ roleId, menuIds }) => {
-	// 验证输入
-	if (!roleId || !Array.isArray(menuIds)) {
+export const assignMenusToRoleAction = wrapAdminAction('assign_menus', 'role', async (params) => {
+	// 使用 Zod Schema 验证输入
+	const validationResult = validate(assignMenusSchema, params);
+	if (!validationResult.success) {
 		return {
 			success: false,
-			error: 'Invalid parameters: roleId and menuIds (array) are required',
+			error: validationResult.error,
+			errors: validationResult.errors,
 		};
 	}
+
+	const { roleId, menuIds } = validationResult.data;
 
 	// 更新角色的菜单列表
 	const result = await crudActions._dao.update(roleId, { menu: menuIds });
@@ -319,7 +334,12 @@ export const assignMenusToRoleAction = wrapAdminAction('assign_menus', 'role', a
  * 切换角色启用/禁用状态
  */
 export const toggleRoleStatusAction = wrapAdminAction('toggle_status', 'role', async ({ roleId, enable }) => {
-	const result = await crudActions._dao.update(roleId, { enable });
+	// 简单验证
+	if (!roleId) {
+		return { success: false, error: 'roleId is required' };
+	}
+
+	const result = await crudActions._dao.update(roleId, { enable: Boolean(enable) });
 
 	return result;
 });

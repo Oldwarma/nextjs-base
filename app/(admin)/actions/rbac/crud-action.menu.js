@@ -6,9 +6,6 @@ import * as sysDao from '@/app/(admin)/actions/dao/sys';
 
 /**
  * Menu CRUD 配置
- *
- * ✅ 所有服务端配置集中在这里
- * ✅ 不需要单独的 config 文件
  */
 const menuConfig = {
 	/**
@@ -305,4 +302,3 @@ export const getMenuTreeForSelectAction = wrapQueryAction('menu', async () => {
 		data: formattedTree,
 	};
 });
-
