@@ -14,44 +14,8 @@
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
 import { wrapQueryAction, wrapAdminAction } from '@/lib/core/action-wrapper';
+import { checkBackendAccessAction } from '@/lib/auth/admin-auth';
 import * as userDao from '@/app/(admin)/actions/dao/user';
-
-/**
- * 检查是否有后台访问权限
- * 条件：admin 角色 OR (user 角色 + isBackendAllowed = true)
- */
-async function checkBackendAccess() {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
-
-	if (!session?.user) {
-		return {
-			hasAccess: false,
-			error: 'Unauthorized: Please login',
-		};
-	}
-
-	const { role, isBackendAllowed } = session.user;
-	const isAdmin = role === 'admin';
-
-	// 检查后台访问权限
-	// 1. admin 角色自动通过
-	// 2. user 角色需要 isBackendAllowed = true
-	if (!isAdmin && !isBackendAllowed) {
-		return {
-			hasAccess: false,
-			error: 'Forbidden: Backend access not allowed',
-		};
-	}
-
-	return {
-		hasAccess: true,
-		isAdmin,
-		userId: session.user.id,
-		user: session.user,
-	};
-}
 
 // ============================================
 // 标准 CRUD Actions
@@ -61,7 +25,7 @@ async function checkBackendAccess() {
  * 创建用户（后台管理员使用）
  */
 export async function createUserAction(userData) {
-	const backendCheck = await checkBackendAccess();
+	const backendCheck = await checkBackendAccessAction();
 	if (!backendCheck.hasAccess) {
 		return {
 			success: false,
@@ -174,7 +138,7 @@ export const getUserListAction = wrapQueryAction('user', async (params = {}) => 
  * 获取单个用户详情
  */
 export async function getUserDetailAction(userId) {
-	const backendCheck = await checkBackendAccess();
+	const backendCheck = await checkBackendAccessAction();
 	if (!backendCheck.hasAccess) {
 		return {
 			success: false,
@@ -216,7 +180,7 @@ export async function getUserDetailAction(userId) {
  * 更新用户信息
  */
 export async function updateUserAction(userId, updateData) {
-	const backendCheck = await checkBackendAccess();
+	const backendCheck = await checkBackendAccessAction();
 	if (!backendCheck.hasAccess) {
 		return {
 			success: false,
@@ -265,7 +229,7 @@ export async function updateUserAction(userId, updateData) {
  * 删除用户
  */
 export async function deleteUserAction(id) {
-	const backendCheck = await checkBackendAccess();
+	const backendCheck = await checkBackendAccessAction();
 	if (!backendCheck.hasAccess) {
 		return {
 			success: false,
@@ -306,7 +270,7 @@ export async function deleteUserAction(id) {
  * 批量更新用户
  */
 export async function batchUpdateUsersAction(userIds, updateData) {
-	const backendCheck = await checkBackendAccess();
+	const backendCheck = await checkBackendAccessAction();
 	if (!backendCheck.hasAccess) {
 		return {
 			success: false,
@@ -434,7 +398,7 @@ export const bindUserRolesAction = wrapAdminAction(
  * 获取用户的角色列表
  */
 export async function getUserRolesAction(userId) {
-	const backendCheck = await checkBackendAccess();
+	const backendCheck = await checkBackendAccessAction();
 	if (!backendCheck.hasAccess) {
 		return {
 			success: false,
@@ -539,7 +503,7 @@ export const unbanUserAction = wrapAdminAction(
  * 获取用户统计信息
  */
 export async function getUserStatsAction() {
-	const backendCheck = await checkBackendAccess();
+	const backendCheck = await checkBackendAccessAction();
 	if (!backendCheck.hasAccess) {
 		return {
 			success: false,
