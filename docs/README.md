@@ -47,6 +47,12 @@
 | [菜单管理文档](./admin/MENU_MANAGEMENT.md) | 动态菜单管理系统 |
 | [Server Actions 文档](./client/SERVER_ACTIONS.md) | Next.js Server Actions 最佳实践 |
 
+### 🔧 开发与部署
+
+| 文档 | 描述 |
+|------|------|
+| [Git 工作流指南](./development/GIT_WORKFLOW.md) | 多仓库分支管理策略（开源/客户版本） |
+
 ---
 
 ## 🎯 不同角色的文档路径
@@ -186,6 +192,9 @@ docs/
 │   ├── DB_API_GUIDE.md         # DB API 完整指南
 │   ├── DB_API_VS_BASEDAO.md    # 对比分析
 │   └── FOREIGNDB_JOIN_GUIDE.md # 连表查询指南
+│
+├── development/                 # 开发相关文档
+│   └── GIT_WORKFLOW.md         # Git 工作流指南
 │
 └── rbac/                        # RBAC 系统相关文档
     ├── README.md               # RBAC 文档索引
