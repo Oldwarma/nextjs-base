@@ -572,8 +572,8 @@ packages:
 EOF
 
 # 4. 添加核心代码
-cp -r ../jimeng-saas/packages/core ./packages/
-cp -r ../jimeng-saas/docs/nextra/pages ./docs/
+cp -r ../nextjs-base/packages/core ./packages/
+cp -r ../nextjs-base/docs/nextra/pages ./docs/
 
 # 5. 初始提交
 git add .
@@ -589,8 +589,8 @@ gh repo create nextjs-base/nextjs-base-pro --private
 
 # 2. 添加商业代码
 cd nextjs-base-pro
-cp -r ../jimeng-saas/packages/pro ./packages/
-cp -r ../jimeng-saas/docs/nextra/INTERNAL_ANALYSIS.md ./docs/internal/
+cp -r ../nextjs-base/packages/pro ./packages/
+cp -r ../nextjs-base/docs/nextra/INTERNAL_ANALYSIS.md ./docs/internal/
 
 # 3. 初始提交
 git add .

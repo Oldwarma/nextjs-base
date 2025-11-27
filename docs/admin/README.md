@@ -97,7 +97,7 @@ const fieldsConfig = [
 ## 📁 目录结构
 
 ```
-jimeng-saas/
+nextjs-base/
 ├── app/(admin)/
 │   ├── actions/                    # Server Actions
 │   │   ├── dao/

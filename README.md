@@ -1,4 +1,4 @@
-# Jimeng SaaS - AI Image Generation Platform
+# NextJS Base - Full-Stack Admin Platform
 
 A full-stack SaaS platform for AI image generation with user authentication, credit system, package management, and usage tracking.
 
@@ -23,7 +23,7 @@ A full-stack SaaS platform for AI image generation with user authentication, cre
 ## Project Structure
 
 ```
-jimeng-saas/
+nextjs-base/
 ├── app/                    # Next.js App Router
 │   ├── (client)/          # Frontend (multi-language support)
 │   │   ├── [locale]/      # Dynamic language routes (en, zh, ja)
@@ -63,7 +63,7 @@ jimeng-saas/
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd jimeng-saas
+cd nextjs-base
 ```
 
 2. Install dependencies:

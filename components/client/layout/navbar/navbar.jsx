@@ -45,7 +45,7 @@ export default function Navbar() {
 			>
 				<Image
 					src='/logo.png'
-					alt='Jimeng Logo'
+					alt='NextJS Base Logo'
 					width={32}
 					height={32}
 				/>

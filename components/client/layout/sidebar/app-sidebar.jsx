@@ -23,7 +23,7 @@ export function AppSidebar({ user }) {
 					<div className='size-6 flex items-center justify-center'>
 						<Image
 							src='/logo.png'
-							alt='Jimeng Logo'
+							alt='NextJS Base Logo'
 							width={40}
 							height={40}
 							className='object-contain'

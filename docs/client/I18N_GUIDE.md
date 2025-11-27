@@ -11,7 +11,7 @@
 ## 项目结构
 
 ```
-jimeng-saas/
+nextjs-base/
 ├── i18n/
 │   ├── config.js          # i18n 配置（语言列表、默认语言等）
 │   └── request.js         # next-intl 请求配置

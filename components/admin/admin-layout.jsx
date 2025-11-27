@@ -269,7 +269,7 @@ export default function AdminLayout({ children, user }) {
 	return (
 		<>
 			<ProLayout
-				title='Jimeng Admin'
+				title='NextJS Base Admin'
 				logo='/logo.png'
 				layout='mix'
 				splitMenus={false}
