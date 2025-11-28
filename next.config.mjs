@@ -17,9 +17,9 @@ const nextConfig = {
 		remotePatterns: [
 			{
 				protocol: 'https',
-				hostname: 'inwindcms.nextjsbase.com',
+				hostname: 'r2.nextjsbase.com',
 				port: '',
-				pathname: '/assets/**', // 只允许访问 /assets 路径下的图片
+				pathname: '',
 			},
 			{
 				protocol: 'https',

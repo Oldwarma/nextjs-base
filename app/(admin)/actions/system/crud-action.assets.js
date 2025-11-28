@@ -44,7 +44,7 @@ export async function update(id, data) {
 import { deleteFile } from '@/lib/upload/upload-service';
 import { wrapAdminAction } from '@/lib/core/action-wrapper';
 
-export const remove = wrapAdminAction('delete', 'upload', async (id, context) => {
+export const remove = wrapAdminAction('delete', 'assets', async (id, context) => {
 	const { userId } = context;
 	
 	// 先获取文件信息
@@ -62,7 +62,7 @@ export const remove = wrapAdminAction('delete', 'upload', async (id, context) =>
 });
 
 // 批量删除
-export const batchDelete = wrapAdminAction('batch_delete', 'upload', async ({ ids }, context) => {
+export const batchDelete = wrapAdminAction('batch_delete', 'assets', async ({ ids }, context) => {
 	const { userId } = context;
 	
 	const errors = [];
