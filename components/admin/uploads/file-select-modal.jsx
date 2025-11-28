@@ -13,7 +13,7 @@ import {
 	FileZipOutlined,
 	FileImageOutlined,
 } from '@ant-design/icons';
-import { getUploadList } from '@/app/(admin)/actions/uploads/upload-actions';
+import { getUploadList } from '@/app/(admin)/actions/system/upload-actions';
 
 /**
  * 获取文件图标
