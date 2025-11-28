@@ -6,8 +6,8 @@ import { createCrudActions } from '@/lib/core/crud-helper';
  * 素材管理 CRUD Actions
  */
 const crudActions = createCrudActions({
-	collectionName: 'uploads',
-	resourceType: 'upload',
+	collectionName: 'assets',
+	resourceType: 'asset',
 	primaryKey: 'id',  // 使用 UUID 作为主键
 	
 	// 可创建字段（素材一般不支持手动创建，通过上传接口）

@@ -39,7 +39,7 @@ export const getUploadList = wrapAdminAction('query', 'upload', async ({
 	
 	// 使用 selects 方法查询
 	const result = await selects({
-		dbName: 'uploads',
+		dbName: 'assets',
 		whereJson,
 		sortJson: { createdAt: -1 },
 		pageIndex,
