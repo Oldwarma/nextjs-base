@@ -1,6 +1,6 @@
 # SmartCrudPage 模板使用指南
 
-> 基于 Permissions、Roles、Menus、Users 四个页面重构的最新模板
+> 基于 Menus、Permissions、Roles 等页面总结的最新模板规范
 
 ---
 
@@ -11,9 +11,9 @@
 ```
 app/(admin)/
 ├── admin/{resource}/
-│   └── page.js                    # 前端页面 + fieldsConfig
-└── actions/rbac/
-    └── crud-action.{resource}.js  # Server Actions + 配置
+│   └── page.js                         # 前端页面 + fieldsConfig
+└── actions/{module}/
+    └── crud-action.{resource}.js       # Server Actions + 配置
 ```
 
 **不再需要**单独的 config 文件！
@@ -30,11 +30,14 @@ app/(admin)/
 ### 步骤 1: 复制模板文件
 
 ```bash
-# 1. 复制 Page 模板
-cp templates/crud/page.template.js app/(admin)/admin/{resource}/page.js
+# 1. 创建页面目录
+mkdir -p app/(admin)/admin/{module}/{resource}
 
-# 2. 复制 Action 模板
-cp templates/crud/action.template.js app/(admin)/actions/rbac/crud-action.{resource}.js
+# 2. 复制 Page 模板
+cp templates/crud/page.template.js app/(admin)/admin/{module}/{resource}/page.js
+
+# 3. 复制 Action 模板
+cp templates/crud/action.template.js app/(admin)/actions/{module}/crud-action.{resource}.js
 ```
 
 ### 步骤 2: 批量替换变量
@@ -46,19 +49,89 @@ cp templates/crud/action.template.js app/(admin)/actions/rbac/crud-action.{resou
 | `{RESOURCE_NAME}` | 资源名(小写单数) | `coupon` |
 | `{RESOURCE_LABEL}` | 资源标签(首字母大写) | `Coupon` |
 | `{COLLECTION_NAME}` | MongoDB 集合名(小写复数) | `coupons` |
+| `{ACTION_PATH}` | Action 文件路径 | `cms`, `rbac`, `system` |
 
 **快捷替换命令**（macOS/Linux）：
 
 ```bash
-# 在文件中替换
+# 在 page.js 中替换
 sed -i '' 's/{RESOURCE_NAME}/coupon/g' page.js
 sed -i '' 's/{RESOURCE_LABEL}/Coupon/g' page.js
+sed -i '' 's/{ACTION_PATH}/cms/g' page.js
+
+# 在 action 文件中替换
+sed -i '' 's/{RESOURCE_NAME}/coupon/g' crud-action.coupon.js
+sed -i '' 's/{RESOURCE_LABEL}/Coupon/g' crud-action.coupon.js
 sed -i '' 's/{COLLECTION_NAME}/coupons/g' crud-action.coupon.js
 ```
 
 ### 步骤 3: 配置字段
 
 在 `page.js` 中，修改 `fieldsConfig` 数组，定义你的字段。
+
+---
+
+## 📋 最新规范
+
+### ✅ 正确写法
+
+```javascript
+'use client';
+
+// 1. 静态导入 SmartCrudPage（不使用 dynamic）
+import SmartCrudPage from '@/components/admin/smart-crud-page';
+
+// 2. 统一导入 Actions
+import * as resourceActions from '@/app/(admin)/actions/module/crud-action.resource';
+
+export default function ResourceManagementPage() {
+	// 3. 直接定义 fieldsConfig（不使用 useMemo）
+	const fieldsConfig = [
+		{
+			key: 'name',
+			title: 'Name',
+			type: 'text',
+			table: { width: 200 },
+			form: { required: true },
+			search: { mode: 'like' },  // 直接使用 mode，不需要 enabled: true
+		},
+	];
+
+	// 4. 在 JSX 中内联定义 actions
+	return (
+		<SmartCrudPage
+			fieldsConfig={fieldsConfig}
+			actions={{
+				getList: resourceActions.getResourceListAction,
+				create: resourceActions.createResourceAction,
+				update: resourceActions.updateResourceAction,
+				delete: resourceActions.deleteResourceAction,
+			}}
+			title='Resource Management'
+			enableCreate={true}
+			enableEdit={true}
+			enableDelete={true}
+			enableDetail={true}
+		/>
+	);
+}
+```
+
+### ❌ 旧写法（不推荐）
+
+```javascript
+// ❌ 不要使用 dynamic 导入
+const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), { ssr: false });
+
+// ❌ 不要使用 useMemo 包裹 fieldsConfig
+const fieldsConfig = useMemo(() => [...], []);
+
+// ❌ 不要单独定义 actions 对象
+const actions = { getList, create, update, delete: deleteItem };
+
+// ❌ 不要使用 search.enabled
+search: { enabled: true, mode: 'like' }  // enabled 是多余的
+```
 
 ---
 
@@ -73,28 +146,27 @@ const fieldsConfig = [
     title: 'Field Label',    // 显示标签（必需）
     type: 'text',            // 字段类型（必需）
     
-    // 表格配置
+    // 表格配置（false 表示不显示）
     table: {
       width: 150,
-      sorter: true,
-      copyable: true,
+      ellipsis: true,
+      align: 'center',
     },
     
-    // 表单配置
+    // 表单配置（false 表示不显示）
     form: {
       required: true,
       placeholder: 'Enter value',
+      fieldProps: {
+        showCount: true,
+        maxLength: 50,
+      },
     },
     
-    // 搜索配置
+    // 搜索配置（false 表示不可搜索）
     search: {
-      enabled: true,
-      mode: 'like',
-    },
-    
-    // 详情配置
-    detail: {
-      render: (value) => value,
+      mode: 'like',           // 搜索模式
+      placeholder: 'Search',
     },
   },
 ];
@@ -102,148 +174,115 @@ const fieldsConfig = [
 
 ### 支持的字段类型
 
-#### 1. 文本类型
+| 类型 | 说明 | 示例 |
+|------|------|------|
+| `text` | 单行文本 | 名称、标题 |
+| `textarea` | 多行文本 | 描述、备注 |
+| `number` | 数字输入 | 数量、排序 |
+| `select` | 下拉选择 | 状态、类型 |
+| `switch` | 开关 | 启用/禁用 |
+| `date` | 日期选择 | 生日、过期日期 |
+| `datetime` | 日期时间 | 创建时间 |
+| `tree-select` | 树形选择 | 父级菜单 |
+| `icon` | 图标选择 | 菜单图标 |
+| `image` | 图片上传 | 头像、封面 |
+| `markdown` | Markdown 编辑器 | 文章内容 |
 
-```javascript
-{ type: 'text' }       // 单行文本
-{ type: 'textarea' }   // 多行文本
-{ type: 'password' }   // 密码
-```
+### 搜索模式
 
-#### 2. 数字类型
-
-```javascript
-{ type: 'number' }     // 数字输入
-```
-
-#### 3. 选择类型
-
-```javascript
-{
-  type: 'select',
-  options: [
-    { label: 'Option 1', value: '1', color: 'blue' },
-    { label: 'Option 2', value: '2', color: 'green' },
-  ],
-}
-
-{ type: 'radio' }      // 单选
-```
-
-#### 4. 树形选择
-
-```javascript
-{
-  type: 'tree-select',
-  form: {
-    action: getResourceTreeForSelectAction, // 动态加载树形数据
-  },
-}
-```
-
-#### 5. 日期类型
-
-```javascript
-{ type: 'date' }       // 日期
-{ type: 'datetime' }   // 日期时间
-{ type: 'dateRange' }  // 日期范围
-```
-
-#### 6. 布尔类型
-
-```javascript
-{
-  type: 'switch',
-  table: {
-    trueText: 'Enabled',
-    falseText: 'Disabled',
-  },
-}
-```
-
-#### 7. 数组类型
-
-```javascript
-{
-  type: 'array',
-  form: {
-    placeholder: 'Enter item',
-    addButtonText: 'Add Item',
-  },
-}
-```
-
-#### 8. 其他类型
-
-```javascript
-{ type: 'image' }      // 图片
-{ type: 'upload' }     // 文件上传
-{ type: 'json' }       // JSON 编辑器
-{ type: 'markdown' }   // Markdown 编辑器
-```
+| 模式 | 说明 | 适用场景 |
+|------|------|----------|
+| `like` | 模糊搜索 | 文本字段 |
+| `exact` | 精确搜索 | 状态、布尔值 |
+| `in` | 数组包含 | 多选字段 |
+| `range` | 范围搜索 | 日期范围 |
 
 ---
 
 ## 🎨 配置示例
 
-### 1. 基础 CRUD 页面
+### 1. 基础字段
 
 ```javascript
-const fieldsConfig = [
-  {
-    key: 'name',
-    title: 'Name',
-    type: 'text',
-    table: { width: 200, sorter: true },
-    form: { required: true },
-    search: { enabled: true, mode: 'like' },
-  },
-  {
-    key: 'status',
-    title: 'Status',
-    type: 'select',
-    options: [
-      { label: 'Active', value: 'active', color: 'green' },
-      { label: 'Inactive', value: 'inactive', color: 'red' },
-    ],
-    table: { width: 100 },
-    form: { required: true },
-    search: { enabled: true, mode: 'exact' },
-  },
-];
-```
-
-### 2. 树形结构页面
-
-```javascript
-const fieldsConfig = [
-  {
-    key: 'parent_id',
-    title: 'Parent',
-    type: 'tree-select',
-    table: false,
-    form: {
-      action: getResourceTreeForSelectAction,
-      placeholder: 'Select parent',
+// 文本字段
+{
+  key: 'name',
+  title: 'Name',
+  type: 'text',
+  table: { width: 200, ellipsis: true },
+  form: {
+    required: true,
+    placeholder: 'Enter name',
+    fieldProps: {
+      showCount: true,
+      maxLength: 50,
     },
   },
-  // ... 其他字段
-];
+  search: { mode: 'like' },
+}
+
+// 开关字段
+{
+  key: 'enable',
+  title: 'Status',
+  type: 'switch',
+  table: { width: 100, align: 'center' },
+  form: {
+    fieldProps: {
+      checkedChildren: 'Enabled',
+      unCheckedChildren: 'Disabled',
+    },
+  },
+  search: { fieldProps: { placeholder: 'Filter by status' } },
+}
+
+// 时间字段（只读）
+{
+  key: 'createdAt',
+  title: 'Created At',
+  type: 'datetime',
+  table: { width: 180 },
+  form: false,
+  search: false,
+}
 ```
 
-### 3. 自定义渲染
+### 2. 树形选择（动态加载）
 
 ```javascript
 {
-  key: 'avatar',
-  title: 'Avatar',
-  type: 'image',
+  key: 'parent_id',
+  title: 'Parent Menu',
+  type: 'tree-select',
+  table: false,
+  form: {
+    placeholder: 'Select parent menu',
+    action: 'getMenuTreeForSelectAction',  // Action 名称，自动调用
+    fieldProps: {
+      allowClear: true,
+      showSearch: true,
+      treeDefaultExpandAll: false,
+    },
+  },
+  search: false,
+}
+```
+
+### 3. 自定义表格渲染
+
+```javascript
+{
+  key: 'enable',
+  title: 'Status',
+  type: 'switch',
   table: {
-    width: 80,
-    render: (url, record) => (
-      <Avatar src={url} size={40}>
-        {record.name?.[0]}
-      </Avatar>
+    width: 100,
+    render: (enable) => (
+      enable ? (
+        <Tag icon={<CheckCircleOutlined />} color='success'>Enabled</Tag>
+      ) : (
+        <Tag icon={<CloseCircleOutlined />} color='default'>Disabled</Tag>
+      )
     ),
   },
 }
@@ -251,251 +290,114 @@ const fieldsConfig = [
 
 ---
 
-## 🔧 高级配置
+## 🔧 Action 配置
 
-### 1. 动态选项加载
+### 基础配置
 
 ```javascript
-const [options, setOptions] = useState([]);
-
-useEffect(() => {
-  loadOptions();
-}, []);
-
-const fieldsConfig = useMemo(() => [
-  {
-    key: 'category',
-    type: 'select',
-    options: options, // 动态选项
+const resourceConfig = {
+  collectionName: 'resources',      // MongoDB 集合名
+  primaryKey: 'id',                 // 主键字段
+  softDelete: false,                // 是否软删除
+  
+  fields: {
+    creatable: ['name', 'enable', 'remark'],  // 可创建字段
+    updatable: ['name', 'enable', 'remark'],  // 可更新字段
+    searchable: ['name', 'remark'],           // 可搜索字段
   },
-], [options]);
-```
-
-### 2. 条件显示字段
-
-```javascript
-{
-  key: 'customField',
-  title: 'Custom Field',
-  type: 'text',
-  form: {
-    showRule: (formData) => formData.type === 'custom',
+  
+  query: {
+    defaultSort: { createdAt: -1 },  // 默认排序
+    defaultPageSize: 20,             // 默认分页大小
   },
-}
-```
-
-### 3. 自定义操作
-
-```javascript
-const customRowActions = [
-  {
-    key: 'activate',
-    text: 'Activate',
-    onClick: async (record) => {
-      await activateAction(record.id);
+  
+  validation: {
+    name: {
+      required: true,
+      type: 'string',
+      minLength: 2,
+      maxLength: 50,
     },
   },
-];
-
-<SmartCrudPage
-  customRowActions={customRowActions}
-  // ...
-/>
+};
 ```
 
-### 4. 树形表格
+### 生命周期钩子
 
 ```javascript
-<SmartCrudPage
-  expandable={{
-    defaultExpandAllRows: true,
-    childrenColumnName: 'children',
-  }}
-  // ...
-/>
-```
-
----
-
-## 📚 完整示例
-
-### 示例 1: Permissions 页面
-
-参考：`app/(admin)/admin/rbac/permissions/page.js`
-
-**特点**：
-- 树形结构
-- 父级选择
-- 动作数组字段
-
-### 示例 2: Roles 页面
-
-参考：`app/(admin)/admin/rbac/roles/page.js`
-
-**特点**：
-- 自定义操作（分配权限/菜单）
-- 树形模态框
-- 多选数据
-
-### 示例 3: Menus 页面
-
-参考：`app/(admin)/admin/rbac/menus/page.js`
-
-**特点**：
-- 树形表格
-- 图标选择
-- URL 配置
-
-### 示例 4: Users 页面
-
-参考：`app/(admin)/admin/rbac/users/page.js`
-
-**特点**：
-- Better Auth 集成
-- 自定义创建模态框
-- 角色绑定
-- 密码重置
-- 用户封禁
-
----
-
-## 🎯 最佳实践
-
-### 1. 文件命名
-
-```
-推荐
-page.js
-crud-action.permission.js
-crud-action.role.js
-
-❌ 不推荐
-permissions-page.js
-admin-permissions.js
-permission-crud.config.js (不需要单独的 config)
-```
-
-### 2. 字段顺序
-
-```javascript
-const fieldsConfig = [
-  // 1. 隐藏字段（ID）
-  { key: 'id', table: false, form: false },
+hooks: {
+  beforeCreate: async (data) => {
+    // 创建前处理
+    return data;
+  },
   
-  // 2. 主要字段（名称、编码）
-  { key: 'name' },
-  { key: 'code' },
+  beforeUpdate: async (id, data) => {
+    // 更新前处理
+    return data;
+  },
   
-  // 3. 状态字段
-  { key: 'enable' },
-  { key: 'status' },
-  
-  // 4. 描述字段
-  { key: 'description' },
-  { key: 'remark' },
-  
-  // 5. 时间字段
-  { key: 'createdAt' },
-  { key: 'updatedAt' },
-];
-```
-
-### 3. rowKey 配置
-
-```javascript
-// 正确：使用字符串
-<SmartCrudPage rowKey='id' />
-
-// ❌ 错误：不要使用函数
-<SmartCrudPage rowKey={(record) => record.id} />
-```
-
-### 4. Actions 命名
-
-```javascript
-// 统一命名规范
-export const getResourceListAction = ...;
-export const getResourceDetailAction = ...;
-export const createResourceAction = ...;
-export const updateResourceAction = ...;
-export const deleteResourceAction = ...;
-```
-
-### 5. 搜索模式
-
-```javascript
-search: {
-  mode: 'like',   // 模糊搜索（文本）
-  mode: 'exact',  // 精确搜索（状态、布尔值）
-  mode: 'in',     // 数组包含（多选）
+  beforeDelete: async (id) => {
+    // 删除前检查
+    return true;
+  },
 }
 ```
+
+---
+
+## 📚 参考示例
+
+| 页面 | 路径 | 特点 |
+|------|------|------|
+| Menus | `admin/rbac/menus` | 树形表格、图标选择、动态 TreeSelect |
+| Permissions | `admin/rbac/permissions` | 树形结构、数组字段 |
+| Roles | `admin/rbac/roles` | 自定义操作、权限分配 |
+| Posts | `admin/cms/post` | Markdown 编辑器、批量操作 |
 
 ---
 
 ## 🐛 常见问题
 
-### 1. 删除时提示 "ID is required"
+### 1. 搜索不生效
 
-**原因**: `rowKey` 配置错误
+**检查**: `search` 配置是否正确设置了 `mode`
+
+```javascript
+// ❌ 错误
+search: { enabled: true }
+
+// ✅ 正确
+search: { mode: 'like' }
+```
+
+### 2. TreeSelect 数据不加载
+
+**检查**: `form.action` 是否在 `actions` 中注册
+
+```javascript
+// page.js
+actions={{
+  getList: ...,
+  getMenuTreeForSelectAction: menuActions.getMenuTreeForSelectAction,  // 必须注册
+}}
+
+// fieldsConfig
+form: {
+  action: 'getMenuTreeForSelectAction',  // 与上面对应
+}
+```
+
+### 3. 删除报错 "ID is required"
+
+**检查**: `rowKey` 是否正确配置
 
 ```javascript
 // ❌ 错误
 rowKey={(record) => record.id}
 
-// 正确
+// ✅ 正确
 rowKey='id'
 ```
-
-### 2. 搜索时报错 "$regex has to be a string"
-
-**原因**: DAO 层重复包装 `$regex`
-
-**解决**: 在 DAO 中检查是否已经是对象：
-
-```javascript
-if (filters.name) {
-  query.name = typeof filters.name === 'object' 
-    ? filters.name 
-    : { $regex: filters.name, $options: 'i' };
-}
-```
-
-### 3. TreeSelect 警告 "value is invalidate: undefined"
-
-**原因**: Root 节点的 `value` 是 `null` 或 `undefined`
-
-**解决**: 使用空字符串：
-
-```javascript
-const treeData = [
-  { title: '--- Root ---', value: '', key: '' }, // 使用空字符串
-  ...otherNodes,
-];
-```
-
-### 4. Select 没有 placeholder
-
-**原因**: `placeholder` 放在了顶层 props
-
-**解决**: 放在 `fieldProps` 中：
-
-```javascript
-form: {
-  placeholder: 'Select option', // ❌ 无效
-  fieldProps: {
-    placeholder: 'Select option', // 有效
-  },
-}
-```
-
----
-
-## 📖 相关文档
-
-- [SmartCrudPage 完整指南](../../docs/SMART_CRUD_COMPLETE_GUIDE.md)
-- [字段类型参考](../../lib/crud/field-types.js)
-- [CRUD Helper 文档](../../lib/crud/crud-helper.js)
 
 ---
 
@@ -509,4 +411,4 @@ form: {
 - 🔧 **易于维护** - 配置集中，修改方便
 - ⚡ **类型驱动** - 自动渲染，开箱即用
 
-**开始使用模板，提升 10 倍开发效率！** 🎉
+**开始使用模板，提升开发效率！** 🎉
