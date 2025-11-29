@@ -38,7 +38,7 @@ lib/
 │   ├── search-transformer.js  # 搜索转换器
 │   └── README.md
 │
-├── validation/          # ✅ 数据验证
+├── validation/          # 数据验证
 │   ├── auto-schema.js   # 自动 Schema 转换（validation → Zod）
 │   ├── index.js         # 导出入口
 │   └── README.md
@@ -131,7 +131,7 @@ import { z } from '@/lib/validation';
 - [📝 日志系统 (logging/)](./logging/README.md)
 - [💼 业务逻辑 (business/)](./business/README.md)
 - [🎨 CRUD 工具 (crud/)](./crud/README.md)
-- [✅ 数据验证 (validation/)](./validation/README.md)
+- [数据验证 (validation/)](./validation/README.md)
 
 ## 🔗 依赖关系图
 
@@ -167,8 +167,8 @@ import { z } from '@/lib/validation';
 
 ### 导入路径规范
 
-- ✅ 使用绝对路径：`@/lib/auth/auth`
-- ✅ 明确子目录：`@/lib/database/db-api`
+- 使用绝对路径：`@/lib/auth/auth`
+- 明确子目录：`@/lib/database/db-api`
 - ❌ 避免：`@/lib/database/mongodb`（旧路径）
 
 ### 文件命名规范

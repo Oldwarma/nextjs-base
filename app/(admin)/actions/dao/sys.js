@@ -410,7 +410,7 @@ export async function findMenusByIds(menuIds) {
 
 	const collection = await getCollection(COLLECTION_NAMES.MENUS);
 	return await collection.find({
-		id: { $in: menuIds }, // ✅ 使用 id（UUID）查询
+		id: { $in: menuIds }, // 使用 id（UUID）查询
 	});
 }
 
@@ -1163,7 +1163,7 @@ function buildMenuTreeFromFlat(menus, parent_id = null) {
 	for (const menu of menus) {
 		// 数据库中 parent_id 字段存的是父菜单的 id（UUID）
 		if (menu.parent_id === parent_id) {
-			const children = buildMenuTreeFromFlat(menus, menu.id); // ✅ 使用 id（UUID）而不是 _id
+			const children = buildMenuTreeFromFlat(menus, menu.id); // 使用 id（UUID）而不是 _id
 			if (children.length > 0) {
 				menu.children = children;
 			}

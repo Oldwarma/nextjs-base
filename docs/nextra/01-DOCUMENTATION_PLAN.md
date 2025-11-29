@@ -8,7 +8,6 @@
 ### 框架定位
 - **名称**: NextJS Base Framework (暂定)
 - **定位**: 基于 Next.js + MongoDB 的开箱即用全栈开发框架
-- **类似**: VK-uniCloud (uni-app + uniCloud)，但基于现代 Next.js 技术栈
 - **目标用户**: 
   - 独立开发者
   - 小团队快速开发
@@ -235,7 +234,7 @@ nextra-docs/
 
 3. **表格对比**
    - 用表格对比不同方案
-   - 清晰的 ✅ ❌ 标记
+   - 清晰的 ❌ 标记
 
 4. **实际案例**
    - 基于真实业务场景
@@ -253,19 +252,19 @@ nextra-docs/
 
 | 现有文档 | 新位置 | 状态 |
 |---------|--------|------|
-| SMART_CRUD_COMPLETE_GUIDE.md | `/admin/smart-crud/` | ✅ 拆分成多个页面 |
-| SMART_CRUD_ARCHITECTURE.md | `/admin/smart-crud/introduction.mdx` | ✅ 整合 |
-| admin/RBAC_SYSTEM.md | `/admin/rbac/configuration.mdx` | ✅ 用户配置指南 |
-| rbac/RBAC_IMPLEMENTATION_GUIDE.md | `/admin/rbac/implementation.mdx` | ✅ 开发者实现指南 |
-| database/DB_API_GUIDE.md | `/admin/database/db-api.mdx` | ✅ 完整保留 |
-| admin/BASE_DAO.md | `/admin/database/base-dao.mdx` | ✅ 完整保留 |
-| database/FOREIGNDB_JOIN_GUIDE.md | `/admin/database/foreign-db.mdx` | ✅ 连表查询 |
-| admin/ACTION_LOGGER.md | `/admin/advanced/action-logger.mdx` | ✅ 保留 |
-| admin/MENU_MANAGEMENT.md | `/admin/advanced/menu-management.mdx` | ✅ 保留 |
-| admin/MARKDOWN_EDITOR_GUIDE.md | `/admin/components/markdown-editor.mdx` | ✅ 保留 |
-| database-primary-key-strategy.md | `/core-concepts/database-design.mdx` | ✅ 整合 |
-| NAMING_STANDARDS.md | `/core-concepts/naming-standards.mdx` | ✅ 保留 |
-| client/* | `/client/` | ✅ 保留待扩展 |
+| SMART_CRUD_COMPLETE_GUIDE.md | `/admin/smart-crud/` | 拆分成多个页面 |
+| SMART_CRUD_ARCHITECTURE.md | `/admin/smart-crud/introduction.mdx` | 整合 |
+| admin/RBAC_SYSTEM.md | `/admin/rbac/configuration.mdx` | 用户配置指南 |
+| rbac/RBAC_IMPLEMENTATION_GUIDE.md | `/admin/rbac/implementation.mdx` | 开发者实现指南 |
+| database/DB_API_GUIDE.md | `/admin/database/db-api.mdx` | 完整保留 |
+| admin/BASE_DAO.md | `/admin/database/base-dao.mdx` | 完整保留 |
+| database/FOREIGNDB_JOIN_GUIDE.md | `/admin/database/foreign-db.mdx` | 连表查询 |
+| admin/ACTION_LOGGER.md | `/admin/advanced/action-logger.mdx` | 保留 |
+| admin/MENU_MANAGEMENT.md | `/admin/advanced/menu-management.mdx` | 保留 |
+| admin/MARKDOWN_EDITOR_GUIDE.md | `/admin/components/markdown-editor.mdx` | 保留 |
+| database-primary-key-strategy.md | `/core-concepts/database-design.mdx` | 整合 |
+| NAMING_STANDARDS.md | `/core-concepts/naming-standards.mdx` | 保留 |
+| client/* | `/client/` | 保留待扩展 |
 
 ### 需要删除的文档 (临时/调试)
 
@@ -372,7 +371,7 @@ mkdir -p nextra/pages
 
 ## 💡 下一步行动
 
-1. ✅ 完成此规划文档
+1. 完成此规划文档
 2. 创建 Nextra 项目
 3. 开始编写第一批核心文档
 4. 迭代优化文档内容

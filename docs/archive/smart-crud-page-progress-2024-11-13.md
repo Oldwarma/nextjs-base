@@ -5,18 +5,18 @@
 
 ---
 
-## ✅ 已完成（Phase 1 - Part 1）
+## 已完成（Phase 1 - Part 1）
 
 ### 1. Switch 类型增强 ✅
 
 **文件：** `lib/crud/field-types.js` (第 833-871 行)
 
 **新增功能：**
-- ✅ 支持 `activeText` / `inactiveText` (vk 风格，优先)
-- ✅ 支持 `trueText` / `falseText` (向后兼容)
-- ✅ 支持 `activeColor` / `inactiveColor` (自定义颜色)
-- ✅ 支持 `activeIcon` / `inactiveIcon` (图标名称)
-- ✅ 动态加载 Ant Design 图标
+- 支持 `activeText` / `inactiveText` (优先)
+- 支持 `trueText` / `falseText` (向后兼容)
+- 支持 `activeColor` / `inactiveColor` (自定义颜色)
+- 支持 `activeIcon` / `inactiveIcon` (图标名称)
+- 动态加载 Ant Design 图标
 
 **配置示例：**
 ```javascript
@@ -45,11 +45,11 @@
 **文件：** `lib/crud/field-types.js` (第 649-723 行)
 
 **新增功能：**
-- ✅ 支持 `table.valueEnum` (Ant Design Pro 风格)
-- ✅ 支持 `status` 字段自动映射颜色
-- ✅ 状态映射：Success → success, Error → error, Warning → warning 等
-- ✅ 支持单选和多选
-- ✅ 向后兼容 `options` 配置
+- 支持 `table.valueEnum` (Ant Design Pro 风格)
+- 支持 `status` 字段自动映射颜色
+- 状态映射：Success → success, Error → error, Warning → warning 等
+- 支持单选和多选
+- 向后兼容 `options` 配置
 
 **状态到颜色映射：**
 ```javascript
@@ -94,8 +94,8 @@ const statusColorMap = {
 **目标文件：** `lib/crud/field-types.js` - array 类型
 
 **计划功能：**
-1. ✅ 支持 `formatter` 函数（纯 JS）
-2. ✅ 支持 `arrayRender` 配置
+1. 支持 `formatter` 函数（纯 JS）
+2. 支持 `arrayRender` 配置
    - `maxDisplay`: 最多显示几个
    - `tagColor`: Tag 颜色（函数或固定值）
 
@@ -143,7 +143,7 @@ if (field.table?.render) {
   // 自定义 JSX render 函数
   column.render = field.table.render;
 } else if (field.table?.formatter) {
-  // ✅ 支持纯 JS formatter 函数（vk 风格）
+  // 支持纯 JS formatter 函数
   column.render = (value, record, index) => {
     const result = field.table.formatter(value, record, index);
     return result;  // 可以是字符串或 React 元素
@@ -173,7 +173,7 @@ const request = async (params, sort, filter) => {
   // ... 现有请求逻辑 ...
   
   if (result.success) {
-    // ✅ 检测是否为树形数据
+    // 检测是否为树形数据
     const hasChildren = result.data && result.data.some(item => 
       item.children && Array.isArray(item.children) && item.children.length > 0
     );
@@ -202,8 +202,8 @@ const request = async (params, sort, filter) => {
 
 | 任务 | 状态 | 文件 | 行数 |
 |------|------|------|------|
-| Switch 增强 | ✅ 完成 | field-types.js | ~40 行 |
-| Select + valueEnum | ✅ 完成 | field-types.js | ~75 行 |
+| Switch 增强 | 完成 | field-types.js | ~40 行 |
+| Select + valueEnum | 完成 | field-types.js | ~75 行 |
 | Array 增强 | 🔄 待完成 | field-types.js | ~50 行 |
 | formatter 支持 | 🔄 待完成 | field-generator.js | ~10 行 |
 | 树形数据识别 | 🔄 待完成 | smart-crud-page.jsx | ~30 行 |
@@ -233,7 +233,7 @@ const request = async (params, sort, filter) => {
 }
 
 // 预期：显示带图标的 Tag
-// ✅ 需要在浏览器中验证
+// 需要在浏览器中验证
 ```
 
 #### Test 2: Select + valueEnum
@@ -252,7 +252,7 @@ const request = async (params, sort, filter) => {
 }
 
 // 预期：根据 status 自动显示不同颜色的 Tag
-// ✅ 需要在浏览器中验证
+// 需要在浏览器中验证
 ```
 
 ### 待完成测试
@@ -269,15 +269,15 @@ const request = async (params, sort, filter) => {
 
 ### 立即行动（继续实施）
 
-1. ✅ **实施 Array 类型增强**
+1. **实施 Array 类型增强**
    - 支持 `formatter` 函数
    - 支持 `arrayRender` 配置
 
-2. ✅ **实施 formatter 函数支持**
+2. **实施 formatter 函数支持**
    - 修改 `field-generator.js`
    - 添加优先级处理
 
-3. ✅ **实施树形数据自动识别**
+3. **实施树形数据自动识别**
    - 修改 `smart-crud-page.jsx`
    - 添加自动检测逻辑
 
@@ -306,26 +306,26 @@ const request = async (params, sort, filter) => {
 ```javascript
 export const permissionCrudConfig = {
   fieldsConfig: [
-    // ✅ 使用新的 Switch 配置
+    // 使用新的 Switch 配置
     {
       key: 'enable',
       type: 'switch',
       table: {
-        activeText: 'Enabled',    // ✅ 新增
-        inactiveText: 'Disabled', // ✅ 新增
-        activeColor: 'success',   // ✅ 新增
-        inactiveColor: 'error',   // ✅ 新增
-        activeIcon: 'CheckCircleOutlined',   // ✅ 新增
-        inactiveIcon: 'CloseCircleOutlined', // ✅ 新增
+        activeText: 'Enabled',    // 新增
+        inactiveText: 'Disabled', // 新增
+        activeColor: 'success',   // 新增
+        inactiveColor: 'error',   // 新增
+        activeIcon: 'CheckCircleOutlined',   // 新增
+        inactiveIcon: 'CloseCircleOutlined', // 新增
       },
     },
     
-    // ✅ 使用新的 Select + valueEnum 配置
+    // 使用新的 Select + valueEnum 配置
     {
       key: 'crud_category',
       type: 'select',
       table: {
-        valueEnum: {              // ✅ 新增
+        valueEnum: {              // 新增
           0: { text: 'Unclassified', status: 'Default' },
           1: { text: 'Create', status: 'Success' },
           2: { text: 'Delete', status: 'Error' },
@@ -341,7 +341,7 @@ export const permissionCrudConfig = {
       key: 'actions',
       type: 'array',
       table: {
-        formatter: (value) => {   // ✅ 待实施
+        formatter: (value) => {   // 待实施
           if (!value || value.length === 0) return '-';
           return value.slice(0, 2).join(', ') + (value.length > 2 ? ' ...' : '');
         },

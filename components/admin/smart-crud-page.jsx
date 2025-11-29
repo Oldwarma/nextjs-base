@@ -1,7 +1,7 @@
 /**
  * 智能 CRUD 页面组件
  *
- * 基于 vk-unicloud 万能表格/表单思想
+ * 基于万能表格/表单思想
  * 通过统一的字段配置自动生成表格、表单、搜索等
  *
  * 使用方式:
@@ -77,7 +77,7 @@ export default function SmartCrudPage({
 	dataSource, // 可选：直接传入数据（不使用 request）
 	loading, // 可选：加载状态
 	title = 'Data Management',
-	rowKey = 'id',  // ✅ 默认使用 'id' 而不是 '_id'，兼容未来数据库迁移
+	rowKey = 'id',  // 默认使用 'id' 而不是 '_id'，兼容未来数据库迁移
 	tableProps = {},
 	formProps = {},
 	batchActions = [],
@@ -116,7 +116,7 @@ export default function SmartCrudPage({
 	const [currentRow, setCurrentRow] = useState(null);
 	const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 	const [searchExpanded, setSearchExpanded] = useState(false); // 搜索表单展开状态
-	const [isTreeData, setIsTreeData] = useState(false); // ✅ 树形数据标识
+	const [isTreeData, setIsTreeData] = useState(false); // 树形数据标识
 	const actionRef = useRef();
 	
 	// 当 actionRef 准备好时，通知父组件
@@ -395,8 +395,8 @@ export default function SmartCrudPage({
 			const requestParams = {
 				pageIndex: params.current,
 				pageSize: params.pageSize,
-				whereJson,    // ✅ 统一使用 whereJson 传递查询条件
-				sortJson,     // ✅ 统一使用 sortJson 传递排序条件
+				whereJson,    // 统一使用 whereJson 传递查询条件
+				sortJson,     // 统一使用 sortJson 传递排序条件
 			};
 
 		const result = await actions.getList(requestParams);
@@ -406,7 +406,7 @@ export default function SmartCrudPage({
 			return { data: [], success: false, total: 0 };
 		}
 
-		// ✅ 自动检测是否为树形数据（vk-unicloud 风格）
+		// 自动检测是否为树形数据
 		const dataList = result.data || [];
 		if (dataList.length > 0) {
 			const hasChildren = dataList.some(item => 
@@ -614,7 +614,7 @@ export default function SmartCrudPage({
 	// 合并 tableProps，单独处理 pagination、scroll 和 expandable
 	const { pagination: userPagination, scroll: userScroll, expandable: userExpandable, ...restTableProps } = tableProps || {};
 	
-	// ✅ 自动生成树形表格配置（vk-unicloud 风格）
+	// 自动生成树形表格配置
 	const autoExpandable = isTreeData ? {
 		defaultExpandAllRows: false, // 默认不展开
 		indentSize: 24, // 缩进大小
@@ -643,7 +643,7 @@ export default function SmartCrudPage({
 					pageSizeOptions: [10, 20, 50, 100],
 					...userPagination,
 				} : (
-					// ✅ 树形数据禁用分页
+					// 树形数据禁用分页
 					isTreeData ? false : {
 						defaultPageSize: 20, // 使用 defaultPageSize 让组件自己管理状态
 						showSizeChanger: true,

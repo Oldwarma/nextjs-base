@@ -19,7 +19,7 @@ await auth.api.setUserPassword({
   body: { userId, newPassword },  // 顺序错误
 });
 
-// ✅ 正确的参数顺序（根据官方文档）
+// 正确的参数顺序（根据官方文档）
 await auth.api.setUserPassword({
   headers: await headers(),
   body: { newPassword, userId },  // newPassword 在前
@@ -58,7 +58,7 @@ export async function resetUserPasswordAction(userId, newPassword) {
 
     console.log('[resetUserPasswordAction] Better Auth API result:', result);
 
-    // ✅ 检查返回值中的错误
+    // 检查返回值中的错误
     if (result?.error) {
       console.error('[resetUserPasswordAction] Better Auth returned error:', result.error);
       return {
@@ -67,7 +67,7 @@ export async function resetUserPasswordAction(userId, newPassword) {
       };
     }
 
-    // ✅ 如果 Better Auth 失败，使用 DAO 层后备方案
+    // 如果 Better Auth 失败，使用 DAO 层后备方案
     if (!result || result.status === 'error') {
       console.log('[resetUserPasswordAction] Better Auth API failed, trying DAO method...');
       
@@ -80,7 +80,7 @@ export async function resetUserPasswordAction(userId, newPassword) {
 
     return { success: true, message: 'Password reset successfully' };
   } catch (error) {
-    // ✅ 异常时也尝试 DAO 层后备方案
+    // 异常时也尝试 DAO 层后备方案
     console.error('[resetUserPasswordAction] Exception occurred:', error);
     
     try {
@@ -110,7 +110,7 @@ export async function resetUserPassword(userId, newPassword) {
   // 1. 查找用户获取完整信息
   const user = await getUserById(userId);
   
-  // 2. ✅ 从用户对象的 _id 字段获取 ObjectId
+  // 2. 从用户对象的 _id 字段获取 ObjectId
   //    这是关键！account 表的 userId 必须使用 _id 对应的 ObjectId
   let userObjectId;
   if (user._id) {
@@ -128,7 +128,7 @@ export async function resetUserPassword(userId, newPassword) {
     dbName: 'account',
     getOne: true,
     whereJson: {
-      userId: userObjectId,  // ✅ 使用正确的 ObjectId
+      userId: userObjectId,  // 使用正确的 ObjectId
       providerId: 'credential',
     },
   });
@@ -149,7 +149,7 @@ export async function resetUserPassword(userId, newPassword) {
     await add({
       dbName: 'account',
       dataJson: {
-        userId: userObjectId,  // ✅ 使用正确的 ObjectId
+        userId: userObjectId,  // 使用正确的 ObjectId
         accountId: user.email,
         providerId: 'credential',
         password: hashedPassword,
@@ -185,8 +185,8 @@ export async function resetUserPassword(userId, newPassword) {
 6. 点击确认
 
 **预期结果：**
-- ✅ 提示 "Password reset successfully"
-- ✅ 控制台输出详细日志：
+- 提示 "Password reset successfully"
+- 控制台输出详细日志：
   ```
   [resetUserPasswordAction] Attempting to reset password for user: xxx
   [resetUserPasswordAction] Better Auth API result: ...
@@ -194,8 +194,8 @@ export async function resetUserPassword(userId, newPassword) {
   [DAO resetUserPassword] No credential account found, creating new one for OAuth user...
   [DAO resetUserPassword] New credential account created: ...
   ```
-- ✅ 数据库 `account` 集合中新增一条 `providerId: 'credential'` 的记录
-- ✅ 用户可以使用邮箱和新密码登录
+- 数据库 `account` 集合中新增一条 `providerId: 'credential'` 的记录
+- 用户可以使用邮箱和新密码登录
 
 #### 场景 2：为普通用户重置密码
 
@@ -207,10 +207,10 @@ export async function resetUserPassword(userId, newPassword) {
 6. 点击确认
 
 **预期结果：**
-- ✅ 提示 "Password reset successfully"
-- ✅ 控制台输出日志
-- ✅ 数据库中该用户的 `credential` account 密码已更新
-- ✅ 用户可以使用邮箱和新密码登录
+- 提示 "Password reset successfully"
+- 控制台输出日志
+- 数据库中该用户的 `credential` account 密码已更新
+- 用户可以使用邮箱和新密码登录
 
 ### 验证密码重置成功
 

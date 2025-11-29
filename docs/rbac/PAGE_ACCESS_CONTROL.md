@@ -86,9 +86,9 @@ URL: /admin/users
 
 ### 完成！
 
-- ✅ 用户可以访问 `/admin/users` 页面
-- ✅ 菜单会自动显示在侧边栏
-- ✅ 无需编写任何权限验证代码
+- 用户可以访问 `/admin/users` 页面
+- 菜单会自动显示在侧边栏
+- 无需编写任何权限验证代码
 
 ---
 
@@ -114,9 +114,9 @@ URL: /admin/users
 
 `role: 'admin'` 的用户（Better Auth 的基础角色）：
 
-- ✅ 可以访问所有页面
-- ✅ 看到所有菜单
-- ✅ 无需配置任何权限
+- 可以访问所有页面
+- 看到所有菜单
+- 无需配置任何权限
 
 ---
 
@@ -136,7 +136,7 @@ export default function FinancePage() {
     </div>
   );
 }
-// ✅ 无需添加任何权限验证代码
+// 无需添加任何权限验证代码
 ```
 
 #### 2. 在后台配置菜单
@@ -171,9 +171,9 @@ URL: /admin/finance
 
 #### 5. 测试
 
-- ✅ `finance@example.com` 可以看到"Finance Management"菜单
-- ✅ 可以访问 `/admin/finance` 页面
-- ✅ 其他用户看不到菜单，访问页面会显示 403
+- `finance@example.com` 可以看到"Finance Management"菜单
+- 可以访问 `/admin/finance` 页面
+- 其他用户看不到菜单，访问页面会显示 403
 
 ---
 
@@ -233,7 +233,7 @@ console.log('User menus:', result.data);
 ```
 访问任何页面
     ↓
-检查 role === 'admin'? ──Yes→ ✅ 允许访问
+检查 role === 'admin'? ──Yes→ 允许访问
 ```
 
 ### 普通用户
@@ -247,7 +247,7 @@ console.log('User menus:', result.data);
     ↓
 检查 /admin/users 是否在菜单的 URL 中?
     ↓
-Yes → ✅ 允许访问
+Yes → 允许访问
 No  → ❌ 显示 403
 ```
 
@@ -260,7 +260,7 @@ No  → ❌ 显示 403
 确保菜单配置的 URL 与实际页面路径完全一致：
 
 ```javascript
-// ✅ 正确
+// 正确
 菜单 URL: /admin/users
 页面路径: app/(admin)/admin/users/page.js → /admin/users
 
@@ -272,7 +272,7 @@ No  → ❌ 显示 403
 ### 2. 使用有意义的菜单名称
 
 ```javascript
-// ✅ 好的命名
+// 好的命名
 User Management
 Finance Dashboard
 Analytics Reports
@@ -286,7 +286,7 @@ test
 ### 3. 合理的菜单层级
 
 ```javascript
-// ✅ 推荐：2-3 层
+// 推荐：2-3 层
 系统管理
 ├── 用户管理
 ├── 角色管理
@@ -327,7 +327,7 @@ export default async function UsersPage() {
 #### 迁移后
 
 ```javascript
-// ✅ 直接返回内容
+// 直接返回内容
 export default async function UsersPage() {
   return <div>Content</div>;
 }
@@ -414,11 +414,11 @@ role === 'admin' → 可以访问所有页面，看到所有菜单
 
 这个系统的优势：
 
-1. ✅ **零代码**: 页面不需要添加任何权限验证代码
-2. ✅ **统一管理**: 所有权限在后台 RBAC 系统中配置
-3. ✅ **自动同步**: 菜单显示和页面访问自动关联
-4. ✅ **安全**: 自动拦截所有未授权访问
-5. ✅ **灵活**: 通过后台配置即可调整权限
+1. **零代码**: 页面不需要添加任何权限验证代码
+2. **统一管理**: 所有权限在后台 RBAC 系统中配置
+3. **自动同步**: 菜单显示和页面访问自动关联
+4. **安全**: 自动拦截所有未授权访问
+5. **灵活**: 通过后台配置即可调整权限
 
 **现在就开始使用吧！** 🚀
 

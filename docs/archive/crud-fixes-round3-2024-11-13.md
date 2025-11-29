@@ -16,7 +16,7 @@
 
 ---
 
-## ✅ 修复方案
+## 修复方案
 
 ### 问题根源
 
@@ -53,7 +53,7 @@ React 不允许将不认识的 props 直接传递给 DOM 元素。这些警告�
       allowClear: true,
       showSearch: true,
       treeNodeFilterProp: 'title',
-      // ✅ 移除 dropdownStyle/popupStyle
+      // 移除 dropdownStyle/popupStyle
       // TreeSelect 会自动处理下拉菜单样式
     },
   },
@@ -86,9 +86,9 @@ React 不允许将不认识的 props 直接传递给 DOM 元素。这些警告�
 ```javascript
 {
   key: 'actions',
-  type: 'list',  // ✅ 使用正确的类型
+  type: 'list',  // 使用正确的类型
   form: {
-    // ✅ ProFormList 的配置应该在 form 这一层
+    // ProFormList 的配置应该在 form 这一层
     copyIconProps: false,
     deleteIconProps: { tooltipText: 'Delete Action' },
     creatorButtonProps: { creatorButtonText: 'Add Action' },
@@ -136,10 +136,10 @@ Ant Design 在版本更新中废弃了一些属性：
 
 | 问题 | 修复前 | 修复后 |
 |------|--------|--------|
-| **popupStyle 警告** | 使用 `dropdownStyle` 或 `popupStyle` | ✅ 完全移除 |
-| **copyIconProps 警告** | 放在 `fieldProps` 中 | ✅ 放在 `form` 中 |
-| **deleteIconProps 警告** | 放在 `fieldProps` 中 | ✅ 放在 `form` 中 |
-| **creatorButtonProps 警告** | 放在 `fieldProps` 中 | ✅ 放在 `form` 中 |
+| **popupStyle 警告** | 使用 `dropdownStyle` 或 `popupStyle` | 完全移除 |
+| **copyIconProps 警告** | 放在 `fieldProps` 中 | 放在 `form` 中 |
+| **deleteIconProps 警告** | 放在 `fieldProps` 中 | 放在 `form` 中 |
+| **creatorButtonProps 警告** | 放在 `fieldProps` 中 | 放在 `form` 中 |
 
 ---
 
@@ -153,7 +153,7 @@ Ant Design 在版本更新中废弃了一些属性：
   title: 'Items',
   type: 'list',
   form: {
-    // ✅ ProFormList 特有的配置在这一层
+    // ProFormList 特有的配置在这一层
     copyIconProps: false,
     deleteIconProps: { tooltipText: 'Delete item' },
     creatorButtonProps: { creatorButtonText: 'Add item' },
@@ -174,7 +174,7 @@ Ant Design 在版本更新中废弃了一些属性：
     placeholder: 'Select parent',
     action: 'getTreeDataAction',  // 自动加载数据
     fieldProps: {
-      // ✅ 只放 TreeSelect 组件支持的标准属性
+      // 只放 TreeSelect 组件支持的标准属性
       allowClear: true,
       showSearch: true,
       treeNodeFilterProp: 'title',

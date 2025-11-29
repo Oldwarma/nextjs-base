@@ -1205,13 +1205,13 @@ fields: {
 	// ❌ 不要包含系统字段
 	creatable: ['id', 'createdAt', 'name'], // 错误
 	
-	// ✅ 只包含业务字段
+	// 只包含业务字段
 	creatable: ['name', 'email', 'role'], // 正确
 	
 	// ❌ 不要包含敏感字段
 	updatable: ['password', 'secretKey'], // 错误（应通过专门的方法处理）
 	
-	// ✅ 只包含可安全修改的字段
+	// 只包含可安全修改的字段
 	updatable: ['name', 'email', 'role'], // 正确
 }
 ```
@@ -1233,14 +1233,14 @@ validation: {
 		message: 'Invalid email or email already registered',
 	},
 	
-	// ✅ 简单验证用内置验证器
+	// 简单验证用内置验证器
 	username: {
 		minLength: 3,
 		maxLength: 20,
 		pattern: /^[a-zA-Z0-9_]+$/,
 	},
 	
-	// ✅ 复杂验证用自定义函数
+	// 复杂验证用自定义函数
 	age: {
 		validator: async (value, data) => {
 			if (data.role === 'admin') {
@@ -1263,14 +1263,14 @@ validation: {
 **示例**：
 ```javascript
 hooks: {
-	// ✅ beforeCreate 做简单的数据准备
+	// beforeCreate 做简单的数据准备
 	beforeCreate: async (data) => {
 		data.id = generateId();
 		data.status = 'active';
 		return data;
 	},
 	
-	// ✅ afterCreate 做异步通知
+	// afterCreate 做异步通知
 	afterCreate: async (data) => {
 		// 不阻塞主流程
 		sendWelcomeEmail(data.email).catch(console.error);
@@ -1548,7 +1548,7 @@ afterCreate: async (data) => {
 	}
 }
 
-// ✅ 好：批量查询
+// 好：批量查询
 afterCreate: async (data) => {
 	const friends = await getUsersByIds(data.friendIds); // 一次查询
 	await Promise.all(friends.map(notifyFriend));
@@ -1600,17 +1600,17 @@ export async function getUsersWithCursorAction(cursor, limit = 20) {
 BaseDAO 系统通过配置化的方式，大幅减少了后台管理 CRUD 操作的重复代码，同时保持了足够的灵活性。
 
 **核心优势**：
-- ✅ **减少重复代码**：标准 CRUD 只需几行配置
-- ✅ **统一规范**：所有数据表遵循相同的开发模式
-- ✅ **易于维护**：配置集中管理，修改方便
-- ✅ **扩展性强**：支持钩子、转换、自定义方法
-- ✅ **类型安全**：字段白名单机制，防止意外修改
-- ✅ **安全可靠**：内置权限检查、数据验证
+- **减少重复代码**：标准 CRUD 只需几行配置
+- **统一规范**：所有数据表遵循相同的开发模式
+- **易于维护**：配置集中管理，修改方便
+- **扩展性强**：支持钩子、转换、自定义方法
+- **类型安全**：字段白名单机制，防止意外修改
+- **安全可靠**：内置权限检查、数据验证
 
 **适用场景**：
-- ✅ 后台管理的标准 CRUD 操作
-- ✅ 数据字典、配置表管理
-- ✅ 用户、产品、订单等常见实体管理
+- 后台管理的标准 CRUD 操作
+- 数据字典、配置表管理
+- 用户、产品、订单等常见实体管理
 
 **不适用场景**：
 - ❌ 复杂的多表联查

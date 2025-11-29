@@ -163,8 +163,8 @@ export async function getUserProfileAction() {
 ```
 
 **权限特点**：
-- ✅ 只能访问自己的数据
-- ✅ 使用 `session.user.id` 确保安全
+- 只能访问自己的数据
+- 使用 `session.user.id` 确保安全
 - ❌ 无法访问其他用户的数据
 
 ### 示例 2: 管理员 Action（管理员权限）
@@ -222,9 +222,9 @@ export async function getUserListAction(options) {
 ```
 
 **权限特点**：
-- ✅ 可以访问所有用户的数据
-- ✅ 可以执行管理操作
-- ✅ 两层验证确保安全
+- 可以访问所有用户的数据
+- 可以执行管理操作
+- 两层验证确保安全
 
 ## Session 对象结构
 
@@ -387,10 +387,10 @@ export async function getUserCreditsAction(userId) {
 await getUserCreditsAction('another_user_id'); // 可以查看他人积分！
 ```
 
-#### ✅ 安全的设计
+#### 安全的设计
 
 ```javascript
-// ✅ 不接受 userId 参数 - 安全！
+// 不接受 userId 参数 - 安全！
 export async function getUserCreditsAction() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { success: false, error: 'Unauthorized' };
@@ -409,25 +409,25 @@ await getUserCreditsAction(); // 只能查看自己的积分
 我们的项目中，所有客户端 Actions 都遵循这个原则：
 
 ```javascript
-// ✅ 用户资料相关 - 不接受 userId
+// 用户资料相关 - 不接受 userId
 getUserProfileAction()              // 获取自己的资料
 updateUserProfileAction(updates)     // 更新自己的资料
 getUserStatisticsAction()            // 获取自己的统计
 
-// ✅ 积分相关 - 不接受 userId
+// 积分相关 - 不接受 userId
 getUserCreditsAction()               // 获取自己的积分
 getCreditTransactionsAction(options) // 获取自己的交易记录
 
-// ✅ 套餐相关 - 不接受 userId
+// 套餐相关 - 不接受 userId
 getUserPackagesAction(options)       // 获取自己的套餐
 getUserCurrentPackageAction()        // 获取自己当前套餐
 purchasePackageAction(packageId)     // 为自己购买套餐
 
-// ✅ 使用记录 - 不接受 userId
+// 使用记录 - 不接受 userId
 getUserUsageLogsAction(options)      // 获取自己的使用记录
 getUserUsageStatisticsAction(options)// 获取自己的统计
 
-// ✅ 图片生成 - 自动使用当前用户
+// 图片生成 - 自动使用当前用户
 textToImageAction({ prompt, size }) // 为当前用户生成图片
 ```
 
@@ -436,7 +436,7 @@ textToImageAction({ prompt, size }) // 为当前用户生成图片
 只有管理员 Actions 可以接受 userId 参数，因为管理员需要管理其他用户：
 
 ```javascript
-// ✅ 管理员 Action - 可以接受 userId
+// 管理员 Action - 可以接受 userId
 export async function getUserStatisticsAdminAction(userId) {
   // 先验证是否是管理员
   const adminCheck = await checkAdmin();
@@ -472,7 +472,7 @@ export async function viewUserProfileAction(userId) {
   return await getUserProfile(userId); // 可以查看他人资料
 }
 
-// ✅ 正确：只能查看自己
+// 正确：只能查看自己
 export async function getUserProfileAction() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { success: false, error: 'Unauthorized' };
@@ -490,7 +490,7 @@ export async function purchasePackageAction(userId, packageId) {
   return await purchasePackage(userId, packageId); // 可能为他人购买
 }
 
-// ✅ 正确：只能为自己购买
+// 正确：只能为自己购买
 export async function purchasePackageAction(packageId) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { success: false, error: 'Unauthorized' };
@@ -510,7 +510,7 @@ export async function textToImageAction(userId, { prompt }) {
   return await createUsageLog(userId, { action: 'text_to_image', ... });
 }
 
-// ✅ 正确：只能消耗自己的积分
+// 正确：只能消耗自己的积分
 export async function textToImageAction({ prompt }) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { success: false, error: 'Unauthorized' };
@@ -540,13 +540,13 @@ export default function DeleteButton({ userId }) {
 }
 ```
 
-✅ **正确做法**（服务端验证）：
+**正确做法**（服务端验证）：
 ```javascript
 // Server Action
 'use server';
 
 export async function deleteUserAction(userId) {
-  // ✅ 服务端验证
+  // 服务端验证
   const adminCheck = await checkAdmin();
   if (!adminCheck.isAdmin) {
     return { success: false, error: 'Unauthorized' };
@@ -598,14 +598,14 @@ export async function updateProfileAction(userId, updates) {
 await updateProfileAction('other_user_id', { name: 'Hacked!' });
 ```
 
-✅ **正确做法**（不接受 userId 参数）：
+**正确做法**（不接受 userId 参数）：
 ```javascript
 export async function updateProfileAction(updates) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { success: false, error: 'Unauthorized' };
   
-  // ✅ 完全忽略客户端可能传入的 userId
-  // ✅ 强制使用 session.user.id，确保用户只能修改自己的数据
+  // 完全忽略客户端可能传入的 userId
+  // 强制使用 session.user.id，确保用户只能修改自己的数据
   await updateUserProfile(session.user.id, updates);
 }
 
@@ -623,7 +623,7 @@ await updateProfileAction({ name: 'New Name' });
 
 ### 3. 抽取公共权限检查函数
 
-✅ **推荐做法**：
+**推荐做法**：
 ```javascript
 // 可以创建一个通用的权限检查工具
 // lib/auth-helpers.js
@@ -736,11 +736,11 @@ if (!adminCheck.isAdmin) return { success: false, error: adminCheck.error };
 ```
 
 ### 关键安全原则
-1. ✅ **永远在服务端验证权限**
-2. ✅ **使用 session.user.id，不信任客户端输入**
-3. ✅ **前端权限检查仅用于 UI 显示**
-4. ✅ **管理员操作必须双重验证**
-5. ✅ **统一的错误响应格式**
+1. **永远在服务端验证权限**
+2. **使用 session.user.id，不信任客户端输入**
+3. **前端权限检查仅用于 UI 显示**
+4. **管理员操作必须双重验证**
+5. **统一的错误响应格式**
 
 这样的权限系统既简单又安全，满足了大多数 SaaS 应用的需求！
 

@@ -231,7 +231,7 @@ export default function AdminLayout({ children, user }) {
 import { checkPageAccess } from '@/lib/page-auth';
 
 export default async function UsersPage() {
-	// ✅ 验证页面访问权限，无权限会自动重定向
+	// 验证页面访问权限，无权限会自动重定向
 	await checkPageAccess('/admin/users');
 
 	return (
@@ -305,7 +305,7 @@ checkPageAccess(pageUrl)
 import { checkActionPermission } from '@/lib/permission-auth';
 
 export async function createUserAction(data) {
-	// ✅ 验证权限：检查用户是否有权限执行此 Action
+	// 验证权限：检查用户是否有权限执行此 Action
 	const permCheck = await checkActionPermission(
 		'/admin/actions/user/create'
 	);
@@ -330,11 +330,11 @@ export async function createUserAction(data) {
 
 | 权限配置 | Action 路径 | 匹配结果 |
 |---------|------------|---------|
-| `/admin/actions/user/create` | `/admin/actions/user/create` | ✅ 精确匹配 |
-| `/admin/actions/user/*` | `/admin/actions/user/create` | ✅ 单层通配 |
+| `/admin/actions/user/create` | `/admin/actions/user/create` | 精确匹配 |
+| `/admin/actions/user/*` | `/admin/actions/user/create` | 单层通配 |
 | `/admin/actions/user/*` | `/admin/actions/user/role/assign` | ❌ 不匹配多层 |
-| `/admin/actions/**` | `/admin/actions/user/create` | ✅ 多层通配 |
-| `/admin/actions/**` | `/admin/actions/user/role/assign` | ✅ 多层通配 |
+| `/admin/actions/**` | `/admin/actions/user/create` | 多层通配 |
+| `/admin/actions/**` | `/admin/actions/user/role/assign` | 多层通配 |
 
 ### 权限验证方式对比
 
@@ -421,7 +421,7 @@ export async function updateUserRoleAction(userId, newRole) {
 	const params = { userId, newRole };
 
 	try {
-		// ✅ 步骤1: 验证权限
+		// 步骤1: 验证权限
 		const permCheck = await checkActionPermission(
 			'/admin/actions/user/updateRole'
 		);
@@ -435,7 +435,7 @@ export async function updateUserRoleAction(userId, newRole) {
 			return result;
 		}
 
-		// ✅ 步骤2: 验证业务逻辑
+		// 步骤2: 验证业务逻辑
 		if (!userId || !newRole) {
 			const result = {
 				success: false,
@@ -445,7 +445,7 @@ export async function updateUserRoleAction(userId, newRole) {
 			return result;
 		}
 
-		// ✅ 步骤3: 执行操作
+		// 步骤3: 执行操作
 		const { getCollection } = await import('@/lib/database/mongodb');
 		const usersCollection = await getCollection('users');
 		
@@ -454,7 +454,7 @@ export async function updateUserRoleAction(userId, newRole) {
 			{ $set: { role: newRole, updatedAt: new Date() } }
 		);
 
-		// ✅ 步骤4: 返回结果
+		// 步骤4: 返回结果
 		if (updateResult.modifiedCount > 0) {
 			const result = {
 				success: true,
@@ -955,7 +955,7 @@ export default function UsersPage() {
 
 ### 1. 权限粒度设计
 
-#### ✅ 推荐
+#### 推荐
 
 ```
 用户管理
@@ -976,7 +976,7 @@ export default function UsersPage() {
 
 ### 2. Action 路径命名
 
-#### ✅ 推荐
+#### 推荐
 
 ```javascript
 // 使用模块化的路径结构
@@ -996,7 +996,7 @@ export default function UsersPage() {
 
 ### 3. 通配符使用
 
-#### ✅ 推荐
+#### 推荐
 
 ```javascript
 // 精确路径或单层通配
@@ -1049,10 +1049,10 @@ if (!permCheck.hasPermission) {
 #### 前端缓存权限
 
 ```javascript
-// ✅ Hook 已自动缓存权限，避免重复请求
+// Hook 已自动缓存权限，避免重复请求
 const { hasPermission } = usePermission();
 
-// ✅ 多次调用不会重复请求
+// 多次调用不会重复请求
 {hasPermission('perm-1') && <Button>Action 1</Button>}
 {hasPermission('perm-2') && <Button>Action 2</Button>}
 ```
@@ -1060,7 +1060,7 @@ const { hasPermission } = usePermission();
 #### 批量权限检查
 
 ```javascript
-// ✅ 使用 hasAnyPermission 一次检查多个权限
+// 使用 hasAnyPermission 一次检查多个权限
 const canEdit = hasAnyPermission(['user-create', 'user-update']);
 
 // ❌ 避免多次单独检查
@@ -1072,7 +1072,7 @@ const canEdit = hasPermission('user-create') || hasPermission('user-update');
 #### Server Actions 必须验证权限
 
 ```javascript
-// ✅ 正确：在 Server Action 中验证权限
+// 正确：在 Server Action 中验证权限
 export async function deleteUserAction(userId) {
 	const permCheck = await checkActionPermission('/admin/actions/user/delete');
 	if (!permCheck.hasPermission) {

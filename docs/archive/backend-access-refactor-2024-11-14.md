@@ -114,14 +114,14 @@ Better Auth 角色系统
     ↓
 【第一层】Layout - checkBackendAccess()
     ├─ 未登录 → 重定向登录页
-    ├─ admin → ✅ 通过
-    ├─ user + isBackendAllowed → ✅ 通过
+    ├─ admin → 通过
+    ├─ user + isBackendAllowed → 通过
     └─ user + !isBackendAllowed → ❌ 重定向首页
          ↓
 【第二层】PageAccessGuard
-    ├─ admin → ✅ 自动通过
+    ├─ admin → 自动通过
     └─ user → 检查 RBAC 菜单权限
-         ├─ 有权限 → ✅ 显示页面
+         ├─ 有权限 → 显示页面
          └─ 无权限 → ❌ 显示 403
 ```
 
@@ -139,10 +139,10 @@ Better Auth 角色系统
          └─ 有后台权限 → 继续
               ↓
 检查 permissionId（仅 user）
-    ├─ admin → ✅ 自动通过
-    ├─ 未设置 → ✅ 通过
+    ├─ admin → 自动通过
+    ├─ 未设置 → 通过
     └─ 已设置 → 调用 checkUserHasPermission()
-         ├─ 有权限 → ✅ 执行 handler
+         ├─ 有权限 → 执行 handler
          └─ 无权限 → ❌ 返回错误
 ```
 
@@ -190,12 +190,12 @@ export const deleteAllData = wrapAdminAction(
 );
 ```
 
-## ✅ 向后兼容性
+## 向后兼容性
 
-- ✅ 保留所有旧函数作为别名
-- ✅ 自动转换返回格式
-- ✅ 现有代码无需修改即可工作
-- ✅ 标记 `@deprecated` 提示迁移
+- 保留所有旧函数作为别名
+- 自动转换返回格式
+- 现有代码无需修改即可工作
+- 标记 `@deprecated` 提示迁移
 
 ## 🔍 测试建议
 
@@ -211,12 +211,12 @@ export const deleteAllData = wrapAdminAction(
 3. **有后台权限的 User**
    - `isBackendAllowed = true`
    - 有 RBAC 角色和权限
-   - 访问已授权页面 → ✅ 正常显示
+   - 访问已授权页面 → 正常显示
    - 访问未授权页面 → ❌ 显示 403
 
 4. **Admin 用户**
-   - 访问任何页面 → ✅ 全部可访问
-   - 执行任何操作 → ✅ 全部可执行
+   - 访问任何页面 → 全部可访问
+   - 执行任何操作 → 全部可执行
 
 ## 📝 数据库字段
 
@@ -302,12 +302,12 @@ await bindUserRoles({
 
 本次重构成功实现了：
 
-✅ `isBackendAllowed` 字段正确生效  
-✅ 支持普通用户通过 RBAC 访问后台  
-✅ Admin 保持唯一超级管理员地位  
-✅ 三层权限防护机制  
-✅ 向后兼容现有代码  
-✅ 完整的文档更新
+`isBackendAllowed` 字段正确生效  
+支持普通用户通过 RBAC 访问后台  
+Admin 保持唯一超级管理员地位  
+三层权限防护机制  
+向后兼容现有代码  
+完整的文档更新
 
 权限系统现在更加灵活、安全和易于管理！
 

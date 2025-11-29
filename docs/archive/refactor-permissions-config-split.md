@@ -35,7 +35,7 @@ Import trace:
 
 ---
 
-## ✅ 解决方案
+## 解决方案
 
 ### 策略：配置文件拆分
 
@@ -113,10 +113,10 @@ export const getPermissionFieldsConfig = (permissionTree = []) => [
 ```
 
 **特点：**
-- ✅ 使用 `'use client'` 指令
-- ✅ 只导入 Ant Design 组件（客户端安全）
-- ✅ 不包含任何 MongoDB 或 Node.js 模块
-- ✅ 导出纯函数 `getPermissionFieldsConfig()`
+- 使用 `'use client'` 指令
+- 只导入 Ant Design 组件（客户端安全）
+- 不包含任何 MongoDB 或 Node.js 模块
+- 导出纯函数 `getPermissionFieldsConfig()`
 
 ---
 
@@ -140,7 +140,7 @@ export const permissionCrudConfig = {
   validation: {
     parent_id: {
       custom: async (value, context) => {
-        // ✅ 可以安全使用动态 import
+        // 可以安全使用动态 import
         const { getDb } = await import('@/lib/database/mongodb');
         const db = await getDb();
         // ... 验证逻辑
@@ -150,7 +150,7 @@ export const permissionCrudConfig = {
 
   hooks: {
     beforeCreate: async (data, context) => {
-      // ✅ 可以安全使用动态 import
+      // 可以安全使用动态 import
       const { getDb } = await import('@/lib/database/mongodb');
       // ... hook 逻辑
     },
@@ -161,10 +161,10 @@ export const permissionCrudConfig = {
 ```
 
 **特点：**
-- ✅ 默认服务端模块（无 'use client'）
-- ✅ 可以使用动态 `import()` 加载 MongoDB
-- ✅ 只在 Server Actions 中使用
-- ✅ 包含完整的后端逻辑
+- 默认服务端模块（无 'use client'）
+- 可以使用动态 `import()` 加载 MongoDB
+- 只在 Server Actions 中使用
+- 包含完整的后端逻辑
 
 ---
 
@@ -183,7 +183,7 @@ const fieldsConfig = useMemo(() => {
 
 **修改后：**
 ```javascript
-// ✅ 只导入客户端配置
+// 只导入客户端配置
 import { getPermissionFieldsConfig } from '@/app/(admin)/actions/rbac/configs/permission-fields.config';
 
 const fieldsConfig = useMemo(() => {
@@ -204,7 +204,7 @@ import { permissionCrudConfig } from '@/app/(admin)/actions/rbac/configs/permiss
 
 **修改后：**
 ```javascript
-// ✅ 只导入服务端配置
+// 只导入服务端配置
 import { permissionCrudConfig } from '@/app/(admin)/actions/rbac/configs/permission-crud.config';
 ```
 
@@ -215,10 +215,10 @@ import { permissionCrudConfig } from '@/app/(admin)/actions/rbac/configs/permiss
 | 指标 | 拆分前 | 拆分后 |
 |------|--------|--------|
 | **配置文件** | 1 个混合文件 (628行) | 2 个独立文件 (314+391行) |
-| **客户端引用** | ❌ 导入混合配置（含 MongoDB） | ✅ 只导入纯客户端配置 |
-| **服务端引用** | ✅ 可使用完整配置 | ✅ 可使用完整配置 |
-| **构建错误** | ❌ Module not found | ✅ 正常构建 |
-| **维护性** | ⚠️ 职责混合 | ✅ 职责分离 |
+| **客户端引用** | ❌ 导入混合配置（含 MongoDB） | 只导入纯客户端配置 |
+| **服务端引用** | 可使用完整配置 | 可使用完整配置 |
+| **构建错误** | ❌ Module not found | 正常构建 |
+| **维护性** | ⚠️ 职责混合 | 职责分离 |
 
 ---
 
@@ -227,19 +227,19 @@ import { permissionCrudConfig } from '@/app/(admin)/actions/rbac/configs/permiss
 ### Next.js 客户端/服务端代码分离规则
 
 1. **客户端代码（'use client'）**
-   - ✅ 可以导入：React、Ant Design、纯 JS 库
+   - 可以导入：React、Ant Design、纯 JS 库
    - ❌ 不能导入：MongoDB、fs、path、child_process 等 Node.js 模块
    - ❌ 不能导入：任何间接依赖 Node.js 模块的文件
 
 2. **服务端代码（默认）**
-   - ✅ 可以导入：任何 Node.js 模块
-   - ✅ 可以使用动态 `import()` 延迟加载
+   - 可以导入：任何 Node.js 模块
+   - 可以使用动态 `import()` 延迟加载
    - ⚠️ 如果被客户端代码导入，会导致构建错误
 
 3. **混合使用策略**
-   - ✅ **拆分配置**：客户端配置 + 服务端配置
-   - ✅ **拆分组件**：纯 UI 组件（客户端） + 数据获取（服务端）
-   - ✅ **Server Actions**：将所有后端逻辑封装在 Server Actions 中
+   - **拆分配置**：客户端配置 + 服务端配置
+   - **拆分组件**：纯 UI 组件（客户端） + 数据获取（服务端）
+   - **Server Actions**：将所有后端逻辑封装在 Server Actions 中
    - ❌ **避免混合**：不要在同一文件中混合客户端和服务端代码
 
 ---
@@ -287,7 +287,7 @@ app/(admin)/actions/rbac/configs/
 
 ---
 
-## ✅ 验证清单
+## 验证清单
 
 - [x] 客户端配置文件创建完成
 - [x] 服务端配置文件创建完成

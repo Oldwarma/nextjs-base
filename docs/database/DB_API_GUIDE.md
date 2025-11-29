@@ -2,7 +2,7 @@
 
 ## 概述
 
-Database API (`lib/db-api.js`) 是一个统一的数据库操作接口层，参考 VK Framework 设计理念，适配 MongoDB + Next.js 技术栈。提供简洁、一致的 API 接口，减少重复代码，提高开发效率。
+Database API (`lib/db-api.js`) 是一个统一的数据库操作接口层，适配 MongoDB + Next.js 技术栈。提供简洁、一致的 API 接口，减少重复代码，提高开发效率。
 
 ## 设计理念
 
@@ -1652,7 +1652,7 @@ export async function getUserAction(userId) {
 
 **使用索引字段**：
 ```javascript
-// ✅ 好：使用有索引的字段查询
+// 好：使用有索引的字段查询
 const user = await getOne({
 	dbName: 'users',
 	whereJson: { email: 'john@example.com' }, // email 有索引
@@ -1667,7 +1667,7 @@ const user = await getOne({
 
 **限制返回字段**：
 ```javascript
-// ✅ 好：只查询需要的字段
+// 好：只查询需要的字段
 const users = await getList({
 	dbName: 'users',
 	fieldJson: { name: 1, email: 1 },
@@ -1695,7 +1695,7 @@ for (const userId of userIds) {
 	});
 }
 
-// ✅ 好：批量更新
+// 好：批量更新
 await updateMany({
 	dbName: 'users',
 	whereJson: { _id: { $in: userIds } },
@@ -1710,14 +1710,14 @@ await updateMany({
 利用自动时间戳功能：
 
 ```javascript
-// ✅ 好：自动添加时间戳
+// 好：自动添加时间戳
 const userId = await add({
 	dbName: 'users',
 	dataJson: { name: 'John' },
 });
 // 自动添加 createdAt 和 updatedAt
 
-// ✅ 好：自动更新时间戳
+// 好：自动更新时间戳
 await update({
 	dbName: 'users',
 	_id: userId,
@@ -1834,16 +1834,16 @@ export async function getUserStatsAction() {
 **A**: DB API 自动处理 ObjectId 转换：
 
 ```javascript
-// ✅ 传入字符串 ID 会自动转换
+// 传入字符串 ID 会自动转换
 const user = await findById({
 	dbName: 'users',
 	_id: '507f1f77bcf86cd799439011', // 字符串
 });
 
-// ✅ 返回的数据中 ObjectId 自动转为字符串
+// 返回的数据中 ObjectId 自动转为字符串
 console.log(user._id); // '507f1f77bcf86cd799439011'
 
-// ✅ 查询条件中的 _id 自动处理
+// 查询条件中的 _id 自动处理
 const users = await getList({
 	dbName: 'users',
 	whereJson: {
@@ -1887,14 +1887,14 @@ const users = await getList({
 **A**: 使用分页和限制：
 
 ```javascript
-// ✅ 使用分页
+// 使用分页
 const result = await getPage({
 	dbName: 'posts',
 	pageIndex: 1,
 	pageSize: 20,
 });
 
-// ✅ 限制返回数量
+// 限制返回数量
 const recentPosts = await getList({
 	dbName: 'posts',
 	sortJson: { createdAt: -1 },
@@ -1946,10 +1946,10 @@ export async function getActiveUsersAction() {
 
 DB API 提供了一套简洁、统一的数据库操作接口，适合：
 
-- ✅ 熟悉 MongoDB 的开发者
-- ✅ 需要灵活查询的场景
-- ✅ 前端 Server Actions
-- ✅ 简单的数据统计和聚合
+- 熟悉 MongoDB 的开发者
+- 需要灵活查询的场景
+- 前端 Server Actions
+- 简单的数据统计和聚合
 
 与 BaseDAO 配合使用，可以覆盖大部分数据库操作场景，提高开发效率，减少重复代码。
 

@@ -13,10 +13,10 @@
 ```javascript
 foreignDB: [
 	{
-		dbName: 'roles',           // ✅ 副表集合名称
-		localKey: 'roles',         // ✅ 主表字段名（可以是数组）
-		foreignKey: 'id',          // ✅ 副表字段名
-		as: 'roleList',            // ✅ 连表结果存放的字段名
+		dbName: 'roles',           // 副表集合名称
+		localKey: 'roles',         // 主表字段名（可以是数组）
+		foreignKey: 'id',          // 副表字段名
+		as: 'roleList',            // 连表结果存放的字段名
 		fieldJson: { id: 1, name: 1 }, // 可选：只返回指定字段
 		limit: 10,                 // 可选：限制返回数量
 		whereJson: {},             // 可选：副表额外查询条件
@@ -319,7 +319,7 @@ if (Array.isArray(foreignDB) && foreignDB.length > 0) {
 			continue;
 		}
 		
-		console.log('[selects] ✅ Processing lookup:', { foreignDbName, localKey, foreignKey, as });
+		console.log('[selects] Processing lookup:', { foreignDbName, localKey, foreignKey, as });
 		// ...
 	}
 }
@@ -359,11 +359,11 @@ const request = async (params, sort, filter) => {
 
 **检查清单：**
 
-1. ✅ foreignDB 参数格式是否正确（`dbName`, `localKey`, `foreignKey`, `as`）
-2. ✅ 副表集合名称是否正确
-3. ✅ 字段名是否匹配
-4. ✅ 前端 render 函数是否使用了正确的字段名（`record.roleList`）
-5. ✅ 数据是否真的存在（检查数据库）
+1. foreignDB 参数格式是否正确（`dbName`, `localKey`, `foreignKey`, `as`）
+2. 副表集合名称是否正确
+3. 字段名是否匹配
+4. 前端 render 函数是否使用了正确的字段名（`record.roleList`）
+5. 数据是否真的存在（检查数据库）
 
 ### Q2: 数组字段连表返回空数组？
 

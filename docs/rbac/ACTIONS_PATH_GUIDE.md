@@ -14,9 +14,9 @@
 `actions` 是权限文档中的一个字符串数组字段，用于定义该权限可以访问的 **Server Action 函数名称**。
 
 **关键点**：
-- ✅ `actions` 中配置的是 **纯函数名称**（不包含文件路径）
-- ✅ 使用 **通配符模式** 来匹配多个函数
-- ✅ 匹配时是对 **函数名称** 进行模式匹配
+- `actions` 中配置的是 **纯函数名称**（不包含文件路径）
+- 使用 **通配符模式** 来匹配多个函数
+- 匹配时是对 **函数名称** 进行模式匹配
 
 **重要说明**：
 - 当前系统中所有 `permissionId` 都是**纯函数名**（如 `createUserAction`）
@@ -35,10 +35,10 @@
   "id": "perm-uuid",
   "name": "用户管理",
   "actions": [
-    "getUserAction",           // ✅ 推荐：精确匹配函数名（简洁）
-    "get*Action",              // ✅ 推荐：通配符匹配（简洁）
-    "*User*Action",            // ✅ 推荐：包含关键字匹配（简洁）
-    "create*Action"            // ✅ 推荐：创建操作（简洁）
+    "getUserAction",           // 推荐：精确匹配函数名（简洁）
+    "get*Action",              // 推荐：通配符匹配（简洁）
+    "*User*Action",            // 推荐：包含关键字匹配（简洁）
+    "create*Action"            // 推荐：创建操作（简洁）
   ]
 }
 ```
@@ -50,10 +50,10 @@
   "id": "perm-uuid",
   "name": "用户管理",
   "actions": [
-    "**/getUserAction",        // ✅ 兼容：带 **/ 前缀（冗余但不影响）
-    "**/get*Action",           // ✅ 兼容：带 **/ 前缀
-    "**/*User*Action",         // ✅ 兼容：带 **/ 前缀
-    "**/create*Action"         // ✅ 兼容：带 **/ 前缀
+    "**/getUserAction",        // 兼容：带 **/ 前缀（冗余但不影响）
+    "**/get*Action",           // 兼容：带 **/ 前缀
+    "**/*User*Action",         // 兼容：带 **/ 前缀
+    "**/create*Action"         // 兼容：带 **/ 前缀
   ]
 }
 ```
@@ -94,7 +94,7 @@ export const getCustomListAction = wrapAdminAction(
     return { success: true, data: [] };
   },
   {
-    permissionId: 'getCustomListAction', // ✅ 关键：这里传入函数名
+    permissionId: 'getCustomListAction', // 关键：这里传入函数名
     skipLog: false,
   }
 );
@@ -333,7 +333,7 @@ export async function checkUserHasActionPermission(userId, actionPath) {
       
       // 测试是否匹配
       if (regex.test(actionPath)) {
-        return true; // ✅ 匹配成功
+        return true; // 匹配成功
       }
     }
   }
@@ -368,11 +368,11 @@ function patternToRegex(pattern) {
 
 ## 📋 最佳实践
 
-### ✅ DO - 推荐做法
+### DO - 推荐做法
 
 1. **使用语义化的函数命名**
    ```javascript
-   // ✅ 好的命名 - 清晰表达操作对象和动作
+   // 好的命名 - 清晰表达操作对象和动作
    getUserListAction
    createOrderAction
    updateProductAction
@@ -382,13 +382,13 @@ function patternToRegex(pattern) {
 
 2. **保持命名一致性**
    ```javascript
-   // ✅ 统一使用 Action 后缀
+   // 统一使用 Action 后缀
    getUserAction
    createUserAction
    updateUserAction
    deleteUserAction
    
-   // ✅ 统一使用动词+名词格式
+   // 统一使用动词+名词格式
    get + User + Action
    create + Order + Action
    export + Report + Action
@@ -541,7 +541,7 @@ export const createCustomAction = wrapAdminAction(
    | **CRUD Category** | `Read` | CRUD 类型 |
    | **Permission Level** | `Bullet` | 权限级别 |
    | **Actions** | `["**/get*Custom*Action"]` | ⚠️ 关键配置 |
-   | **Enabled** | `✅ Yes` | 启用状态 |
+   | **Enabled** | `Yes` | 启用状态 |
    | **Sort** | `100` | 排序 |
 
 4. 点击 **Submit** 保存
@@ -569,7 +569,7 @@ import { getCustomListAction } from '@/app/(admin)/actions/rbac/custom/actions';
 const result = await getCustomListAction({ page: 1, pageSize: 10 });
 
 if (result.success) {
-  console.log('✅ 权限验证成功', result.data);
+  console.log('权限验证成功', result.data);
 } else {
   console.error('❌ 权限验证失败', result.error);
   // 预期输出: "Forbidden: Action 'getCustomListAction' not allowed"
@@ -662,15 +662,15 @@ if (!hasPermission) {
 
 | 写法 | 是否推荐 | 匹配效果 |
 |------|---------|---------|
-| `create*Action` | ✅ 推荐（简洁） | 匹配 `createUserAction`、`createRoleAction` 等 |
-| `**/create*Action` | ✅ 兼容（冗余） | 匹配效果与上面**完全相同** |
+| `create*Action` | 推荐（简洁） | 匹配 `createUserAction`、`createRoleAction` 等 |
+| `**/create*Action` | 兼容（冗余） | 匹配效果与上面**完全相同** |
 
 ### Q3: `permissionId` 是否可以包含文件路径？
 
 **答**：**不推荐**。
 
 当前系统设计是基于**纯函数名**：
-- ✅ 推荐：`createUserAction`
+- 推荐：`createUserAction`
 - ❌ 不推荐：`app/actions/createUserAction`
 
 原因：

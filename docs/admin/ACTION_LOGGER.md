@@ -27,9 +27,9 @@ MongoDB
 ```
 
 **优点**:
-- ✅ 不会重复导入 Server Actions
-- ✅ 所有使用 BaseDAO 的 actions 自动有日志
-- ✅ 零配置，自动生效
+- 不会重复导入 Server Actions
+- 所有使用 BaseDAO 的 actions 自动有日志
+- 零配置，自动生效
 
 ---
 
@@ -255,9 +255,9 @@ export async function getTotalCreditsUsedAction() {
 ### Q: 为什么我看不到日志？
 
 **A:** 检查以下几点：
-1. ✅ 确认在 **开发环境**（`NODE_ENV=development`）
-2. ✅ 查看 **运行 `npm run dev` 的终端**，不是浏览器控制台
-3. ✅ 确认你的 action 已经集成了日志（使用 BaseDAO 或手动添加）
+1. 确认在 **开发环境**（`NODE_ENV=development`）
+2. 查看 **运行 `npm run dev` 的终端**，不是浏览器控制台
+3. 确认你的 action 已经集成了日志（使用 BaseDAO 或手动添加）
 
 ### Q: 日志太多怎么办？
 
@@ -285,7 +285,7 @@ DISABLE_ACTION_LOGS=true  # 禁用日志
   - Server Actions 的 "use server" 指令会失效
   - 可能导致状态管理混乱
 
-- ✅ **正确方案**：在 DAO 层或 action 内部添加日志
+- **正确方案**：在 DAO 层或 action 内部添加日志
   - 日志代码和业务代码在同一个 "use server" 上下文中
   - 不会重复执行
   - 性能更好

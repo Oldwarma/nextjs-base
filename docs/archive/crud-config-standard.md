@@ -7,7 +7,7 @@
 
 ## 📖 标准规范
 
-### ✅ 统一原则
+### 统一原则
 
 **所有 CRUD 配置统一使用 1 个文件：**
 ```
@@ -137,7 +137,7 @@ export const {resource}CrudConfig = {
 			title: 'Status',
 			table: {
 				width: 120,
-				// ✅ 使用 valueEnum（Ant Design Pro 风格）
+				// 使用 valueEnum（Ant Design Pro 风格）
 				valueEnum: {
 					0: { text: 'Inactive', status: 'Default' },
 					1: { text: 'Active', status: 'Success' },
@@ -162,14 +162,13 @@ export const {resource}CrudConfig = {
 			},
 		},
 
-		// 示例 3：开关（使用 vk 风格）
+		// 示例 3：开关
 		{
 			key: 'enable',
 			type: 'switch',
 			title: 'Enable',
 			table: {
 				width: 100,
-				// ✅ 使用 vk-unicloud 风格的声明式配置
 				activeText: 'Enabled',
 				inactiveText: 'Disabled',
 				activeColor: 'success',
@@ -192,7 +191,7 @@ export const {resource}CrudConfig = {
 			table: {
 				width: 200,
 				ellipsis: true,
-				// ✅ 使用纯 JS formatter 函数
+				// 使用纯 JS formatter 函数
 				formatter: (value) => {
 					if (!value) return '-';
 					if (!Array.isArray(value)) return String(value);
@@ -313,7 +312,7 @@ export const {resource}CrudConfig = {
 			required: true,
 			type: 'string',
 			custom: async (value, context) => {
-				// ✅ 使用 dynamic import 避免构建错误
+				// 使用 dynamic import 避免构建错误
 				const { getDb } = await import('@/lib/database/mongodb');
 				const db = await getDb();
 				
@@ -339,7 +338,7 @@ export const {resource}CrudConfig = {
 	 */
 	hooks: {
 		beforeCreate: async (data, context) => {
-			// ✅ 使用 dynamic import
+			// 使用 dynamic import
 			const { getDb } = await import('@/lib/database/mongodb');
 			const db = await getDb();
 			
@@ -429,7 +428,7 @@ export default function PermissionsPage() {
   return (
     <SmartCrudPage
       title='Permission Management'
-      fieldsConfig={permissionCrudConfig.fieldsConfig} // ✅ 只导入 fieldsConfig
+      fieldsConfig={permissionCrudConfig.fieldsConfig} // 只导入 fieldsConfig
       actions={{
         getList: actions.getPermissionTreeAction,
         create: actions.createPermissionAction,
@@ -452,7 +451,7 @@ export default function PermissionsPage() {
 import { createCrudActions } from '@/lib/core/crud-helper';
 import { permissionCrudConfig } from './configs/crud-config.permission';
 
-// ✅ createCrudActions 会使用完整的 config（包括 validation、hooks）
+// createCrudActions 会使用完整的 config（包括 validation、hooks）
 const crudActions = createCrudActions(permissionCrudConfig);
 
 export const getPermissionListAction = crudActions.getList;
@@ -465,7 +464,7 @@ export const deletePermissionAction = crudActions.delete;
 
 ## 🔒 安全性保证
 
-### ✅ 为什么客户端导入是安全的？
+### 为什么客户端导入是安全的？
 
 1. **只导入 fieldsConfig 属性**
    ```javascript
@@ -502,14 +501,14 @@ fieldsConfig: [
 ]
 ```
 
-✅ **正确示例：**
+**正确示例：**
 ```javascript
 fieldsConfig: [
   {
     key: 'name',
     form: {
-      placeholder: 'Enter name',  // ✅ 只使用静态配置
-      action: 'getOptionsAction',  // ✅ 通过 action 字符串加载数据
+      placeholder: 'Enter name',  // 只使用静态配置
+      action: 'getOptionsAction',  // 通过 action 字符串加载数据
     }
   }
 ]
@@ -538,7 +537,7 @@ fieldsConfig: [
 
 ## ✨ 新特性
 
-### vk-unicloud 风格的声明式配置
+### 声明式配置
 
 **1. Switch 字段**
 ```javascript
@@ -546,7 +545,7 @@ fieldsConfig: [
   key: 'enable',
   type: 'switch',
   table: {
-    activeText: 'Enabled',     // ✅ vk 风格
+    activeText: 'Enabled',
     inactiveText: 'Disabled',
     activeColor: 'success',
     inactiveColor: 'error',
@@ -562,7 +561,7 @@ fieldsConfig: [
   key: 'status',
   type: 'select',
   table: {
-    valueEnum: {  // ✅ Ant Design Pro 风格
+    valueEnum: {  // Ant Design Pro 风格
       0: { text: 'Inactive', status: 'Default' },
       1: { text: 'Active', status: 'Success' },
     },
@@ -576,7 +575,7 @@ fieldsConfig: [
   key: 'tags',
   type: 'array',
   table: {
-    formatter: (value) => {  // ✅ 纯 JS，非 JSX
+    formatter: (value) => {  // 纯 JS，非 JSX
       if (!Array.isArray(value)) return '-';
       return value.slice(0, 2).join(', ') + '...';
     },
@@ -590,7 +589,7 @@ fieldsConfig: [
   key: 'parent_id',
   type: 'tree-select',
   form: {
-    action: 'getPermissionTreeForSelectAction', // ✅ 自动调用
+    action: 'getPermissionTreeForSelectAction', // 自动调用
   },
 }
 ```
@@ -643,7 +642,7 @@ export const {resource}CrudConfig = {
 ### 4. Dynamic Import
 
 ```javascript
-// ✅ 在 validation 和 hooks 中使用
+// 在 validation 和 hooks 中使用
 const { getDb } = await import('@/lib/database/mongodb');
 ```
 

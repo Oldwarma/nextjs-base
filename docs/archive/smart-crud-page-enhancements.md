@@ -16,7 +16,7 @@
 
 ## 📋 需要增强的功能
 
-### 1. ✅ Tree-Select 字段自动加载数据
+### 1. Tree-Select 字段自动加载数据
 
 **当前问题：**
 ```javascript
@@ -40,12 +40,12 @@ const fieldsConfig = useMemo(() => [{
 
 **期望效果（参考 vk-unicloud）：**
 ```javascript
-// ✅ Config 中声明 action，SmartCrudPage 自动调用
+// Config 中声明 action，SmartCrudPage 自动调用
 {
   key: 'parent_id',
   type: 'tree-select',
   form: {
-    action: 'getPermissionTreeForSelectAction',  // ✅ 声明 action 名称
+    action: 'getPermissionTreeForSelectAction',  // 声明 action 名称
     fieldProps: {
       allowClear: true,
       showSearch: true,
@@ -63,7 +63,7 @@ const fieldsConfig = useMemo(() => [{
 
 ---
 
-### 2. ✅ Tag 自动渲染（tagRender 配置）
+### 2. Tag 自动渲染（tagRender 配置）
 
 **当前问题：**
 ```javascript
@@ -87,7 +87,7 @@ const fieldsConfig = useMemo(() => [{
 
 **期望效果：**
 ```javascript
-// ✅ 使用 tagRender 配置，SmartCrudPage 自动渲染
+// 使用 tagRender 配置，SmartCrudPage 自动渲染
 {
   key: 'crud_category',
   type: 'select',
@@ -116,7 +116,7 @@ const fieldsConfig = useMemo(() => [{
 
 ---
 
-### 3. ✅ Switch 自动渲染（switchRender 配置）
+### 3. Switch 自动渲染（switchRender 配置）
 
 **当前问题：**
 ```javascript
@@ -137,7 +137,7 @@ const fieldsConfig = useMemo(() => [{
 
 **期望效果：**
 ```javascript
-// ✅ 使用 switchRender 配置
+// 使用 switchRender 配置
 {
   key: 'enable',
   type: 'switch',
@@ -160,7 +160,7 @@ const fieldsConfig = useMemo(() => [{
 
 ---
 
-### 4. ✅ Array 自动渲染（arrayRender 配置）
+### 4. Array 自动渲染（arrayRender 配置）
 
 **当前问题：**
 ```javascript
@@ -191,7 +191,7 @@ const fieldsConfig = useMemo(() => [{
 
 **期望效果：**
 ```javascript
-// ✅ 使用 arrayRender 配置
+// 使用 arrayRender 配置
 {
   key: 'actions',
   type: 'array',
@@ -214,7 +214,7 @@ const fieldsConfig = useMemo(() => [{
 
 ---
 
-### 5. ✅ 自动识别树形数据
+### 5. 自动识别树形数据
 
 **当前问题：**
 - 需要在 Page 中配置 `expandable` prop
@@ -222,7 +222,7 @@ const fieldsConfig = useMemo(() => [{
 
 **期望效果：**
 ```javascript
-// ✅ SmartCrudPage 自动检测
+// SmartCrudPage 自动检测
 // 当 getList 返回的数据包含 children 字段时，自动启用树形表格
 ```
 
@@ -287,7 +287,7 @@ export default function PermissionsManagementPage() {
         create: actions.createPermissionAction,
         update: actions.updatePermissionAction,
         delete: actions.deletePermissionAction,
-        // ✅ tree-select 自动调用
+        // tree-select 自动调用
         getPermissionTreeForSelectAction: actions.getPermissionTreeForSelectAction,
       }}
       enableCreate={true}
@@ -321,14 +321,14 @@ export const permissionCrudConfig = {
       key: 'parent_id',
       type: 'tree-select',
       form: {
-        action: 'getPermissionTreeForSelectAction',  // ✅ 自动加载
+        action: 'getPermissionTreeForSelectAction',  // 自动加载
       },
     },
     {
       key: 'crud_category',
       type: 'select',
       table: {
-        tagRender: {  // ✅ 自动渲染 Tag
+        tagRender: {  // 自动渲染 Tag
           0: { text: 'Unclassified', color: 'default' },
           1: { text: 'Create', color: 'green' },
         },
@@ -338,7 +338,7 @@ export const permissionCrudConfig = {
       key: 'enable',
       type: 'switch',
       table: {
-        switchRender: {  // ✅ 自动渲染 Switch
+        switchRender: {  // 自动渲染 Switch
           checkedText: 'Enabled',
           unCheckedText: 'Disabled',
         },
@@ -348,7 +348,7 @@ export const permissionCrudConfig = {
       key: 'actions',
       type: 'array',
       table: {
-        arrayRender: {  // ✅ 自动渲染 Array
+        arrayRender: {  // 自动渲染 Array
           maxDisplay: 2,
           tagColor: (item) => item.includes('*') ? 'blue' : 'default',
         },
@@ -368,13 +368,13 @@ export const permissionCrudConfig = {
 ## 🚀 实现优先级
 
 ### Phase 1（高优先级）
-1. ✅ Tree-Select 自动加载数据
-2. ✅ Tag 自动渲染（tagRender）
-3. ✅ 自动识别树形数据
+1. Tree-Select 自动加载数据
+2. Tag 自动渲染（tagRender）
+3. 自动识别树形数据
 
 ### Phase 2（中优先级）
-4. ✅ Switch 自动渲染（switchRender）
-5. ✅ Array 自动渲染（arrayRender）
+4. Switch 自动渲染（switchRender）
+5. Array 自动渲染（arrayRender）
 
 ### Phase 3（低优先级 - 可选）
 6. 支持更多复杂渲染模式

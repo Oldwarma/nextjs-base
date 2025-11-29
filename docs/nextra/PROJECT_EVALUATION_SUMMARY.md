@@ -69,24 +69,24 @@ export const userCrudConfig = {
 
 ### 2. 企业级 RBAC 系统
 
-- ✅ 通配符权限 (`admin:user:*`)
-- ✅ 层级菜单 (无限层级)
-- ✅ Action 级控制 (细粒度)
-- ✅ 配置化 (无需代码)
+- 通配符权限 (`admin:user:*`)
+- 层级菜单 (无限层级)
+- Action 级控制 (细粒度)
+- 配置化 (无需代码)
 
 ### 3. ProComponents 深度集成
 
-- ✅ 26 种字段类型
-- ✅ 11 种搜索模式
-- ✅ 开箱即用的表格、表单
-- ✅ 响应式设计
+- 26 种字段类型
+- 11 种搜索模式
+- 开箱即用的表格、表单
+- 响应式设计
 
 ### 4. Next.js 生态加成
 
-- ✅ 100 万+ 开发者社区
-- ✅ Server Actions (无需 API 层)
-- ✅ Vercel 一键部署
-- ✅ 自动跟随 Next.js 更新
+- 100 万+ 开发者社区
+- Server Actions (无需 API 层)
+- Vercel 一键部署
+- 自动跟随 Next.js 更新
 
 ---
 
@@ -183,8 +183,8 @@ Admin Framework  ← NextJS Base 在这里
 | **技术栈** | Next.js | Django | React | Node.js |
 | **后端** | 内置 | 内置 | 需自建 | 内置 |
 | **前端** | ProComponents | Django 模板 | Material-UI | 可视化 |
-| **配置化** | ✅ | ✅ | ❌ | ✅ (可视化) |
-| **代码可控** | ✅ | ✅ | ✅ | ❌ (黑盒) |
+| **配置化** | | | ❌ | (可视化) |
+| **代码可控** | | | | ❌ (黑盒) |
 
 ---
 
@@ -193,11 +193,11 @@ Admin Framework  ← NextJS Base 在这里
 ### SWOT 分析
 
 **优势 (Strengths)**:
-- ✅ Next.js 生态 (100 万+ 开发者)
-- ✅ 配置驱动 (代码减少 80%)
-- ✅ 企业级 RBAC (通配符 + 层级)
-- ✅ 文档完善 (26 种字段类型)
-- ✅ AI 友好 (配置化适合 AI 生成)
+- Next.js 生态 (100 万+ 开发者)
+- 配置驱动 (代码减少 80%)
+- 企业级 RBAC (通配符 + 层级)
+- 文档完善 (26 种字段类型)
+- AI 友好 (配置化适合 AI 生成)
 
 **劣势 (Weaknesses)**:
 - ❌ 数据库单一 (仅 MongoDB)

@@ -34,7 +34,7 @@
 // app/(admin)/actions/{module}/crud-action.{resource}.js
 const {resource}Config = {
   collectionName: '{resource}',
-  primaryKey: 'id',  // ✅ 必需：指定使用 'id' 而不是 '_id'
+  primaryKey: 'id',  // 必需：指定使用 'id' 而不是 '_id'
   // ...
 };
 ```
@@ -44,7 +44,7 @@ const {resource}Config = {
 ```javascript
 // app/(admin)/admin/{module}/{resource}/page.js
 <SmartCrudPage
-  rowKey='id'  // ✅ 必需：指定表格行的唯一标识
+  rowKey='id'  // 必需：指定表格行的唯一标识
   // ...
 />
 ```
@@ -81,7 +81,7 @@ import { createCrudActions } from '@/lib/core/crud-helper';
 
 const {resource}Config = {
   collectionName: '{resource}',
-  primaryKey: 'id',  // ✅ 重要！
+  primaryKey: 'id',  // 重要！
   softDelete: false,
   
   fields: {
@@ -128,7 +128,7 @@ export default function {Resource}Page() {
     <SmartCrudPage
       title='{Resource} Management'
       fieldsConfig={fieldsConfig}
-      rowKey='id'  // ✅ 重要！
+      rowKey='id'  // 重要！
       actions={{
         getList: actions.get{Resource}ListAction,
         create: actions.create{Resource}Action,
@@ -156,7 +156,7 @@ export default function {Resource}Page() {
 **修复：**
 ```javascript
 const config = {
-  primaryKey: 'id',  // ✅ 添加这一行
+  primaryKey: 'id',  // 添加这一行
 };
 ```
 
@@ -169,7 +169,7 @@ const config = {
 **修复：**
 ```javascript
 <SmartCrudPage
-  rowKey='id'  // ✅ 添加这一行
+  rowKey='id'  // 添加这一行
 />
 ```
 
@@ -214,7 +214,7 @@ const config = {
 ```javascript
 // components/admin/smart-crud-page.jsx
 export default function SmartCrudPage({
-  rowKey = 'id',  // ✅ 改为默认使用 'id'
+  rowKey = 'id',  // 改为默认使用 'id'
   // ...
 }) {
   // ...
@@ -229,7 +229,7 @@ export default function SmartCrudPage({
 // app/(admin)/actions/dao/base.js
 constructor(config) {
   this.config = {
-    primaryKey: 'id',  // ✅ 改为默认使用 'id'
+    primaryKey: 'id',  // 改为默认使用 'id'
     softDelete: false,
     ...config,
   };
@@ -307,7 +307,7 @@ async function migrateIdField() {
 
 ---
 
-## ✅ 当前项目建议
+## 当前项目建议
 
 基于你的需求（未来兼容其他数据库），**继续使用 `id` 字段是正确的选择**。
 

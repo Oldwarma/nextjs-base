@@ -3,11 +3,10 @@
  * 
  * 支持 showRule 和 disabled 条件渲染
  * 支持 watch 字段监听
- * 支持 action 自动加载数据（vk-unicloud 风格）
+ * 支持 action 自动加载数据
  * 支持 group 分组布局
  * 
  * 参考：
- * - vk-unicloud: https://vkdoc.fsq.pub/admin/components/0%E3%80%81public.html
  * - ProComponents: https://procomponents.ant.design/components/form
  * 
  * 注意：不使用 ProFormGroup 是因为它内部使用 Space 布局，
@@ -51,7 +50,7 @@ export default function DynamicFormFields({ fieldsConfig, formInstance: propForm
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [JSON.stringify(watchedValues)]);
 	
-	// ✅ 处理 action 自动加载数据（vk-unicloud 风格）
+	// 处理 action 自动加载数据
 	const [actionData, setActionData] = useState({});
 	const [loadingActions, setLoadingActions] = useState({});
 
@@ -130,7 +129,7 @@ export default function DynamicFormFields({ fieldsConfig, formInstance: propForm
 			isDisabled = evaluateRule(field.disabled, formData, field);
 		}
 
-		// ✅ 处理 data 为函数的情况（动态选项）
+		// 处理 data 为函数的情况（动态选项）
 		let processedField = { ...field };
 		
 		// 如果 data 是函数，调用它获取实际数据
@@ -160,7 +159,7 @@ export default function DynamicFormFields({ fieldsConfig, formInstance: propForm
 			}
 		}
 		
-		// ✅ 如果字段配置了 action，注入加载的数据
+		// 如果字段配置了 action，注入加载的数据
 		if (field.form?.action && actionData[field.key]) {
 			processedField = {
 				...processedField,
@@ -298,7 +297,7 @@ export default function DynamicFormFields({ fieldsConfig, formInstance: propForm
  * 
  * 支持两种 watch 格式：
  * 1. watch: (params) => { ... }  // 函数形式
- * 2. watch: { handler: (value, helpers) => { ... } }  // 对象形式（vk-unicloud 风格）
+ * 2. watch: { handler: (value, helpers) => { ... } }  // 对象形式
  */
 function FieldWithWatch({ field, fieldComponent, formInstance, formData, index }) {
 	// 使用 ref 存储上一次的值，避免 state 更新导致的循环

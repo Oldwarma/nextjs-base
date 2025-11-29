@@ -7,7 +7,7 @@
 
 ## 🎯 核心原则
 
-### ✅ 最简单的方案：只需 2 个文件！
+### 最简单的方案：只需 2 个文件！
 
 **彻底删除所有 config 文件！**
 
@@ -15,11 +15,11 @@
 2. **crud-action.{resource}.js** - 所有服务端逻辑（config + validation + hooks + transforms + actions）
 
 **为什么这样最好？**
-1. ✅ 文件最少，结构最清晰
-2. ✅ 不需要导入任何 config
-3. ✅ 完全避免构建错误
-4. ✅ 修改配置只需改一个文件
-5. ✅ 符合 "关注点分离"：UI 和服务端逻辑完全分离
+1. 文件最少，结构最清晰
+2. 不需要导入任何 config
+3. 完全避免构建错误
+4. 修改配置只需改一个文件
+5. 符合 "关注点分离"：UI 和服务端逻辑完全分离
 
 ---
 
@@ -52,8 +52,8 @@ import * as actions from '@/app/(admin)/actions/{module}/crud-action.{resource}'
 /**
  * {Resource} Management Page
  * 
- * ✅ 只包含 UI 配置（fieldsConfig）
- * ✅ 不包含任何业务逻辑
+ * 只包含 UI 配置（fieldsConfig）
+ * 不包含任何业务逻辑
  */
 export default function {Resource}ManagementPage() {
   const fieldsConfig = [
@@ -128,7 +128,7 @@ export default function {Resource}ManagementPage() {
       form: {
         required: false,
         placeholder: 'Select parent',
-        action: 'get{Resource}TreeForSelectAction',  // ✅ 自动调用对应 action
+        action: 'get{Resource}TreeForSelectAction',  // 自动调用对应 action
         fieldProps: {
           allowClear: true,
           showSearch: true,
@@ -177,7 +177,7 @@ export default function {Resource}ManagementPage() {
         create: actions.create{Resource}Action,
         update: actions.update{Resource}Action,
         delete: actions.delete{Resource}Action,
-        // ✅ 如果有树形结构，添加这个
+        // 如果有树形结构，添加这个
         get{Resource}TreeForSelectAction: actions.get{Resource}TreeForSelectAction,
       }}
       enableCreate={true}
@@ -200,7 +200,7 @@ import { wrapQueryAction } from '@/lib/core/action-wrapper';
 /**
  * {Resource} CRUD 配置
  * 
- * ✅ 所有服务端配置集中在这里：
+ * 所有服务端配置集中在这里：
  *    - 基础配置（collectionName, primaryKey, fields）
  *    - 验证规则（validation）
  *    - 生命周期钩子（hooks）
@@ -241,7 +241,7 @@ const {resource}Config = {
       custom: async (value, context) => {
         if (!value) return true;
         
-        // ✅ 使用 dynamic import
+        // 使用 dynamic import
         const { getDb } = await import('@/lib/database/mongodb');
         const db = await getDb();
         
@@ -501,7 +501,7 @@ app/(admin)/
 
 ### 1. fieldsConfig 定义位置
 
-✅ **必须：直接在 page.js 中定义**
+**必须：直接在 page.js 中定义**
 ```javascript
 export default function Page() {
   const fieldsConfig = [ /* ... */ ];
@@ -517,7 +517,7 @@ export const fieldsConfig = [ /* ... */ ];
 
 ### 2. 服务端配置位置
 
-✅ **必须：直接在 crud-action.{resource}.js 中定义**
+**必须：直接在 crud-action.{resource}.js 中定义**
 ```javascript
 'use server';
 
@@ -539,13 +539,13 @@ const crudActions = createCrudActions({resource}Config);
 
 ### 3. 使用声明式配置
 
-✅ **推荐：使用 valueEnum, formatter, action**
+**推荐：使用 valueEnum, formatter, action**
 ```javascript
 {
   key: 'status',
   type: 'select',
   table: {
-    valueEnum: {  // ✅ 声明式
+    valueEnum: {  // 声明式
       0: { text: 'Inactive', status: 'Default' },
       1: { text: 'Active', status: 'Success' },
     },
@@ -553,20 +553,20 @@ const crudActions = createCrudActions({resource}Config);
 }
 ```
 
-✅ **推荐：使用 action 字符串自动加载数据**
+**推荐：使用 action 字符串自动加载数据**
 ```javascript
 {
   key: 'parent_id',
   type: 'tree-select',
   form: {
-    action: 'get{Resource}TreeForSelectAction',  // ✅ 自动调用
+    action: 'get{Resource}TreeForSelectAction',  // 自动调用
   },
 }
 ```
 
 ### 4. Dynamic Import MongoDB
 
-✅ **必须：所有 MongoDB 导入使用 await import**
+**必须：所有 MongoDB 导入使用 await import**
 ```javascript
 const { getDb } = await import('@/lib/database/mongodb'); // ✅
 ```
@@ -579,7 +579,7 @@ const { getDb } = require('@/lib/database/mongodb'); // ❌
 
 ### 5. 代码组织
 
-✅ **推荐：按功能分段，添加清晰注释**
+**推荐：按功能分段，添加清晰注释**
 ```javascript
 const {resource}Config = {
   // ==================== 基础配置 ====================
@@ -610,7 +610,7 @@ const {resource}Config = {
 | - crud-config.{resource}.js | | | | |
 | - {resource}-server.config.js | | | | |
 | - crud-action.{resource}.js | | | | |
-| **新方案（合并 config）** | **2** | **😊 低** | **✅ 不会** | **✅ 好** |
+| **新方案（合并 config）** | **2** | **😊 低** | **不会** | **好** |
 | - page.js (fieldsConfig) | | | | |
 | - crud-action.{resource}.js (所有配置) | | | | |
 
@@ -644,7 +644,7 @@ rm -rf app/(admin)/actions/{module}/configs/
 
 ---
 
-## ✅ 核心要点总结
+## 核心要点总结
 
 1. **只需 2 个文件** ✅
    - `page.js` - UI 配置（fieldsConfig）

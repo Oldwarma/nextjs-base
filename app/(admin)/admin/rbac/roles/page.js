@@ -50,7 +50,7 @@ export default function RolesManagementPage() {
 			const result = await getPermissionTreeForSelectAction();
 			if (result.success) {
 				console.log('[Roles] Raw permission data:', result.data);
-				// ✅ getPermissionTreeForSelectAction 已经返回正确格式，直接使用
+				// getPermissionTreeForSelectAction 已经返回正确格式，直接使用
 				setPermissionTree(result.data || []);
 			}
 		};
@@ -59,7 +59,7 @@ export default function RolesManagementPage() {
 			const result = await getMenuTreeForSelectAction();
 			if (result.success) {
 				console.log('[Roles] Raw menu data:', result.data);
-				// ✅ getMenuTreeForSelectAction 已经返回正确格式，直接使用
+				// getMenuTreeForSelectAction 已经返回正确格式，直接使用
 				setMenuTree(result.data || []);
 			}
 		};
@@ -354,7 +354,7 @@ export default function RolesManagementPage() {
 				key: 'assign-permissions',
 				text: 'Assign Permissions',
 				icon: <KeyOutlined />,
-				inMore: true, // ✅ 放入更多菜单
+				inMore: true, // 放入更多菜单
 				onClick: handleAssignPermissions,
 				show: (record) => record.id !== 'admin', // 不显示给 admin 角色
 			},
@@ -362,7 +362,7 @@ export default function RolesManagementPage() {
 				key: 'assign-menus',
 				text: 'Assign Menus',
 				icon: <MenuOutlined />,
-				inMore: true, // ✅ 放入更多菜单
+				inMore: true, // 放入更多菜单
 				onClick: handleAssignMenus,
 				show: (record) => record.id !== 'admin', // 不显示给 admin 角色
 			},

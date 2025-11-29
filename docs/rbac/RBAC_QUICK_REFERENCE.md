@@ -53,7 +53,7 @@ import {
 import { checkActionPermission } from '@/lib/permission-auth';
 
 export async function createUserAction(data) {
-  // ✅ 验证权限
+  // 验证权限
   const permCheck = await checkActionPermission('/admin/actions/user/create');
   
   if (!permCheck.hasPermission) {
@@ -140,7 +140,7 @@ if (!permCheck.hasPermission) {
 import { checkPageAccess } from '@/lib/page-auth';
 
 export default async function UsersPage() {
-  // ✅ 验证页面访问权限（无权限会自动重定向）
+  // 验证页面访问权限（无权限会自动重定向）
   await checkPageAccess('/admin/users');
 
   return (
@@ -446,7 +446,7 @@ export async function deleteUserAction(userId) {
   await deleteUser(userId);
 }
 
-// ✅ 正确：添加权限验证
+// 正确：添加权限验证
 export async function deleteUserAction(userId) {
   const permCheck = await checkActionPermission('/admin/actions/user/delete');
   if (!permCheck.hasPermission) {
@@ -469,7 +469,7 @@ export async function deleteUserAction(userId) {
   await deleteUser(userId);  // 危险！可以直接调用
 }
 
-// ✅ 正确：前后端都验证
+// 正确：前后端都验证
 {hasPermission('user-delete') && (
   <Button onClick={deleteUser}>Delete</Button>
 )}
@@ -490,7 +490,7 @@ export async function deleteUserAction(userId) {
 // 权限配置: actions: ["/admin/actions/user/*"]
 const permCheck = await checkActionPermission('/actions/user/create');  // 路径错误
 
-// ✅ 正确：路径匹配权限配置
+// 正确：路径匹配权限配置
 const permCheck = await checkActionPermission('/admin/actions/user/create');
 ```
 

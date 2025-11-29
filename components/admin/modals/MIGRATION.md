@@ -4,10 +4,10 @@
 
 ## 迁移收益
 
-- ✅ **代码减少 60-80%**：去除重复的 Modal 代码
-- ✅ **维护性提升**：统一的组件，统一的行为
-- ✅ **Bug 修复一次**：所有页面同时受益
-- ✅ **功能增强容易**：在组件层面统一增强
+- **代码减少 60-80%**：去除重复的 Modal 代码
+- **维护性提升**：统一的组件，统一的行为
+- **Bug 修复一次**：所有页面同时受益
+- **功能增强容易**：在组件层面统一增强
 
 ---
 
@@ -142,7 +142,7 @@ import {
 } from '@/components/admin/modals';
 
 export default function UsersManagementPage() {
-  // ✅ 简化的状态管理
+  // 简化的状态管理
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [roleModalVisible, setRoleModalVisible] = useState(false);
@@ -150,7 +150,7 @@ export default function UsersManagementPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [roleTree, setRoleTree] = useState([]);
 
-  // ✅ 简化的处理逻辑
+  // 简化的处理逻辑
   const handleCreateUser = async (userData) => {
     const result = await createUserAction(userData);
     if (result.success) {
@@ -203,7 +203,7 @@ export default function UsersManagementPage() {
         ]}
       />
 
-      {/* ✅ 使用可复用组件（3 行） */}
+      {/* 使用可复用组件（3 行） */}
       <CreateUserModal
         visible={createModalVisible}
         onSave={handleCreateUser}
@@ -302,7 +302,7 @@ export default function RolesManagementPage() {
 import { TreeSelectorModal } from '@/components/admin/modals';
 
 export default function RolesManagementPage() {
-  // ✅ 简化状态
+  // 简化状态
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [menuModalVisible, setMenuModalVisible] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
@@ -322,7 +322,7 @@ export default function RolesManagementPage() {
         ]}
       />
 
-      {/* ✅ 权限分配 */}
+      {/* 权限分配 */}
       <TreeSelectorModal
         visible={permissionModalVisible}
         title={`Assign Permissions: ${selectedRole?.name || ''}`}
@@ -338,7 +338,7 @@ export default function RolesManagementPage() {
         onCancel={() => setPermissionModalVisible(false)}
       />
 
-      {/* ✅ 菜单分配（带额外选项） */}
+      {/* 菜单分配（带额外选项） */}
       <TreeSelectorModal
         visible={menuModalVisible}
         title={`Assign Menus: ${selectedRole?.name || ''}`}
@@ -369,14 +369,14 @@ export default function RolesManagementPage() {
 
 ## 迁移检查清单
 
-### ✅ 迁移前检查
+### 迁移前检查
 
 - [ ] 已阅读 `README.md` 了解组件功能
 - [ ] 已阅读 `EXAMPLES.md` 查看使用示例
 - [ ] 已识别页面中可复用的 Modal
 - [ ] 已备份原始代码（git commit）
 
-### ✅ 迁移过程
+### 迁移过程
 
 - [ ] 导入新组件
 - [ ] 替换 Modal 实现
@@ -385,7 +385,7 @@ export default function RolesManagementPage() {
 - [ ] 删除旧的 Modal 代码
 - [ ] 删除不再需要的 Form 实例
 
-### ✅ 迁移后测试
+### 迁移后测试
 
 - [ ] 创建功能正常
 - [ ] 编辑功能正常

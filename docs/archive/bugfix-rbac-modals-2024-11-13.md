@@ -55,7 +55,7 @@ useEffect(() => {
 
 **修复代码：**
 ```javascript
-// ✅ 页面加载时立即加载角色数据（用于角色分配 Modal）
+// 页面加载时立即加载角色数据（用于角色分配 Modal）
 useEffect(() => {
   if (!rolesLoaded) {
     loadAllRoles();
@@ -80,9 +80,9 @@ useEffect(() => {
 ### 影响评估
 
 **优点：**
-- ✅ 用户体验改善：打开 Modal 立即看到数据
-- ✅ 逻辑更简单：不依赖搜索表单状态
-- ✅ 避免竞态条件
+- 用户体验改善：打开 Modal 立即看到数据
+- 逻辑更简单：不依赖搜索表单状态
+- 避免竞态条件
 
 **缺点：**
 - ⚠️ 页面加载时会多一次 API 请求
@@ -159,14 +159,14 @@ const convertToTreeData = (data, keyField = 'id') => {
   if (!Array.isArray(data)) return [];
 
   return data.map((item) => {
-    // ✅ 确保 key 是字符串类型
+    // 确保 key 是字符串类型
     const keyValue = item[keyField];
     const stringKey = keyValue ? String(keyValue) : String(Math.random());
     
     return {
       title: item.label || item.name || item[keyField] || 'Unknown',
-      value: stringKey,  // ✅ 强制转换为字符串
-      key: stringKey,    // ✅ 强制转换为字符串
+      value: stringKey,  // 强制转换为字符串
+      key: stringKey,    // 强制转换为字符串
       children: item.children && item.children.length > 0 
         ? convertToTreeData(item.children, keyField) 
         : undefined,
@@ -213,10 +213,10 @@ String(null) || String(Math.random())
 ### 影响评估
 
 **优点：**
-- ✅ 修复 Tree 组件报错
-- ✅ 兼容所有数据类型（ObjectId、UUID、String）
-- ✅ 防止未来类似问题
-- ✅ 对现有功能无影响
+- 修复 Tree 组件报错
+- 兼容所有数据类型（ObjectId、UUID、String）
+- 防止未来类似问题
+- 对现有功能无影响
 
 **缺点：**
 - 无明显缺点
@@ -233,9 +233,9 @@ String(null) || String(Math.random())
 3. 观察 Modal 是否立即显示角色列表
 
 **预期结果：**
-- ✅ Modal 立即显示角色树形数据
-- ✅ 不再卡在 "Loading available roles..."
-- ✅ 可以正常选择和保存角色
+- Modal 立即显示角色树形数据
+- 不再卡在 "Loading available roles..."
+- 可以正常选择和保存角色
 
 ### 测试 2：Roles 页面
 
@@ -245,10 +245,10 @@ String(null) || String(Math.random())
 3. 观察 Modal 是否正常显示权限树
 
 **预期结果：**
-- ✅ Console 无错误信息
-- ✅ 权限以树形结构正确显示
-- ✅ 可以展开/收起节点
-- ✅ 可以正常勾选和保存权限
+- Console 无错误信息
+- 权限以树形结构正确显示
+- 可以展开/收起节点
+- 可以正常勾选和保存权限
 
 ### 测试 3：回归测试
 
@@ -272,7 +272,7 @@ String(null) || String(Math.random())
 
 **变更前：**
 ```javascript
-// ✅ 延迟加载：只在搜索表单展开时加载角色选项
+// 延迟加载：只在搜索表单展开时加载角色选项
 useEffect(() => {
   if (searchExpanded && !rolesLoaded) {
     loadAllRoles();
@@ -282,7 +282,7 @@ useEffect(() => {
 
 **变更后：**
 ```javascript
-// ✅ 页面加载时立即加载角色数据（用于角色分配 Modal）
+// 页面加载时立即加载角色数据（用于角色分配 Modal）
 useEffect(() => {
   if (!rolesLoaded) {
     loadAllRoles();
@@ -353,7 +353,7 @@ useEffect(() => {
   }
 }, [userTriggeredSomething]);
 
-// ✅ 好：页面加载时预加载
+// 好：页面加载时预加载
 useEffect(() => {
   loadCriticalData();
 }, []);
@@ -370,7 +370,7 @@ useEffect(() => {
 // ❌ 不好：直接使用
 key: item.id
 
-// ✅ 好：类型转换 + 边界处理
+// 好：类型转换 + 边界处理
 const stringKey = item.id ? String(item.id) : String(Math.random());
 key: stringKey
 ```

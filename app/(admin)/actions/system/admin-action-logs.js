@@ -47,7 +47,7 @@ const actionLogsCrudConfig = {
 				as: 'userInfo',
 				limit: 1,
 				fieldJson: { id: 1, name: 1, email: 1, _id: 1 },
-				convertToObjectId: true, // ✅ 标记需要类型转换
+				convertToObjectId: true, // 标记需要类型转换
 			},
 		],
 	},

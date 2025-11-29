@@ -36,7 +36,7 @@
 searchParams = { name: 'create' }
 
 // generateSearchTransform 转换
-const mode = field.search?.mode || 'exact';  // ✅ mode = 'like'
+const mode = field.search?.mode || 'exact';  // mode = 'like'
 
 switch (mode) {
   case 'like':
@@ -77,7 +77,7 @@ case 'like':
 
 ---
 
-## ✅ 修复方案
+## 修复方案
 
 ### 修改 `generateSearchTransform` 函数
 
@@ -93,13 +93,13 @@ searchableFields.forEach((field) => {
   switch (mode) {
     case 'like':
     case '%%':
-      // ✅ 模糊搜索 - 转换为 MongoDB $regex 格式
+      // 模糊搜索 - 转换为 MongoDB $regex 格式
       conditions[field.key] = { $regex: value, $options: 'i' };
       break;
 
     case 'exact':
     case '==':
-      // ✅ 精确搜索
+      // 精确搜索
       conditions[field.key] = value;
       break;
     
@@ -116,7 +116,7 @@ searchableFields.forEach((field) => {
 {
   key: 'name',
   search: {
-    mode: 'like',  // ✅ 现在会生效！
+    mode: 'like',  // 现在会生效！
     enabled: true,
     placeholder: 'Search by name',
   },
@@ -125,7 +125,7 @@ searchableFields.forEach((field) => {
 {
   key: 'remark',
   search: {
-    mode: 'like',  // ✅ 添加 mode 配置
+    mode: 'like',  // 添加 mode 配置
     placeholder: 'Search by remark',
   },
 }
@@ -147,7 +147,7 @@ conditions[field.key] = { $regex: 'create', $options: 'i' };
 
 // 结果
 whereJson = { 
-  name: { $regex: 'create', $options: 'i' }  // ✅ MongoDB 模糊搜索格式
+  name: { $regex: 'create', $options: 'i' }  // MongoDB 模糊搜索格式
 }
 ```
 
@@ -162,14 +162,14 @@ whereJson = {
 
 // MongoDB 查询
 db.collection.find({ 
-  name: { $regex: 'create', $options: 'i' }  // ✅ 模糊搜索，不区分大小写
+  name: { $regex: 'create', $options: 'i' }  // 模糊搜索，不区分大小写
 })
 ```
 
 **3. 查询结果：**
-- ✅ "Create Bullet" - 匹配（包含 "create"，不区分大小写）
-- ✅ "create user" - 匹配
-- ✅ "User Creation" - 匹配（包含 "creat"）
+- "Create Bullet" - 匹配（包含 "create"，不区分大小写）
+- "create user" - 匹配
+- "User Creation" - 匹配（包含 "creat"）
 - ❌ "delete" - 不匹配
 
 ---
@@ -292,8 +292,8 @@ db.collection.find({
 - "Delete Permission"
 
 **搜索 "create"：**
-- ✅ 匹配前 3 条（不区分大小写）
-- ✅ 不匹配 "Delete Permission"
+- 匹配前 3 条（不区分大小写）
+- 不匹配 "Delete Permission"
 
 #### 2. 模糊搜索 - Remark 字段
 
@@ -303,8 +303,8 @@ db.collection.find({
 - "creation time tracking"
 
 **搜索 "create"：**
-- ✅ 匹配前 2 条
-- ✅ "creation" 也匹配（因为包含 "creat"）
+- 匹配前 2 条
+- "creation" 也匹配（因为包含 "creat"）
 
 #### 3. 组合搜索
 
@@ -313,8 +313,8 @@ db.collection.find({
 - Enable: true
 
 **结果：**
-- ✅ 只返回名字包含 "create" 且状态为启用的记录
-- ✅ 两个条件都生效
+- 只返回名字包含 "create" 且状态为启用的记录
+- 两个条件都生效
 
 ---
 
@@ -362,7 +362,7 @@ db.collection.find({
 {
   key: 'fieldName',
   search: {
-    mode: 'like',  // ✅ 必须明确指定 mode
+    mode: 'like',  // 必须明确指定 mode
     placeholder: 'Search...',
   },
 }
@@ -380,7 +380,7 @@ db.collection.find({
 - 问题：BaseDAO 收到的已经是 `whereJson`，无法区分哪些字段需要模糊搜索
 - 结果：必须修改 BaseDAO，增加复杂度
 
-✅ **正确：在 generateSearchTransform 中转换**
+**正确：在 generateSearchTransform 中转换**
 - 优点：根据字段配置的 `mode` 生成正确的查询格式
 - 结果：BaseDAO 收到的就是最终的 MongoDB 查询条件
 

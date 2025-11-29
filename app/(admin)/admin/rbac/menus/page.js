@@ -22,7 +22,7 @@ import { renderIcon } from '@/components/admin/icon-picker';
 import * as menuActions from '@/app/(admin)/actions/rbac/crud-action.menu';
 
 export default function MenusManagementPage() {
-	// ✅ fieldsConfig 直接在 page 中定义（客户端安全）
+	// fieldsConfig 直接在 page 中定义（客户端安全）
 	const fieldsConfig = [
 		// ID (UUID - 自动生成)
 		{
@@ -276,7 +276,7 @@ export default function MenusManagementPage() {
 				create: menuActions.createMenuAction,
 				update: menuActions.updateMenuAction,
 				delete: menuActions.deleteMenuAction,
-				// ✅ tree-select 字段通过 action 名称自动调用
+				// tree-select 字段通过 action 名称自动调用
 				getMenuTreeForSelectAction: menuActions.getMenuTreeForSelectAction,
 			}}
 			title='Menu Management'

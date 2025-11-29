@@ -483,7 +483,7 @@ export async function updateUserLanguage(userId, locale) {
 
 ### 1. 翻译文件组织
 
-✅ **按功能模块组织**
+**按功能模块组织**
 
 ```json
 {
@@ -511,7 +511,7 @@ export async function updateUserLanguage(userId, locale) {
 
 ### 2. 命名规范
 
-✅ **使用描述性键名**
+**使用描述性键名**
 
 ```json
 {
@@ -550,7 +550,7 @@ export async function updateUserLanguage(userId, locale) {
 ### 4. 使用命名空间
 
 ```javascript
-// ✅ 好的做法
+// 好的做法
 const t = useTranslations('generate');
 t('title');
 
@@ -567,12 +567,12 @@ t('generate.title');
 
 ## 总结
 
--   ✅ 使用 `useTranslations` 在组件中获取翻译
--   ✅ 使用 `getTranslations` 在 Server Actions 中获取翻译
--   ✅ 翻译文件按功能模块组织
--   ✅ 支持变量插值 `{variable}`
--   ✅ 自动路由处理 `/[locale]/...`
--   ✅ SEO 友好的 alternate links
--   ✅ 数据库内容使用多语言字段
+-   使用 `useTranslations` 在组件中获取翻译
+-   使用 `getTranslations` 在 Server Actions 中获取翻译
+-   翻译文件按功能模块组织
+-   支持变量插值 `{variable}`
+-   自动路由处理 `/[locale]/...`
+-   SEO 友好的 alternate links
+-   数据库内容使用多语言字段
 
 有问题？查看 [next-intl 官方文档](https://next-intl-docs.vercel.app/)

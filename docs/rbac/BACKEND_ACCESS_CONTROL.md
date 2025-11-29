@@ -96,8 +96,8 @@ return permissions;
 ```javascript
 {
   "email": "admin@example.com",
-  "role": "admin",              // ✅ 顶级管理员
-  "isBackendAllowed": true,     // ✅ 允许访问后台
+  "role": "admin",              // 顶级管理员
+  "isBackendAllowed": true,     // 允许访问后台
   "roles": []                   // 无需 RBAC 角色，拥有全部权限
 }
 ```
@@ -110,7 +110,7 @@ return permissions;
 {
   "email": "employee@example.com",
   "role": "user",               // ⚠️ 普通用户
-  "isBackendAllowed": true,     // ✅ 允许访问后台
+  "isBackendAllowed": true,     // 允许访问后台
   "roles": [
     "content-manager-role-id",  // 角色 1
     "finance-viewer-role-id"    // 角色 2
@@ -217,7 +217,7 @@ if (user.role === 'admin') {
 }
 ```
 
-✅ **正确做法：**
+**正确做法：**
 ```javascript
 // 判断是否可以进后台
 if (user.isBackendAllowed) {

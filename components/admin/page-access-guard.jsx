@@ -71,7 +71,7 @@ export default function PageAccessGuard({ children }) {
 
 				if (result.success) {
 					const hasAccess = result.hasAccess || result.isAdmin;
-					console.log('🔒 [PageAccessGuard] Final decision:', hasAccess ? '✅ Allow' : '❌ Deny (403)');
+					console.log('🔒 [PageAccessGuard] Final decision:', hasAccess ? 'Allow' : '❌ Deny (403)');
 					setAccessState({
 						loading: false,
 						hasAccess,

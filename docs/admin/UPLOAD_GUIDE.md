@@ -84,11 +84,11 @@ R2_PUBLIC_URL=https://your-public-url
 
 | 变量名 | 必填 | 说明 |
 |--------|------|------|
-| `R2_ACCOUNT_ID` | ✅ | Cloudflare 账户 ID |
-| `R2_ACCESS_KEY_ID` | ✅ | R2 API Access Key |
-| `R2_SECRET_ACCESS_KEY` | ✅ | R2 API Secret Key |
-| `R2_BUCKET_NAME` | ✅ | R2 存储桶名称 |
-| `R2_PUBLIC_URL` | ✅ | 文件公开访问的基础 URL |
+| `R2_ACCOUNT_ID` | | Cloudflare 账户 ID |
+| `R2_ACCESS_KEY_ID` | | R2 API Access Key |
+| `R2_SECRET_ACCESS_KEY` | | R2 API Secret Key |
+| `R2_BUCKET_NAME` | | R2 存储桶名称 |
+| `R2_PUBLIC_URL` | | 文件公开访问的基础 URL |
 | `R2_ENDPOINT` | ❌ | 自定义 Endpoint（默认自动生成） |
 
 ## 4. 上传 API 使用说明

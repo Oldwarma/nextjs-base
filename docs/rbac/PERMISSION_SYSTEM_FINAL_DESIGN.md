@@ -33,7 +33,7 @@
   "level": 0,  // 0=Other, 1=Bullet, 2=Bomb, 3=Grenade, 4=Nuclear
   "crud_category": 0,
   
-  // ✅ 核心权限字段（只有 2 个）
+  // 核心权限字段（只有 2 个）
   "actions": [        // Server Actions（函数名匹配）
     "**/getUserAction",
     "**/deleteMyAccountAction"
@@ -120,9 +120,9 @@
 - `api_routes` ❌ 太长，拗口
 - `api_list` ❌ 有下划线，不够简洁
 - `api` ⚠️ 不明确是数组
-- `apis` ✅ **最佳选择**
+- `apis` **最佳选择**
 
-**最终决策**：✅ **`apis`**
+**最终决策**：**`apis`**
 
 **理由**：
 - 简洁（4 个字母）
@@ -143,10 +143,10 @@
 1. 验证登录状态
    └─ auth.api.getSession()
       ├─ 未登录 → ❌ 返回 "Unauthorized"
-      └─ 已登录 → ✅ 继续
+      └─ 已登录 → 继续
          ↓
 2. 检查角色
-   ├─ admin 角色 → ✅ 自动通过（跳过 RBAC）
+   ├─ admin 角色 → 自动通过（跳过 RBAC）
    └─ user 角色 → 继续步骤 3
          ↓
 3. RBAC 权限检查
@@ -155,7 +155,7 @@
       ├─ 查询角色的所有权限
       ├─ 查询权限的 actions 配置
       ├─ 使用通配符匹配 permissionId
-      ├─ 匹配成功 → ✅ 继续执行
+      ├─ 匹配成功 → 继续执行
       └─ 匹配失败 → ❌ 返回 "Forbidden"
          ↓
 4. 执行业务逻辑
@@ -175,10 +175,10 @@ HTTP 请求到达 API Route
 1. 验证登录状态
    └─ auth.api.getSession()
       ├─ 未登录 → ❌ 返回 401
-      └─ 已登录 → ✅ 继续
+      └─ 已登录 → 继续
          ↓
 2. 检查角色
-   ├─ admin 角色 → ✅ 自动通过
+   ├─ admin 角色 → 自动通过
    └─ user 角色 → 继续步骤 3
          ↓
 3. RBAC 权限检查
@@ -186,7 +186,7 @@ HTTP 请求到达 API Route
       ├─ 查询用户的所有权限
       ├─ 查询权限的 apis 配置
       ├─ 使用通配符匹配 apiPath
-      ├─ 匹配成功 → ✅ 继续执行
+      ├─ 匹配成功 → 继续执行
       └─ 匹配失败 → ❌ 返回 403
          ↓
 4. 执行业务逻辑
@@ -304,7 +304,7 @@ async function handler(request, context) {
   });
 }
 
-// ✅ 使用权限中间件
+// 使用权限中间件
 export const GET = withApiPermission(handler);
 
 // 如果不需要权限检查
@@ -395,9 +395,9 @@ export const POST = withApiPermission(handler, { skipPermission: true });
 
 ### 3. 最小权限原则
 
-- ✅ 用户只获得完成工作所需的最小权限
-- ✅ 按需分配，定期回收
-- ✅ 高危操作需要额外验证（如密码确认）
+- 用户只获得完成工作所需的最小权限
+- 按需分配，定期回收
+- 高危操作需要额外验证（如密码确认）
 
 ---
 

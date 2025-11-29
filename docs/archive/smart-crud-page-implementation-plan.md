@@ -34,22 +34,22 @@ switch: {
 ```javascript
 switch: {
   table: (value, config) => {
-    // ✅ 支持 vk 风格的 activeText/inactiveText
+    // 支持activeText/inactiveText
     const activeText = config.table?.activeText || config.table?.trueText || 'Yes';
     const inactiveText = config.table?.inactiveText || config.table?.falseText || 'No';
     
-    // ✅ 支持自定义颜色
+    // 支持自定义颜色
     const activeColor = config.table?.activeColor || 'success';
     const inactiveColor = config.table?.inactiveColor || 'default';
     
-    // ✅ 支持图标
+    // 支持图标
     const activeIcon = config.table?.activeIcon;
     const inactiveIcon = config.table?.inactiveIcon;
     
     const text = value ? activeText : inactiveText;
     const color = value ? activeColor : inactiveColor;
     
-    // ✅ 动态导入图标
+    // 动态导入图标
     let icon = null;
     if (value && activeIcon) {
       icon = React.createElement(require('@ant-design/icons')[activeIcon]);
@@ -74,7 +74,7 @@ switch: {
 ```javascript
 select: {
   table: (value, config) => {
-    // ✅ 支持 valueEnum 自动渲染 Tag（Ant Design Pro 风格）
+    // 支持 valueEnum 自动渲染 Tag（Ant Design Pro 风格）
     const valueEnum = config.table?.valueEnum;
     
     if (valueEnum && valueEnum[value]) {
@@ -117,7 +117,7 @@ array: {
   table: (value, config) => {
     if (!value || !Array.isArray(value) || value.length === 0) return '-';
     
-    // ✅ 支持 formatter 函数
+    // 支持 formatter 函数
     if (config.table?.formatter) {
       const result = config.table.formatter(value, config);
       // 如果返回字符串，直接显示
@@ -128,7 +128,7 @@ array: {
       return result;
     }
     
-    // ✅ 支持 arrayRender 配置
+    // 支持 arrayRender 配置
     const arrayRender = config.table?.arrayRender;
     if (arrayRender) {
       const maxDisplay = arrayRender.maxDisplay || value.length;
@@ -178,12 +178,12 @@ if (field.table?.render) {
 
 **改进为：**
 ```javascript
-// ✅ 优先级：render > formatter > typeConfig.table
+// 优先级：render > formatter > typeConfig.table
 if (field.table?.render) {
   // 自定义 JSX render 函数
   column.render = field.table.render;
 } else if (field.table?.formatter) {
-  // ✅ 支持纯 JS formatter 函数（vk 风格）
+  // 支持纯 JS formatter 函数
   column.render = (value, record, index) => {
     const result = field.table.formatter(value, record, index);
     // 如果返回字符串，直接显示
@@ -216,12 +216,12 @@ const request = async (params, sort, filter) => {
   const result = await actions.getList(requestParams);
   
   if (result.success) {
-    // ✅ 检测是否为树形数据
+    // 检测是否为树形数据
     const hasChildren = result.data && result.data.some(item => 
       item.children && Array.isArray(item.children)
     );
     
-    // ✅ 如果检测到树形数据，自动设置 expandable
+    // 如果检测到树形数据，自动设置 expandable
     if (hasChildren && !tableProps.expandable) {
       // 通过 state 或其他方式通知组件启用树形显示
       setIsTreeData(true);
@@ -274,23 +274,23 @@ const request = async (params, sort, filter) => {
 
 ### Phase 1（本次实施）- 高优先级
 
-1. ✅ **Switch 类型增强**
+1. **Switch 类型增强**
    - 支持 `activeText`/`inactiveText`
    - 支持 `activeColor`/`inactiveColor`
    - 支持 `activeIcon`/`inactiveIcon`
 
-2. ✅ **Select + valueEnum**
+2. **Select + valueEnum**
    - 自动渲染为 Tag
    - 支持 status 映射
 
-3. ✅ **Array + arrayRender**
+3. **Array + arrayRender**
    - 支持 `maxDisplay`
    - 支持 `tagColor` 函数或固定值
 
-4. ✅ **支持 formatter 函数**
+4. **支持 formatter 函数**
    - 优先级：`render` > `formatter` > `typeConfig.table`
 
-5. ✅ **自动识别树形数据**
+5. **自动识别树形数据**
    - 检测 `children` 字段
    - 自动启用 `expandable`
 
@@ -386,7 +386,7 @@ const request = async (params, sort, filter) => {
 
 ---
 
-## ✅ 完成标准
+## 完成标准
 
 - [ ] Switch 类型支持新配置
 - [ ] Select + valueEnum 自动渲染 Tag

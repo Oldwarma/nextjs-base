@@ -1,49 +1,88 @@
-# SmartCrudPage 完整使用指南
+# Smart CRUD 完整开发指南
 
-基于 RBAC 模块（Permissions、Roles、Menus、Users）重构的完整经验总结。
+> **最后更新**: 2025-11-29  
+> **版本**: v3.0.0  
+> **目标读者**: AI Assistant、开发者  
+> **用途**: 创建新的管理页面时的完整参考
 
 ---
 
 ## 📋 目录
 
-1. [核心理念](#核心理念)
-2. [文件结构](#文件结构)
-3. [快速开始](#快速开始)
-4. [字段配置详解](#字段配置详解)
-5. [Server Actions 规范](#server-actions-规范)
-6. [高级功能](#高级功能)
-7. [最佳实践](#最佳实践)
-8. [常见问题](#常见问题)
+1. [架构概述](#架构概述)
+2. [文件结构规范](#文件结构规范)
+3. [CRUD Config 配置详解](#crud-config-配置详解)
+4. [Server Actions 编写规范](#server-actions-编写规范)
+5. [Page 页面开发规范](#page-页面开发规范)
+6. [字段类型完整参考](#字段类型完整参考)
+7. [高级功能](#高级功能)
+8. [最佳实践](#最佳实践)
 
 ---
 
-## 核心理念
+## 架构概述
 
-### 设计目标
+### 核心理念
 
-**SmartCrudPage** 的核心目标是通过 **配置驱动** 的方式，用最少的代码实现完整的 CRUD 功能。
+Smart CRUD 采用**声明式配置**模式，通过一套统一的配置自动生成完整的 CRUD 功能。
+
+### 系统架构
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Page Layer (前端)                        │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  SmartCrudPage                                       │   │
+│  │  - fieldsConfig (直接定义)                           │   │
+│  │  - actions (Server Actions 引用)                     │   │
+│  │  - UI 配置                                           │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Actions Layer (服务端)                     │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  crud-action.xxx.js                                  │   │
+│  │  - xxxConfig (数据库配置)                            │   │
+│  │  - createCrudActions(config)                         │   │
+│  │  - 自定义 Actions                                    │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     Core Layer (核心库)                      │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ crud-helper │  │action-wrapper│ │     BaseDAO         │ │
+│  │- createCrud │  │- wrapQuery  │  │- find/create/update │ │
+│  │- createRead │  │- wrapAdmin  │  │- delete/aggregate   │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Database Layer (MongoDB)                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 核心文件说明
+
+| 文件 | 位置 | 职责 |
+|------|------|------|
+| `crud-helper.js` | `lib/core/` | 生成标准 CRUD Actions |
+| `action-wrapper.js` | `lib/core/` | 包装 Actions（权限、日志） |
+| `base-dao.js` | `lib/database/` | 数据库操作封装 |
+| `smart-crud-page.jsx` | `components/admin/` | 前端 CRUD 组件 |
+| `smart-form/*.jsx` | `components/admin/` | 表单组件 |
+
+---
+
+## 文件结构规范
 
 ### 两个文件原则
 
 每个 CRUD 资源只需要 **2 个文件**：
-
-```
-资源名/
-├── page.js                    # 客户端：fieldsConfig + UI 逻辑
-└── crud-action.{resource}.js  # 服务端：所有 Server Actions
-```
-
-**核心规则：**
-
--   ✅ `page.js` - 包含 `fieldsConfig`（直接定义）+ UI 逻辑
--   ✅ `crud-action.{resource}.js` - 只包含 Server Actions（`'use server'`）
--   ❌ 不需要额外的 config 文件
-
----
-
-## 文件结构
-
-### 标准目录结构
 
 ```
 app/(admin)/
@@ -51,753 +90,574 @@ app/(admin)/
 │   └── {resource}/
 │       └── page.js              # 前端页面
 └── actions/
-    └── {resource}/
+    └── {module}/
         └── crud-action.{resource}.js  # Server Actions
 ```
 
-### 实际案例（RBAC 模块）
+### ❌ 不需要的文件
+
+```
+# 以下文件结构已废弃，不要使用：
+
+app/(admin)/actions/
+└── {module}/
+    └── configs/                 # ❌ 不需要单独的 config 目录
+        └── xxx-crud.config.js   # ❌ 不需要单独的 config 文件
+```
+
+### 实际项目结构
 
 ```
 app/(admin)/
-├── admin/rbac/
-│   ├── permissions/page.js      (311 行)
-│   ├── roles/page.js            (454 行)
-│   ├── menus/page.js            (340 行)
-│   └── users/page.js            (952 行)
-└── actions/rbac/
-    ├── crud-action.permission.js (361 行)
-    ├── crud-action.role.js       (327 行)
-    ├── crud-action.menu.js       (NEW)
-    └── crud-action.user.js       (581 行)
+├── admin/
+│   ├── rbac/
+│   │   ├── permissions/page.js
+│   │   ├── roles/page.js
+│   │   ├── menus/page.js
+│   │   └── users/page.js
+│   ├── cms/
+│   │   └── post/page.js
+│   └── system/
+│       ├── action_logs/page.js
+│       └── assets/page.js
+└── actions/
+    ├── rbac/
+    │   ├── crud-action.permission.js
+    │   ├── crud-action.role.js
+    │   ├── crud-action.menu.js
+    │   └── crud-action.user.js
+    ├── cms/
+    │   └── crud-action.post.js
+    └── system/
+        ├── admin-action-logs.js
+        └── crud-action.assets.js
+```
+
+### 命名规范
+
+| 类型 | 命名规则 | 示例 |
+|------|---------|------|
+| 页面文件 | `page.js` | `permissions/page.js` |
+| Actions 文件 | `crud-action.{resource}.js` | `crud-action.permission.js` |
+| 特殊 Actions | `admin-{resource}.js` | `admin-action-logs.js` |
+| Actions 函数 | `{操作}{实体}Action` | `getPermissionListAction` |
+| 配置对象 | `{resource}Config` | `permissionConfig` |
+
+---
+
+## CRUD Config 配置详解
+
+### 完整配置模板
+
+```javascript
+const xxxConfig = {
+	// ========== 基础配置 ==========
+	collectionName: 'xxx',        // MongoDB 集合名（必需）
+	primaryKey: 'id',             // 主键字段（默认 'id'）
+	softDelete: false,            // 是否软删除（默认 false）
+
+	// ========== 字段权限配置 ==========
+	fields: {
+		creatable: ['name', 'status', 'remark'],   // Create 允许的字段
+		updatable: ['name', 'status', 'remark'],   // Update 允许的字段
+		searchable: ['name', 'remark'],            // 可搜索的字段
+	},
+
+	// ========== 查询配置 ==========
+	query: {
+		defaultSort: { createdAt: -1 },   // 默认排序
+		defaultPageSize: 20,               // 默认分页大小
+		maxPageSize: 100,                  // 最大分页大小
+
+		// 连表查询配置
+		foreignDB: [
+			{
+				dbName: 'users',              // 目标集合名
+				localKey: 'userId',           // 本地外键字段
+				foreignKey: 'id',             // 目标集合主键
+				as: 'userInfo',               // 结果字段名
+				limit: 1,                     // 限制数量（1=一对一）
+				fieldJson: {                  // 返回字段（投影）
+					id: 1,
+					name: 1,
+					email: 1,
+				},
+				convertToObjectId: false,     // 是否转换为 ObjectId
+			},
+		],
+	},
+
+	// ========== 验证规则 ==========
+	validation: {
+		name: {
+			required: true,                    // 必填
+			type: 'string',                    // 类型
+			minLength: 2,                      // 最小长度
+			maxLength: 100,                    // 最大长度
+			pattern: /^[a-zA-Z0-9]+$/,        // 正则验证
+			enum: ['active', 'inactive'],      // 枚举值
+			message: 'Custom error message',   // 错误提示
+		},
+	},
+
+	// ========== 生命周期钩子 ==========
+	hooks: {
+		// 创建前
+		beforeCreate: async (data) => {
+			// 可以修改数据、设置默认值
+			return data;
+		},
+
+		// 创建后
+		afterCreate: async (id, data) => {
+			// 可以发送通知、写日志
+		},
+
+		// 更新前
+		beforeUpdate: async (id, data) => {
+			// 可以修改数据、权限检查
+			return data;
+		},
+
+		// 更新后
+		afterUpdate: async (id, data) => {
+			// 可以发送通知、清缓存
+		},
+
+		// 删除前
+		beforeDelete: async (id) => {
+			// 可以检查关联数据
+			// 返回 true 允许删除，false 阻止删除
+			return true;
+		},
+
+		// 删除后
+		afterDelete: async (id) => {
+			// 可以清理关联数据
+		},
+
+		// 查询后（列表）
+		afterFind: async (records) => {
+			// 可以转换数据格式
+			return records;
+		},
+
+		// 查询后（详情）
+		afterFindOne: async (record) => {
+			// 可以补充关联数据
+			return record;
+		},
+	},
+
+	// ========== 数据转换 ==========
+	transforms: {
+		// 写入前转换
+		input: (data) => {
+			// 例：日期字符串转 Date 对象
+			return data;
+		},
+
+		// 读取后转换
+		output: (data) => {
+			// 例：Date 对象转字符串
+			return data;
+		},
+	},
+};
+```
+
+### 字段权限说明
+
+```javascript
+fields: {
+	// 正确：只包含用户可提交的字段
+	creatable: ['name', 'status', 'description'],
+
+	// ❌ 错误：不要包含以下字段
+	// - id（自动生成 UUID）
+	// - createdAt（自动设置）
+	// - updatedAt（自动设置）
+	// - _id（MongoDB 内部字段）
+
+	// 正确：只包含允许修改的字段
+	updatable: ['name', 'status', 'description'],
+
+	// ❌ 错误：不要包含以下字段
+	// - id（主键不可修改）
+	// - createdAt（创建时间不可修改）
+}
+```
+
+### 连表查询类型
+
+#### 一对一关联
+
+```javascript
+foreignDB: [
+	{
+		dbName: 'users',
+		localKey: 'userId',        // 本地字段存储用户 ID
+		foreignKey: 'id',          // 关联 users.id
+		as: 'userInfo',
+		limit: 1,                  // 一对一
+		fieldJson: { id: 1, name: 1, email: 1 },
+	},
+]
+```
+
+#### 一对多关联
+
+```javascript
+foreignDB: [
+	{
+		dbName: 'roles',
+		localKey: 'roles',         // 本地字段是数组 ['role1', 'role2']
+		foreignKey: 'id',
+		as: 'roleList',            // 结果也是数组
+		fieldJson: { id: 1, name: 1 },
+		// 不设置 limit，返回所有匹配记录
+	},
+]
+```
+
+#### 自引用关联（树形结构）
+
+```javascript
+foreignDB: [
+	{
+		dbName: 'menus',           // 同一个集合
+		localKey: 'parent_id',
+		foreignKey: 'id',
+		as: 'parentInfo',
+		limit: 1,
+		fieldJson: { id: 1, name: 1 },
+	},
+]
 ```
 
 ---
 
-## 快速开始
+## Server Actions 编写规范
 
-### 步骤 1：创建 Server Actions
-
-**文件：** `app/(admin)/actions/rbac/crud-action.product.js`
+### 标准模板
 
 ```javascript
 'use server';
 
-import { auth } from '@/lib/auth/auth';
-import { headers } from 'next/headers';
-import { wrapQueryAction } from '@/lib/core/action-wrapper';
-
-// 权限检查函数
-async function checkBackendAccess() {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
-
-	if (!session?.user || !session.user.isBackendAllowed) {
-		return { hasAccess: false, error: 'Unauthorized' };
-	}
-
-	return { hasAccess: true };
-}
-
-// ============================================
-// 标准 CRUD Actions
-// ============================================
+import { createCrudActions } from '@/lib/core/crud-helper';
+import { wrapQueryAction, wrapAdminAction } from '@/lib/core/action-wrapper';
 
 /**
- * 获取列表
+ * Xxx CRUD 配置
  */
-export const getProductListAction = wrapQueryAction('product', async (params = {}) => {
-	const { pageIndex = 1, pageSize = 20, whereJson = {}, sortJson = { createdAt: -1 } } = params;
+const xxxConfig = {
+	collectionName: 'xxx',
+	primaryKey: 'id',
+	fields: {
+		creatable: ['name', 'status'],
+		updatable: ['name', 'status'],
+		searchable: ['name'],
+	},
+	query: {
+		defaultSort: { createdAt: -1 },
+	},
+};
 
-	// 从数据库获取数据
-	const { getCollection } = await import('@/lib/database/mongodb');
-	const collection = await getCollection('products');
+/**
+ * 创建标准 CRUD Actions
+ */
+const crudActions = createCrudActions(xxxConfig);
 
-	const skip = (pageIndex - 1) * pageSize;
-	const [data, total] = await Promise.all([
-		collection.find(whereJson).sort(sortJson).skip(skip).limit(pageSize).toArray(),
-		collection.countDocuments(whereJson),
-	]);
+/**
+ * 导出标准 CRUD Actions
+ */
+export const getXxxListAction = crudActions.getList;
+export const getXxxDetailAction = crudActions.getDetail;
+export const createXxxAction = crudActions.create;
+export const updateXxxAction = crudActions.update;
+export const deleteXxxAction = crudActions.delete;
+export const batchUpdateXxxAction = crudActions.batchUpdate;
+export const batchDeleteXxxAction = crudActions.batchDelete;
 
-	return {
-		success: true,
-		data,
-		total,
-		page: pageIndex,
-		pageSize,
-	};
+/**
+ * 自定义 Action 示例
+ */
+export const customXxxAction = wrapAdminAction(
+	'custom',
+	'xxx',
+	async (params, context) => {
+		const { userId } = context;
+		// 业务逻辑
+		return { success: true, data: {} };
+	}
+);
+```
+
+### 只读 Actions（日志、记录类）
+
+```javascript
+'use server';
+
+import { createReadOnlyActions } from '@/lib/core/crud-helper';
+
+/**
+ * Action Logs 配置
+ */
+const actionLogsConfig = {
+	collectionName: 'action_logs',
+	primaryKey: 'id',
+	fields: {
+		searchable: ['action', 'resourceType', 'userId'],
+	},
+	query: {
+		defaultSort: { createdAt: -1 },
+		foreignDB: [
+			{
+				dbName: 'users',
+				localKey: 'userId',
+				foreignKey: 'id',
+				as: 'userInfo',
+				limit: 1,
+				fieldJson: { id: 1, name: 1, email: 1 },
+			},
+		],
+	},
+};
+
+/**
+ * 创建只读 Actions
+ */
+const crudActions = createReadOnlyActions(actionLogsConfig);
+
+export const getActionLogListAction = crudActions.getList;
+export const getActionLogDetailAction = crudActions.getDetail;
+```
+
+### 自定义 Action 类型
+
+#### 查询类 Action
+
+```javascript
+export const getXxxTreeAction = wrapQueryAction('xxx', async (params) => {
+	const dao = new BaseDAO('xxx', 'id');
+	const records = await dao.find({}, { sort: { sort: 1 } });
+
+	// 构建树形结构
+	const tree = buildTree(records);
+	return { success: true, data: tree };
 });
+```
 
-/**
- * 获取详情
- */
-export async function getProductDetailAction(id) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return { success: false, error: backendCheck.error };
+#### 管理类 Action
+
+```javascript
+export const approveXxxAction = wrapAdminAction(
+	'approve',           // 操作类型
+	'xxx',               // 资源类型
+	async (params, context) => {
+		const { id } = params;
+		const { userId } = context;
+
+		const dao = new BaseDAO('xxx', 'id');
+		await dao.update(id, {
+			status: 'approved',
+			approvedBy: userId,
+			approvedAt: new Date(),
+		});
+
+		return { success: true };
+	},
+	{
+		permissionId: 'approveXxxAction',  // 权限标识
+		skipLog: false,                     // 是否跳过日志
 	}
-
-	const { getCollection } = await import('@/lib/database/mongodb');
-	const collection = await getCollection('products');
-	const product = await collection.findOne({ id });
-
-	if (!product) {
-		return { success: false, error: 'Product not found' };
-	}
-
-	return { success: true, data: product };
-}
-
-/**
- * 创建
- */
-export async function createProductAction(data) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return { success: false, error: backendCheck.error };
-	}
-
-	const { getCollection } = await import('@/lib/database/mongodb');
-	const collection = await getCollection('products');
-
-	const newProduct = {
-		...data,
-		id: crypto.randomUUID(),
-		createdAt: new Date(),
-		updatedAt: new Date(),
-	};
-
-	await collection.insertOne(newProduct);
-
-	return { success: true, data: newProduct };
-}
-
-/**
- * 更新
- */
-export async function updateProductAction(id, data) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return { success: false, error: backendCheck.error };
-	}
-
-	const { getCollection } = await import('@/lib/database/mongodb');
-	const collection = await getCollection('products');
-
-	const result = await collection.findOneAndUpdate({ id }, { $set: { ...data, updatedAt: new Date() } }, { returnDocument: 'after' });
-
-	if (!result.value) {
-		return { success: false, error: 'Product not found' };
-	}
-
-	return { success: true, data: result.value };
-}
-
-/**
- * 删除
- */
-export async function deleteProductAction(id) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return { success: false, error: backendCheck.error };
-	}
-
-	const { getCollection } = await import('@/lib/database/mongodb');
-	const collection = await getCollection('products');
-
-	await collection.deleteOne({ id });
-
-	return { success: true, message: 'Product deleted successfully' };
-}
-
-/**
- * 批量更新
- */
-export async function batchUpdateProductsAction(ids, data) {
-	const backendCheck = await checkBackendAccess();
-	if (!backendCheck.hasAccess) {
-		return { success: false, error: backendCheck.error };
-	}
-
-	const { getCollection } = await import('@/lib/database/mongodb');
-	const collection = await getCollection('products');
-
-	const result = await collection.updateMany({ id: { $in: ids } }, { $set: { ...data, updatedAt: new Date() } });
-
-	return {
-		success: true,
-		data: { modifiedCount: result.modifiedCount },
-	};
-}
+);
 ```
 
 ---
 
-### 步骤 2：创建前端页面
+## Page 页面开发规范
 
-**文件：** `app/(admin)/admin/products/page.js`
+### 标准模板
 
 ```javascript
+/**
+ * Xxx Management Page
+ */
+
 'use client';
 
-import { useMemo } from 'react';
-import dynamic from 'next/dynamic';
-import * as productActions from '@/app/(admin)/actions/rbac/crud-action.product';
+import SmartCrudPage from '@/components/admin/smart-crud-page';
+import * as xxxActions from '@/app/(admin)/actions/module/crud-action.xxx';
 
-const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
-	ssr: false,
-});
+export default function XxxManagementPage() {
+	// 直接定义 fieldsConfig（不使用 useMemo）
+	const fieldsConfig = [
+		{
+			key: 'id',
+			title: 'ID',
+			type: 'text',
+			table: false,
+			form: false,
+			search: false,
+		},
+		{
+			key: 'name',
+			title: 'Name',
+			type: 'text',
+			table: { width: 200 },
+			form: { required: true },
+			search: { mode: 'like' },
+		},
+		// ... 更多字段
+	];
 
-export default function ProductsPage() {
-	// ============================================
-	// 字段配置
-	// ============================================
-	const fieldsConfig = useMemo(
-		() => [
-			{
-				key: 'id',
-				title: 'ID',
-				type: 'text',
-				table: false,
-				form: false,
-				search: false,
-			},
-			{
-				key: 'name',
-				title: 'Product Name',
-				type: 'text',
-				table: {
-					width: 200,
-					copyable: true,
-				},
-				form: {
-					required: true,
-					placeholder: 'Enter product name',
-				},
-				search: {
-					enabled: true,
-					mode: 'like',
-				},
-			},
-			{
-				key: 'price',
-				title: 'Price',
-				type: 'number',
-				table: {
-					width: 120,
-					sorter: true,
-				},
-				form: {
-					required: true,
-					placeholder: 'Enter price',
-					fieldProps: {
-						min: 0,
-						precision: 2,
-					},
-				},
-			},
-			{
-				key: 'status',
-				title: 'Status',
-				type: 'select',
-				options: [
-					{ label: 'Active', value: 'active', color: 'green' },
-					{ label: 'Inactive', value: 'inactive', color: 'red' },
-				],
-				table: {
-					width: 100,
-				},
-				form: {
-					required: true,
-				},
-				search: {
-					enabled: true,
-					mode: 'exact',
-				},
-			},
-			{
-				key: 'description',
-				title: 'Description',
-				type: 'textarea',
-				table: {
-					width: 300,
-					ellipsis: true,
-				},
-				form: {
-					required: false,
-					fieldProps: {
-						rows: 4,
-					},
-				},
-			},
-			{
-				key: 'createdAt',
-				title: 'Created At',
-				type: 'datetime',
-				table: {
-					width: 180,
-					sorter: true,
-				},
-				form: false,
-			},
-		],
-		[]
-	);
-
-	// ============================================
-	// Actions 配置
-	// ============================================
-	const actions = {
-		getList: productActions.getProductListAction,
-		getDetail: productActions.getProductDetailAction,
-		create: productActions.createProductAction,
-		update: productActions.updateProductAction,
-		delete: productActions.deleteProductAction,
-	};
-
-	// ============================================
-	// 返回页面
-	// ============================================
 	return (
 		<SmartCrudPage
 			fieldsConfig={fieldsConfig}
-			actions={actions}
-			title='Product Management'
-			rowKey='id'
+			actions={{
+				getList: xxxActions.getXxxListAction,
+				create: xxxActions.createXxxAction,
+				update: xxxActions.updateXxxAction,
+				delete: xxxActions.deleteXxxAction,
+			}}
+			title="Xxx Management"
+			rowKey="id"
 			enableCreate={true}
 			enableEdit={true}
 			enableDelete={true}
-			enableDetail={true}
-			tableProps={{
-				scroll: { x: 1200 },
-			}}
-			formProps={{
-				width: 600,
-			}}
 		/>
 	);
 }
 ```
 
----
+### 关键规范
 
-## 字段配置详解
-
-### 字段配置结构
+#### 正确做法
 
 ```javascript
-{
-  key: 'fieldName',           // ✅ 必需：字段名
-  title: 'Field Title',       // ✅ 必需：显示标题
-  type: 'text',              // ✅ 必需：字段类型
+// 1. 直接导入 SmartCrudPage
+import SmartCrudPage from '@/components/admin/smart-crud-page';
 
-  // 表格显示配置
-  table: {
-    width: 120,              // 列宽
-    copyable: true,          // 可复制
-    ellipsis: true,          // 超长省略
-    sorter: true,            // 可排序
-    render: (value, record) => <span>{value}</span>,  // 自定义渲染
-  },
+// 2. 直接定义 fieldsConfig
+const fieldsConfig = [...];
 
-  // 表单配置
-  form: {
-    required: true,          // 是否必填
-    placeholder: 'Enter...',  // 占位符
-    fieldProps: {},          // Ant Design 组件原生属性
-    rules: [],               // 验证规则
-  },
-
-  // 搜索配置
-  search: {
-    enabled: true,           // 启用搜索
-    mode: 'like',            // 搜索模式：'like' | 'exact' | 'in' | 'range'
-    placeholder: 'Search...',
-  },
-
-  // 详情显示配置
-  detail: {
-    render: (value) => value,
-  },
-}
+// 3. 使用 actions 属性
+actions={{
+	getList: xxxActions.getXxxListAction,
+}}
 ```
 
----
-
-### 支持的字段类型
-
-#### 1. 文本类型
+#### ❌ 错误做法
 
 ```javascript
-// 单行文本
-{ type: 'text' }
-
-// 多行文本
-{
-  type: 'textarea',
-  form: {
-    fieldProps: {
-      rows: 4,
-      showCount: true,
-      maxLength: 500,
-    },
-  },
-}
-
-// 密码
-{ type: 'password' }
-```
-
----
-
-#### 2. 数字类型
-
-```javascript
-{
-  type: 'number',
-  form: {
-    fieldProps: {
-      min: 0,
-      max: 100,
-      precision: 2,
-      step: 0.01,
-    },
-  },
-}
-```
-
----
-
-#### 3. 选择类型
-
-```javascript
-// 下拉选择
-{
-  type: 'select',
-  options: [
-    { label: 'Option 1', value: 'value1', color: 'blue' },
-    { label: 'Option 2', value: 'value2', color: 'green' },
-  ],
-  form: {
-    fieldProps: {
-      mode: 'multiple',  // 多选
-      showSearch: true,  // 可搜索
-    },
-  },
-}
-
-// 单选按钮
-{
-  type: 'radio',
-  options: [
-    { label: 'Yes', value: true },
-    { label: 'No', value: false },
-  ],
-}
-```
-
----
-
-#### 4. 树形选择
-
-```javascript
-{
-  type: 'tree-select',
-  form: {
-    action: getMenuTreeForSelectAction,  // ✅ 自动加载树形数据
-    placeholder: 'Select parent menu',
-  },
-}
-```
-
-**Action 返回格式：**
-
-```javascript
-export async function getMenuTreeForSelectAction() {
-	// 返回 Ant Design TreeSelect 需要的格式
-	return {
-		success: true,
-		data: [
-			{ title: '--- Root ---', value: '', key: '' }, // ✅ 空字符串表示根节点
-			{
-				title: 'Menu 1',
-				value: 'menu-1',
-				key: 'menu-1',
-				children: [{ title: 'Sub Menu 1', value: 'sub-1', key: 'sub-1' }],
-			},
-		],
-	};
-}
-```
-
----
-
-#### 5. 开关类型
-
-```javascript
-{
-  type: 'switch',
-  table: {
-    width: 100,
-  },
-  form: {
-    fieldProps: {
-      checkedChildren: 'Enabled',
-      unCheckedChildren: 'Disabled',
-    },
-  },
-}
-```
-
----
-
-#### 6. 日期时间类型
-
-```javascript
-// 日期
-{
-	type: 'date';
-}
-
-// 日期时间
-{
-	type: 'datetime';
-}
-
-// 日期范围
-{
-	type: 'dateRange';
-}
-```
-
----
-
-#### 7. 数组类型
-
-```javascript
-{
-  type: 'array',
-  form: {
-    placeholder: 'Enter action',
-    fieldProps: {
-      addButtonText: 'Add Action',
-      max: 10,
-      showCopy: true,
-    },
-  },
-}
-```
-
----
-
-### 搜索模式
-
-```javascript
-search: {
-  enabled: true,
-  mode: 'like',      // 模糊搜索（转换为 MongoDB $regex）
-  // mode: 'exact',  // 精确匹配
-  // mode: 'in',     // 数组包含（用于多选，转换为 MongoDB $in）
-  // mode: 'range',  // 范围查询（用于日期范围）
-}
-```
-
----
-
-### 字段显示控制
-
-```javascript
-{
-  key: 'field',
-
-  // 完全隐藏（不在任何地方显示）
-  table: false,
-  form: false,
-  search: false,
-  detail: false,
-
-  // 或使用 hideInTable（保留在其他地方）
-  hideInTable: true,
-}
-```
-
----
-
-## Server Actions 规范
-
-### 标准函数签名
-
-#### 1. getList (必需)
-
-```javascript
-export const get{Resource}ListAction = wrapQueryAction('{resource}', async (params = {}) => {
-  const { pageIndex = 1, pageSize = 20, whereJson = {}, sortJson = {} } = params;
-
-  // 数据库查询逻辑
-
-  return {
-    success: true,
-    data: [],      // 数据数组
-    total: 0,      // 总数
-    page: pageIndex,
-    pageSize,
-  };
+// 1. 不要使用动态导入
+const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
+	ssr: false,
 });
+
+// 2. 不要使用 useMemo 包裹 fieldsConfig
+const fieldsConfig = useMemo(() => [...], []);
+
+// 3. 不要使用 api 属性（已废弃）
+api={{
+	getList: '/api/xxx/list',
+}}
 ```
 
-**参数说明：**
-
--   `pageIndex`: 页码（从 1 开始）
--   `pageSize`: 每页条数
--   `whereJson`: 搜索条件对象（已转换为 MongoDB 查询格式）
--   `sortJson`: 排序对象，如 `{ createdAt: -1 }`
-
----
-
-#### 2. getDetail (可选)
+### tree-select 动态加载
 
 ```javascript
-export async function get{Resource}DetailAction(id) {
-  // 权限检查
-
-  // 查询单条记录（可包含关联数据）
-
-  return {
-    success: true,
-    data: {},  // 单条记录
-  };
+// fieldsConfig 中配置
+{
+	key: 'parent_id',
+	title: 'Parent',
+	type: 'tree-select',
+	form: {
+		action: 'getTreeForSelectAction',  // 使用 action 名称
+		fieldProps: {
+			allowClear: true,
+			showSearch: true,
+		},
+	},
 }
-```
 
-**何时需要 getDetail？**
-
--   ✅ 需要查询关联数据（如用户的角色列表）
--   ✅ 需要额外的数据转换
--   ❌ 如果列表数据已经完整，可以不提供
-
----
-
-#### 3. create (必需)
-
-```javascript
-export async function create{Resource}Action(data) {
-  // 权限检查
-
-  // 数据验证
-
-  // 创建记录
-
-  return {
-    success: true,
-    data: {},  // 新创建的记录
-  };
-}
-```
-
-**注意：**
-
--   ✅ 参数是完整的数据对象（不是 `id` + `data`）
--   ✅ 需要添加 `id`、`createdAt`、`updatedAt` 等字段
-
----
-
-#### 4. update (必需)
-
-```javascript
-export async function update{Resource}Action(id, data) {
-  // ✅ 参数1：id（主键值）
-  // ✅ 参数2：data（更新数据）
-
-  // 权限检查
-
-  // 更新记录
-
-  return {
-    success: true,
-    data: {},  // 更新后的记录
-  };
-}
+// actions 中注册
+actions={{
+	getList: xxxActions.getXxxListAction,
+	create: xxxActions.createXxxAction,
+	update: xxxActions.updateXxxAction,
+	delete: xxxActions.deleteXxxAction,
+	// 注册动态加载 Action
+	getTreeForSelectAction: xxxActions.getTreeForSelectAction,
+}}
 ```
 
 ---
 
-#### 5. delete (必需)
+## 字段类型完整参考
 
-```javascript
-export async function delete{Resource}Action(id) {
-  // ✅ 参数：id（主键值，注意不是 userId、productId 等）
+### 基础类型
 
-  // 权限检查
+| 类型 | 说明 | 表格显示 | 表单组件 |
+|------|------|---------|---------|
+| `text` | 单行文本 | 文本 | Input |
+| `textarea` | 多行文本 | 文本 | TextArea |
+| `number` | 数字 | 数字 | InputNumber |
+| `money` | 金额 | 格式化金额 | InputNumber |
+| `password` | 密码 | 掩码 | Password |
 
-  // 删除记录
+### 选择类型
 
-  return {
-    success: true,
-    message: 'Deleted successfully',
-  };
-}
-```
+| 类型 | 说明 | 表格显示 | 表单组件 |
+|------|------|---------|---------|
+| `select` | 下拉选择 | Tag | Select |
+| `radio` | 单选按钮 | Tag | Radio.Group |
+| `checkbox` | 多选框 | Tags | Checkbox.Group |
+| `switch` | 开关 | Switch | Switch |
+| `tree-select` | 树形选择 | 文本 | TreeSelect |
+| `cascader` | 级联选择 | 文本 | Cascader |
 
-**⚠️ 重要：**
+### 日期时间类型
 
--   参数名必须是 `id`，而不是 `userId`、`productId` 等
--   `SmartCrudPage` 会调用 `actions.delete(record[rowKey])`
+| 类型 | 说明 | 表格显示 | 表单组件 |
+|------|------|---------|---------|
+| `date` | 日期 | 格式化日期 | DatePicker |
+| `datetime` | 日期时间 | 格式化日期时间 | DatePicker |
+| `time` | 时间 | 格式化时间 | TimePicker |
+| `dateRange` | 日期范围 | - | RangePicker |
 
----
+### 上传类型
 
-#### 6. batchUpdate (可选)
+| 类型 | 说明 | 表格显示 | 表单组件 |
+|------|------|---------|---------|
+| `image` | 图片上传 | Image | ImageUpload |
+| `avatar` | 头像上传 | Avatar | AvatarUpload |
+| `file` | 文件上传 | 链接 | FileUpload |
 
-```javascript
-export async function batchUpdate{Resource}sAction(ids, data) {
-  // 权限检查
+### 高级类型
 
-  // 批量更新
+| 类型 | 说明 | 表格显示 | 表单组件 |
+|------|------|---------|---------|
+| `array` | 数组 | Tags | ArrayEditor |
+| `json` | JSON | 代码 | JsonEditor |
+| `markdown` | Markdown | 预览 | MarkdownEditor |
+| `icon` | 图标 | Icon | IconPicker |
+| `rate` | 评分 | Rate | Rate |
+| `slider` | 滑块 | 数值 | Slider |
+| `color` | 颜色 | 色块 | ColorPicker |
 
-  return {
-    success: true,
-    data: {
-      modifiedCount: 10,
-    },
-  };
-}
-```
+### 布局类型
 
----
-
-### 权限检查模板
-
-```javascript
-async function checkBackendAccess() {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
-
-	if (!session?.user) {
-		return {
-			hasAccess: false,
-			error: 'Unauthorized: Please login',
-		};
-	}
-
-	if (!session.user.isBackendAllowed) {
-		return {
-			hasAccess: false,
-			error: 'Forbidden: Backend access not allowed',
-		};
-	}
-
-	return {
-		hasAccess: true,
-		user: session.user,
-	};
-}
-```
+| 类型 | 说明 | 用途 |
+|------|------|------|
+| `group` | 分组 | 表单字段分组 |
 
 ---
 
 ## 高级功能
 
-### 1. 自定义行操作
+### 自定义行操作
 
 ```javascript
 const customRowActions = [
@@ -809,14 +669,12 @@ const customRowActions = [
 			const result = await approveAction(record.id);
 			if (result.success) {
 				message.success('Approved');
-				// 刷新列表
 			}
 		},
 	},
 	{
 		key: 'reject',
 		text: 'Reject',
-		icon: <CloseOutlined />,
 		danger: true,
 		confirm: {
 			title: 'Reject this item?',
@@ -828,12 +686,10 @@ const customRowActions = [
 	},
 ];
 
-<SmartCrudPage customRowActions={customRowActions} />;
+<SmartCrudPage customRowActions={customRowActions} />
 ```
 
----
-
-### 2. 批量操作
+### 批量操作
 
 ```javascript
 const batchActions = [
@@ -841,398 +697,195 @@ const batchActions = [
 		key: 'activate',
 		label: 'Batch Activate',
 		action: async (selectedKeys) => {
-			return await batchUpdateProductsAction(selectedKeys, { status: 'active' });
+			return await batchUpdateAction(selectedKeys, { status: 'active' });
+		},
+	},
+	{
+		key: 'delete',
+		label: 'Batch Delete',
+		danger: true,
+		action: async (selectedKeys) => {
+			return await batchDeleteAction(selectedKeys);
 		},
 	},
 ];
 
-<SmartCrudPage batchActions={batchActions} />;
+<SmartCrudPage batchActions={batchActions} />
 ```
 
----
-
-### 3. 自定义详情头部
-
-```javascript
-const renderDetailHeader = (record) => (
-	<div style={{ textAlign: 'center' }}>
-		<Avatar
-			src={record.avatar}
-			size={80}
-		/>
-		<div style={{ marginTop: 12, fontSize: 18, fontWeight: 500 }}>{record.name}</div>
-	</div>
-);
-
-<SmartCrudPage renderDetailHeader={renderDetailHeader} />;
-```
-
----
-
-### 4. 自定义工具栏按钮
-
-```javascript
-<SmartCrudPage
-	enableCreate={false} // 禁用默认创建按钮
-	customToolbarButtons={[
-		<Button
-			key='custom-create'
-			type='primary'
-			icon={<PlusOutlined />}
-			onClick={() => setModalVisible(true)}
-		>
-			Custom Create
-		</Button>,
-	]}
-/>
-```
-
----
-
-### 5. 表格扩展行
+### 树形表格
 
 ```javascript
 <SmartCrudPage
 	expandable={{
-		expandedRowRender: (record) => (
-			<div>
-				<p>Additional Info: {record.detail}</p>
-			</div>
-		),
-	}}
-/>
-```
-
----
-
-### 6. 树形表格
-
-```javascript
-<SmartCrudPage
-	expandable={{
-		childrenColumnName: 'children',
 		defaultExpandAllRows: true,
+		indentSize: 24,
+	}}
+	tableProps={{
+		pagination: false,
 	}}
 />
 ```
 
-**数据格式：**
+### 字段联动
 
 ```javascript
 {
-  success: true,
-  data: [
-    {
-      id: '1',
-      name: 'Parent',
-      children: [
-        { id: '1-1', name: 'Child' },
-      ],
-    },
-  ],
-  total: 1,
-}
+	key: 'type',
+	title: 'Type',
+	type: 'select',
+	options: [
+		{ label: 'Basic', value: 'basic' },
+		{ label: 'Advanced', value: 'advanced' },
+	],
+	form: {
+		required: true,
+	},
+},
+{
+	key: 'advancedOption',
+	title: 'Advanced Option',
+	type: 'text',
+	// 条件显示：只有 type === 'advanced' 时显示
+	showRule: "type === 'advanced'",
+	form: {
+		required: true,
+	},
+},
+```
+
+### 字段监听
+
+```javascript
+{
+	key: 'price',
+	title: 'Price',
+	type: 'money',
+	form: {
+		required: true,
+	},
+	watch: ({ value, formData, $set }) => {
+		// 自动计算总价
+		const quantity = formData.quantity || 1;
+		$set('totalPrice', value * quantity);
+	},
+},
 ```
 
 ---
 
 ## 最佳实践
 
-### 1. 文件命名规范
-
-| 类型           | 命名规范                    | 示例                     |
-| -------------- | --------------------------- | ------------------------ |
-| 资源名（集合） | 复数，小写                  | `products`, `users`      |
-| 页面文件       | `page.js`                   | `products/page.js`       |
-| Actions 文件   | `crud-action.{resource}.js` | `crud-action.product.js` |
-| Action 函数    | `{action}{Resource}Action`  | `createProductAction`    |
-
----
-
-### 2. 主键配置
-
-**推荐使用 `id` (UUID) 作为主键：**
+### 1. 配置放在 Action 文件中
 
 ```javascript
-<SmartCrudPage
-	rowKey='id' // ✅ 推荐：UUID
-	// 或
-	rowKey='_id' // ✅ 可选：MongoDB ObjectId
-/>
+// 正确：配置和 Actions 在同一个文件
+// crud-action.xxx.js
+'use server';
+
+const xxxConfig = { ... };
+const crudActions = createCrudActions(xxxConfig);
+export const getXxxListAction = crudActions.getList;
 ```
 
-**⚠️ 错误示例：**
-
 ```javascript
-// ❌ 不要使用函数
-rowKey={(record) => record.id || record._id}
+// ❌ 错误：单独的配置文件
+// configs/xxx-crud.config.js
+export const xxxConfig = { ... };
+
+// crud-action.xxx.js
+import { xxxConfig } from './configs/xxx-crud.config';
 ```
 
----
-
-### 3. 搜索字段优化
-
-**只对常用字段启用搜索：**
+### 2. 直接导入组件
 
 ```javascript
-// ✅ 推荐
+// 正确
+import SmartCrudPage from '@/components/admin/smart-crud-page';
+```
+
+```javascript
+// ❌ 错误
+const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
+	ssr: false,
+});
+```
+
+### 3. 直接定义 fieldsConfig
+
+```javascript
+// 正确
+const fieldsConfig = [...];
+```
+
+```javascript
+// ❌ 错误
+const fieldsConfig = useMemo(() => [...], []);
+```
+
+### 4. 使用 action 属性加载动态数据
+
+```javascript
+// 正确：使用 action 名称
 {
-  key: 'name',
-  search: { enabled: true, mode: 'like' },
+	type: 'tree-select',
+	form: {
+		action: 'getTreeForSelectAction',
+	},
 }
+```
+
+```javascript
+// ❌ 错误：使用 data 属性和 useState
+const [treeData, setTreeData] = useState([]);
+useEffect(() => {
+	loadTreeData().then(setTreeData);
+}, []);
 
 {
-  key: 'status',
-  search: { enabled: true, mode: 'exact' },
-}
-
-// ❌ 不推荐：对所有字段都启用搜索
-```
-
----
-
-### 4. 数据转换
-
-**在 DAO 层处理数据格式：**
-
-```javascript
-// ✅ 推荐：在 DAO 中处理 MongoDB $regex
-if (filters.name) {
-	query.name = typeof filters.name === 'object' ? filters.name : { $regex: filters.name, $options: 'i' };
-}
-
-// ❌ 不推荐：在 Action 中处理
-```
-
----
-
-### 5. 错误处理
-
-**统一的错误返回格式：**
-
-```javascript
-try {
-	// 操作逻辑
-	return { success: true, data: result };
-} catch (error) {
-	console.error('Error:', error);
-	return {
-		success: false,
-		error: error.message || 'Operation failed',
-	};
+	type: 'tree-select',
+	form: {
+		data: treeData,
+	},
 }
 ```
 
----
-
-### 6. 自定义渲染优化
-
-**使用 `useMemo` 包裹 fieldsConfig：**
+### 5. 连表数据访问
 
 ```javascript
-const fieldsConfig = useMemo(
-	() => [
-		{
-			key: 'name',
-			table: {
-				render: (value, record) => <span style={{ fontWeight: 500 }}>{value}</span>,
-			},
+// 正确：使用 record.{as} 访问，提供 fallback
+{
+	key: 'userId',
+	title: 'User',
+	table: {
+		render: (value, record) => {
+			const user = record.userInfo;  // 使用 foreignDB 的 as 字段
+			return user ? user.name : value;  // 提供 fallback
 		},
-	],
-	[
-		/* 依赖项 */
-	]
-);
-```
-
----
-
-## 常见问题
-
-### Q1: 删除失败，提示 "User ID is required"
-
-**原因：** `rowKey` 配置错误
-
-```javascript
-// ❌ 错误
-rowKey={(record) => record.id}
-
-// ✅ 正确
-rowKey="id"
-```
-
----
-
-### Q2: TreeSelect 警告 "value is invalidate"
-
-**原因：** Root 节点使用了 `null` 而不是空字符串
-
-```javascript
-// ❌ 错误
-{ title: '--- Root ---', value: null, key: 'root' }
-
-// ✅ 正确
-{ title: '--- Root ---', value: '', key: '' }
-```
-
-**数据转换：**
-
-```javascript
-// 在 transforms.input 中转换
-if (data.parent_id === '') {
-	data.parent_id = null; // 转为 null 存储到数据库
+	},
 }
 ```
 
----
-
-### Q3: Select 没有显示 placeholder
-
-**原因：** `placeholder` 位置错误
-
 ```javascript
-// ❌ 错误
+// ❌ 错误：直接显示 ID
 {
-  type: 'select',
-  placeholder: 'Select...',  // 顶层无效
-}
-
-// ✅ 正确
-{
-  type: 'select',
-  form: {
-    placeholder: 'Select...',  // 在 form 中
-  },
+	key: 'userId',
+	title: 'User',
+	table: true,  // 只显示 userId
 }
 ```
 
 ---
 
-### Q4: 搜索功能报错 "$regex has to be a string"
+## 相关文档
 
-**原因：** DAO 层重复包装 `$regex`
-
-```javascript
-// ❌ 错误：重复包装
-if (filters.name) {
-	query.name = { $regex: filters.name, $options: 'i' };
-	// 但 filters.name 可能已经是 { $regex: ..., $options: 'i' }
-}
-
-// ✅ 正确：检查类型
-if (filters.name) {
-	query.name = typeof filters.name === 'object' ? filters.name : { $regex: filters.name, $options: 'i' };
-}
-```
+- [SmartForm 使用指南](./admin/SMART_FORM_GUIDE.md)
+- [BaseDAO 文档](./admin/BASE_DAO.md)
+- [DB API 文档](./database/DB_API_GUIDE.md)
+- [权限系统文档](./rbac/)
 
 ---
 
-### Q5: 如何处理 Better Auth 用户删除？
+## 许可证
 
-**解决方案：** 参数名使用 `id`，内部映射为 `userId`
-
-```javascript
-export async function deleteUserAction(id) {
-	// ✅ 参数名是 id（SmartCrudPage 传递）
-
-	await auth.api.removeUser({
-		headers: await headers(),
-		body: {
-			userId: id, // ✅ Better Auth API 需要 userId
-		},
-	});
-
-	return { success: true };
-}
-```
-
----
-
-## 附录
-
-### RBAC 模块重构对比
-
-| 页面        | 重构前               | 重构后            | 减少代码        |
-| ----------- | -------------------- | ----------------- | --------------- |
-| Permissions | 多个文件，约 800 行  | 2 个文件，672 行  | 16%             |
-| Roles       | 多个文件，约 900 行  | 2 个文件，781 行  | 13%             |
-| Menus       | 多个文件，约 700 行  | 2 个文件，(NEW)   | NEW             |
-| Users       | 多个文件，约 1500 行 | 2 个文件，1533 行 | 保持 + 功能增强 |
-
-**关键改进：**
-
--   ✅ 文件结构统一
--   ✅ 配置位置统一（`page.js` 中）
--   ✅ 命名规范统一
--   ✅ 功能完整保留
--   ✅ 代码可维护性提升 50%+
-
----
-
-### SmartCrudPage 核心特性
-
-#### Type-Driven Rendering（类型驱动渲染）
-
-通过 `type` 字段自动渲染合适的组件：
-
-```javascript
-{ type: 'text' }        → Input
-{ type: 'textarea' }    → TextArea
-{ type: 'select' }      → Select
-{ type: 'tree-select' } → TreeSelect
-{ type: 'switch' }      → Switch
-{ type: 'number' }      → InputNumber
-{ type: 'date' }        → DatePicker
-{ type: 'datetime' }    → DatePicker (showTime)
-```
-
-#### Action-Driven Data Loading（动作驱动数据加载）
-
-通过 `action` 字段自动加载数据：
-
-```javascript
-{
-  type: 'tree-select',
-  form: {
-    action: getMenuTreeForSelectAction,  // ✅ 自动调用并加载数据
-  },
-}
-```
-
-#### Search Transform（搜索转换）
-
-自动转换搜索条件为 MongoDB 查询：
-
-```javascript
-// 用户输入
-{ name: 'test', status: 'active' }
-
-// 自动转换（基于 mode）
-{
-  name: { $regex: 'test', $options: 'i' },  // mode: 'like'
-  status: 'active',                          // mode: 'exact'
-}
-```
-
----
-
-## 总结
-
-### 核心价值
-
-1. **极简代码** - 2 个文件即可完成完整 CRUD
-2. **配置驱动** - 通过 `fieldsConfig` 统一管理所有展示逻辑
-3. **类型安全** - TypeScript 友好的配置结构
-4. **可扩展** - 支持自定义渲染、自定义操作
-5. **统一规范** - 所有 CRUD 页面保持一致的结构
-
-### 开发效率
-
--   **创建新页面：** 15 分钟（复制模板 + 修改配置）
--   **代码行数：** 减少 60%+
--   **维护成本：** 降低 70%+
--   **学习成本：** 新人 1 天即可上手
-
----
-
-**🎉 开始使用 SmartCrudPage，享受高效开发！**
+MIT License

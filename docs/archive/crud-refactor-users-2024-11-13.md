@@ -42,10 +42,10 @@ app/(admin)/
 
 ### 关键改进
 
-✅ **统一结构：** 与其他 RBAC 页面保持一致  
-✅ **职责分离：** Server Actions 和 Client Config 分离  
-✅ **代码复用：** `fieldsConfig` 可以被其他页面复用  
-✅ **保持功能：** 所有 Better Auth 集成功能正常工作
+**统一结构：** 与其他 RBAC 页面保持一致  
+**职责分离：** Server Actions 和 Client Config 分离  
+**代码复用：** `fieldsConfig` 可以被其他页面复用  
+**保持功能：** 所有 Better Auth 集成功能正常工作
 
 ---
 
@@ -59,8 +59,8 @@ app/(admin)/
 
 **关键点：**
 - ❌ **不包含** `'use server'` 指令
-- ✅ 可以导出普通函数和配置对象
-- ✅ 包含所有字段的基础配置（table、form、search、detail）
+- 可以导出普通函数和配置对象
+- 包含所有字段的基础配置（table、form、search、detail）
 
 **代码结构：**
 
@@ -125,9 +125,9 @@ export const userFieldsConfig = (roleOptions = [], rolesLoaded = false, searchEx
 **作用：** 整合所有 User 相关的 Server Actions
 
 **关键点：**
-- ✅ 包含 `'use server'` 指令
-- ✅ 从 `admin-users.js` 复制所有函数实现（不是重新导出）
-- ✅ 保持所有 Better Auth 集成功能
+- 包含 `'use server'` 指令
+- 从 `admin-users.js` 复制所有函数实现（不是重新导出）
+- 保持所有 Better Auth 集成功能
 
 **导出的 Actions：**
 
@@ -167,7 +167,7 @@ import {
   // ... 更多导入
 } from '@/app/(admin)/actions/rbac/admin-users';
 
-// ✅ 现在
+// 现在
 import * as userActions from '@/app/(admin)/actions/rbac/crud-action.user';
 import { userFieldsConfig } from '@/app/(admin)/actions/rbac/crud-config.user';
 ```
@@ -178,7 +178,7 @@ import { userFieldsConfig } from '@/app/(admin)/actions/rbac/crud-config.user';
 const fieldsConfig = useMemo(() => {
   const baseConfig = userFieldsConfig(roleOptions, rolesLoaded, searchExpanded);
   
-  // ✅ 在基础配置上添加自定义渲染逻辑
+  // 在基础配置上添加自定义渲染逻辑
   return baseConfig.map(field => {
     // Avatar 字段：自定义渲染
     if (field.key === 'image') {
@@ -260,7 +260,7 @@ const actions = {
   delete: deleteItem,
 };
 
-// ✅ 现在
+// 现在
 const actions = {
   getList: userActions.getUserListAction,
   getDetail: userActions.getUserDetailAction,
@@ -277,7 +277,7 @@ const result = await createUserAction(values);
 const result = await resetUserPasswordAction(userId, password);
 const result = await bindUserRolesAction(userId, roleIds, true);
 
-// ✅ 现在
+// 现在
 const result = await userActions.createUserAction(values);
 const result = await userActions.resetUserPasswordAction(userId, password);
 const result = await userActions.bindUserRolesAction(userId, roleIds, true);
@@ -318,10 +318,10 @@ Only async functions are allowed to be exported in a "use server" file.
 
 | 特性 | Permissions | Roles | Menus | Users |
 |------|-------------|-------|-------|-------|
-| **Config 文件** | 无（直接在 page.js） | 无（直接在 page.js） | 无（直接在 page.js） | ✅ `crud-config.user.js` |
+| **Config 文件** | 无（直接在 page.js） | 无（直接在 page.js） | 无（直接在 page.js） | `crud-config.user.js` |
 | **Action 文件** | `crud-action.permission.js` | `crud-action.role.js` | `crud-action.menu.js` | `crud-action.user.js` |
 | **特殊 Actions** | `getPermissionTree` | `assignPermissions`<br>`assignMenus` | `getMenuTree` | `resetPassword`<br>`banUser`<br>`bindUserRoles`<br>`getUserRoles`<br>... |
-| **Better Auth 集成** | ❌ | ❌ | ❌ | ✅ |
+| **Better Auth 集成** | ❌ | ❌ | ❌ | |
 
 **为什么 Users 需要单独的 Config 文件？**
 
@@ -375,21 +375,21 @@ users/
 
 ### 1. 代码组织
 
-✅ **统一结构：** 与其他 RBAC 页面保持一致的命名和组织方式  
-✅ **职责分离：** 客户端配置和服务端逻辑分离  
-✅ **易于维护：** 字段配置集中管理，修改更方便
+**统一结构：** 与其他 RBAC 页面保持一致的命名和组织方式  
+**职责分离：** 客户端配置和服务端逻辑分离  
+**易于维护：** 字段配置集中管理，修改更方便
 
 ### 2. 代码复用
 
-✅ **Config 可复用：** `userFieldsConfig` 可以在其他页面使用  
-✅ **Actions 统一入口：** 所有 User Actions 从 `crud-action.user.js` 导入  
-✅ **减少重复：** 避免在多个地方定义相同的字段配置
+**Config 可复用：** `userFieldsConfig` 可以在其他页面使用  
+**Actions 统一入口：** 所有 User Actions 从 `crud-action.user.js` 导入  
+**减少重复：** 避免在多个地方定义相同的字段配置
 
 ### 3. 开发体验
 
-✅ **导入简单：** `import * as userActions from 'crud-action.user'`  
-✅ **类型安全：** 函数名统一，减少拼写错误  
-✅ **易于扩展：** 新增字段只需修改 `crud-config.user.js`
+**导入简单：** `import * as userActions from 'crud-action.user'`  
+**类型安全：** 函数名统一，减少拼写错误  
+**易于扩展：** 新增字段只需修改 `crud-config.user.js`
 
 ---
 
@@ -397,19 +397,19 @@ users/
 
 所有 Users 页面的功能都保持不变：
 
-✅ **Better Auth 集成**
+**Better Auth 集成**
 - 用户创建（通过 Better Auth Admin API）
 - 用户更新（通过 Better Auth Admin API）
 - 用户删除（通过 Better Auth Admin API）
 - 密码重置（通过 Better Auth API + DAO 后备）
 - 用户封禁/解封（通过 Better Auth Admin API）
 
-✅ **RBAC 集成**
+**RBAC 集成**
 - 角色绑定（通过 DAO）
 - 角色查询（通过 DAO）
 - 多角色支持（数组字段）
 
-✅ **自定义功能**
+**自定义功能**
 - 头像显示
 - 用户名和姓名联合显示
 - 角色 Tags 显示（连表数据）

@@ -23,7 +23,7 @@ const fieldsConfig = [
 	{
 		key: 'status',
 		title: 'Status',
-		type: 'select',  // ✅ 使用 select 类型
+		type: 'select',  // 使用 select 类型
 		options: [
 			{ label: 'Active', value: 'active' },
 			{ label: 'Inactive', value: 'inactive' },
@@ -81,7 +81,7 @@ useEffect(() => {
 	};
 	
 	loadRoleOptions();
-}, []);  // ✅ 空依赖数组，只在组件挂载时加载一次
+}, []);  // 空依赖数组，只在组件挂载时加载一次
 ```
 
 #### 步骤 3: 在 fieldsConfig 中使用动态选项
@@ -91,8 +91,8 @@ const fieldsConfig = useMemo(() => [
 	{
 		key: 'roles',
 		title: 'Roles',
-		type: 'select',  // ✅ 使用 select 类型
-		options: roleOptions,  // ✅ 使用动态加载的选项
+		type: 'select',  // 使用 select 类型
+		options: roleOptions,  // 使用动态加载的选项
 		form: {
 			mode: 'multiple',  // 多选模式
 			placeholder: 'Select roles',
@@ -103,11 +103,11 @@ const fieldsConfig = useMemo(() => [
 			placeholder: 'Filter by roles',
 			fieldProps: {
 				mode: 'multiple',  // 搜索时也支持多选
-				loading: !rolesLoaded,  // ✅ 加载中状态
+				loading: !rolesLoaded,  // 加载中状态
 			},
 		},
 	}
-], [roleOptions, rolesLoaded]);  // ✅ 依赖动态选项
+], [roleOptions, rolesLoaded]);  // 依赖动态选项
 ```
 
 ## 完整示例
@@ -166,13 +166,13 @@ export default function UsersManagementPage() {
 			key: 'roles',
 			title: 'Roles',
 			type: 'select',
-			options: roleOptions,  // ✅ 动态选项
+			options: roleOptions,  // 动态选项
 			search: {
 				enabled: true,
 				mode: 'in',
 				fieldProps: {
 					mode: 'multiple',
-					loading: !rolesLoaded,  // ✅ 显示加载状态
+					loading: !rolesLoaded,  // 显示加载状态
 				},
 			},
 		},
@@ -244,7 +244,7 @@ whereJson: { roles: ['role-id-1', 'role-id-2'] }
 ```javascript
 useEffect(() => {
 	loadOptions();
-}, []);  // ✅ 空依赖数组
+}, []);  // 空依赖数组
 ```
 
 ### 2. 显示加载状态
@@ -252,7 +252,7 @@ useEffect(() => {
 ```javascript
 search: {
 	fieldProps: {
-		loading: !optionsLoaded,  // ✅ 加载中时显示 loading
+		loading: !optionsLoaded,  // 加载中时显示 loading
 	},
 }
 ```
@@ -262,14 +262,14 @@ search: {
 ```javascript
 const fieldsConfig = useMemo(() => [
 	// ... 字段配置
-], [roleOptions, rolesLoaded]);  // ✅ 只在选项变化时重新生成
+], [roleOptions, rolesLoaded]);  // 只在选项变化时重新生成
 ```
 
 ### 4. 异步加载不阻塞页面
 
 ```javascript
 useEffect(() => {
-	// ✅ 异步加载，不阻塞主渲染
+	// 异步加载，不阻塞主渲染
 	loadOptions();
 }, []);
 
@@ -345,7 +345,7 @@ const options = [
 		enabled: true,
 		mode: 'exact',
 		fieldProps: {
-			showSearch: true,  // ✅ 启用搜索
+			showSearch: true,  // 启用搜索
 			filterOption: (input, option) =>
 				option.label.toLowerCase().includes(input.toLowerCase()),
 		},
@@ -378,7 +378,7 @@ const handleSearch = async (value) => {
 		enabled: true,
 		fieldProps: {
 			showSearch: true,
-			onSearch: handleSearch,  // ✅ 输入时触发远程搜索
+			onSearch: handleSearch,  // 输入时触发远程搜索
 			filterOption: false,  // 禁用本地过滤
 		},
 	},
@@ -438,14 +438,14 @@ const options = data.map(item => ({
 
 ## 最佳实践
 
-1. ✅ 使用 `useState` + `useEffect` 异步加载选项
-2. ✅ 使用 `useMemo` 包裹 `fieldsConfig` 并声明依赖
-3. ✅ 显示 `loading` 状态，提升用户体验
-4. ✅ 在 `useEffect` 的 `finally` 中设置 `loaded` 状态
-5. ✅ 并行加载多个选项数据（使用 `Promise.all`）
-6. ✅ 过滤掉无效数据（如已禁用的选项）
-7. ✅ 使用 `String()` 确保 `label` 和 `value` 是字符串
-8. ✅ 对于大量选项，使用 `showSearch` 启用搜索功能
+1. 使用 `useState` + `useEffect` 异步加载选项
+2. 使用 `useMemo` 包裹 `fieldsConfig` 并声明依赖
+3. 显示 `loading` 状态，提升用户体验
+4. 在 `useEffect` 的 `finally` 中设置 `loaded` 状态
+5. 并行加载多个选项数据（使用 `Promise.all`）
+6. 过滤掉无效数据（如已禁用的选项）
+7. 使用 `String()` 确保 `label` 和 `value` 是字符串
+8. 对于大量选项，使用 `showSearch` 启用搜索功能
 
 ## 参考资料
 

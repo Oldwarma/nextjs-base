@@ -37,14 +37,14 @@ const parent = await db.collection('permissions').findOne({ id: value });
 
 ---
 
-## ✅ 修复方案
+## 修复方案
 
 ### 1. 修改 validation 中的数据库访问
 
 **文件：** `app/(admin)/actions/rbac/crud-action.permission.js`
 
 ```javascript
-// ✅ 正确的方式
+// 正确的方式
 const { getCollection } = await import('@/lib/database/mongodb');
 const collection = await getCollection('permissions');
 const parent = await collection.findOne({ id: value });
@@ -111,7 +111,7 @@ afterFind: async (records) => {
 ```javascript
 export default function SmartCrudPage({
   // ...
-  rowKey = 'id',  // ✅ 改为默认使用 'id'（原来是 '_id'）
+  rowKey = 'id',  // 改为默认使用 'id'（原来是 '_id'）
   // ...
 })
 ```
@@ -123,7 +123,7 @@ export default function SmartCrudPage({
 ```javascript
 constructor(config) {
   this.config = {
-    primaryKey: config.primaryKey || 'id',  // ✅ 已经默认使用 'id'
+    primaryKey: config.primaryKey || 'id',  // 已经默认使用 'id'
     // ...
   };
 }
@@ -143,7 +143,7 @@ const config = {
 
 **修改后（自动使用默认值）：**
 ```javascript
-// ✅ 不需要配置，默认就是 'id'
+// 不需要配置，默认就是 'id'
 const config = {
   collectionName: 'permissions',
   // primaryKey 默认是 'id'
@@ -172,18 +172,18 @@ const config = {
 
 ### 1. 数据库操作正常
 
-- ✅ `beforeCreate` - 使用 `getCollection` 正常工作
-- ✅ `beforeUpdate` - 使用 `getCollection` 正常工作
-- ✅ `beforeDelete` - 使用 `getCollection` 正常工作
-- ✅ `afterFind` - 使用 `getCollection` 正常工作
-- ✅ `validation` - 使用 `getCollection` 正常工作
+- `beforeCreate` - 使用 `getCollection` 正常工作
+- `beforeUpdate` - 使用 `getCollection` 正常工作
+- `beforeDelete` - 使用 `getCollection` 正常工作
+- `afterFind` - 使用 `getCollection` 正常工作
+- `validation` - 使用 `getCollection` 正常工作
 
 ### 2. 主键配置简化
 
-- ✅ `SmartCrudPage` 默认使用 `id` 作为 `rowKey`
-- ✅ `BaseDAO` 默认使用 `id` 作为 `primaryKey`
-- ✅ 不需要每次都手动配置
-- ✅ 保持了跨数据库兼容性（UUID 格式）
+- `SmartCrudPage` 默认使用 `id` 作为 `rowKey`
+- `BaseDAO` 默认使用 `id` 作为 `primaryKey`
+- 不需要每次都手动配置
+- 保持了跨数据库兼容性（UUID 格式）
 
 ### 3. 代码更简洁
 
@@ -217,7 +217,7 @@ const config = {
 ### 1. MongoDB API 使用
 
 ```javascript
-// ✅ 正确：使用 getCollection
+// 正确：使用 getCollection
 const { getCollection } = await import('@/lib/database/mongodb');
 const collection = await getCollection('collectionName');
 

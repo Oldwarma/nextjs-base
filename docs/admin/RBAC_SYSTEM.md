@@ -2,7 +2,7 @@
 
 > **最后更新**: 2025-11-04  
 > **版本**: v2.0.0  
-> **状态**: ✅ 已完全实现  
+> **状态**: 已完全实现  
 > **目标读者**: 系统管理员、配置人员  
 > **用途**: 配置和管理系统权限时的参考文档
 
@@ -12,11 +12,11 @@
 
 RBAC 权限管理系统已完全实现并可用！包括：
 
-- ✅ **菜单权限控制**: 根据用户角色自动过滤菜单
-- ✅ **页面访问控制**: 保护页面访问权限
-- ✅ **操作权限控制**: Server Actions 权限验证
-- ✅ **前端权限控制**: React Hooks 支持
-- ✅ **完整文档**: 配置指南和开发文档
+- **菜单权限控制**: 根据用户角色自动过滤菜单
+- **页面访问控制**: 保护页面访问权限
+- **操作权限控制**: Server Actions 权限验证
+- **前端权限控制**: React Hooks 支持
+- **完整文档**: 配置指南和开发文档
 
 **开发者文档**: 查看 [RBAC 实现指南](../rbac/RBAC_IMPLEMENTATION_GUIDE.md) 了解技术实现细节
 
@@ -51,13 +51,13 @@ RBAC（Role-Based Access Control，基于角色的访问控制）是一种权限
 
 ### 核心特性
 
-- ✅ **用户-角色多对多**：一个用户可以有多个角色
-- ✅ **角色-权限多对多**：一个角色可以有多个权限
-- ✅ **角色-菜单多对多**：一个角色可以访问多个菜单
-- ✅ **权限树形结构**：支持多层级权限组织
-- ✅ **菜单树形结构**：支持多层级菜单导航
-- ✅ **通配符支持**：Action 路径支持 `*` 和 `**` 通配符
-- ✅ **动态验证**：Server Actions 中自动验证权限
+- **用户-角色多对多**：一个用户可以有多个角色
+- **角色-权限多对多**：一个角色可以有多个权限
+- **角色-菜单多对多**：一个角色可以访问多个菜单
+- **权限树形结构**：支持多层级权限组织
+- **菜单树形结构**：支持多层级菜单导航
+- **通配符支持**：Action 路径支持 `*` 和 `**` 通配符
+- **动态验证**：Server Actions 中自动验证权限
 
 ### 与 Better Auth 集成
 
@@ -254,9 +254,9 @@ RBAC（Role-Based Access Control，基于角色的访问控制）是一种权限
 1. 在角色列表中找到「编辑员」角色
 2. 点击「Assign Permissions」按钮
 3. 在弹窗中勾选需要的权限：
-   - ✅ 文章管理
-   - ✅ 文章管理 → 创建文章
-   - ✅ 文章管理 → 编辑文章
+   - 文章管理
+   - 文章管理 → 创建文章
+   - 文章管理 → 编辑文章
 4. 点击「OK」保存
 
 **权限继承规则**：
@@ -267,8 +267,8 @@ RBAC（Role-Based Access Control，基于角色的访问控制）是一种权限
 
 1. 点击「Assign Menus」按钮
 2. 在弹窗中勾选需要的菜单：
-   - ✅ 内容管理
-   - ✅ 内容管理 → 文章管理
+   - 内容管理
+   - 内容管理 → 文章管理
 3. 点击「OK」保存
 
 **菜单显示规则**：
@@ -424,14 +424,14 @@ export async function createUserAction(data) {
 
 | 权限配置 | Action 路径 | 是否匹配 |
 |---------|------------|---------|
-| `/admin/actions/user/create` | `/admin/actions/user/create` | ✅ 是 |
+| `/admin/actions/user/create` | `/admin/actions/user/create` | 是 |
 | `/admin/actions/user/create` | `/admin/actions/user/update` | ❌ 否 |
-| `/admin/actions/user/*` | `/admin/actions/user/create` | ✅ 是 |
-| `/admin/actions/user/*` | `/admin/actions/user/update` | ✅ 是 |
+| `/admin/actions/user/*` | `/admin/actions/user/create` | 是 |
+| `/admin/actions/user/*` | `/admin/actions/user/update` | 是 |
 | `/admin/actions/user/*` | `/admin/actions/user/role/assign` | ❌ 否（多层） |
-| `/admin/actions/**` | `/admin/actions/user/create` | ✅ 是 |
-| `/admin/actions/**` | `/admin/actions/user/role/assign` | ✅ 是 |
-| `/admin/actions/**` | `/admin/actions/order/list` | ✅ 是 |
+| `/admin/actions/**` | `/admin/actions/user/create` | 是 |
+| `/admin/actions/**` | `/admin/actions/user/role/assign` | 是 |
+| `/admin/actions/**` | `/admin/actions/order/list` | 是 |
 
 ### 权限计算逻辑
 
@@ -591,7 +591,7 @@ query: {
 
 ### 1. 权限设计原则
 
-#### ✅ 推荐
+#### 推荐
 
 - **最小权限原则**：用户只拥有完成工作所需的最小权限
 - **分层设计**：使用树形结构组织权限
@@ -599,7 +599,7 @@ query: {
 - **粒度适中**：权限不宜过细也不宜过粗
 
 ```
-✅ 好的设计：
+好的设计：
 用户管理
 ├── 创建用户
 ├── 编辑用户
@@ -611,14 +611,14 @@ query: {
 创建用户的姓名字段  # 粒度太细，难以管理
 ```
 
-#### ✅ 权限命名规范
+#### 权限命名规范
 
 - 使用名词短语
 - 清晰表达功能
 - 避免缩写
 
 ```javascript
-✅ 好的命名：
+好的命名：
 "用户管理"
 "创建文章"
 "导出订单"
@@ -633,14 +633,14 @@ query: {
 
 ### 2. 角色设计建议
 
-#### ✅ 推荐
+#### 推荐
 
 - **职责清晰**：每个角色对应一个明确的职责
 - **避免角色爆炸**：不要为每个用户创建单独的角色
 - **组合使用**：通过组合多个角色实现复杂权限
 
 ```javascript
-✅ 好的角色设计：
+好的角色设计：
 - 超级管理员：拥有所有权限
 - 用户管理员：只管理用户相关
 - 内容编辑：只管理内容相关
@@ -657,10 +657,10 @@ query: {
 
 ### 3. 通配符使用建议
 
-#### ✅ 推荐：精确路径或单层通配
+#### 推荐：精确路径或单层通配
 
 ```javascript
-✅ 好的配置：
+好的配置：
 actions: ["/admin/actions/user/create"]  # 精确控制
 actions: ["/admin/actions/user/*"]       # 控制单个模块
 ```

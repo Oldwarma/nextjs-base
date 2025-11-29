@@ -10,33 +10,33 @@
 
 | 分类 | 类型 | 说明 | Table | Form | Search |
 |------|------|------|-------|------|--------|
-| **文本类** | `text` | 单行文本 | ✅ | ✅ | ✅ |
-| | `textarea` | 多行文本 | ✅ | ✅ | ✅ |
-| | `password` | 密码输入 | ❌ | ✅ | ❌ |
-| | `email` | 邮箱输入 | ✅ | ✅ | ✅ |
-| | `url` | URL 输入 | ✅ | ✅ | ❌ |
-| **数字类** | `number` | 数字输入 | ✅ | ✅ | ✅ |
-| | `money` | 金额 | ✅ | ✅ | ❌ |
-| | `percent` | 百分比 | ✅ | ✅ | ❌ |
-| **选择类** | `select` | 下拉选择 | ✅ | ✅ | ✅ |
-| | `radio` | 单选按钮 | ✅ | ✅ | ❌ |
-| | `checkbox` | 多选框 | ✅ | ✅ | ❌ |
-| | `tree-select` | 树形选择 | ✅ | ✅ | ❌ |
-| **开关类** | `switch` | 开关 | ✅ | ✅ | ✅ |
-| **时间类** | `date` | 日期 | ✅ | ✅ | ✅ |
-| | `datetime` | 日期时间 | ✅ | ✅ | ✅ |
-| | `time` | 时间 | ✅ | ✅ | ❌ |
-| | `dateRange` | 日期范围 | ❌ | ✅ | ✅ |
-| **文件类** | `image` | 图片上传 | ✅ | ✅ | ❌ |
-| | `file` | 文件上传 | ✅ | ✅ | ❌ |
-| **富文本** | `markdown` | Markdown | ✅ | ✅ | ❌ |
-| | `richtext` | 富文本编辑器 | ✅ | ✅ | ❌ |
-| **复合类** | `array` | 数组 | ✅ | ✅ | ❌ |
-| | `json` | JSON 对象 | ✅ | ✅ | ❌ |
-| | `tags` | 标签 | ✅ | ✅ | ❌ |
-| **特殊类** | `color` | 颜色选择器 | ✅ | ✅ | ❌ |
-| | `slider` | 滑块 | ✅ | ✅ | ❌ |
-| | `rate` | 评分 | ✅ | ✅ | ❌ |
+| **文本类** | `text` | 单行文本 | | | |
+| | `textarea` | 多行文本 | | | |
+| | `password` | 密码输入 | ❌ | | ❌ |
+| | `email` | 邮箱输入 | | | |
+| | `url` | URL 输入 | | | ❌ |
+| **数字类** | `number` | 数字输入 | | | |
+| | `money` | 金额 | | | ❌ |
+| | `percent` | 百分比 | | | ❌ |
+| **选择类** | `select` | 下拉选择 | | | |
+| | `radio` | 单选按钮 | | | ❌ |
+| | `checkbox` | 多选框 | | | ❌ |
+| | `tree-select` | 树形选择 | | | ❌ |
+| **开关类** | `switch` | 开关 | | | |
+| **时间类** | `date` | 日期 | | | |
+| | `datetime` | 日期时间 | | | |
+| | `time` | 时间 | | | ❌ |
+| | `dateRange` | 日期范围 | ❌ | | |
+| **文件类** | `image` | 图片上传 | | | ❌ |
+| | `file` | 文件上传 | | | ❌ |
+| **富文本** | `markdown` | Markdown | | | ❌ |
+| | `richtext` | 富文本编辑器 | | | ❌ |
+| **复合类** | `array` | 数组 | | | ❌ |
+| | `json` | JSON 对象 | | | ❌ |
+| | `tags` | 标签 | | | ❌ |
+| **特殊类** | `color` | 颜色选择器 | | | ❌ |
+| | `slider` | 滑块 | | | ❌ |
+| | `rate` | 评分 | | | ❌ |
 
 ---
 
@@ -723,9 +723,9 @@ export async function getCategoryTreeForSelectAction() {
 ```typescript
 interface FieldConfig {
   // 基础属性
-  key: string;              // ✅ 必需：字段名
-  title: string;            // ✅ 必需：显示标题
-  type: string;             // ✅ 必需：字段类型
+  key: string;              // 必需：字段名
+  title: string;            // 必需：显示标题
+  type: string;             // 必需：字段类型
   
   // 表格配置
   table?: {

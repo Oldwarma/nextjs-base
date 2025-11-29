@@ -1,367 +1,309 @@
-# SmartForm 万能表单组件
+# SmartForm 组件
 
-基于 vk-unicloud 万能表单思想，通过 JSON 配置自动生成表单。
+> **最后更新**: 2025-11-29  
+> **版本**: v3.0.0
 
-## 📦 组件列表
+基于 Ant Design ProForm 的声明式表单组件，通过 `fieldsConfig` 配置自动生成表单。
 
-| 组件 | 说明 | 使用场景 |
-|------|------|---------|
-| `SmartForm` | 基础表单 | 嵌入页面的表单 |
-| `SmartModalForm` | 模态框表单 | 弹窗表单（最常用） |
-| `SmartDrawerForm` | 抽屉表单 | 需要更大空间的表单 |
+## 组件列表
 
-## 🚀 快速开始
+| 组件 | 文件 | 说明 |
+|------|------|------|
+| `SmartForm` | `smart-form.jsx` | 基础表单 |
+| `SmartModalForm` | `smart-modal-form.jsx` | 弹窗表单 |
+| `SmartDrawerForm` | `smart-drawer-form.jsx` | 抽屉表单 |
 
-### 安装导入
+## 快速开始
 
-```jsx
-import { SmartForm, SmartModalForm, SmartDrawerForm } from '@/components/admin/smart-form';
-```
+### 基础表单
 
-### 基础用法
+```javascript
+import { SmartForm } from '@/components/admin/smart-form';
 
-```jsx
-// 模态框表单
-const [visible, setVisible] = useState(false);
+const fieldsConfig = [
+	{
+		key: 'name',
+		title: 'Name',
+		type: 'text',
+		form: { required: true },
+	},
+	{
+		key: 'status',
+		title: 'Status',
+		type: 'select',
+		options: [
+			{ label: 'Active', value: 'active' },
+			{ label: 'Inactive', value: 'inactive' },
+		],
+	},
+];
 
-<SmartModalForm
-  title="Create User"
-  open={visible}
-  onOpenChange={setVisible}
-  fieldsConfig={[
-    { key: 'name', title: 'Name', type: 'text', form: { required: true } },
-    { key: 'email', title: 'Email', type: 'text', form: { required: true } },
-    { key: 'role', title: 'Role', type: 'select', options: [
-      { label: 'Admin', value: 'admin' },
-      { label: 'User', value: 'user' },
-    ]},
-  ]}
-  onFinish={async (values) => {
-    const result = await createUserAction(values);
-    if (result.success) {
-      message.success('Created successfully');
-      return true; // 返回 true 自动关闭
-    }
-    message.error(result.error);
-    return false; // 返回 false 保持打开
-  }}
+<SmartForm
+	fieldsConfig={fieldsConfig}
+	onFinish={async (values) => {
+		console.log(values);
+		return true;
+	}}
 />
 ```
 
-## 📝 字段配置 (fieldsConfig)
+### 弹窗表单
 
-字段配置与 SmartCrudPage 完全兼容，使用相同的 `fieldsConfig` 格式。
+```javascript
+import { SmartModalForm } from '@/components/admin/smart-form';
+import { Button } from 'antd';
+
+<SmartModalForm
+	title="Create Item"
+	trigger={<Button type="primary">Create</Button>}
+	fieldsConfig={fieldsConfig}
+	onFinish={handleSubmit}
+	width={600}
+/>
+```
+
+### 抽屉表单
+
+```javascript
+import { SmartDrawerForm } from '@/components/admin/smart-form';
+import { Button } from 'antd';
+
+<SmartDrawerForm
+	title="Edit Item"
+	trigger={<Button>Edit</Button>}
+	fieldsConfig={fieldsConfig}
+	initialValues={record}
+	onFinish={handleSubmit}
+	width={500}
+/>
+```
+
+## 字段配置
 
 ### 基础结构
 
 ```javascript
 {
-  key: 'fieldName',           // ✅ 必需：字段名
-  title: 'Field Title',       // ✅ 必需：显示标题
-  type: 'text',               // ✅ 必需：字段类型
+	key: 'fieldName',           // 字段名（必需）
+	title: 'Field Title',       // 显示标题（必需）
+	type: 'text',               // 字段类型（必需）
 
-  // 表单配置
-  form: {
-    required: true,           // 是否必填
-    placeholder: 'Enter...',  // 占位符
-    disabled: false,          // 是否禁用
-    fieldProps: {},           // Ant Design 组件原生属性
-    rules: [],                // 额外验证规则
-  },
+	// 表单配置
+	form: {
+		required: true,          // 是否必填
+		disabled: false,         // 是否禁用
+		placeholder: 'Enter...', // 占位符
+		initialValue: '',        // 默认值
+		tips: 'Some tips',       // 提示信息
+		rules: [],               // 验证规则
+		fieldProps: {},          // Ant Design 组件属性
+		action: 'getDataAction', // 动态加载数据的 Action 名称
+		data: [],                // 静态数据
+		dependencies: [],        // 依赖字段
+	},
 
-  // 条件显示
-  showRule: "type=='advanced'",  // 条件表达式或函数
+	// 选项数据
+	options: [
+		{ label: 'Option 1', value: 'value1' },
+	],
 
-  // 字段联动
-  watch: ({ value, formData, $set }) => {
-    // 监听值变化
-    if (value === 'admin') {
-      $set('permissions', ['all']);
-    }
-  },
+	// 条件显示
+	showRule: "type === 'advanced'",
 
-  // 选项数据（用于 select、radio、checkbox）
-  options: [
-    { label: 'Option 1', value: 'value1' },
-    { label: 'Option 2', value: 'value2' },
-  ],
+	// 字段联动
+	watch: ({ value, formData, $set }) => {
+		$set('otherField', value);
+	},
 }
 ```
 
-### 支持的字段类型
+### 简写方式
 
-| 类型 | 说明 | 示例 |
+```javascript
+// form: true - 显示在表单中（使用默认配置）
+{ key: 'name', title: 'Name', type: 'text', form: true }
+
+// form: false - 不显示在表单中
+{ key: 'createdAt', title: 'Created At', type: 'datetime', form: false }
+```
+
+## 支持的字段类型
+
+### 基础类型
+
+| 类型 | 说明 | 组件 |
 |------|------|------|
-| `text` | 单行文本 | 姓名、标题 |
-| `textarea` | 多行文本 | 描述、备注 |
-| `number` | 数字 | 年龄、数量 |
-| `money` | 金额 | 价格、费用 |
-| `percentage` | 百分比 | 折扣、进度 |
-| `select` | 下拉选择 | 状态、分类 |
-| `radio` | 单选 | 性别、类型 |
-| `checkbox` | 多选 | 权限、标签 |
-| `switch` | 开关 | 启用/禁用 |
-| `date` | 日期 | 生日、日期 |
-| `datetime` | 日期时间 | 创建时间 |
-| `time` | 时间 | 开始时间 |
-| `rate` | 评分 | 星级评分 |
-| `slider` | 滑块 | 范围选择 |
-| `color` | 颜色 | 主题色 |
-| `image` | 图片上传 | 头像、封面 |
-| `file` | 文件上传 | 附件 |
-| `avatar` | 头像上传 | 用户头像 |
-| `markdown` | Markdown | 文章内容 |
-| `json` | JSON | 配置数据 |
-| `array` | 动态数组 | 标签列表 |
-| `tree-select` | 树形选择 | 部门、分类 |
-| `cascader` | 级联选择 | 地区 |
-| `icon` | 图标选择 | 菜单图标 |
-| `group` | 分组容器 | 字段分组布局 |
+| `text` | 单行文本 | Input |
+| `textarea` | 多行文本 | TextArea |
+| `number` | 数字 | InputNumber |
+| `money` | 金额 | InputNumber |
+| `password` | 密码 | Password |
 
-## 🎯 组件 API
+### 选择类型
 
-### SmartModalForm
+| 类型 | 说明 | 组件 |
+|------|------|------|
+| `select` | 下拉选择 | Select |
+| `radio` | 单选按钮 | Radio.Group |
+| `checkbox` | 多选框 | Checkbox.Group |
+| `switch` | 开关 | Switch |
+| `tree-select` | 树形选择 | TreeSelect |
+| `cascader` | 级联选择 | Cascader |
 
-| 属性 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `title` | string | 'Form' | 模态框标题 |
-| `open` | boolean | - | 是否打开（受控） |
-| `onOpenChange` | (visible: boolean) => void | - | 打开状态变化回调 |
-| `fieldsConfig` | array | [] | 字段配置数组 |
-| `initialValues` | object | {} | 表单初始值 |
-| `onFinish` | (values) => Promise<boolean> | - | 提交回调，返回 true 关闭 |
-| `beforeSubmit` | (values) => values \| false | - | 提交前数据转换 |
-| `actions` | object | {} | Server Actions（用于 action 加载数据） |
-| `isCreate` | boolean | true | 是否是创建表单 |
-| `width` | number \| string | 600 | 模态框宽度 |
-| `enableFullscreen` | boolean | true | 是否启用全屏按钮 |
-| `destroyOnHidden` | boolean | true | 关闭时销毁内容 |
-| `trigger` | ReactNode | - | 触发器（非受控模式） |
+### 日期时间类型
 
-### SmartDrawerForm
+| 类型 | 说明 | 组件 |
+|------|------|------|
+| `date` | 日期 | DatePicker |
+| `datetime` | 日期时间 | DatePicker |
+| `time` | 时间 | TimePicker |
+| `dateRange` | 日期范围 | RangePicker |
 
-| 属性 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `title` | string | 'Form' | 抽屉标题 |
-| `open` | boolean | - | 是否打开（受控） |
-| `onOpenChange` | (visible: boolean) => void | - | 打开状态变化回调 |
-| `fieldsConfig` | array | [] | 字段配置数组 |
-| `initialValues` | object | {} | 表单初始值 |
-| `onFinish` | (values) => Promise<boolean> | - | 提交回调，返回 true 关闭 |
-| `beforeSubmit` | (values) => values \| false | - | 提交前数据转换 |
-| `actions` | object | {} | Server Actions |
-| `isCreate` | boolean | true | 是否是创建表单 |
-| `width` | number \| string | 600 | 抽屉宽度 |
-| `placement` | 'left' \| 'right' | 'right' | 抽屉位置 |
-| `submitter` | boolean \| object | true | 提交按钮配置 |
-| `extra` | ReactNode | - | 标题栏右侧内容 |
+### 上传类型
+
+| 类型 | 说明 | 组件 |
+|------|------|------|
+| `image` | 图片上传 | ImageUpload |
+| `avatar` | 头像上传 | AvatarUpload |
+| `file` | 文件上传 | FileUpload |
+
+### 高级类型
+
+| 类型 | 说明 | 组件 |
+|------|------|------|
+| `array` | 数组编辑 | ArrayEditor |
+| `json` | JSON 编辑 | JsonEditor |
+| `markdown` | Markdown | MarkdownEditor |
+| `icon` | 图标选择 | IconPicker |
+| `rate` | 评分 | Rate |
+| `slider` | 滑块 | Slider |
+| `color` | 颜色选择 | ColorPicker |
+
+### 布局类型
+
+| 类型 | 说明 | 用途 |
+|------|------|------|
+| `group` | 分组 | 表单字段分组 |
+
+## 组件属性
 
 ### SmartForm
 
 | 属性 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `fieldsConfig` | array | [] | 字段配置数组 |
-| `initialValues` | object | {} | 表单初始值 |
-| `onFinish` | (values) => Promise<boolean> | - | 提交回调 |
-| `onFinishFailed` | (errorInfo) => void | - | 验证失败回调 |
-| `onValuesChange` | (changedValues, allValues) => void | - | 值变化回调 |
-| `beforeSubmit` | (values) => values \| false | - | 提交前数据转换 |
-| `actions` | object | {} | Server Actions |
-| `isCreate` | boolean | true | 是否是创建表单 |
-| `labelWidth` | string | 'auto' | 标签宽度 |
-| `layout` | 'horizontal' \| 'vertical' \| 'inline' | 'horizontal' | 布局方式 |
-| `column` | number | 1 | 列数（多列布局） |
-| `loading` | boolean | false | 加载状态 |
-| `disabled` | boolean | false | 禁用整个表单 |
-| `submitter` | boolean \| object | true | 提交按钮配置 |
+| `fieldsConfig` | Array | [] | 字段配置 |
+| `onFinish` | Function | - | 提交回调 |
+| `initialValues` | Object | {} | 初始值 |
+| `submitText` | String | 'Submit' | 提交按钮文字 |
+| `resetText` | String | 'Reset' | 重置按钮文字 |
+| `showReset` | Boolean | true | 显示重置按钮 |
+| `layout` | String | 'vertical' | 布局方式 |
+| `actions` | Object | {} | 动态加载 Actions |
 
-## 📚 高级用法
+### SmartModalForm
 
-### 分组布局 (group)
+继承 SmartForm 所有属性，额外支持：
 
-```javascript
-{
-  key: 'basic-group',
-  title: '📋 Basic Information',
-  type: 'group',
-  tips: 'Fill in the basic information',
-  columns: [
-    { key: 'title', title: 'Title', type: 'text', col: { span: 16 } },
-    { key: 'status', title: 'Status', type: 'select', col: { span: 8 } },
-  ],
-}
-```
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `title` | String | - | 弹窗标题 |
+| `trigger` | ReactNode | - | 触发按钮 |
+| `width` | Number | 520 | 弹窗宽度 |
+| `open` | Boolean | - | 受控显示 |
+| `onOpenChange` | Function | - | 显示状态变化 |
 
-**栅格宽度：** `col.span` 支持 1-24，默认 12（50%）
+### SmartDrawerForm
 
-### 条件显示 (showRule)
+继承 SmartForm 所有属性，额外支持：
 
-```javascript
-{
-  key: 'advancedOptions',
-  title: 'Advanced Options',
-  type: 'text',
-  // 字符串表达式
-  showRule: "type === 'advanced'",
-  // 或使用函数
-  showRule: (formData) => formData.type === 'advanced',
-}
-```
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `title` | String | - | 抽屉标题 |
+| `trigger` | ReactNode | - | 触发按钮 |
+| `width` | Number | 400 | 抽屉宽度 |
+| `placement` | String | 'right' | 抽屉位置 |
 
-支持的操作符：`= == === != !== > >= < <= in && ||`
+## 高级用法
 
-### 字段联动 (watch)
+### 条件显示
 
 ```javascript
 {
-  key: 'category',
-  title: 'Category',
-  type: 'select',
-  data: categoryOptions,
-  watch: {
-    handler: (value, { setFieldValue }) => {
-      // 主分类变化时，清空子分类
-      setFieldValue('subCategory', undefined);
-    },
-  },
+	key: 'advancedOption',
+	title: 'Advanced Option',
+	type: 'text',
+	showRule: "type === 'advanced'",  // 字符串表达式
+}
+
+// 或使用函数
+{
+	showRule: (formData) => formData.type === 'advanced',
 }
 ```
 
-### 动态选项 (data 函数)
+### 字段联动
 
 ```javascript
 {
-  key: 'subCategory',
-  title: 'Sub Category',
-  type: 'select',
-  // data 可以是函数，根据其他字段值动态返回选项
-  data: (formData) => {
-    return subCategoryMap[formData?.category] || [];
-  },
+	key: 'price',
+	title: 'Price',
+	type: 'money',
+	watch: ({ value, formData, $set }) => {
+		const quantity = formData.quantity || 1;
+		$set('totalPrice', value * quantity);
+	},
 }
 ```
 
-### 条件禁用 (disabled 函数)
+### 动态数据加载
+
+```javascript
+// 方式 1：通过 action 名称（推荐）
+{
+	key: 'parent_id',
+	type: 'tree-select',
+	form: {
+		action: 'getTreeAction',
+	},
+}
+
+// 注册 actions
+<SmartForm
+	fieldsConfig={fieldsConfig}
+	actions={{
+		getTreeAction: myActions.getTreeAction,
+	}}
+/>
+
+// 方式 2：静态数据
+{
+	key: 'parent_id',
+	type: 'tree-select',
+	form: {
+		data: treeData,
+	},
+}
+```
+
+### 表单分组
 
 ```javascript
 {
-  key: 'subCategory',
-  title: 'Sub Category',
-  type: 'select',
-  // 当没有选择主分类时禁用
-  disabled: (formData) => !formData?.category,
+	key: 'basicInfo',
+	title: 'Basic Information',
+	type: 'group',
+	children: [
+		{ key: 'name', title: 'Name', type: 'text' },
+		{ key: 'email', title: 'Email', type: 'text' },
+	],
 }
 ```
 
-### 数据转换 (beforeSubmit)
+## 相关文档
 
-```jsx
-<SmartModalForm
-  fieldsConfig={[...]}
-  beforeSubmit={(values) => {
-    // 转换数据格式
-    return {
-      ...values,
-      createdAt: new Date(),
-      tags: values.tags?.join(','),
-    };
-  }}
-  onFinish={handleSubmit}
-/>
-```
+- [SmartForm 详细指南](/docs/admin/SMART_FORM_GUIDE.md)
+- [SmartCrudPage 完整指南](/docs/SMART_CRUD_COMPLETE_GUIDE.md)
 
-### 使用 ref 控制表单
+## 许可证
 
-```jsx
-const formRef = useRef();
-
-<SmartModalForm
-  ref={formRef}
-  fieldsConfig={[...]}
-  onFinish={handleSubmit}
-/>
-
-// 获取表单值
-const values = formRef.current?.getFieldsValue();
-
-// 设置表单值
-formRef.current?.setFieldsValue({ name: 'New Name' });
-
-// 重置表单
-formRef.current?.resetFields();
-
-// 验证表单
-formRef.current?.validateFields();
-
-// 提交表单
-formRef.current?.submit();
-```
-
-### 非受控模式（使用 trigger）
-
-```jsx
-<SmartModalForm
-  title="Create User"
-  trigger={<Button type="primary">Create</Button>}
-  fieldsConfig={[...]}
-  onFinish={handleCreate}
-/>
-```
-
-### 自定义提交按钮
-
-```jsx
-<SmartModalForm
-  fieldsConfig={[...]}
-  formProps={{
-    submitter: {
-      searchConfig: {
-        submitText: 'Save',
-        resetText: 'Reset',
-      },
-      render: (props, doms) => {
-        return [
-          ...doms,
-          <Button key="custom" onClick={handleCustomAction}>
-            Custom Action
-          </Button>,
-        ];
-      },
-    },
-  }}
-/>
-```
-
-## 🔄 与 SmartCrudPage 的关系
-
-SmartForm 系列组件与 SmartCrudPage 共享相同的 `fieldsConfig` 配置格式，可以无缝复用配置：
-
-```jsx
-// 定义一次配置
-const userFieldsConfig = [
-  { key: 'name', title: 'Name', type: 'text', form: { required: true } },
-  { key: 'email', title: 'Email', type: 'text', form: { required: true } },
-  // ...
-];
-
-// 在 SmartCrudPage 中使用
-<SmartCrudPage
-  fieldsConfig={userFieldsConfig}
-  actions={crudActions}
-/>
-
-// 在独立表单中复用
-<SmartModalForm
-  title="Quick Create"
-  fieldsConfig={userFieldsConfig}
-  onFinish={handleCreate}
-/>
-```
-
-## 📖 参考文档
-
-- [vk-unicloud 万能表单](https://vkdoc.fsq.pub/admin/3/form.html)
-- [Ant Design ProComponents ModalForm](https://procomponents.ant.design/components/modal-form)
-- [Ant Design ProComponents DrawerForm](https://procomponents.ant.design/components/drawer-form)
-- [SmartCrudPage 完整指南](../../../docs/SMART_CRUD_COMPLETE_GUIDE.md)
-
+MIT License

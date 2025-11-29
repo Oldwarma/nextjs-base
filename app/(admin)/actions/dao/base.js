@@ -214,12 +214,12 @@ export class BaseDAO {
 			pageSize = this.config.query.defaultPageSize,
 			search,
 			filters = {},
-			whereJson,  // ✅ 新增：支持直接传入 whereJson（SmartCrudPage 使用）
-			sortJson,   // ✅ 直接接收 sortJson 参数
+			whereJson,  // 新增：支持直接传入 whereJson（SmartCrudPage 使用）
+			sortJson,   // 直接接收 sortJson 参数
 			foreignDB,  // 连表配置（参数传入）
 		} = params;
 
-		// ✅ 构建查询条件：优先使用 whereJson，其次使用 search + filters 构建
+		// 构建查询条件：优先使用 whereJson，其次使用 search + filters 构建
 		let query;
 		
 		if (whereJson) {
@@ -267,12 +267,12 @@ export class BaseDAO {
 		// 连表配置：优先使用参数传入的，否则使用 config 中配置的
 		const finalForeignDB = foreignDB || this.config.query?.foreignDB || [];
 
-		// ✅ 统一使用 selects 方法（即使没有连表）
+		// 统一使用 selects 方法（即使没有连表）
 		// 优点：参数统一、逻辑统一、易于维护
 		const selectsParams = {
 			dbName: this.config.collectionName,
 			whereJson: query,
-			sortJson: sortOption,  // ✅ 统一使用 sortJson 参数名
+			sortJson: sortOption,  // 统一使用 sortJson 参数名
 			pageIndex,
 			pageSize,
 			getCount: true,
@@ -825,7 +825,7 @@ export function createCrudActions(config) {
 		// 获取列表
 		getList: async (params) => {
 			const startTime = Date.now();
-			const userId = await dao.getCurrentUserId(); // ✅ 获取实际用户ID
+			const userId = await dao.getCurrentUserId(); // 获取实际用户ID
 			
 			try {
 				const result = await dao.getList(params);

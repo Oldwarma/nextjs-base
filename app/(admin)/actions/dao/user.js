@@ -248,12 +248,12 @@ export async function getUserList({ page = 1, pageSize = 20, filters = {}, sort 
 
 	// 处理特定字段的搜索
 	if (filters.email) {
-		// ✅ 如果已经是对象（如 { $regex: ..., $options: 'i' }），直接使用
+		// 如果已经是对象（如 { $regex: ..., $options: 'i' }），直接使用
 		query.email = typeof filters.email === 'object' ? filters.email : { $regex: filters.email, $options: 'i' };
 	}
 
 	if (filters.name) {
-		// ✅ 如果已经是对象（如 { $regex: ..., $options: 'i' }），直接使用
+		// 如果已经是对象（如 { $regex: ..., $options: 'i' }），直接使用
 		query.name = typeof filters.name === 'object' ? filters.name : { $regex: filters.name, $options: 'i' };
 	}
 
@@ -291,10 +291,10 @@ export async function getUserList({ page = 1, pageSize = 20, filters = {}, sort 
 		getCount: true,
 		foreignDB: [
 			{
-				dbName: 'roles',          // ✅ 使用 dbName 而不是 from
-				localKey: 'roles',        // ✅ 使用 localKey 而不是 localField (users.roles 是数组)
-				foreignKey: 'id',         // ✅ 使用 foreignKey 而不是 foreignField (roles.id 是 UUID)
-				as: 'roleList',           // ✅ 连表结果存放在 roleList 字段
+				dbName: 'roles',          // 使用 dbName 而不是 from
+				localKey: 'roles',        // 使用 localKey 而不是 localField (users.roles 是数组)
+				foreignKey: 'id',         // 使用 foreignKey 而不是 foreignField (roles.id 是 UUID)
+				as: 'roleList',           // 连表结果存放在 roleList 字段
 				fieldJson: { id: 1, name: 1, enable: 1 }, // 只返回需要的字段
 			},
 		],

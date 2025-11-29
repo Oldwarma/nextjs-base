@@ -16,7 +16,7 @@
 {
   key: "enable",
   title: "是否启用",
-  type: "switch",              // ✅ type 决定渲染
+  type: "switch",              // type 决定渲染
   activeValue: true,
   inactiveValue: false,
   width: 80,
@@ -26,7 +26,7 @@
 {
   key: "parent_id",
   title: "父级菜单",
-  type: "tree-select",         // ✅ type 决定渲染
+  type: "tree-select",         // type 决定渲染
   action: "admin/system/menu/sys/getAll",
   props: { 
     list: "rows",
@@ -51,7 +51,7 @@
 ```javascript
 // 表格数据请求
 table1: {
-  action: "admin/system/menu/sys/getAll",  // ✅ 字符串 URL
+  action: "admin/system/menu/sys/getAll",  // 字符串 URL
   columns: [/* ... */],
 }
 
@@ -59,7 +59,7 @@ table1: {
 {
   key: "parent_id",
   type: "tree-select",
-  action: "admin/system/menu/sys/getAll",  // ✅ 自动请求
+  action: "admin/system/menu/sys/getAll",  // 自动请求
   props: { 
     list: "rows",           // 指定数据路径
     value: "menu_id",
@@ -86,7 +86,7 @@ table1: {
   title: "菜单名称",
   type: "html",
   formatter: function(val, row, column, index) {
-    // ✅ 纯 JS 函数，返回 HTML 字符串
+    // 纯 JS 函数，返回 HTML 字符串
     let icon = row.icon || "el-icon-tickets";
     return `<i class="${icon}" style="margin-right: 10px;"></i><text>${row.name}</text>`;
   }
@@ -175,17 +175,17 @@ render: (value, record) => (
 
 | 特性 | vk-data-table | SmartCrudPage（当前） | 改进方向 |
 |------|---------------|----------------------|----------|
-| **类型渲染** | `type` 自动识别 | 部分支持 | ✅ 增强 type 自动渲染 |
+| **类型渲染** | `type` 自动识别 | 部分支持 | 增强 type 自动渲染 |
 | **Action 请求** | 字符串 URL | 函数引用 | ⚠️ 架构不同，需适配 |
 | **Render 函数** | `formatter` (HTML) | JSX render | ⚠️ 保持 JSX，但支持 formatter |
-| **Tree-Select 数据** | `action` + `props` | 手动加载 | ✅ 自动加载 |
-| **Switch 渲染** | `type: "switch"` | 手动 render | ✅ 自动渲染 |
+| **Tree-Select 数据** | `action` + `props` | 手动加载 | 自动加载 |
+| **Switch 渲染** | `type: "switch"` | 手动 render | 自动渲染 |
 | **实时更新** | `watch` 回调 | 不支持 | 🔄 未来考虑 |
-| **配置位置** | 全在 columns | 分散 | ✅ 统一到 fieldsConfig |
+| **配置位置** | 全在 columns | 分散 | 统一到 fieldsConfig |
 
 ---
 
-## ✅ 改进建议
+## 改进建议
 
 ### 1. 增强 type 自动渲染
 
@@ -196,7 +196,7 @@ render: (value, record) => (
 // Config 中
 {
   key: 'enable',
-  type: 'switch',              // ✅ SmartCrudPage 自动渲染为 Switch
+  type: 'switch',              // SmartCrudPage 自动渲染为 Switch
   activeText: 'Enabled',
   inactiveText: 'Disabled',
 }
@@ -204,7 +204,7 @@ render: (value, record) => (
 {
   key: 'crud_category',
   type: 'select',
-  valueEnum: {                // ✅ SmartCrudPage 自动渲染为 Tag
+  valueEnum: {                // SmartCrudPage 自动渲染为 Tag
     0: { text: 'Unclassified', status: 'Default' },
     1: { text: 'Create', status: 'Success' },
   },
@@ -224,7 +224,7 @@ render: (value, record) => (
   key: 'parent_id',
   type: 'tree-select',
   form: {
-    action: 'getPermissionTreeForSelectAction',  // ✅ action 名称
+    action: 'getPermissionTreeForSelectAction',  // action 名称
     props: {
       list: 'data',
       value: 'value',
@@ -239,7 +239,7 @@ render: (value, record) => (
   actions={{
     getList: actions.getPermissionTreeAction,
     create: actions.createPermissionAction,
-    // ✅ SmartCrudPage 自动查找并调用
+    // SmartCrudPage 自动查找并调用
     getPermissionTreeForSelectAction: actions.getPermissionTreeForSelectAction,
   }}
 />
@@ -259,7 +259,7 @@ render: (value, record) => (
   type: 'array',
   table: {
     formatter: (value) => {
-      // ✅ 返回字符串或对象，SmartCrudPage 自动处理
+      // 返回字符串或对象，SmartCrudPage 自动处理
       if (!value || value.length === 0) return '-';
       return value.slice(0, 2).join(', ') + (value.length > 2 ? ' ...' : '');
     },
@@ -311,25 +311,25 @@ const statusColorMap = {
 
 ### 必须实现（高优先级）
 
-1. ✅ **Type-Driven Rendering**
+1. **Type-Driven Rendering**
    - `type: "switch"` → 自动渲染 Switch 样式
    - `type: "select"` + `valueEnum` → 自动渲染 Tag
 
-2. ✅ **Tree-Select 自动加载**
+2. **Tree-Select 自动加载**
    - `action` 字段名 → 自动从 `actions` prop 中查找并调用
    - `props` 配置 → 自动映射数据结构
 
-3. ✅ **Formatter 支持**
+3. **Formatter 支持**
    - 支持 `formatter` 函数返回字符串
    - 与 `render` 共存，优先级：`render` > `formatter`
 
 ### 应该实现（中优先级）
 
-4. ✅ **ValueEnum 配置**
+4. **ValueEnum 配置**
    - 简化 Tag 渲染配置
    - 统一状态映射
 
-5. ✅ **自动识别树形数据**
+5. **自动识别树形数据**
    - 检测 `children` 字段自动启用树形表格
 
 ### 可以考虑（低优先级）
@@ -349,7 +349,7 @@ const statusColorMap = {
 ### vk-data-table 风格
 
 ```javascript
-// ✅ 简洁、声明式
+// 简洁、声明式
 columns: [
   {
     key: "parent_id",
@@ -371,7 +371,7 @@ columns: [
 ### 改进后的 SmartCrudPage 风格
 
 ```javascript
-// ✅ 同样简洁、类型安全
+// 同样简洁、类型安全
 fieldsConfig: [
   {
     key: 'parent_id',
@@ -399,14 +399,14 @@ fieldsConfig: [
 ## 🚀 实施计划
 
 ### Phase 1：核心功能（本周）
-1. ✅ Tree-Select 自动加载
-2. ✅ Switch 自动渲染
-3. ✅ ValueEnum 支持
+1. Tree-Select 自动加载
+2. Switch 自动渲染
+3. ValueEnum 支持
 
 ### Phase 2：增强功能（下周）
-4. ✅ Formatter 函数支持
-5. ✅ 自动识别树形数据
-6. ✅ Array 自动渲染
+4. Formatter 函数支持
+5. 自动识别树形数据
+6. Array 自动渲染
 
 ### Phase 3：高级功能（按需）
 7. 🔄 Watch 回调

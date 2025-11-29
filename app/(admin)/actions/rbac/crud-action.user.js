@@ -245,7 +245,7 @@ export async function deleteUserAction(id) {
 			};
 		}
 
-		// ✅ Better Auth 的 removeUser 需要 userId 参数
+		// Better Auth 的 removeUser 需要 userId 参数
 		await auth.api.removeUser({
 			headers: await headers(),
 			body: {

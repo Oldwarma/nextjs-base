@@ -258,19 +258,19 @@ export const batchDeletePermissionsAction = crudActions.batchDelete;
  * 返回扁平化格式，适配 SmartCrudPage 的树形表格
  */
 export const getPermissionTreeAction = wrapQueryAction('permission', async ({ pageIndex = 1, pageSize = 1000, whereJson = {}, sortJson = null } = {}) => {
-	// ✅ 如果有搜索条件，使用标准查询（支持搜索所有层级）
+	// 如果有搜索条件，使用标准查询（支持搜索所有层级）
 	if (whereJson && Object.keys(whereJson).length > 0) {
 		// 使用标准的 getList 查询（支持 searchable 字段搜索）
 		const result = await crudActions._dao.getList({
 			pageIndex,
 			pageSize,
-			whereJson,  // ✅ 使用 whereJson（SmartCrudPage 传递的参数）
+			whereJson,  // 使用 whereJson（SmartCrudPage 传递的参数）
 			sortJson,
 		});
 		return result;
 	}
 	
-	// ✅ 没有搜索条件时，返回完整的树形结构
+	// 没有搜索条件时，返回完整的树形结构
 	const result = await sysDao.getPermissionTree({
 		pageIndex,
 		pageSize,
@@ -293,7 +293,7 @@ export const getPermissionTreeForSelectAction = wrapQueryAction('permission', as
 	// 使用 sysDao.getPermissionTreeForSelect 获取完整的权限树
 	const tree = await sysDao.getPermissionTreeForSelect({ withLabel: false });
 
-	// ✅ 转换为 TreeSelect 需要的格式
+	// 转换为 TreeSelect 需要的格式
 	const convertToTreeSelectFormat = (nodes) => {
 		if (!nodes || !Array.isArray(nodes)) return [];
 

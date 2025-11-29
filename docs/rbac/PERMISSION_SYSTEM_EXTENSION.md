@@ -45,9 +45,9 @@ function matchActionPath(actionPath, patterns) {
 ```
 
 **核心特点**：
-- ✅ 通用的模式匹配逻辑（支持通配符）
-- ✅ 基于字符串路径的验证
-- ✅ 易于扩展到不同场景
+- 通用的模式匹配逻辑（支持通配符）
+- 基于字符串路径的验证
+- 易于扩展到不同场景
 
 ---
 
@@ -64,7 +64,7 @@ function matchActionPath(actionPath, patterns) {
   "name": "用户管理",
   "identify": "crud:user:all",
   
-  // ✅ 原有字段（向后兼容）
+  // 原有字段（向后兼容）
   "actions": [
     "**/getUserAction",           // Backend Admin Actions
     "**/deleteMyAccountAction"    // Client Actions（如需 RBAC）
@@ -118,7 +118,7 @@ const permissionConfig = {
   fields: {
     // ... 现有字段 ...
     
-    // ✅ 保留原有字段
+    // 保留原有字段
     actions: {
       required: false,
       type: 'array',
@@ -526,7 +526,7 @@ async function handler(request, context) {
   });
 }
 
-// ✅ 使用权限中间件
+// 使用权限中间件
 export const GET = withApiPermission(handler);
 
 // 如果不需要权限检查
@@ -602,7 +602,7 @@ async function migratePermissions() {
     { $set: { apis: [] } }
   );
   
-  console.log(`✅ Migration completed: ${result.modifiedCount} documents updated`);
+  console.log(`Migration completed: ${result.modifiedCount} documents updated`);
 }
 
 migratePermissions();

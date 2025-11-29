@@ -1,7 +1,7 @@
 /**
  * SmartForm - 智能表单组件
  * 
- * 基于 vk-unicloud 万能表单思想，通过 JSON 配置自动生成表单
+ * 基于万能表单思想，通过 JSON 配置自动生成表单
  * 
  * 特性：
  * - 配置驱动：通过 fieldsConfig 自动生成表单字段
@@ -27,7 +27,6 @@
  * />
  * ```
  * 
- * @see https://vkdoc.fsq.pub/admin/3/form.html
  */
 
 'use client';

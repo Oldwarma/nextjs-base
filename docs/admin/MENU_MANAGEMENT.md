@@ -95,11 +95,11 @@ Click "..." → "Delete" on any menu row
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| **Menu Key** | Text | ✅ | Unique identifier, e.g., `dashboard`, `users` |
-| **Menu Name** | Text | ✅ | Display name, e.g., "User Management" |
+| **Menu Key** | Text | | Unique identifier, e.g., `dashboard`, `users` |
+| **Menu Name** | Text | | Display name, e.g., "User Management" |
 | **Icon** | Icon Picker | ❌ | Select from icon library (top-level only) |
 | **URL** | Text | ❌ | Internal: `/admin/users`<br>External: `https://example.com` |
-| **Sort Order** | Number | ✅ | Larger numbers appear first (descending) |
+| **Sort Order** | Number | | Larger numbers appear first (descending) |
 | **Parent Menu** | TreeSelect | ❌ | Leave empty for root menu |
 | **Remark** | TextArea | ❌ | Description text |
 | **Enabled** | Switch | - | Default enabled |
@@ -293,7 +293,7 @@ Following Ant Design Pro's official design standards, **sub-menu items do not di
 
 ### Ant Design Pro Menu Design Standard
 
-- ✅ **Top-level menu**: Display icon
+- **Top-level menu**: Display icon
 - ❌ **Sub-menu items**: No icon (keep interface clean)
 
 This is ProLayout's default behavior, conforming to Ant Design's design system.
@@ -387,7 +387,7 @@ When user selects parent menu, icon field is auto-cleared via `onChange` callbac
 
 ### 1. Menu Key Naming Convention
 
-✅ **Recommended:**
+**Recommended:**
 ```
 dashboard
 user_management
@@ -682,20 +682,20 @@ const ProLayout = dynamic(
 
 Test the following functions to ensure system works:
 
-- [ ] ✅ Create root menu
-- [ ] ✅ Create sub-menu
-- [ ] ✅ Create 3-level menu
-- [ ] ✅ Edit menu info
-- [ ] ✅ Change parent menu
-- [ ] ✅ Adjust sort order
-- [ ] ✅ Enable/disable menu
-- [ ] ✅ Show/hide menu
-- [ ] ✅ Delete leaf menu
-- [ ] ✅ Delete parent menu fails (with children)
-- [ ] ✅ Tree table expand/collapse
-- [ ] ✅ Icon picker
-- [ ] ✅ Search function
-- [ ] ✅ View details
+- [ ] Create root menu
+- [ ] Create sub-menu
+- [ ] Create 3-level menu
+- [ ] Edit menu info
+- [ ] Change parent menu
+- [ ] Adjust sort order
+- [ ] Enable/disable menu
+- [ ] Show/hide menu
+- [ ] Delete leaf menu
+- [ ] Delete parent menu fails (with children)
+- [ ] Tree table expand/collapse
+- [ ] Icon picker
+- [ ] Search function
+- [ ] View details
 
 ---
 
@@ -726,22 +726,22 @@ Test the following functions to ensure system works:
 ## Changelog
 
 ### 2024-11-03
-- ✅ Confirm menu sorting is ascending (sortOrder ascending)
-- ✅ Change backend layout menu to database loading
-- ✅ Implement dynamic icon rendering
-- ✅ Implement dynamic breadcrumb matching
-- ✅ Add menu loading state
-- ✅ Support multi-level menu tree structure
-- ✅ Auto-filter disabled and hidden menus
-- ✅ Restore AdminLayout to official version (sub-menus don't show icons)
-- ✅ Add icon field and parent menu linkage
-- ✅ Implement icon picker dynamic disable function
-- ✅ Auto-clear icon when parent menu selected
-- ✅ Update form hint text
+- Confirm menu sorting is ascending (sortOrder ascending)
+- Change backend layout menu to database loading
+- Implement dynamic icon rendering
+- Implement dynamic breadcrumb matching
+- Add menu loading state
+- Support multi-level menu tree structure
+- Auto-filter disabled and hidden menus
+- Restore AdminLayout to official version (sub-menus don't show icons)
+- Add icon field and parent menu linkage
+- Implement icon picker dynamic disable function
+- Auto-clear icon when parent menu selected
+- Update form hint text
 
 ---
 
-**Status**: ✅ Feature Complete  
+**Status**: Feature Complete  
 **Version**: v1.0.0  
 **Last Updated**: 2025-11-03
 

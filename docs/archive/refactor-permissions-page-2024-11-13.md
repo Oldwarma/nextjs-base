@@ -14,26 +14,26 @@
 |------|--------|--------|------|----------|
 | **Config** | 354 行 | 685 行 | +331 行 | +94% ⚠️ |
 | **Actions** | 94 行 | 94 行 | 0 行 | 0% |
-| **Page** | 481 行 | **115 行** | **-366 行** | **-76%** ✅ |
+| **Page** | 481 行 | **115 行** | **-366 行** | **-76%** |
 | **总计** | 929 行 | **894 行** | **-35 行** | **-4%** |
 
 > ⚠️ Config 文件增加是因为添加了完整的 `fieldsConfig`，但这带来了：
-> - ✅ **配置统一**：前后端配置在一个文件
-> - ✅ **逻辑清晰**：字段定义、验证、钩子一目了然
-> - ✅ **易于维护**：修改字段只需改一个地方
+> - **配置统一**：前后端配置在一个文件
+> - **逻辑清晰**：字段定义、验证、钩子一目了然
+> - **易于维护**：修改字段只需改一个地方
 
 ### 关键改进
 
-✅ **Page 组件精简 76%**
+**Page 组件精简 76%**
 - 从 481 行减少到 115 行
 - 移除了 366 行手动构建的 `fieldsConfig`
 - 代码更清晰、更易维护
 
-✅ **配置统一**
+**配置统一**
 - 所有配置集中在一个文件
 - 前端（SmartCrudPage）和后端（BaseDAO）共用同一套规则
 
-✅ **功能完整保留**
+**功能完整保留**
 - 树形表格 ✓
 - 父级权限选择 ✓
 - CRUD 分类 ✓
@@ -132,14 +132,14 @@ const fieldsConfig = useMemo(() => {
 
 ### 新增文件
 
-1. ✅ `app/(admin)/actions/rbac/configs/permission-crud-unified.config.js` - 统一配置文件（685 行）
-2. ✅ `app/(admin)/admin/rbac/permissions/page.old.js` - 旧版本备份（481 行）
-3. ✅ `docs/refactor-permissions-page-2024-11-13.md` - 本文档
+1. `app/(admin)/actions/rbac/configs/permission-crud-unified.config.js` - 统一配置文件（685 行）
+2. `app/(admin)/admin/rbac/permissions/page.old.js` - 旧版本备份（481 行）
+3. `docs/refactor-permissions-page-2024-11-13.md` - 本文档
 
 ### 修改文件
 
-1. ✅ `app/(admin)/actions/rbac/admin-permissions.js` - 更新 import 路径
-2. ✅ `app/(admin)/admin/rbac/permissions/page.js` - 精简为 115 行
+1. `app/(admin)/actions/rbac/admin-permissions.js` - 更新 import 路径
+2. `app/(admin)/admin/rbac/permissions/page.js` - 精简为 115 行
 
 ### 保留文件
 
@@ -243,7 +243,7 @@ const fieldsConfig = useMemo(() => {
 ### 4. 一致性更好
 
 **所有 RBAC 页面将使用相同的配置格式：**
-- Permissions ✅ 已重构
+- Permissions 已重构
 - Roles ⏳ 待重构
 - Users ⏳ 待重构
 - Menus ⏳ 待重构
@@ -340,9 +340,9 @@ export const xxxCrudConfig = {
 
 ### Phase 1: 验证（当前阶段）
 
-- [x] ✅ 创建统一配置文件
-- [x] ✅ 更新 Actions 文件
-- [x] ✅ 精简 Page 组件
+- [x] 创建统一配置文件
+- [x] 更新 Actions 文件
+- [x] 精简 Page 组件
 - [ ] ⏳ 测试所有功能
 - [ ] ⏳ 收集反馈
 

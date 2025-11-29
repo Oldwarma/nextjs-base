@@ -58,7 +58,7 @@ if (!isAdmin && !skipPermission && permissionId) {
 
 ---
 
-## ✅ 修复方案
+## 修复方案
 
 ### 修复 1: 添加 `permissionId`
 
@@ -73,19 +73,19 @@ create: wrapAdminAction('create', resourceType, async (params, context) => {
     userId: context.userId,
   });
 }, {
-  permissionId: `create${pascalCase(resourceType)}Action`,  // ✅ 添加
+  permissionId: `create${pascalCase(resourceType)}Action`,  // 添加
 }),
 
 update: wrapAdminAction('update', resourceType, async (id, data, context) => {
   return await dao.update(id, data);
 }, {
-  permissionId: `update${pascalCase(resourceType)}Action`,  // ✅ 添加
+  permissionId: `update${pascalCase(resourceType)}Action`,  // 添加
 }),
 
 delete: wrapAdminAction('delete', resourceType, async (id, context) => {
   return await dao.delete(id);
 }, {
-  permissionId: `delete${pascalCase(resourceType)}Action`,  // ✅ 添加
+  permissionId: `delete${pascalCase(resourceType)}Action`,  // 添加
 }),
 ```
 
@@ -124,10 +124,10 @@ function pascalCase(str) {
 
 | collectionName | pascalCase 结果 | 生成的 permissionId |
 |----------------|----------------|---------------------|
-| `permissions` | `Permission` | `createPermissionAction` ✅ |
-| `users` | `User` | `createUserAction` ✅ |
-| `roles` | `Role` | `createRoleAction` ✅ |
-| `menus` | `Menu` | `createMenuAction` ✅ |
+| `permissions` | `Permission` | `createPermissionAction` |
+| `users` | `User` | `createUserAction` |
+| `roles` | `Role` | `createRoleAction` |
+| `menus` | `Menu` | `createMenuAction` |
 
 ### 修复 3: 支持无路径前缀的匹配
 
@@ -157,8 +157,8 @@ function patternToRegex(pattern) {
 
 | 权限模式 | 转换后的正则 | 是否匹配 `createPermissionAction` |
 |---------|-------------|----------------------------------|
-| `**/create*Action` | `^(.*/)?create[^/]*Action$` | ✅ 现在可以匹配 |
-| `create*Action` | `^create[^/]*Action$` | ✅ 也可以匹配 |
+| `**/create*Action` | `^(.*/)?create[^/]*Action$` | 现在可以匹配 |
+| `create*Action` | `^create[^/]*Action$` | 也可以匹配 |
 
 ---
 
@@ -180,11 +180,11 @@ function patternToRegex(pattern) {
 
 使用 `createCrudActions` 的所有模块：
 
-- ✅ Users
-- ✅ Roles
-- ✅ Permissions
-- ✅ Menus
-- ✅ 所有自定义 CRUD 模块
+- Users
+- Roles
+- Permissions
+- Menus
+- 所有自定义 CRUD 模块
 
 ---
 
@@ -196,7 +196,7 @@ function patternToRegex(pattern) {
 
 **当前系统使用纯函数名（不含路径）**：
 
-- ✅ `permissionId`: `createUserAction`（纯函数名）
+- `permissionId`: `createUserAction`（纯函数名）
 - ❌ `permissionId`: `app/actions/createUserAction`（不推荐）
 
 ### `**/` 前缀的实际意义
@@ -205,8 +205,8 @@ function patternToRegex(pattern) {
 
 | 写法 | 效果 | 说明 |
 |------|------|------|
-| `create*Action` | 匹配 `createUserAction` 等 | ✅ 推荐（简洁） |
-| `**/create*Action` | 匹配 `createUserAction` 等 | ✅ 兼容（冗余） |
+| `create*Action` | 匹配 `createUserAction` 等 | 推荐（简洁） |
+| `**/create*Action` | 匹配 `createUserAction` 等 | 兼容（冗余） |
 
 **为什么保留 `**/` 支持？**
 
@@ -257,14 +257,14 @@ function patternToRegex(pattern) {
 
 ---
 
-## ✅ 修复效果
+## 修复效果
 
 ### 修复前
 
 ```
 用户权限: create*Action, get*Action, update*Action
 尝试操作: 删除用户
-结果: ✅ 删除成功（权限检查被跳过）
+结果: 删除成功（权限检查被跳过）
 ```
 
 ### 修复后
@@ -305,8 +305,8 @@ function patternToRegex(pattern) {
 
 ### 立即行动
 
-1. ✅ **应用修复**：已完成代码修复
-2. ✅ **更新文档**：已更新相关文档
+1. **应用修复**：已完成代码修复
+2. **更新文档**：已更新相关文档
 3. 🔄 **审查权限配置**：建议审查现有权限配置，统一使用推荐写法
 
 ### 后续优化
@@ -325,7 +325,7 @@ function patternToRegex(pattern) {
 
 ---
 
-**修复状态**: ✅ 已完成  
-**验证状态**: ✅ 已验证  
-**文档状态**: ✅ 已更新
+**修复状态**: 已完成  
+**验证状态**: 已验证  
+**文档状态**: 已更新
 

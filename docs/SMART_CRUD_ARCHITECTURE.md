@@ -390,11 +390,11 @@ export function generateSearchTransform(fieldsConfig) {
 
 **自动处理：**
 
--   ✅ 根据 `type` 渲染对应组件
--   ✅ 根据 `form.action` 自动加载数据（如 TreeSelect 数据）
--   ✅ 根据 `form.required` 添加必填验证
--   ✅ 根据 `form.rules` 添加自定义验证
--   ✅ 根据 `form.showRule` 条件显示/隐藏字段
+-   根据 `type` 渲染对应组件
+-   根据 `form.action` 自动加载数据（如 TreeSelect 数据）
+-   根据 `form.required` 添加必填验证
+-   根据 `form.rules` 添加自定义验证
+-   根据 `form.showRule` 条件显示/隐藏字段
 
 ---
 
@@ -516,9 +516,9 @@ export class BaseDAO {
 
 **优势：**
 
--   ✅ 减少重复代码
--   ✅ 提高一致性
--   ✅ 易于维护
+-   减少重复代码
+-   提高一致性
+-   易于维护
 
 **示例：**
 
@@ -538,7 +538,7 @@ export class BaseDAO {
   </Form.Item>
 </Form>
 
-// ✅ SmartCrudPage：一份配置，多处使用
+// SmartCrudPage：一份配置，多处使用
 const fieldsConfig = [
   { key: 'name', type: 'text', form: { required: true } },
   { key: 'status', type: 'select', options: [...] },
@@ -552,8 +552,6 @@ const fieldsConfig = [
 ### 2. 类型驱动渲染 (Type-Driven Rendering)
 
 **原理：** 根据 `type` 字段自动选择合适的渲染组件。
-
-**灵感来源：** vk-unicloud 的 `vk-data-table`
 
 **实现：**
 
@@ -574,9 +572,9 @@ if (typeRenderer) {
 
 **优势：**
 
--   ✅ 自动选择组件，无需手动编写
--   ✅ 统一的渲染逻辑
--   ✅ 易于扩展新类型
+-   自动选择组件，无需手动编写
+-   统一的渲染逻辑
+-   易于扩展新类型
 
 ---
 
@@ -592,7 +590,7 @@ if (typeRenderer) {
   key: 'parent_id',
   type: 'tree-select',
   form: {
-    action: getMenuTreeForSelectAction,  // ✅ 指定数据加载函数
+    action: getMenuTreeForSelectAction,  // 指定数据加载函数
   },
 }
 
@@ -608,9 +606,9 @@ useEffect(() => {
 
 **优势：**
 
--   ✅ 声明式数据加载
--   ✅ 减少模板代码
--   ✅ 支持异步数据
+-   声明式数据加载
+-   减少模板代码
+-   支持异步数据
 
 ---
 
@@ -635,9 +633,9 @@ crud-action.{resource}.js (服务端)
 
 **优势：**
 
--   ✅ 清晰的代码边界
--   ✅ 服务端逻辑不暴露给客户端
--   ✅ 易于测试
+-   清晰的代码边界
+-   服务端逻辑不暴露给客户端
+-   易于测试
 
 ---
 
@@ -662,11 +660,11 @@ crud-action.{resource}.js (服务端)
 
 **使用场景：**
 
--   ✅ 唯一性检查（beforeCreate）
--   ✅ 数据补全（beforeCreate）
--   ✅ 级联删除检查（beforeDelete）
--   ✅ 日志记录（afterCreate, afterUpdate, afterDelete）
--   ✅ 缓存清理（afterUpdate, afterDelete）
+-   唯一性检查（beforeCreate）
+-   数据补全（beforeCreate）
+-   级联删除检查（beforeDelete）
+-   日志记录（afterCreate, afterUpdate, afterDelete）
+-   缓存清理（afterUpdate, afterDelete）
 
 ---
 
@@ -675,7 +673,7 @@ crud-action.{resource}.js (服务端)
 ### 1. useMemo 优化
 
 ```javascript
-// ✅ 使用 useMemo 缓存 fieldsConfig
+// 使用 useMemo 缓存 fieldsConfig
 const fieldsConfig = useMemo(() => [
   { key: 'name', type: 'text', ... },
 ], [dependencies]);
@@ -684,7 +682,7 @@ const fieldsConfig = useMemo(() => [
 ### 2. useCallback 优化
 
 ```javascript
-// ✅ 使用 useCallback 缓存事件处理函数
+// 使用 useCallback 缓存事件处理函数
 const handleCreate = useCallback(async (values) => {
 	// ...
 }, []);
@@ -693,7 +691,7 @@ const handleCreate = useCallback(async (values) => {
 ### 3. 动态导入
 
 ```javascript
-// ✅ SmartCrudPage 使用动态导入
+// SmartCrudPage 使用动态导入
 const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
 	ssr: false,
 });
@@ -702,7 +700,7 @@ const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page')
 ### 4. 分页加载
 
 ```javascript
-// ✅ 列表分页，避免一次加载大量数据
+// 列表分页，避免一次加载大量数据
 const { pageIndex = 1, pageSize = 20 } = params;
 const skip = (pageIndex - 1) * pageSize;
 ```
@@ -728,14 +726,14 @@ async function checkBackendAccess() {
 ### 2. 字段过滤
 
 ```javascript
-// ✅ 只允许 creatable/updatable 字段写入数据库
+// 只允许 creatable/updatable 字段写入数据库
 const filteredData = filterFields(data, config.fields.creatable);
 ```
 
 ### 3. 数据验证
 
 ```javascript
-// ✅ 服务端验证
+// 服务端验证
 validation: {
   name: {
     required: true,
@@ -748,7 +746,7 @@ validation: {
 ### 4. MongoDB 注入防护
 
 ```javascript
-// ✅ 使用参数化查询
+// 使用参数化查询
 collection.find({ id: userId });
 
 // ❌ 不要拼接字符串

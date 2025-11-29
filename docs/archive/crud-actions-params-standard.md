@@ -276,7 +276,7 @@ DAO 层负责将 `filters` 中的字符串转换为正则表达式：
 为了兼容旧代码，Actions 支持多种参数格式：
 
 ```javascript
-// ✅ 新格式（推荐）
+// 新格式（推荐）
 {
 	pageIndex: 1,
 	pageSize: 20,
@@ -284,7 +284,7 @@ DAO 层负责将 `filters` 中的字符串转换为正则表达式：
 	sortJson: { createdAt: -1 }
 }
 
-// ✅ 旧格式 1
+// 旧格式 1
 {
 	page: 1,
 	pageSize: 20,
@@ -292,7 +292,7 @@ DAO 层负责将 `filters` 中的字符串转换为正则表达式：
 	sort: { createdAt: -1 }
 }
 
-// ✅ 旧格式 2（SmartCrudPage 早期版本）
+// 旧格式 2（SmartCrudPage 早期版本）
 {
 	pageIndex: 1,
 	pageSize: 20,
@@ -327,9 +327,9 @@ const result = await getUserListAction({
 
 ### 1. 使用统一的参数名称
 
-- ✅ `pageIndex`（不是 `page`）
-- ✅ `whereJson`（不是 `filters` 或 `conditions`）
-- ✅ `sortJson`（不是 `sort` 或 `orderBy`）
+- `pageIndex`（不是 `page`）
+- `whereJson`（不是 `filters` 或 `conditions`）
+- `sortJson`（不是 `sort` 或 `orderBy`）
 
 ### 2. 分离查询条件和分页参数
 
@@ -344,7 +344,7 @@ const result = await getUserListAction({
 }
 ```
 
-✅ **推荐**：
+**推荐**：
 ```javascript
 {
 	pageIndex: 1,

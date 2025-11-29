@@ -204,35 +204,35 @@
 ### 当前安全措施 ✅
 
 #### 1. **密码安全**
-- ✅ 使用 bcrypt 加密密码（由 better-auth 自动处理）
-- ✅ 密码最小长度：8 字符
-- ✅ 密码最大长度：128 字符（防止 DoS 攻击）
-- ✅ 密码永不明文存储
+- 使用 bcrypt 加密密码（由 better-auth 自动处理）
+- 密码最小长度：8 字符
+- 密码最大长度：128 字符（防止 DoS 攻击）
+- 密码永不明文存储
 
 #### 2. **Session 安全**
-- ✅ 使用 HttpOnly Cookie（防止 XSS 攻击窃取 session）
-- ✅ 生产环境使用 Secure Cookie（仅 HTTPS 传输）
-- ✅ Session 过期时间：24 小时
-- ✅ Session 自动刷新：每小时更新一次
+- 使用 HttpOnly Cookie（防止 XSS 攻击窃取 session）
+- 生产环境使用 Secure Cookie（仅 HTTPS 传输）
+- Session 过期时间：24 小时
+- Session 自动刷新：每小时更新一次
 
 #### 3. **CSRF 保护**
-- ✅ better-auth 内置 CSRF token 验证
-- ✅ 所有状态改变请求都需要验证 CSRF token
+- better-auth 内置 CSRF token 验证
+- 所有状态改变请求都需要验证 CSRF token
 
 #### 4. **数据验证**
-- ✅ Server Actions 进行服务端验证
-- ✅ 输入清理和验证（邮箱格式、密码长度）
-- ✅ MongoDB 防止 NoSQL 注入（使用参数化查询）
+- Server Actions 进行服务端验证
+- 输入清理和验证（邮箱格式、密码长度）
+- MongoDB 防止 NoSQL 注入（使用参数化查询）
 
 #### 5. **OAuth 安全**
-- ✅ 使用标准 OAuth 2.0 流程
-- ✅ 验证 state 参数防止 CSRF
-- ✅ 只信任官方 OAuth 回调
+- 使用标准 OAuth 2.0 流程
+- 验证 state 参数防止 CSRF
+- 只信任官方 OAuth 回调
 
 #### 6. **权限控制**
-- ✅ 角色基础访问控制（user / admin）
-- ✅ 所有 Server Actions 验证 session
-- ✅ 管理员操作额外检查 role 字段
+- 角色基础访问控制（user / admin）
+- 所有 Server Actions 验证 session
+- 管理员操作额外检查 role 字段
 
 ### 潜在安全问题 ⚠️
 

@@ -12,9 +12,9 @@
 ### 首先：它们都是 Server Actions！
 
 **关键点**：
-- ✅ **所有的 Actions 都是 Server Actions**（在服务器端执行）
-- ✅ **都使用 `'use server'` 指令**
-- ✅ **都不是客户端 JavaScript 代码**
+- **所有的 Actions 都是 Server Actions**（在服务器端执行）
+- **都使用 `'use server'` 指令**
+- **都不是客户端 JavaScript 代码**
 
 **真正的区别**：
 - 区别在于 **目录位置**（`app/(admin)/actions/` vs `app/(client)/actions/`）
@@ -95,9 +95,9 @@ export const resetUserPasswordAction = wrapAdminAction(
   'set_password',
   'user',
   async (userId, newPassword, { userId: operatorId, isAdmin }) => {
-    // ✅ operatorId 是操作者（管理员）的 ID
-    // ✅ userId 是被操作用户的 ID
-    // ✅ isAdmin 标识操作者是否为 admin 角色
+    // operatorId 是操作者（管理员）的 ID
+    // userId 是被操作用户的 ID
+    // isAdmin 标识操作者是否为 admin 角色
     
     // 业务逻辑：可以重置任何用户的密码
     await resetPassword(userId, newPassword);
@@ -170,7 +170,7 @@ import { headers } from 'next/headers';
  * - 不记录日志
  */
 export async function getUserProfileAction() {
-  // ✅ 手动进行 session 验证
+  // 手动进行 session 验证
   const session = await auth.api.getSession({ headers: await headers() });
   
   if (!session) {
@@ -180,7 +180,7 @@ export async function getUserProfileAction() {
     };
   }
   
-  // ✅ 只能访问自己的数据
+  // 只能访问自己的数据
   const userId = session.user.id;
   const profile = await getUserProfile(userId);  // 自动限制为当前用户
   
@@ -203,7 +203,7 @@ export async function updateUserProfileAction(updates) {
     };
   }
   
-  // ✅ 只能更新自己的资料
+  // 只能更新自己的资料
   const userId = session.user.id;
   const result = await updateUserProfile(userId, updates);
   
@@ -250,14 +250,14 @@ async function handleUpdateProfile(updates) {
 1. 检查后台访问权限
    └─ checkBackendAccessAction()
       ├─ 未登录？ → ❌ 返回 "Unauthorized"
-      ├─ admin 角色？ → ✅ 跳到步骤 3
+      ├─ admin 角色？ → 跳到步骤 3
       └─ user + isBackendAllowed？
-         ├─ 是 → ✅ 继续步骤 2
+         ├─ 是 → 继续步骤 2
          └─ 否 → ❌ 返回 "Forbidden: Backend access not allowed"
          ↓
 2. RBAC 权限检查（仅 user 角色）
    └─ checkUserHasActionPermission(userId, permissionId)
-      ├─ 匹配权限？ → ✅ 继续步骤 3
+      ├─ 匹配权限？ → 继续步骤 3
       └─ 无权限？ → ❌ 返回 "Forbidden: Action not allowed"
          ↓
 3. 执行业务逻辑
@@ -278,7 +278,7 @@ async function handleUpdateProfile(updates) {
 1. 检查登录状态
    └─ auth.api.getSession()
       ├─ 未登录？ → ❌ 返回 "Unauthorized"
-      └─ 已登录？ → ✅ 继续步骤 2
+      └─ 已登录？ → 继续步骤 2
          ↓
 2. 执行业务逻辑（限制为当前用户）
    └─ handler(session.user.id, ...)
@@ -289,8 +289,8 @@ async function handleUpdateProfile(updates) {
 **关键差异**：
 - ❌ Client Actions **不做** RBAC 检查
 - ❌ Client Actions **不做** 后台访问权限检查
-- ✅ Client Actions **只做** 基本登录验证
-- ✅ Client Actions **自动限制** 为当前用户数据
+- Client Actions **只做** 基本登录验证
+- Client Actions **自动限制** 为当前用户数据
 
 ---
 
@@ -299,30 +299,30 @@ async function handleUpdateProfile(updates) {
 ### Backend Admin Actions 适用场景
 
 ```
-✅ 用户管理
+用户管理
    ├─ 查看所有用户列表
    ├─ 编辑任意用户资料
    ├─ 重置任意用户密码
    ├─ 禁用/启用用户账号
    └─ 分配角色和权限
 
-✅ 角色权限管理
+角色权限管理
    ├─ 创建/编辑角色
    ├─ 分配权限给角色
    └─ 管理菜单
 
-✅ 内容审核
+内容审核
    ├─ 审核用户生成的内容
    ├─ 删除违规内容
    └─ 封禁用户
 
-✅ 财务管理
+财务管理
    ├─ 查看所有订单
    ├─ 手动充值积分
    ├─ 退款处理
    └─ 财务报表
 
-✅ 系统配置
+系统配置
    ├─ 系统参数设置
    ├─ 查看操作日志
    └─ 数据备份
@@ -331,26 +331,26 @@ async function handleUpdateProfile(updates) {
 ### Client (Frontend) Actions 适用场景
 
 ```
-✅ 个人资料
+个人资料
    ├─ 查看自己的资料
    ├─ 更新自己的头像、昵称
    └─ 修改自己的密码
 
-✅ 积分操作
+积分操作
    ├─ 查看自己的积分余额
    ├─ 购买积分套餐
    └─ 查看自己的积分消费记录
 
-✅ 内容生成
+内容生成
    ├─ 生成图片
    ├─ 查看自己的生成历史
    └─ 下载自己生成的内容
 
-✅ 订单管理
+订单管理
    ├─ 查看自己的订单
    └─ 申请退款（自己的订单）
 
-✅ 使用统计
+使用统计
    ├─ 查看自己的使用量
    └─ 查看自己的统计数据
 ```
@@ -372,32 +372,32 @@ Q1: 这个功能是给谁用的？
      ↓
 Q2: 管理员功能
   ├─ 需要操作其他用户的数据？
-  │  └─ 是 → ✅ Backend Admin Action + RBAC
+  │  └─ 是 → Backend Admin Action + RBAC
   ├─ 需要细粒度权限控制？
-  │  └─ 是 → ✅ Backend Admin Action + RBAC
+  │  └─ 是 → Backend Admin Action + RBAC
   └─ 是高危操作（删除、禁用等）？
-     └─ 是 → ✅ Backend Admin Action + RBAC
+     └─ 是 → Backend Admin Action + RBAC
      ↓
 Q3: 普通用户功能
   ├─ 只操作自己的数据？
-  │  └─ 是 → ✅ Client Action
+  │  └─ 是 → Client Action
   ├─ 不需要权限控制（登录即可）？
-  │  └─ 是 → ✅ Client Action
+  │  └─ 是 → Client Action
   └─ 是日常使用功能？
-     └─ 是 → ✅ Client Action
+     └─ 是 → Client Action
 ```
 
 ### 快速判断表
 
 | 特征 | Backend Admin | Client (Frontend) |
 |------|--------------|-------------------|
-| 操作对象是"任意用户" | ✅ | ❌ |
-| 操作对象是"当前用户自己" | ❌ | ✅ |
-| 需要 RBAC 权限 | ✅ | ❌ |
-| 登录即可使用 | ❌ | ✅ |
-| 需要记录操作日志 | ✅ | ❌ |
-| 在 `/admin/*` 页面调用 | ✅ | ❌ |
-| 在 `/[locale]/*` 页面调用 | ❌ | ✅ |
+| 操作对象是"任意用户" | | ❌ |
+| 操作对象是"当前用户自己" | ❌ | |
+| 需要 RBAC 权限 | | ❌ |
+| 登录即可使用 | ❌ | |
+| 需要记录操作日志 | | ❌ |
+| 在 `/admin/*` 页面调用 | | ❌ |
+| 在 `/[locale]/*` 页面调用 | ❌ | |
 
 ---
 
@@ -413,7 +413,7 @@ Q3: 普通用户功能
 
 /**
  * 用户修改自己的密码
- * ✅ Client Action - 不需要 RBAC
+ * Client Action - 不需要 RBAC
  */
 export async function changeMyPasswordAction(oldPassword, newPassword) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -445,7 +445,7 @@ import { wrapAdminAction } from '@/lib/core/action-wrapper';
 
 /**
  * 管理员重置用户密码
- * ✅ Backend Admin Action - 需要 RBAC
+ * Backend Admin Action - 需要 RBAC
  */
 export const resetUserPasswordAction = wrapAdminAction(
   'set_password',
@@ -472,10 +472,10 @@ export const resetUserPasswordAction = wrapAdminAction(
 | 维度 | changeMyPasswordAction | resetUserPasswordAction |
 |------|------------------------|-------------------------|
 | 位置 | `app/(client)/actions/` | `app/(admin)/actions/` |
-| 需要旧密码 | ✅ 是 | ❌ 否（管理员操作） |
+| 需要旧密码 | 是 | ❌ 否（管理员操作） |
 | 操作范围 | 只能改自己的 | 可以改任何用户的 |
-| RBAC 权限 | ❌ 不需要 | ✅ 需要 |
-| 日志记录 | ❌ 不记录 | ✅ 记录 |
+| RBAC 权限 | ❌ 不需要 | 需要 |
+| 日志记录 | ❌ 不记录 | 记录 |
 
 ---
 
@@ -492,9 +492,9 @@ export async function getUserProfileAction() {
 ```
 
 **正确理解**：
-- ✅ **所有 Actions 都在服务器端执行**
-- ✅ "Client Actions" 指的是**给前台客户端用户使用**的 Actions
-- ✅ 它们仍然是 Server Actions，只是目标用户不同
+- **所有 Actions 都在服务器端执行**
+- "Client Actions" 指的是**给前台客户端用户使用**的 Actions
+- 它们仍然是 Server Actions，只是目标用户不同
 
 ### ❌ 误区 2: "Backend Admin Actions 只能 admin 角色用"
 
@@ -504,9 +504,9 @@ export async function getUserProfileAction() {
 ```
 
 **正确理解**：
-- ✅ `admin` 角色：自动拥有所有权限
-- ✅ `user` 角色 + `isBackendAllowed = true`：可以访问后台，但受 RBAC 限制
-- ✅ `user` 角色 + `isBackendAllowed = false`：完全无法访问后台
+- `admin` 角色：自动拥有所有权限
+- `user` 角色 + `isBackendAllowed = true`：可以访问后台，但受 RBAC 限制
+- `user` 角色 + `isBackendAllowed = false`：完全无法访问后台
 
 ### ❌ 误区 3: "所有后台功能都要用 RBAC"
 
@@ -516,9 +516,9 @@ export async function getUserProfileAction() {
 ```
 
 **正确理解**：
-- ✅ 有些 Actions 可以设置 `skipPermission: true`（如获取菜单列表）
-- ✅ 有些 Actions 可以设置 `requireAdmin: true`（只允许 admin，不做 RBAC）
-- ✅ RBAC 是可选的，根据业务需求决定
+- 有些 Actions 可以设置 `skipPermission: true`（如获取菜单列表）
+- 有些 Actions 可以设置 `requireAdmin: true`（只允许 admin，不做 RBAC）
+- RBAC 是可选的，根据业务需求决定
 
 ---
 

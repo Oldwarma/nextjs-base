@@ -20,8 +20,8 @@ import { authClient } from '@/lib/auth/auth-client';
  * 管理后台布局组件 - 使用 Pro Components
  */
 export default function AdminLayout({ children, user }) {
-	const { message } = App.useApp(); // ✅ 使用 App context 提供的 message API
-	const currentPathname = usePathname(); // ✅ 直接使用 usePathname hook
+	const { message } = App.useApp(); // 使用 App context 提供的 message API
+	const currentPathname = usePathname(); // 直接使用 usePathname hook
 	const [collapsed, setCollapsed] = useState(false);
 	const [menuData, setMenuData] = useState([]);
 	const [menuLoading, setMenuLoading] = useState(true);
@@ -110,19 +110,19 @@ export default function AdminLayout({ children, user }) {
 		const IconComponent = menu.icon && Icons[menu.icon] ? Icons[menu.icon] : null;
 
 		// 使用 url 字段作为跳转路径
-		const menuPath = menu.url || `/admin/${menu.id}`; // ✅ 使用 id（UUID）
+		const menuPath = menu.url || `/admin/${menu.id}`; // 使用 id（UUID）
 
 		const route = {
 			path: menuPath,
 			name: menu.name,
-			key: menu.id, // ✅ 使用 id（UUID）作为唯一标识
+			key: menu.id, // 使用 id（UUID）作为唯一标识
 			icon: IconComponent ? <IconComponent /> : null,
 		};
 
 		// 递归处理子菜单
 		if (menu.children && menu.children.length > 0) {
 			route.routes = menu.children
-				.filter((child) => child.enable && !child.hidden) // ✅ 使用 enable（不是 enabled）
+				.filter((child) => child.enable && !child.hidden) // 使用 enable（不是 enabled）
 				.map(convertMenuToRoute);
 		}
 
@@ -139,7 +139,7 @@ export default function AdminLayout({ children, user }) {
 		}
 
 		const routes = menuData
-			.filter((menu) => menu.enable && !menu.hidden) // ✅ 使用 enable（不是 enabled）
+			.filter((menu) => menu.enable && !menu.hidden) // 使用 enable（不是 enabled）
 			.map(convertMenuToRoute);
 
 		return {
@@ -177,7 +177,7 @@ export default function AdminLayout({ children, user }) {
 	// 根据当前路径从菜单数据中查找菜单名称
 	const findMenuByPath = useCallback((menus, path) => {
 		for (const menu of menus) {
-			const menuPath = menu.url || `/admin/${menu.id}`; // ✅ 使用 id（UUID）
+			const menuPath = menu.url || `/admin/${menu.id}`; // 使用 id（UUID）
 			if (menuPath === path) {
 				return menu;
 			}

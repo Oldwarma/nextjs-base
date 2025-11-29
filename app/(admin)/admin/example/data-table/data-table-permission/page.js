@@ -57,7 +57,7 @@ const subCategoryMap = {
 const statusOptions = [
 	{ label: '📝 Draft', value: 'draft', color: 'default' },
 	{ label: '⏳ Pending', value: 'pending', color: 'processing' },
-	{ label: '✅ Published', value: 'published', color: 'success' },
+	{ label: 'Published', value: 'published', color: 'success' },
 	{ label: '📦 Archived', value: 'archived', color: 'warning' },
 ];
 

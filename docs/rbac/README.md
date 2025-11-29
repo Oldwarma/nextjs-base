@@ -113,8 +113,8 @@
 
 **只需要 2 个字段！**
 
-- ✅ `actions` - 所有 Server Actions（不区分前后台）
-- ✅ `apis` - API Routes
+- `actions` - 所有 Server Actions（不区分前后台）
+- `apis` - API Routes
 
 ### 设计原则
 
@@ -130,19 +130,19 @@
 ### 为什么不区分 client_actions？
 
 - ❌ **不需要** `client_actions` 字段
-- ✅ Backend Admin Actions 和 Client Actions 统一使用 `actions`
+- Backend Admin Actions 和 Client Actions 统一使用 `actions`
 - 理由：它们都是 Server Actions（函数名匹配），本质相同
 
 ### 为什么不需要 resources？
 
 - ❌ **不需要** `resources` 字段
-- ✅ `actions` 已经能表达"对资源的操作"
+- `actions` 已经能表达"对资源的操作"
 - 理由：功能重叠，YAGNI 原则
 
 ### 为什么 apis 不叫 api_routes？
 
 - ❌ `api_routes` 太长，拗口
-- ✅ `apis` 简洁，与 `actions` 命名风格一致
+- `apis` 简洁，与 `actions` 命名风格一致
 
 ---
 
@@ -167,10 +167,10 @@
 
 **重大更新**：简化权限字段设计
 
-- ✅ 移除 `client_actions` 字段（与 `actions` 合并）
-- ✅ 移除 `resources` 字段（YAGNI 原则）
-- ✅ 改名 `api_routes` → `apis`（更简洁）
-- ✅ 最终定案：只需要 2 个字段（`actions` 和 `apis`）
+- 移除 `client_actions` 字段（与 `actions` 合并）
+- 移除 `resources` 字段（YAGNI 原则）
+- 改名 `api_routes` → `apis`（更简洁）
+- 最终定案：只需要 2 个字段（`actions` 和 `apis`）
 
 **新增文档**：
 - [权限系统最终设计总结](./PERMISSION_SYSTEM_FINAL_DESIGN.md)

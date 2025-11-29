@@ -1,6 +1,6 @@
 # SmartForm 与 VK-UniCloud 对比指南
 
-本文档展示如何用我们的组件实现 vk-unicloud 风格的页面。
+本文档展示如何用我们的组件实现页面。
 
 ## 方式一：使用 SmartCrudPage（推荐，最简洁）
 
@@ -78,9 +78,9 @@ export default function MyPage() {
 
 ---
 
-## 方式二：分离表格和表单（VK 风格，更灵活）
+## 方式二：分离表格和表单
 
-如果你需要像 VK 那样分开控制表格和表单，可以这样做：
+如果你需要分开控制表格和表单，可以这样做：
 
 ```jsx
 'use client';
@@ -100,7 +100,7 @@ export default function MyPage() {
   const { message } = App.useApp();
   
   // ============================================
-  // 状态管理（类似 VK 的 form1.props）
+  // 状态管理
   // ============================================
   const [formVisible, setFormVisible] = useState(false);
   const [formType, setFormType] = useState('add'); // 'add' | 'update'
@@ -108,7 +108,7 @@ export default function MyPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // ============================================
-  // 表格字段配置（类似 VK 的 table1.columns）
+  // 表格字段配置
   // ============================================
   const tableFieldsConfig = useMemo(() => [
     { key: '_id', title: 'ID', type: 'text', table: { width: 220 } },
@@ -118,7 +118,7 @@ export default function MyPage() {
   ], []);
 
   // ============================================
-  // 表单字段配置（类似 VK 的 form1.props.columns）
+  // 表单字段配置
   // ============================================
   const formFieldsConfig = useMemo(() => [
     { 
@@ -136,7 +136,7 @@ export default function MyPage() {
   ], []);
 
   // ============================================
-  // 搜索字段配置（类似 VK 的 queryForm1.columns）
+  // 搜索字段配置
   // ============================================
   const searchFieldsConfig = useMemo(() => [
     { 
@@ -173,7 +173,7 @@ export default function MyPage() {
   }, [tableFieldsConfig, searchFieldsConfig]);
 
   // ============================================
-  // 按钮事件（类似 VK 的 addBtn, updateBtn）
+  // 按钮事件
   // ============================================
   
   // 添加按钮
@@ -254,7 +254,7 @@ export default function MyPage() {
         refreshTrigger={refreshTrigger}
       />
 
-      {/* 独立的表单弹窗（类似 VK 的 vk-data-dialog + vk-data-form） */}
+      {/* 独立的表单弹窗 */}
       <SmartModalForm
         title={formType === 'add' ? '添加' : '编辑'}
         open={formVisible}
@@ -271,7 +271,7 @@ export default function MyPage() {
 ```
 
 **这种方式的优点：**
-- 表格和表单配置完全分离（像 VK 一样）
+- 表格和表单配置完全分离
 - 可以完全控制弹窗的显示/隐藏
 - 可以自定义表单的标题、宽度等
 - 更灵活，适合复杂场景

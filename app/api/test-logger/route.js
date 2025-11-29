@@ -168,7 +168,7 @@ export async function GET(request) {
 			duration: 178,
 		});
 
-		console.log('\n✅ 测试完成！\n');
+		console.log('\n测试完成！\n');
 		
 		// 恢复原始环境变量
 		process.env.ACTION_LOG_MODE = originalMode;

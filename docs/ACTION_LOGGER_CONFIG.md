@@ -3,13 +3,13 @@
 ## 📋 概述
 
 action-logger 是一个强大的 Server Action 日志系统，支持：
-- ✅ 自动记录所有 CRUD 操作
-- ✅ 灵活的输出模式（full/summary/simple）
-- ✅ 可配置的展开深度（1-5 或完全展开）
-- ✅ 可选的数据库存储（开/关）
-- ✅ **智能日志清理**（最大记录数限制）
-- ✅ **类型过滤**（只记录指定类型的操作）
-- ✅ 开发环境控制台输出 + 生产环境数据库存储
+- 自动记录所有 CRUD 操作
+- 灵活的输出模式（full/summary/simple）
+- 可配置的展开深度（1-5 或完全展开）
+- 可选的数据库存储（开/关）
+- **智能日志清理**（最大记录数限制）
+- **类型过滤**（只记录指定类型的操作）
+- 开发环境控制台输出 + 生产环境数据库存储
 
 ---
 
@@ -216,17 +216,17 @@ ACTION_LOG_TYPE=all           # all | create,delete | create,read,update,delete 
 
 ### `ACTION_LOG_DATABASE=1`（默认）
 
-- ✅ 控制台输出（开发环境）
-- ✅ 写入 `action_logs` 集合（异步，不阻塞主流程）
-- ✅ 记录完整的请求参数和返回结果
-- ✅ 可用于后续审计、统计、分析
+- 控制台输出（开发环境）
+- 写入 `action_logs` 集合（异步，不阻塞主流程）
+- 记录完整的请求参数和返回结果
+- 可用于后续审计、统计、分析
 
 ### `ACTION_LOG_DATABASE=0`
 
-- ✅ 只输出到控制台
-- ✅ 不写入数据库
-- ✅ 适用于本地开发调试
-- ✅ 减少数据库压力
+- 只输出到控制台
+- 不写入数据库
+- 适用于本地开发调试
+- 减少数据库压力
 
 **使用场景**：
 - 开发环境调试：`ACTION_LOG_DATABASE=0`（不入库，控制台看就够了）
@@ -288,8 +288,8 @@ ACTION_LOG_MAX=
 
 **只控制数据库写入**，不影响控制台输出。
 
-- ✅ 控制台日志（开发环境）：始终输出所有操作
-- ✅ 数据库日志：根据 TYPE 配置过滤
+- 控制台日志（开发环境）：始终输出所有操作
+- 数据库日志：根据 TYPE 配置过滤
 
 这样设计的好处：
 - 开发时可以看到所有操作，方便调试
@@ -328,9 +328,9 @@ ACTION_LOG_TYPE=create,delete
 ```
 
 **效果**：
-- 控制台：✅ 输出所有操作（不受影响）
+- 控制台：输出所有操作（不受影响）
 - 数据库：
-  - ✅ 记录：`create`, `delete`, `batchDelete`
+  - 记录：`create`, `delete`, `batchDelete`
   - ❌ 不记录：`query`, `getList`, `getDetail`, `update`, `batchUpdate`
 
 **使用场景**：审计重要操作，数据库不存储查询和更新日志
@@ -344,9 +344,9 @@ ACTION_LOG_TYPE=create,update,delete
 ```
 
 **效果**：
-- 控制台：✅ 输出所有操作（不受影响）
+- 控制台：输出所有操作（不受影响）
 - 数据库：
-  - ✅ 记录：`create`, `update`, `batchUpdate`, `delete`, `batchDelete`
+  - 记录：`create`, `update`, `batchUpdate`, `delete`, `batchDelete`
   - ❌ 不记录：`query`, `getList`, `getDetail`
 
 **使用场景**：数据变更审计，数据库不存储查询日志
@@ -360,9 +360,9 @@ ACTION_LOG_TYPE=read
 ```
 
 **效果**：
-- 控制台：✅ 输出所有操作（不受影响）
+- 控制台：输出所有操作（不受影响）
 - 数据库：
-  - ✅ 记录：`query`, `getList`, `getDetail`
+  - 记录：`query`, `getList`, `getDetail`
   - ❌ 不记录：`create`, `update`, `delete` 等
 
 **使用场景**：分析查询性能，监控数据访问
@@ -376,7 +376,7 @@ ACTION_LOG_TYPE=
 ```
 
 **效果**：
-- 控制台：✅ 仍然输出（不受影响）
+- 控制台：仍然输出（不受影响）
 - 数据库：❌ 不记录任何操作
 
 **使用场景**：只需要控制台日志，不需要持久化存储
@@ -443,7 +443,7 @@ const crudActions = createCrudActions({
   // ... config
 });
 
-// ✅ 以下方法会自动记录日志
+// 以下方法会自动记录日志
 export const getUserList = crudActions.getList;
 export const createUser = crudActions.create;
 export const updateUser = crudActions.update;
@@ -460,7 +460,7 @@ const crudActions = createCrudActions({
   // ... config
 });
 
-// ✅ 自动记录日志
+// 自动记录日志
 export const getProductList = crudActions.getList;
 ```
 
@@ -473,7 +473,7 @@ export const myAction = wrapAdminAction('create', 'user', async (params, context
   // 业务逻辑
   return { success: true };
 });
-// ✅ 自动验证权限 + 自动记录日志
+// 自动验证权限 + 自动记录日志
 ```
 
 ---

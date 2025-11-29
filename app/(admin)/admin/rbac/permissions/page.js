@@ -7,7 +7,7 @@ import * as actions from '@/app/(admin)/actions/rbac/crud-action.permission';
  * Permission Management Page
  */
 export default function PermissionsManagementPage() {
-	// ✅ fieldsConfig 直接在 page 中定义（客户端安全）
+	// fieldsConfig 直接在 page 中定义（客户端安全）
 	const fieldsConfig = [
 		{
 			key: 'id',
@@ -47,7 +47,7 @@ export default function PermissionsManagementPage() {
 			key: 'parent_id',
 			title: 'Parent Permission',
 			type: 'tree-select',
-			table: false,  // ✅ 不在表格中显示
+			table: false,  // 不在表格中显示
 			form: {
 				required: false,
 				placeholder: 'Select parent permission (leave empty for root)',
@@ -56,7 +56,7 @@ export default function PermissionsManagementPage() {
 					allowClear: true,
 					showSearch: true,
 					treeNodeFilterProp: 'title',
-					// ✅ 移除 dropdownStyle/popupStyle，避免 React 警告
+					// 移除 dropdownStyle/popupStyle，避免 React 警告
 					// TreeSelect 会自动处理下拉菜单样式
 				},
 			},
@@ -319,7 +319,7 @@ export default function PermissionsManagementPage() {
 				create: actions.createPermissionAction,
 				update: actions.updatePermissionAction,
 				delete: actions.deletePermissionAction,
-				// ✅ tree-select 字段通过 action 名称自动调用
+				// tree-select 字段通过 action 名称自动调用
 				getPermissionTreeForSelectAction: actions.getPermissionTreeForSelectAction,
 			}}
 			enableCreate={true}
@@ -327,7 +327,7 @@ export default function PermissionsManagementPage() {
 			enableDelete={true}
 			enableDetail={true}
 			enableIndexColumn={false}
-			// ✅ 树形表格配置（当 getList 返回树形数据时自动启用）
+			// 树形表格配置（当 getList 返回树形数据时自动启用）
 			expandable={{
 				defaultExpandAllRows: false,
 				indentSize: 24,

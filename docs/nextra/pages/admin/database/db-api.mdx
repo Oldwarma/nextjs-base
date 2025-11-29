@@ -2,7 +2,7 @@
 
 > 统一的数据库操作接口,简洁高效
 
-**DB API** 是一个统一的数据库操作接口层,参考 VK Framework 设计理念,提供简洁、一致的 API,减少重复代码。
+**DB API** 是一个统一的数据库操作接口层,提供简洁、一致的 API,减少重复代码。
 
 ---
 
@@ -583,12 +583,12 @@ export async function getDashboardStatsAction() {
 
 ---
 
-## ✅ 最佳实践
+## 最佳实践
 
 ### 1. 错误处理
 
 ```javascript
-// ✅ 始终使用 try-catch
+// 始终使用 try-catch
 export async function myAction() {
   try {
     const result = await getOne({
@@ -606,7 +606,7 @@ export async function myAction() {
 ### 2. 参数验证
 
 ```javascript
-// ✅ 在调用前验证参数
+// 在调用前验证参数
 export async function getUserAction(userId) {
   if (!userId || typeof userId !== 'string') {
     return { success: false, error: 'Invalid user ID' };
@@ -619,13 +619,13 @@ export async function getUserAction(userId) {
 ### 3. 查询优化
 
 ```javascript
-// ✅ 使用索引字段查询
+// 使用索引字段查询
 const user = await getOne({
   dbName: 'users',
   whereJson: { email: 'john@example.com' }, // email 有索引
 });
 
-// ✅ 限制返回字段
+// 限制返回字段
 const users = await getList({
   dbName: 'users',
   fieldJson: { name: 1, email: 1 }, // 只返回需要的字段
@@ -635,7 +635,7 @@ const users = await getList({
 ### 4. 批量操作
 
 ```javascript
-// ✅ 使用批量操作而非循环
+// 使用批量操作而非循环
 await updateMany({
   dbName: 'users',
   whereJson: { _id: { $in: userIds } },
@@ -651,7 +651,7 @@ for (const userId of userIds) {
 ### 5. 利用自动时间戳
 
 ```javascript
-// ✅ 自动添加 createdAt 和 updatedAt
+// 自动添加 createdAt 和 updatedAt
 const userId = await add({
   dbName: 'users',
   dataJson: { name: 'John' },
@@ -680,11 +680,11 @@ const configId = await add({
 
 DB API 的核心优势:
 
-- ✅ 统一的接口命名
-- ✅ 自动时间戳管理
-- ✅ ObjectId 自动转换
-- ✅ 完全兼容 MongoDB
-- ✅ 丰富的统计方法
+- 统一的接口命名
+- 自动时间戳管理
+- ObjectId 自动转换
+- 完全兼容 MongoDB
+- 丰富的统计方法
 
 **使用建议**:
 

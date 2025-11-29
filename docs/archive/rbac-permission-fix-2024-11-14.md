@@ -49,14 +49,14 @@ export async function bindUserRolesAction(userId, roleIds, reset = false) {
 }
 ```
 
-## ✅ 修复方案
+## 修复方案
 
 使用 `wrapAdminAction` 包装所有写入操作，并添加正确的 `permissionId`：
 
 ### 修复后的代码
 
 ```javascript
-// ✅ 正确的实现
+// 正确的实现
 export const bindUserRolesAction = wrapAdminAction(
     'update',
     'user_roles',
@@ -74,8 +74,8 @@ export const bindUserRolesAction = wrapAdminAction(
         };
     },
     {
-        permissionId: 'crud:user:update', // ✅ RBAC 权限检查
-        skipLog: false, // ✅ 自动记录日志
+        permissionId: 'crud:user:update', // RBAC 权限检查
+        skipLog: false, // 自动记录日志
     }
 );
 ```
@@ -140,17 +140,17 @@ export const unbanUserAction = wrapAdminAction(
 
 | 用户类型 | 拥有权限 | 能否执行 bindUserRolesAction | 原因 |
 |---------|---------|---------------------------|------|
-| Admin | admin | ✅ 可以 | 通过后台访问权限检查 |
-| User (only read) | crud:read:all | ✅ **可以**（Bug!） | 通过后台访问权限检查，无 RBAC 阻止 |
-| User (with update) | crud:user:update | ✅ 可以 | 通过后台访问权限检查 |
+| Admin | admin | 可以 | 通过后台访问权限检查 |
+| User (only read) | crud:read:all | **可以**（Bug!） | 通过后台访问权限检查，无 RBAC 阻止 |
+| User (with update) | crud:user:update | 可以 | 通过后台访问权限检查 |
 
 ### 修复后
 
 | 用户类型 | 拥有权限 | 能否执行 bindUserRolesAction | 原因 |
 |---------|---------|---------------------------|------|
-| Admin | admin | ✅ 可以 | 自动绕过 RBAC |
+| Admin | admin | 可以 | 自动绕过 RBAC |
 | User (only read) | crud:read:all | ❌ **不可以** | 缺少 `crud:user:update` 权限 |
-| User (with update) | crud:user:update | ✅ 可以 | 拥有所需权限 |
+| User (with update) | crud:user:update | 可以 | 拥有所需权限 |
 
 ## 📊 权限检查流程
 
@@ -160,8 +160,8 @@ export const unbanUserAction = wrapAdminAction(
 bindUserRolesAction 调用
     ↓
 checkBackendAccess()
-    ├─ Admin → ✅ 通过
-    ├─ User + isBackendAllowed → ✅ 通过（Bug！）
+    ├─ Admin → 通过
+    ├─ User + isBackendAllowed → 通过（Bug！）
     └─ User + !isBackendAllowed → ❌ 拒绝
     ↓
 直接执行操作（没有 RBAC 检查！）
@@ -175,11 +175,11 @@ bindUserRolesAction 调用
 wrapAdminAction (permissionId: 'crud:user:update')
     ↓
 checkBackendAccessAction()
-    ├─ Admin → ✅ 自动绕过 RBAC，直接执行
+    ├─ Admin → 自动绕过 RBAC，直接执行
     └─ User + isBackendAllowed → 继续 RBAC 检查
          ↓
 checkUserHasPermission('crud:user:update')
-    ├─ 有权限 → ✅ 执行操作 + 记录日志
+    ├─ 有权限 → 执行操作 + 记录日志
     └─ 无权限 → ❌ 返回错误 + 记录失败日志
 ```
 
@@ -225,7 +225,7 @@ checkUserHasPermission('crud:user:update')
 
 ### 1. 所有写入操作必须使用 wrapAdminAction
 
-✅ **推荐做法**:
+**推荐做法**:
 ```javascript
 export const myAction = wrapAdminAction('create', 'resource', handler, {
     permissionId: 'resource:create',
@@ -261,10 +261,10 @@ export async function myAction() {
 
 | 操作 | 预期结果 | 实际结果 |
 |------|---------|---------|
-| 查看用户列表 | ✅ 成功 | ✅ 成功 |
-| 绑定用户角色 | ❌ 403 | ✅ **修复后：403** |
-| 重置密码 | ❌ 403 | ✅ **修复后：403** |
-| 封禁用户 | ❌ 403 | ✅ **修复后：403** |
+| 查看用户列表 | 成功 | 成功 |
+| 绑定用户角色 | ❌ 403 | **修复后：403** |
+| 重置密码 | ❌ 403 | **修复后：403** |
+| 封禁用户 | ❌ 403 | **修复后：403** |
 
 ### 测试用例 2: 有更新权限的用户
 
@@ -273,7 +273,7 @@ export async function myAction() {
 | 操作 | 预期结果 | 实际结果 |
 |------|---------|---------|
 | 查看用户列表 | ❌ 403 | ❌ 403 |
-| 绑定用户角色 | ✅ 成功 | ✅ 成功 |
+| 绑定用户角色 | 成功 | 成功 |
 | 重置密码 | ❌ 403 | ❌ 403（需要额外权限） |
 
 ### 测试用例 3: Admin 用户
@@ -282,7 +282,7 @@ export async function myAction() {
 
 | 操作 | 预期结果 | 实际结果 |
 |------|---------|---------|
-| 所有操作 | ✅ 成功 | ✅ 成功 |
+| 所有操作 | 成功 | 成功 |
 
 ## 📚 相关文档
 
@@ -304,5 +304,5 @@ export async function myAction() {
 **修复日期**: 2024-11-14  
 **影响范围**: User Actions (绑定角色、重置密码、封禁、解封)  
 **严重程度**: 🔴 高危 - 权限绕过漏洞  
-**修复状态**: ✅ 已修复
+**修复状态**: 已修复
 

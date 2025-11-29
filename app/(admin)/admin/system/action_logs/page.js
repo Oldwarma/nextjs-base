@@ -36,7 +36,7 @@ export default function ActionLogsPage() {
 			table: {
 				width: 150,
 				render: (userInfo, record) => {
-					// ✅ 因为 limit: 1，selects 会将数组转为单个对象
+					// 因为 limit: 1，selects 会将数组转为单个对象
 					// 所以 userInfo 可能是对象（转换后）或数组（转换前）
 					let user = null;
 					if (Array.isArray(userInfo) && userInfo.length > 0) {
@@ -61,7 +61,7 @@ export default function ActionLogsPage() {
 			detail: {
 				show: true,
 				render: (value, record) => {
-					// ✅ 关键：value 参数就是 userInfo 字段的值
+					// 关键：value 参数就是 userInfo 字段的值
 					// 兼容处理：userInfo 可能是对象、数组或 null
 					let user = null;
 
@@ -288,7 +288,7 @@ export default function ActionLogsPage() {
 			fieldsConfig={fieldsConfig}
 			actions={{
 				getList,
-				// ✅ 不提供 getDetail，直接使用表格数据（已包含连表的 userInfo）
+				// 不提供 getDetail，直接使用表格数据（已包含连表的 userInfo）
 			}}
 			tableOptions={{
 				scroll: { x: 1200 },

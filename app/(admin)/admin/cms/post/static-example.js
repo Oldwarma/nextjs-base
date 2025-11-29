@@ -106,7 +106,7 @@ export default function StaticDataExample() {
 			// 表格配置
 			tableProps={{
 				pagination: {
-					defaultPageSize: 10000, // ✅ 修复：使用合理的分页大小
+					defaultPageSize: 10000, // 修复：使用合理的分页大小
 					showSizeChanger: true,
 					pageSizeOptions: [10, 20, 50, 100, 200], // 最大建议不超过 200
 				},

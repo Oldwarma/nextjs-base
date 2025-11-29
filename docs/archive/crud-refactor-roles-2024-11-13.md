@@ -61,10 +61,10 @@ app/(admin)/actions/rbac/
 ```
 
 **优点：**
-- ✅ 两个文件，结构清晰
-- ✅ 配置和 Actions 统一在一个文件
-- ✅ 与 Permissions 页面结构一致
-- ✅ 符合 CRUD 标准模板
+- 两个文件，结构清晰
+- 配置和 Actions 统一在一个文件
+- 与 Permissions 页面结构一致
+- 符合 CRUD 标准模板
 
 ---
 
@@ -82,7 +82,7 @@ import { wrapQueryAction, wrapAdminAction } from '@/lib/core/action-wrapper';
 
 /**
  * Role CRUD 配置
- * ✅ 所有服务端配置集中在这里
+ * 所有服务端配置集中在这里
  */
 const roleConfig = {
   collectionName: 'roles',
@@ -236,7 +236,7 @@ app/(admin)/actions/rbac/admin-roles.js
 
 ---
 
-## ✅ 功能保留检查清单
+## 功能保留检查清单
 
 ### 标准 CRUD 操作
 
@@ -311,14 +311,14 @@ app/(admin)/actions/rbac/admin-roles.js
 ### 操作按钮
 
 **标准操作：**
-- ✅ View (Detail)
-- ✅ Edit
-- ✅ Delete
+- View (Detail)
+- Edit
+- Delete
 
 **自定义操作：**
-- ✅ Assign Permissions（在 More 菜单中）
-- ✅ Assign Menus（在 More 菜单中）
-- ✅ admin 角色不显示这两个操作
+- Assign Permissions（在 More 菜单中）
+- Assign Menus（在 More 菜单中）
+- admin 角色不显示这两个操作
 
 ### Modal 弹窗
 
@@ -430,8 +430,8 @@ const result = await roleActions.getRoleDetailAction(record.id);
 
 | 页面 | page.js | actions.js | 配置文件 |
 |------|---------|-----------|---------|
-| **Permissions** | ✅ 311 行 | ✅ crud-action.permission.js (361 行) | ❌ 无 |
-| **Roles** | ✅ 454 行 | ✅ crud-action.role.js (335 行) | ❌ 无 |
+| **Permissions** | 311 行 | crud-action.permission.js (361 行) | ❌ 无 |
+| **Roles** | 454 行 | crud-action.role.js (335 行) | ❌ 无 |
 
 ### Actions 命名
 
@@ -552,19 +552,19 @@ const config = {
 
 ### 重构成果
 
-- ✅ 简化了文件结构（3 个文件 → 2 个文件）
-- ✅ 减少了代码行数（841 行 → 789 行）
-- ✅ 提高了代码可维护性
-- ✅ 与 Permissions 页面保持一致
-- ✅ 符合 CRUD 标准模板
+- 简化了文件结构（3 个文件 → 2 个文件）
+- 减少了代码行数（841 行 → 789 行）
+- 提高了代码可维护性
+- 与 Permissions 页面保持一致
+- 符合 CRUD 标准模板
 
 ### 关键特性保留
 
-- ✅ 所有标准 CRUD 操作
-- ✅ 所有自定义操作（分配权限/菜单）
-- ✅ 所有生命周期钩子
-- ✅ 所有数据验证和转换
-- ✅ 连表查询功能
+- 所有标准 CRUD 操作
+- 所有自定义操作（分配权限/菜单）
+- 所有生命周期钩子
+- 所有数据验证和转换
+- 连表查询功能
 
 ---
 

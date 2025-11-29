@@ -486,7 +486,7 @@ import type { CreateUserModalProps } from '@/components/admin/modals/create-user
 
 ### 2024-11-13
 - ✨ 初始版本
-- ✅ TreeSelectorModal（树形选择器）
-- ✅ ResetPasswordModal（重置密码）
-- ✅ CreateUserModal（创建用户）
+- TreeSelectorModal（树形选择器）
+- ResetPasswordModal（重置密码）
+- CreateUserModal（创建用户）
 

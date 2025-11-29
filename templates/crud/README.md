@@ -21,7 +21,7 @@ app/(admin)/
 ### 2. 配置驱动 + 类型驱动
 
 - **配置驱动**: 一份 `fieldsConfig` 应用于 Table、Form、Search、Detail
-- **类型驱动**: 通过 `type` 字段自动渲染组件（参考 vk-unicloud）
+- **类型驱动**: 通过 `type` 字段自动渲染组件
 
 ---
 
@@ -364,7 +364,7 @@ const customRowActions = [
 ### 1. 文件命名
 
 ```
-✅ 推荐
+推荐
 page.js
 crud-action.permission.js
 crud-action.role.js
@@ -403,7 +403,7 @@ const fieldsConfig = [
 ### 3. rowKey 配置
 
 ```javascript
-// ✅ 正确：使用字符串
+// 正确：使用字符串
 <SmartCrudPage rowKey='id' />
 
 // ❌ 错误：不要使用函数
@@ -413,7 +413,7 @@ const fieldsConfig = [
 ### 4. Actions 命名
 
 ```javascript
-// ✅ 统一命名规范
+// 统一命名规范
 export const getResourceListAction = ...;
 export const getResourceDetailAction = ...;
 export const createResourceAction = ...;
@@ -443,7 +443,7 @@ search: {
 // ❌ 错误
 rowKey={(record) => record.id}
 
-// ✅ 正确
+// 正确
 rowKey='id'
 ```
 
@@ -469,7 +469,7 @@ if (filters.name) {
 
 ```javascript
 const treeData = [
-  { title: '--- Root ---', value: '', key: '' }, // ✅ 使用空字符串
+  { title: '--- Root ---', value: '', key: '' }, // 使用空字符串
   ...otherNodes,
 ];
 ```
@@ -484,7 +484,7 @@ const treeData = [
 form: {
   placeholder: 'Select option', // ❌ 无效
   fieldProps: {
-    placeholder: 'Select option', // ✅ 有效
+    placeholder: 'Select option', // 有效
   },
 }
 ```

@@ -2,7 +2,6 @@
  * SmartModalForm - 智能模态框表单组件
  * 
  * 基于 SmartForm，封装为模态框形式
- * 类似 vk-unicloud 的 vk-data-dialog + vk-data-form 组合
  * 
  * 特性：
  * - 继承 SmartForm 所有功能

@@ -15,9 +15,9 @@
 
 ### 迁移影响
 
-- ✅ **向后兼容**：现有权限配置继续工作
-- ✅ **无需停机**：可以在线上环境直接执行
-- ✅ **零风险**：只添加字段，不修改现有数据
+- **向后兼容**：现有权限配置继续工作
+- **无需停机**：可以在线上环境直接执行
+- **零风险**：只添加字段，不修改现有数据
 
 ---
 
@@ -65,7 +65,7 @@ async function migratePermissions() {
     console.log(`   已有 apis 字段: ${totalCount - needMigrationCount}\n`);
     
     if (needMigrationCount === 0) {
-      console.log('✅ 所有权限已经包含 apis 字段，无需迁移');
+      console.log('所有权限已经包含 apis 字段，无需迁移');
       return;
     }
     
@@ -76,7 +76,7 @@ async function migratePermissions() {
       { $set: { apis: [] } }
     );
     
-    console.log(`\n✅ 迁移完成!`);
+    console.log(`\n迁移完成!`);
     console.log(`   更新文档数: ${result.modifiedCount}`);
     console.log(`   匹配文档数: ${result.matchedCount}\n`);
     
@@ -131,7 +131,7 @@ node scripts/migrate-add-apis-field.js
 
 🔄 正在添加 apis 字段...
 
-✅ 迁移完成!
+迁移完成!
    更新文档数: 15
    匹配文档数: 15
 
@@ -164,7 +164,7 @@ db.permissions.find({}, { name: 1, actions: 1, apis: 1 }).pretty()
     "**/find*Action",
     "**/query*Action"
   ],
-  "apis": []  // ✅ 新添加的字段
+  "apis": []  // 新添加的字段
 }
 ```
 
@@ -273,7 +273,7 @@ async function rollbackPermissions() {
       { $unset: { apis: "" } }
     );
     
-    console.log(`✅ 回滚完成!`);
+    console.log(`回滚完成!`);
     console.log(`   删除 apis 字段的文档数: ${result.modifiedCount}\n`);
     
   } catch (error) {
@@ -324,9 +324,9 @@ export async function checkUserHasApiPermission(userId, apiPath) {
 
 ### 3. 性能影响
 
-- ✅ 添加字段不会影响现有查询性能
-- ✅ 空数组不会增加存储负担
-- ✅ 索引无需重建（如果有的话）
+- 添加字段不会影响现有查询性能
+- 空数组不会增加存储负担
+- 索引无需重建（如果有的话）
 
 ### 4. 渐进式配置
 
@@ -352,7 +352,7 @@ async function testExistingPermissions() {
   const hasPermission = await checkUserHasActionPermission('user-id', 'getUserAction');
   
   console.assert(hasPermission === true, '现有权限应该继续工作');
-  console.log('✅ 现有权限测试通过');
+  console.log('现有权限测试通过');
 }
 ```
 
@@ -372,7 +372,7 @@ async function testApiPermissions() {
   const hasPermission2 = await checkUserHasApiPermission('user-id', '/api/v1/users/123');
   console.assert(hasPermission2 === true, '配置的 apis 应该允许访问');
   
-  console.log('✅ API 权限测试通过');
+  console.log('API 权限测试通过');
 }
 ```
 
@@ -385,7 +385,7 @@ async function testAdminRole() {
   const hasPermission = await checkUserHasApiPermission('admin-user-id', '/api/v1/users');
   console.assert(hasPermission === true, 'admin 应该自动通过');
   
-  console.log('✅ Admin 角色测试通过');
+  console.log('Admin 角色测试通过');
 }
 ```
 

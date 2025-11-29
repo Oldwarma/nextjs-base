@@ -30,13 +30,13 @@ const fieldsConfig = [
     title: 'Name',
     type: 'text',
     search: {
-      // ✅ UI配置：搜索框的占位符
+      // UI配置：搜索框的占位符
       placeholder: 'Search by name',
-      // ✅ UI配置：字段属性
+      // UI配置：字段属性
       fieldProps: {
         allowClear: true,
       },
-      // ✅ UI配置：是否延迟加载（仅展开时显示）
+      // UI配置：是否延迟加载（仅展开时显示）
       lazyLoad: true,
     },
   },
@@ -45,7 +45,7 @@ const fieldsConfig = [
     title: 'Enable',
     type: 'switch',
     search: {
-      // ✅ UI配置：搜索时使用下拉选择而不是开关
+      // UI配置：搜索时使用下拉选择而不是开关
       type: 'select',
       options: [
         { label: 'Enabled', value: true },
@@ -73,16 +73,16 @@ const {resource}Config = {
   primaryKey: '_id',
   
   query: {
-    // ✅ 数据配置：默认排序规则
+    // 数据配置：默认排序规则
     defaultSort: { sort: 1, name: 1 },
     
-    // ✅ 数据配置：默认每页显示数量
+    // 数据配置：默认每页显示数量
     defaultPageSize: 20,
     
-    // ✅ 数据配置：需要连表查询的字段
+    // 数据配置：需要连表查询的字段
     populateFields: ['parent_id', 'role_id'],
     
-    // ✅ 数据配置：默认筛选条件（强制应用）
+    // 数据配置：默认筛选条件（强制应用）
     defaultFilters: { enable: true },
   },
 };
@@ -179,7 +179,7 @@ const {resource}Config = {
 // crud-action.{resource}.js
 const {resource}Config = {
   query: {
-    defaultSort: { createdAt: -1 },  // ✅ 修改这里
+    defaultSort: { createdAt: -1 },  // 修改这里
     defaultPageSize: 20,
   },
 };
@@ -197,12 +197,12 @@ const {resource}Config = {
 // crud-action.permission.js
 const permissionConfig = {
   query: {
-    populateFields: ['parent_id'],  // ✅ 添加这里
+    populateFields: ['parent_id'],  // 添加这里
   },
   
   hooks: {
     afterFind: async (records) => {
-      // ✅ 在这里实现关联查询逻辑
+      // 在这里实现关联查询逻辑
       const parentIds = [...new Set(records.map(r => r.parent_id).filter(Boolean))];
       const parents = await db.collection('permissions').find({ id: { $in: parentIds } }).toArray();
       const parentMap = new Map(parents.map(p => [p.id, p]));
@@ -220,7 +220,7 @@ const permissionConfig = {
 
 ### 5. 最佳实践
 
-#### ✅ 正确的分工
+#### 正确的分工
 
 ```javascript
 // page.js - 只管UI
@@ -228,9 +228,9 @@ const fieldsConfig = [
   {
     key: 'name',
     search: {
-      placeholder: 'Search by name',  // ✅ UI文本
+      placeholder: 'Search by name',  // UI文本
       fieldProps: {
-        allowClear: true,              // ✅ UI行为
+        allowClear: true,              // UI行为
       },
     },
   },
@@ -239,9 +239,9 @@ const fieldsConfig = [
 // crud-action.{resource}.js - 只管数据
 const config = {
   query: {
-    defaultSort: { name: 1 },          // ✅ 数据排序
-    defaultPageSize: 20,                // ✅ 数据分页
-    populateFields: ['parent_id'],      // ✅ 数据关联
+    defaultSort: { name: 1 },          // 数据排序
+    defaultPageSize: 20,                // 数据分页
+    populateFields: ['parent_id'],      // 数据关联
   },
 };
 ```

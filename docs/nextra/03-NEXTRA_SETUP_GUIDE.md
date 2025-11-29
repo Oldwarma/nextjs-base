@@ -35,7 +35,7 @@ nextjs-base-docs/           # 新项目根目录
 │   │
 │   ├── admin/                  # Admin 框架
 │   │   ├── _meta.json
-│   │   ├── smart-crud/         ✅ (部分)
+│   │   ├── smart-crud/         (部分)
 │   │   ├── rbac/
 │   │   ├── database/
 │   │   ├── components/

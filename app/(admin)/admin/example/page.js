@@ -96,7 +96,7 @@ export default function ExamplePage() {
 	// 字段配置 - 展示所有 26 种类型 + 分组布局
 	const fieldsConfig = [
 		// ============================================
-		// 分组布局示例（参考 vk-unicloud）
+		// 分组布局示例
 		// ============================================
 		{
 			key: 'basic-info-group',

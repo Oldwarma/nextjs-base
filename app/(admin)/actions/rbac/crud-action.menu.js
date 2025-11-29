@@ -236,7 +236,7 @@ export const batchDeleteMenusAction = crudActions.batchDelete;
  * 返回扁平化格式，适配 SmartCrudPage 的树形表格
  */
 export const getMenuTreeAction = wrapQueryAction('menu', async ({ pageIndex = 1, pageSize = 1000, whereJson = {}, sortJson = null } = {}) => {
-	// ✅ 如果有搜索条件，使用标准查询（支持搜索所有层级）
+	// 如果有搜索条件，使用标准查询（支持搜索所有层级）
 	if (whereJson && Object.keys(whereJson).length > 0) {
 		const result = await crudActions._dao.getList({
 			pageIndex,
@@ -247,7 +247,7 @@ export const getMenuTreeAction = wrapQueryAction('menu', async ({ pageIndex = 1,
 		return result;
 	}
 
-	// ✅ 没有搜索条件时，返回完整的树形结构
+	// 没有搜索条件时，返回完整的树形结构
 	const result = await sysDao.getMenuTree({
 		pageIndex,
 		pageSize,
@@ -272,7 +272,7 @@ export const getMenuTreeForSelectAction = wrapQueryAction('menu', async () => {
 		filters: { enable: true },
 	});
 
-	// ✅ 转换为 TreeSelect 需要的格式
+	// 转换为 TreeSelect 需要的格式
 	const convertToTreeSelectFormat = (nodes) => {
 		if (!nodes || !Array.isArray(nodes)) return [];
 
@@ -293,7 +293,7 @@ export const getMenuTreeForSelectAction = wrapQueryAction('menu', async () => {
 	};
 
 	const formattedTree = [
-		{ title: '--- Root Menu ---', value: '', key: '' }, // ✅ 使用空字符串而不是 null，避免 TreeSelect 警告
+		{ title: '--- Root Menu ---', value: '', key: '' }, // 使用空字符串而不是 null，避免 TreeSelect 警告
 		...convertToTreeSelectFormat(result.rows || []),
 	];
 

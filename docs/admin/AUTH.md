@@ -12,11 +12,11 @@
 ```
 后台访问权限
 ├─ Admin 角色 (role === 'admin')
-│  └─ ✅ 自动拥有所有权限，绕过 RBAC 检查
+│  └─ 自动拥有所有权限，绕过 RBAC 检查
 │
 └─ User 角色 (role === 'user')
    ├─ isBackendAllowed = false → ❌ 无法访问后台
-   └─ isBackendAllowed = true → ✅ 可以访问后台
+   └─ isBackendAllowed = true → 可以访问后台
       └─ 通过 RBAC 控制：
          ├─ 菜单权限（页面访问）
          ├─ 操作权限（Actions）
@@ -43,8 +43,8 @@ export default async function AdminLayout({ children }) {
 **验证逻辑**:
 - ❌ 未登录 → 重定向到 `/en/login?error=unauthorized`
 - ❌ 非 admin 且 `isBackendAllowed = false` → 重定向到 `/en?error=forbidden`
-- ✅ admin 角色 → 通过（拥有所有权限）
-- ✅ user + `isBackendAllowed = true` → 通过（需要 RBAC 检查）
+- admin 角色 → 通过（拥有所有权限）
+- user + `isBackendAllowed = true` → 通过（需要 RBAC 检查）
 
 ---
 
@@ -106,7 +106,7 @@ export default async function SystemSettingsPage() {
 **验证逻辑**:
 - ❌ 未登录 → 重定向到 `/en/login?error=unauthorized`
 - ❌ 非 admin 角色 → 重定向到 `/en?error=forbidden&reason=admin_only`
-- ✅ admin 角色 → 通过
+- admin 角色 → 通过
 
 ---
 
@@ -172,7 +172,7 @@ const canAccessBackend = await hasBackendAccess();
 
 ## 使用场景
 
-### ✅ 正确示例
+### 正确示例
 
 #### 场景 1: 后台 Layout（支持 admin 和有权限的 user）
 
@@ -356,14 +356,14 @@ AdminLayout 调用 checkBackendAccess()
     └─ 已登录 → 检查后台访问权限
          ↓
 检查 role 和 isBackendAllowed
-    ├─ role === 'admin' → ✅ 通过（拥有所有权限）
-    ├─ role === 'user' && isBackendAllowed === true → ✅ 通过，进入 RBAC 检查
+    ├─ role === 'admin' → 通过（拥有所有权限）
+    ├─ role === 'user' && isBackendAllowed === true → 通过，进入 RBAC 检查
     └─ role === 'user' && isBackendAllowed === false → ❌ 重定向到 /en?error=forbidden
          ↓
 【RBAC 页面权限检查】PageAccessGuard
-    ├─ isAdmin === true → ✅ 自动通过
+    ├─ isAdmin === true → 自动通过
     └─ isAdmin === false → 检查用户菜单权限
-         ├─ 有该页面的菜单权限 → ✅ 显示页面
+         ├─ 有该页面的菜单权限 → 显示页面
          └─ 无该页面的菜单权限 → ❌ 显示 403
 ```
 
@@ -383,11 +383,11 @@ AdminLayout 调用 checkBackendAccess()
          └─ 有后台权限 → 继续
               ↓
 检查 options.permissionId（仅对非 admin）
-    ├─ isAdmin === true → ✅ 自动通过，执行 handler
-    ├─ permissionId 未设置 → ✅ 通过，执行 handler
+    ├─ isAdmin === true → 自动通过，执行 handler
+    ├─ permissionId 未设置 → 通过，执行 handler
     └─ isAdmin === false && permissionId 已设置
          ├─ 调用 checkUserHasPermission(userId, permissionId)
-         │    ├─ 有权限 → ✅ 执行 handler
+         │    ├─ 有权限 → 执行 handler
          │    └─ 无权限 → ❌ 返回 { success: false, error }
          └─
               ↓
@@ -400,7 +400,7 @@ AdminLayout 调用 checkBackendAccess()
 
 ## 当前实现状态
 
-### ✅ 已实现
+### 已实现
 
 1. **Layout 层保护**:
    - `app/(admin)/layout.js` 调用 `checkBackendAccess()`
@@ -550,33 +550,33 @@ await bindUserRoles({
 
 1. 退出登录
 2. 访问 `/admin`
-3. ✅ 应该被重定向到 `/en/login?error=unauthorized`
+3. 应该被重定向到 `/en/login?error=unauthorized`
 
 ### 场景 2: 测试无后台权限的 User
 
 1. 以普通用户登录（`isBackendAllowed = false`）
 2. 访问 `/admin`
-3. ✅ 应该被重定向到 `/en?error=forbidden`
+3. 应该被重定向到 `/en?error=forbidden`
 
 ### 场景 3: 测试有后台权限的 User（RBAC）
 
 1. 以有后台权限的用户登录（`isBackendAllowed = true`）
-2. 访问 `/admin` → ✅ 可以进入后台
-3. 访问有菜单权限的页面 → ✅ 正常显示
-4. 访问无菜单权限的页面 → ✅ 显示 403
+2. 访问 `/admin` → 可以进入后台
+3. 访问有菜单权限的页面 → 正常显示
+4. 访问无菜单权限的页面 → 显示 403
 
 ### 场景 4: 测试 Admin 访问
 
 1. 以 admin 身份登录
-2. 访问 `/admin` 下任何页面 → ✅ 全部可访问
-3. 执行任何 Action → ✅ 全部可执行
+2. 访问 `/admin` 下任何页面 → 全部可访问
+3. 执行任何 Action → 全部可执行
 
 ### 场景 5: 测试 RBAC 权限
 
 1. 创建测试角色，分配部分菜单权限
 2. 将用户绑定到该角色，设置 `isBackendAllowed = true`
 3. 登录该用户，验证：
-   - ✅ 可以访问被授权的页面
+   - 可以访问被授权的页面
    - ❌ 不能访问未授权的页面（显示 403）
 
 ---
@@ -592,16 +592,16 @@ await bindUserRoles({
 
 ### 2. Admin 角色管理
 
-- ✅ Admin 只设一个，用于系统维护
-- ✅ 不要随意将用户提升为 admin
-- ✅ 使用 RBAC 为普通用户分配后台权限
+- Admin 只设一个，用于系统维护
+- 不要随意将用户提升为 admin
+- 使用 RBAC 为普通用户分配后台权限
 
 ### 3. RBAC 权限设计
 
-- ✅ 创建角色（如：editor, moderator, viewer）
-- ✅ 为角色分配菜单和操作权限
-- ✅ 将用户绑定到角色
-- ✅ 设置 `isBackendAllowed = true`
+- 创建角色（如：editor, moderator, viewer）
+- 为角色分配菜单和操作权限
+- 将用户绑定到角色
+- 设置 `isBackendAllowed = true`
 
 ### 4. Action 权限控制
 
@@ -622,11 +622,11 @@ export const dangerousAction = wrapAdminAction('delete', 'system', handler, {
 
 ### 5. 代码规范
 
-- ✅ **永远在服务端验证** - 客户端验证不安全
-- ✅ **使用 wrapAdminAction** - 自动处理权限和日志
-- ✅ **明确权限要求** - 注释说明需要什么权限
-- ✅ **记录操作日志** - 使用 action-logger
-- ✅ **错误信息清晰** - 便于调试和用户理解
+- **永远在服务端验证** - 客户端验证不安全
+- **使用 wrapAdminAction** - 自动处理权限和日志
+- **明确权限要求** - 注释说明需要什么权限
+- **记录操作日志** - 使用 action-logger
+- **错误信息清晰** - 便于调试和用户理解
 
 ---
 
@@ -634,24 +634,24 @@ export const dangerousAction = wrapAdminAction('delete', 'system', handler, {
 
 ### 基础安全
 
-1. ✅ **服务端验证** - 永远不要只在客户端验证
-2. ✅ **最小权限原则** - 只给必要的权限
-3. ✅ **定期审计** - 检查用户权限分配
-4. ✅ **Session 管理** - 合理设置过期时间
+1. **服务端验证** - 永远不要只在客户端验证
+2. **最小权限原则** - 只给必要的权限
+3. **定期审计** - 检查用户权限分配
+4. **Session 管理** - 合理设置过期时间
 
 ### RBAC 安全
 
-1. ✅ **角色隔离** - 不同角色不重叠权限
-2. ✅ **权限继承** - 合理设计权限层级
-3. ✅ **动态检查** - 运行时检查权限，不缓存
-4. ✅ **日志记录** - 记录所有权限变更
+1. **角色隔离** - 不同角色不重叠权限
+2. **权限继承** - 合理设计权限层级
+3. **动态检查** - 运行时检查权限，不缓存
+4. **日志记录** - 记录所有权限变更
 
 ### Admin 安全
 
-1. ✅ **唯一 Admin** - 系统中只有一个 admin
-2. ✅ **强密码** - Admin 账号使用强密码
-3. ✅ **双因素认证** - 考虑启用 2FA（推荐）
-4. ✅ **IP 限制** - 限制 Admin 登录 IP（可选）
+1. **唯一 Admin** - 系统中只有一个 admin
+2. **强密码** - Admin 账号使用强密码
+3. **双因素认证** - 考虑启用 2FA（推荐）
+4. **IP 限制** - 限制 Admin 登录 IP（可选）
 
 ---
 

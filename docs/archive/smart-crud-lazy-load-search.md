@@ -70,7 +70,7 @@ export default function UsersPage() {
 
 ```javascript
 const fieldsConfig = [
-	// ✅ 普通字段：无需远程数据,默认显示
+	// 普通字段：无需远程数据,默认显示
 	{
 		key: 'username',
 		title: 'Username',
@@ -81,7 +81,7 @@ const fieldsConfig = [
 		}
 	},
 	
-	// ✅ 延迟加载字段：需要远程数据,展开时才显示
+	// 延迟加载字段：需要远程数据,展开时才显示
 	{
 		key: 'role_ids',
 		title: 'Role',
@@ -94,7 +94,7 @@ const fieldsConfig = [
 		}
 	},
 	
-	// ✅ 延迟加载字段：需要远程数据,展开时才显示
+	// 延迟加载字段：需要远程数据,展开时才显示
 	{
 		key: 'department_id',
 		title: 'Department',
@@ -124,7 +124,7 @@ export default function UsersPage() {
 	const [roleOptions, setRoleOptions] = useState([]);
 	const [searchExpanded, setSearchExpanded] = useState(false);
 	
-	// ✅ 只在搜索表单展开时加载数据
+	// 只在搜索表单展开时加载数据
 	useEffect(() => {
 		if (searchExpanded) {
 			loadRoleOptions();
@@ -158,7 +158,7 @@ export default function UsersPage() {
 		<SmartCrudPage
 			fieldsConfig={fieldsConfig}
 			actions={actions}
-			// ✅ 接收展开状态回调
+			// 接收展开状态回调
 			onSearchExpandChange={setSearchExpanded}
 		/>
 	);
@@ -265,7 +265,7 @@ export default function UsersPage() {
 	const [searchExpanded, setSearchExpanded] = useState(false);
 	const [dataLoaded, setDataLoaded] = useState(false);
 	
-	// ✅ 只在搜索表单展开时加载数据,且只加载一次
+	// 只在搜索表单展开时加载数据,且只加载一次
 	useEffect(() => {
 		if (searchExpanded && !dataLoaded) {
 			Promise.all([
@@ -309,7 +309,7 @@ export default function UsersPage() {
 	};
 	
 	const fieldsConfig = useMemo(() => [
-		// ✅ 常用字段：默认显示,无需远程数据
+		// 常用字段：默认显示,无需远程数据
 		{
 			key: 'username',
 			title: 'Username',
@@ -320,7 +320,7 @@ export default function UsersPage() {
 			}
 		},
 		
-		// ✅ 不常用字段：延迟加载,需要远程数据
+		// 不常用字段：延迟加载,需要远程数据
 		{
 			key: 'role_ids',
 			title: 'Role',
@@ -393,7 +393,7 @@ export default function UsersPage() {
 
 ### 1. 哪些字段应该使用 lazyLoad?
 
-✅ **适合使用 lazyLoad 的字段**:
+**适合使用 lazyLoad 的字段**:
 - 需要远程获取选项数据的下拉框
 - 不常用的高级筛选字段
 - 数据量大的下拉选项 (如用户列表、分类树等)
@@ -411,7 +411,7 @@ export default function UsersPage() {
 const [dataLoaded, setDataLoaded] = useState(false);
 
 useEffect(() => {
-	// ✅ 只加载一次,后续收起/展开不会重复加载
+	// 只加载一次,后续收起/展开不会重复加载
 	if (searchExpanded && !dataLoaded) {
 		loadRemoteData().then(() => setDataLoaded(true));
 	}
@@ -429,7 +429,7 @@ useEffect(() => {
 		enabled: true,
 		lazyLoad: true,
 		fieldProps: {
-			loading: searchExpanded && !dataLoaded, // ✅ 显示 loading spinner
+			loading: searchExpanded && !dataLoaded, // 显示 loading spinner
 			placeholder: 'Select role',
 		},
 	}
@@ -441,7 +441,7 @@ useEffect(() => {
 ```javascript
 useEffect(() => {
 	if (searchExpanded && !dataLoaded) {
-		// ✅ 并行加载多个选项数据
+		// 并行加载多个选项数据
 		Promise.all([
 			loadRoleOptions(),
 			loadDeptOptions(),
@@ -465,7 +465,7 @@ useEffect(() => {
 const [dataLoaded, setDataLoaded] = useState(false);
 
 useEffect(() => {
-	if (searchExpanded && !dataLoaded) { // ✅ 只加载一次
+	if (searchExpanded && !dataLoaded) { // 只加载一次
 		loadData().then(() => setDataLoaded(true));
 	}
 }, [searchExpanded, dataLoaded]);
@@ -527,10 +527,10 @@ useEffect(() => {
 
 延迟加载功能通过以下方式优化性能:
 
-1. ✅ **减少初始请求**: 页面加载时不发起不必要的远程请求
-2. ✅ **按需加载**: 只在用户需要高级搜索时才加载数据
-3. ✅ **缓存数据**: 加载一次后缓存,不会重复请求
-4. ✅ **改善体验**: 页面快速加载,减少白屏时间
+1. **减少初始请求**: 页面加载时不发起不必要的远程请求
+2. **按需加载**: 只在用户需要高级搜索时才加载数据
+3. **缓存数据**: 加载一次后缓存,不会重复请求
+4. **改善体验**: 页面快速加载,减少白屏时间
 
 **使用建议**: 对于有 3+ 个需要远程数据的搜索字段的页面,强烈推荐使用延迟加载功能。
 

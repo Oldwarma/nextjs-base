@@ -1,294 +1,380 @@
-# Admin Server Actions
+# Admin Server Actions 开发规范
 
-所有后台管理的 Server Actions 都在这个目录中。
+> **最后更新**: 2025-11-29  
+> **版本**: v3.0.0
 
-## 文件结构
+本目录包含管理后台的所有 Server Actions，采用统一的开发规范。
+
+## 目录结构
 
 ```
 app/(admin)/actions/
-├── README.md             # 📖 本文档
-├── dao/                  # BaseDAO 相关
-│   └── base.js           # BaseDAO 核心类
-├── configs/              # CRUD 配置
-│   ├── user-crud.config.js
-│   ├── package-crud.config.js
-│   └── credit-transaction-crud.config.js
-├── admin-users.js        # ✅ 用户管理（已使用 BaseDAO）
-├── admin-packages.js     # ✅ 套餐管理（已使用 BaseDAO）
-├── admin-credits.js      # ✅ 积分管理（已使用 BaseDAO + 自定义方法）
-└── admin-usage.js        # 📊 使用统计（保持现状）
+├── README.md                    # 本文档
+├── rbac/                        # 权限管理模块
+│   ├── crud-action.permission.js
+│   ├── crud-action.role.js
+│   ├── crud-action.menu.js
+│   └── crud-action.user.js
+├── cms/                         # 内容管理模块
+│   └── crud-action.post.js
+├── system/                      # 系统管理模块
+│   ├── admin-action-logs.js
+│   └── crud-action.assets.js
+└── finance/                     # 财务管理模块
+    ├── admin-credits.js
+    └── admin-packages.js
 ```
 
-## 使用方式
+## 命名规范
 
-**直接从具体文件导入**（推荐）
+### 文件命名
 
-```javascript
-import {
-	getUserListAction,
-	updateUserInfoAction,
-	deleteUserAction,
-} from '@/app/(admin)/actions/rbac/admin-users';
+| 类型 | 命名规则 | 示例 |
+|------|---------|------|
+| 标准 CRUD | `crud-action.{resource}.js` | `crud-action.permission.js` |
+| 特殊 Actions | `admin-{resource}.js` | `admin-action-logs.js` |
 
-import {
-	getAllPackagesAdminAction,
-	createPackageAction,
-} from '@/app/(admin)/actions/finance/admin-packages';
-```
+### 函数命名
 
-> **为什么没有 index.js？**
-> 
-> Next.js 15+ 的 `"use server"` 文件只能导出 async 函数，不能 re-export 其他文件的 exports。
-> 因此我们直接从各自的文件导入，这样更清晰，也避免了 re-export 的限制。
+| 操作 | 命名规则 | 示例 |
+|------|---------|------|
+| 获取列表 | `get{Entity}ListAction` | `getPermissionListAction` |
+| 获取详情 | `get{Entity}DetailAction` | `getPermissionDetailAction` |
+| 创建 | `create{Entity}Action` | `createPermissionAction` |
+| 更新 | `update{Entity}Action` | `updatePermissionAction` |
+| 删除 | `delete{Entity}Action` | `deletePermissionAction` |
+| 批量更新 | `batchUpdate{Entity}Action` | `batchUpdatePermissionAction` |
+| 批量删除 | `batchDelete{Entity}Action` | `batchDeletePermissionAction` |
+| 自定义操作 | `{verb}{Entity}Action` | `approvePermissionAction` |
 
----
+## 标准模板
 
-## 文件说明
-
-### ✅ admin-users.js - 用户管理
-
-**状态**：已使用 BaseDAO 重构
-
-**配置文件**：`configs/user-crud.config.js`
-
-**Actions**：
-- `getUserListAction` - 获取用户列表
-- `getUserDetailAction` - 获取用户详情
-- `updateUserInfoAction` - 更新用户信息
-- `deleteUserAction` - 删除用户（软删除）
-- `updateUserRoleAction` - 更新用户角色
-- `batchUpdateUsersAction` - 批量更新用户
-- `batchDeleteUsersAction` - 批量删除用户
-- `getUserStatisticsAdminAction` - 获取用户统计
-
-**特点**：
-- ✅ 使用 BaseDAO，代码量减少 51%
-- ✅ 统一的权限检查
-- ✅ 统一的错误处理
-- ✅ 支持批量操作
-- ✅ 软删除支持
-
----
-
-### ✅ admin-packages.js - 套餐管理
-
-**状态**：已使用 BaseDAO
-
-**配置文件**：`configs/package-crud.config.js`
-
-**Actions**：
-- `getAllPackagesAdminAction` - 获取所有套餐（包括未激活的）
-- `getPackageDetailAction` - 获取套餐详情
-- `createPackageAction` - 创建套餐
-- `updatePackageAction` - 更新套餐
-- `deletePackageAction` - 删除套餐
-- `batchUpdatePackagesAction` - 批量更新套餐
-- `batchDeletePackagesAction` - 批量删除套餐
-- `getUserPackagesAdminAction` - 获取用户的套餐购买记录（自定义方法）
-
-**特点**：
-- ✅ 使用 BaseDAO，代码量减少 ~60%
-- ✅ 支持批量操作
-- ✅ 不使用软删除（通过 isActive 控制）
-- ✅ 自动验证：price、credits、validDays 必须为非负数
-- ✅ 自动排序：按 sort 字段和创建时间排序
-
----
-
-### ✅ admin-credits.js - 积分管理
-
-**状态**：已使用 BaseDAO + 自定义方法
-
-**配置文件**：`configs/credit-transaction-crud.config.js`
-
-**Actions**：
-
-**查询类**（使用 BaseDAO）：
-- `getCreditTransactionListAction` - 获取积分交易记录列表
-- `getCreditTransactionDetailAction` - 获取单个交易记录详情
-- `getUserCreditTransactionsAction` - 获取指定用户的交易记录
-
-**操作类**（自定义方法）：
-- `adminAdjustCreditsAction` - 管理员调整积分（正数=增加，负数=扣除）
-- `adminAddCreditsAction` - 管理员增加积分（便捷方法）
-- `adminDeductCreditsAction` - 管理员扣除积分（便捷方法）
-
-**特点**：
-- ✅ 交易记录使用 BaseDAO（只读）
-- ✅ 交易记录不能直接创建、更新、删除
-- ✅ 积分调整通过专门的 Action 处理
-- ✅ 自动记录每次积分变动
-- ✅ 支持按 type、userId 过滤查询
-
----
-
-### 📊 admin-usage.js - 使用统计
-
-**状态**：使用统一的 `checkAdminAction`，保持现状
-
-**Actions**：
-- `getAdminUsageLogsAction` - 获取用户使用日志
-- `getSystemStatisticsAction` - 获取系统统计
-
-**说明**：
-- 这些是统计查询，不是标准 CRUD
-- 不适合使用 BaseDAO
-- 保持现状即可
-
----
-
-## 迁移到 BaseDAO 的步骤
-
-### 1. 创建 CRUD 配置
+### 完整 CRUD Actions
 
 ```javascript
-// configs/package-crud.config.js
-export const packageCrudConfig = {
-	collectionName: 'packages',
-	primaryKey: '_id',
-	fields: {
-		creatable: ['name', 'price', 'credits'],
-		updatable: ['name', 'price', 'credits', 'status'],
-		searchable: ['name'],
-	},
-	validation: {
-		name: { required: true },
-		price: { required: true },
-		credits: { required: true },
-	},
-	softDelete: true,
-};
-```
-
-### 2. 重写 Server Actions
-
-```javascript
-// app/(admin)/actions/admin-packages.js
 'use server';
 
-import { createCrudActions } from '@/(admin)/actions/dao/base';
-import { packageCrudConfig } from '@/configs/package-crud.config';
+import { createCrudActions } from '@/lib/core/crud-helper';
+import { wrapQueryAction, wrapAdminAction } from '@/lib/core/action-wrapper';
 
-const packageCrud = createCrudActions(packageCrudConfig);
+/**
+ * Xxx CRUD 配置
+ * 
+ * 配置直接写在 Action 文件中，不需要单独的 config 文件
+ */
+const xxxConfig = {
+	// 基础配置
+	collectionName: 'xxx',
+	primaryKey: 'id',
+	softDelete: false,
 
-export const getPackageListAction = packageCrud.getList;
-export const createPackageAction = packageCrud.create;
-export const updatePackageAction = packageCrud.update;
-export const deletePackageAction = packageCrud.delete;
+	// 字段权限
+	fields: {
+		creatable: ['name', 'status', 'remark'],
+		updatable: ['name', 'status', 'remark'],
+		searchable: ['name', 'remark'],
+	},
 
-// 自定义方法
-export async function getUserPackagesAction(userId) {
-	// 自定义实现
-}
-```
+	// 查询配置
+	query: {
+		defaultSort: { createdAt: -1 },
+		defaultPageSize: 20,
+		foreignDB: [],  // 连表查询配置
+	},
 
-### 3. 创建 CRUD 页面
+	// 验证规则
+	validation: {
+		name: {
+			required: true,
+			type: 'string',
+			minLength: 2,
+			maxLength: 100,
+		},
+	},
 
-复制 `app/(admin)/admin/_template/page.js` 到 `app/(admin)/admin/packages/page.js`，配置 columns 和 formFields。
+	// 生命周期钩子
+	hooks: {
+		beforeCreate: async (data) => data,
+		beforeUpdate: async (id, data) => data,
+		beforeDelete: async (id) => true,
+	},
+};
 
----
+/**
+ * 创建标准 CRUD Actions
+ */
+const crudActions = createCrudActions(xxxConfig);
 
-## 权限检查
+/**
+ * 导出标准 CRUD Actions
+ */
+export const getXxxListAction = crudActions.getList;
+export const getXxxDetailAction = crudActions.getDetail;
+export const createXxxAction = crudActions.create;
+export const updateXxxAction = crudActions.update;
+export const deleteXxxAction = crudActions.delete;
+export const batchUpdateXxxAction = crudActions.batchUpdate;
+export const batchDeleteXxxAction = crudActions.batchDelete;
 
-所有 Actions 都使用统一的 `checkAdminAction`：
-
-```javascript
-import { checkAdminAction } from '@/lib/admin/admin-auth';
-
-export async function someAction() {
-	const adminCheck = await checkAdminAction();
-	if (!adminCheck.isAdmin) {
-		return { success: false, error: adminCheck.error };
+/**
+ * 自定义 Action 示例
+ */
+export const customXxxAction = wrapAdminAction(
+	'custom',
+	'xxx',
+	async (params, context) => {
+		const { userId } = context;
+		// 业务逻辑
+		return { success: true, data: {} };
 	}
-	
-	// 业务逻辑
+);
+```
+
+### 只读 Actions（日志、记录类）
+
+```javascript
+'use server';
+
+import { createReadOnlyActions } from '@/lib/core/crud-helper';
+
+/**
+ * Action Logs 配置
+ */
+const actionLogsConfig = {
+	collectionName: 'action_logs',
+	primaryKey: 'id',
+	fields: {
+		searchable: ['action', 'resourceType', 'userId'],
+	},
+	query: {
+		defaultSort: { createdAt: -1 },
+		foreignDB: [
+			{
+				dbName: 'users',
+				localKey: 'userId',
+				foreignKey: 'id',
+				as: 'userInfo',
+				limit: 1,
+				fieldJson: { id: 1, name: 1, email: 1 },
+			},
+		],
+	},
+};
+
+/**
+ * 创建只读 Actions
+ */
+const crudActions = createReadOnlyActions(actionLogsConfig);
+
+export const getActionLogListAction = crudActions.getList;
+export const getActionLogDetailAction = crudActions.getDetail;
+```
+
+## 核心函数
+
+### createCrudActions(config)
+
+自动生成标准 CRUD Actions：
+
+```javascript
+const crudActions = createCrudActions(config);
+
+// 自动生成的 Actions：
+crudActions.getList     // 获取列表
+crudActions.getDetail   // 获取详情
+crudActions.create      // 创建
+crudActions.update      // 更新
+crudActions.delete      // 删除
+crudActions.batchUpdate // 批量更新
+crudActions.batchDelete // 批量删除
+crudActions._dao        // 底层 DAO 实例
+```
+
+### createReadOnlyActions(config)
+
+生成只读 Actions：
+
+```javascript
+const crudActions = createReadOnlyActions(config);
+
+// 只生成查询 Actions：
+crudActions.getList
+crudActions.getDetail
+```
+
+### wrapQueryAction(resourceType, handler)
+
+包装查询类 Action：
+
+```javascript
+export const getXxxTreeAction = wrapQueryAction('xxx', async (params) => {
+	// 自动处理权限验证
+	return { success: true, data: [] };
+});
+```
+
+### wrapAdminAction(action, resourceType, handler, options)
+
+包装管理类 Action：
+
+```javascript
+export const approveXxxAction = wrapAdminAction(
+	'approve',           // 操作类型
+	'xxx',               // 资源类型
+	async (params, context) => {
+		const { userId, isAdmin } = context;
+		// 业务逻辑
+		return { success: true };
+	},
+	{
+		permissionId: 'approveXxxAction',  // 权限标识
+		skipLog: false,                     // 是否跳过日志
+	}
+);
+```
+
+## 配置详解
+
+### fields（字段权限）
+
+```javascript
+fields: {
+	// Create 时允许的字段
+	// ❌ 不要包含 id（自动生成）
+	creatable: ['name', 'status'],
+
+	// Update 时允许的字段
+	// ❌ 不要包含 id、createdAt、updatedAt
+	updatable: ['name', 'status'],
+
+	// 可搜索的字段
+	searchable: ['name'],
 }
 ```
 
-**优势**：
-- ✅ 统一的权限检查逻辑
-- ✅ 自动更新 `lastLoginAt`
-- ✅ 返回标准化的错误格式
-
----
-
-## 错误处理
-
-所有 Actions 返回统一的格式：
+### validation（验证规则）
 
 ```javascript
-// 成功
-{ success: true, data: {...} }
-{ success: true, message: 'Operation completed' }
-
-// 失败
-{ success: false, error: 'Error message' }
+validation: {
+	name: {
+		required: true,                    // 必填
+		type: 'string',                    // 类型
+		minLength: 2,                      // 最小长度
+		maxLength: 100,                    // 最大长度
+		pattern: /^[a-zA-Z0-9]+$/,        // 正则
+		enum: ['active', 'inactive'],      // 枚举值
+		message: 'Custom error message',   // 错误提示
+	},
+}
 ```
 
----
-
-## 最佳实践
-
-### 1. 从具体文件导入
+### hooks（生命周期钩子）
 
 ```javascript
-// ✅ 推荐：清晰明确
-import {
-	getUserListAction,
-	updateUserInfoAction,
-} from '@/app/(admin)/actions/rbac/admin-users';
-
-// ✅ 可选：使用别名简化
-import {
-	getUserListAction as getList,
-	updateUserInfoAction as update,
-} from '@/app/(admin)/actions/rbac/admin-users';
+hooks: {
+	beforeCreate: async (data) => {
+		// 创建前：设置默认值
+		return data;
+	},
+	beforeUpdate: async (id, data) => {
+		// 更新前：权限检查
+		return data;
+	},
+	beforeDelete: async (id) => {
+		// 删除前：关联检查
+		return true; // 返回 true 允许删除
+	},
+	afterDelete: async (id) => {
+		// 删除后：清理关联数据
+	},
+	afterFind: async (records) => {
+		// 查询后：数据转换
+		return records;
+	},
+}
 ```
 
-### 2. Actions 命名规范
+### query.foreignDB（连表查询）
 
 ```javascript
-// 格式：动词 + 实体 + Action
-getUserListAction
-createPackageAction
-updateUserInfoAction
-deletePackageAction
-batchUpdateUsersAction
+query: {
+	foreignDB: [
+		// 一对一关联
+		{
+			dbName: 'users',
+			localKey: 'userId',
+			foreignKey: 'id',
+			as: 'userInfo',
+			limit: 1,
+			fieldJson: { id: 1, name: 1, email: 1 },
+		},
 
-// 管理员专用加 Admin 后缀
-getAllPackagesAdminAction
-getAdminUsageLogsAction
+		// 一对多关联
+		{
+			dbName: 'roles',
+			localKey: 'roles',        // 数组字段
+			foreignKey: 'id',
+			as: 'roleList',
+			fieldJson: { id: 1, name: 1 },
+		},
+	],
+}
 ```
 
-### 3. 参数顺序
+## 注意事项
 
-```javascript
-// 单个操作：ID 在前，数据在后
-updateUserAction(userId, data)
-deleteUserAction(userId)
+### 正确做法
 
-// 批量操作：IDs 数组在前，数据在后
-batchUpdateUsersAction(userIds, updates)
-batchDeleteUsersAction(userIds)
-```
+1. **配置写在 Action 文件中**
+   ```javascript
+   // crud-action.xxx.js
+   const xxxConfig = { ... };
+   const crudActions = createCrudActions(xxxConfig);
+   ```
 
----
+2. **使用 'use server' 指令**
+   ```javascript
+   'use server';
+   ```
 
-## 迁移进度
+3. **导出具名函数**
+   ```javascript
+   export const getXxxListAction = crudActions.getList;
+   ```
 
-- [x] admin-users.js - 已使用 BaseDAO ✅
-- [x] 统一 checkAdminAction ✅
-- [x] 移除 index.js（Next.js 15+ 限制）✅
-- [x] admin-packages.js - 已迁移到 BaseDAO ✅
-- [x] admin-credits.js - 已迁移到 BaseDAO（混合模式）✅
-- [ ] 创建 packages 管理页面
-- [ ] 创建 credits 管理页面
+### ❌ 错误做法
 
----
+1. **不要创建单独的 config 文件**
+   ```javascript
+   // ❌ 不要这样做
+   // configs/xxx-crud.config.js
+   export const xxxConfig = { ... };
+   ```
+
+2. **不要在 creatable 中包含 id**
+   ```javascript
+   // ❌ 错误
+   fields: {
+     creatable: ['id', 'name'],
+   }
+   ```
+
+3. **不要在 updatable 中包含时间戳**
+   ```javascript
+   // ❌ 错误
+   fields: {
+     updatable: ['name', 'createdAt', 'updatedAt'],
+   }
+   ```
 
 ## 相关文档
 
-- [BaseDAO 文档](../../../docs/ADMIN_BASE_DAO.md)
-- [CRUD 模板指南](../../../docs/ADMIN_CRUD_TEMPLATE_GUIDE.md)
-- [系统总览](../../../docs/ADMIN_SYSTEM_README.md)
+- [SmartCrudPage 完整指南](/docs/SMART_CRUD_COMPLETE_GUIDE.md)
+- [SmartCrudPage 开发指南](/docs/admin/SMART_CRUD_GUIDE.md)
+- [BaseDAO 文档](/docs/admin/BASE_DAO.md)
+- [crud-helper 源码](/lib/core/crud-helper.js)
+- [action-wrapper 源码](/lib/core/action-wrapper.js)
 
+## 许可证
+
+MIT License

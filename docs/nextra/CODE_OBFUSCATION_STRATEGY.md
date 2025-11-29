@@ -30,10 +30,10 @@
 ### 商业考虑
 
 **优点**:
-- ✅ 完整的产品体验
-- ✅ 更高的商业价值
-- ✅ 更快的市场验证
-- ✅ 避免被快速抄袭
+- 完整的产品体验
+- 更高的商业价值
+- 更快的市场验证
+- 避免被快速抄袭
 
 **挑战**:
 - ⚠️ 缺少社区支持
@@ -42,7 +42,7 @@
 
 ---
 
-## ✅ 可行性评估
+## 可行性评估
 
 ### 代码混淆在 Node.js/Next.js 中是否可行？
 
@@ -51,11 +51,11 @@
 #### 1. JavaScript 混淆的特点
 
 **可以做到**:
-- ✅ 变量名混淆 (`getUserInfo` → `a`)
-- ✅ 字符串加密
-- ✅ 控制流平坦化
-- ✅ 死代码注入
-- ✅ 调试保护
+- 变量名混淆 (`getUserInfo` → `a`)
+- 字符串加密
+- 控制流平坦化
+- 死代码注入
+- 调试保护
 
 **无法做到**:
 - ❌ 完全防止反编译 (JavaScript 本质是解释型)
@@ -69,7 +69,7 @@
 Next.js 应用 = Server 端 + Client 端
 
 Server 端:
-- 代码在服务器执行 ✅ 可以保护
+- 代码在服务器执行 可以保护
 - Server Actions
 - API Routes
 - Middleware
@@ -81,7 +81,7 @@ Client 端:
 ```
 
 **结论**:
-- ✅ **Server 端代码**: 可以有效保护
+- **Server 端代码**: 可以有效保护
 - ⚠️ **Client 端代码**: 混淆有限，但可以做
 
 ---
@@ -241,7 +241,7 @@ function obfuscateFile(filePath) {
   try {
     const obfuscated = JavaScriptObfuscator.obfuscate(code, obfuscateOptions);
     fs.writeFileSync(filePath, obfuscated.getObfuscatedCode());
-    console.log(`✅ 完成: ${filePath}`);
+    console.log(`完成: ${filePath}`);
   } catch (error) {
     console.error(`❌ 失败: ${filePath}`, error.message);
   }
@@ -311,11 +311,11 @@ export default function ProductsPage() {
 
 #### 优点
 
-- ✅ **核心逻辑受保护** (在 npm 包中混淆)
-- ✅ **用户代码清晰** (不影响用户开发)
-- ✅ **性能影响小** (只混淆核心库)
-- ✅ **可调试** (用户代码 + source map)
-- ✅ **易于更新** (通过 npm 升级)
+- **核心逻辑受保护** (在 npm 包中混淆)
+- **用户代码清晰** (不影响用户开发)
+- **性能影响小** (只混淆核心库)
+- **可调试** (用户代码 + source map)
+- **易于更新** (通过 npm 升级)
 
 #### 缺点
 
@@ -410,11 +410,11 @@ export default function ProductsPage() {
 
 **Server 端 (用户完全看不到)**:
 ```javascript
-// ✅ 核心 DAO 逻辑
-// ✅ 数据验证规则
-// ✅ 权限检查逻辑
-// ✅ 复杂业务逻辑
-// ✅ 第三方服务集成 (OSS, 支付等)
+// 核心 DAO 逻辑
+// 数据验证规则
+// 权限检查逻辑
+// 复杂业务逻辑
+// 第三方服务集成 (OSS, 支付等)
 ```
 
 **Client 端 (用户能看到，但混淆)**:
@@ -697,7 +697,7 @@ function obfuscateFile(filePath, level) {
   try {
     const obfuscated = JavaScriptObfuscator.obfuscate(code, options);
     fs.writeFileSync(filePath, obfuscated.getObfuscatedCode());
-    console.log(`✅ 完成: ${filePath}`);
+    console.log(`完成: ${filePath}`);
   } catch (error) {
     console.error(`❌ 失败: ${filePath}`, error.message);
     process.exit(1);
@@ -716,7 +716,7 @@ function obfuscatePackage(pkg) {
   }
   
   files.forEach(file => obfuscateFile(file, pkg.level));
-  console.log(`✅ ${pkg.name} 完成! (${files.length} 个文件)`);
+  console.log(`${pkg.name} 完成! (${files.length} 个文件)`);
 }
 
 // 执行混淆
@@ -792,9 +792,9 @@ npm publish --access public      # 公开包
 #### 1. **Ant Design Pro** (开源)
 
 **策略**: 完全开源
-- ✅ 所有代码开源
-- ✅ 依靠品牌和社区
-- ✅ 通过企业服务盈利
+- 所有代码开源
+- 依靠品牌和社区
+- 通过企业服务盈利
 
 **学习点**: 品牌价值 > 代码保护
 
@@ -803,9 +803,9 @@ npm publish --access public      # 公开包
 #### 2. **Retool** (闭源 SaaS)
 
 **策略**: 完全闭源，SaaS 模式
-- ✅ 代码不交付给用户
-- ✅ 用户只能使用平台
-- ✅ 完全控制
+- 代码不交付给用户
+- 用户只能使用平台
+- 完全控制
 
 **学习点**: SaaS 模式最安全
 
@@ -814,9 +814,9 @@ npm publish --access public      # 公开包
 #### 3. **Strapi** (Open Core)
 
 **策略**: 核心开源 + 企业版闭源
-- ✅ Community Edition (开源)
-- ✅ Enterprise Edition (闭源)
-- ✅ Cloud 服务 (SaaS)
+- Community Edition (开源)
+- Enterprise Edition (闭源)
+- Cloud 服务 (SaaS)
 
 **学习点**: 混合模式最灵活
 
@@ -825,9 +825,9 @@ npm publish --access public      # 公开包
 #### 4. **Refine** (开源 + 混淆插件)
 
 **策略**: 框架开源 + 高级插件混淆
-- ✅ 核心框架开源
-- ✅ 高级插件混淆或闭源
-- ✅ 企业版定制
+- 核心框架开源
+- 高级插件混淆或闭源
+- 企业版定制
 
 **学习点**: 这个最接近你的需求
 
@@ -1008,10 +1008,10 @@ Sentry.init({
 ---
 
 **总结**: 
-- ✅ **代码混淆是可行的**，特别是结合 Next.js 的 Server/Client 分离
-- ✅ **推荐混合策略**: 核心库混淆 + Server 端保护
-- ✅ **不着急开源是对的**: 先验证商业价值
-- ✅ **包含 OSS 和富文本是对的**: 提供完整体验
+- **代码混淆是可行的**，特别是结合 Next.js 的 Server/Client 分离
+- **推荐混合策略**: 核心库混淆 + Server 端保护
+- **不着急开源是对的**: 先验证商业价值
+- **包含 OSS 和富文本是对的**: 提供完整体验
 
 **下一步**: 要不要我帮你实现一个混淆脚本的 Demo？
 

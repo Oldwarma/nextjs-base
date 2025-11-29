@@ -40,7 +40,7 @@ if (field.search) {
   
   if (typeConfig?.search) {
     column.renderFormItem = () => {
-      return typeConfig.search(field);  // ✅ 调用 search 函数
+      return typeConfig.search(field);  // 调用 search 函数
     };
   }
 }
@@ -53,7 +53,7 @@ export const FIELD_TYPE_REGISTRY = {
   text: {
     table: (value, config) => { /* ... */ },
     form: (config) => { /* ... */ },
-    search: (config) => {  // ✅ 有 search 函数
+    search: (config) => {  // 有 search 函数
       return <ProFormText 
         placeholder={config.search?.placeholder || `Search by ${config.title}`}
       />;
@@ -79,7 +79,7 @@ export const FIELD_TYPE_REGISTRY = {
 
 ---
 
-## ✅ 修复方案
+## 修复方案
 
 ### 为 textarea 添加 search 函数
 
@@ -96,7 +96,7 @@ textarea: {
     return <ProFormTextArea {...props} />;
   },
   
-  // ✅ 添加 search 函数
+  // 添加 search 函数
   search: (config) => {
     // textarea 字段在搜索时使用单行文本输入框（更适合搜索场景）
     const props = {
@@ -109,7 +109,7 @@ textarea: {
       },
       ...config.search?.props,
     };
-    return <ProFormText {...props} />;  // ✅ 搜索时使用单行输入框
+    return <ProFormText {...props} />;  // 搜索时使用单行输入框
   },
 },
 ```
@@ -138,7 +138,7 @@ textarea: {
 ```javascript
 {
   key: 'remark',
-  type: 'textarea',  // ✅ 类型为 textarea
+  type: 'textarea',  // 类型为 textarea
   table: {
     // 表格中显示为多行文本（省略显示）
   },
@@ -147,7 +147,7 @@ textarea: {
   },
   search: {
     mode: 'like',
-    placeholder: 'Search by remark',  // ✅ 现在会生效！
+    placeholder: 'Search by remark',  // 现在会生效！
   },
 }
 ```
@@ -187,12 +187,12 @@ textarea: {
 
 ## 📋 字段类型搜索函数检查清单
 
-### ✅ 已支持 search 函数的类型
+### 已支持 search 函数的类型
 
 | 类型 | search 组件 | 说明 |
 |------|------------|------|
 | `text` | `ProFormText` | 单行文本输入 |
-| `textarea` | `ProFormText` | ✅ 本次添加（搜索时用单行） |
+| `textarea` | `ProFormText` | 本次添加（搜索时用单行） |
 | `number` | `ProFormDigit` | 数字输入 |
 | `date` | `ProFormDatePicker` | 日期选择 |
 | `daterange` | `ProFormDateRangePicker` | 日期范围选择 |
@@ -238,10 +238,10 @@ textarea: {
 3. 查看 "Remark" 搜索框
 
 **预期结果：**
-- ✅ 显示单行文本输入框
-- ✅ 显示 placeholder "Search by remark"
-- ✅ 可以输入搜索关键词
-- ✅ 支持模糊搜索（mode: 'like'）
+- 显示单行文本输入框
+- 显示 placeholder "Search by remark"
+- 可以输入搜索关键词
+- 支持模糊搜索（mode: 'like'）
 
 #### 2. 搜索功能
 
@@ -251,8 +251,8 @@ textarea: {
 - Record 3: remark = "Grenade level permission"
 
 **搜索 "admin"：**
-- ✅ 返回 Record 2
-- ✅ 模糊搜索生效（不区分大小写）
+- 返回 Record 2
+- 模糊搜索生效（不区分大小写）
 
 #### 3. 表单中的 Remark 字段
 
@@ -261,10 +261,10 @@ textarea: {
 2. 查看 "Remark" 字段
 
 **预期结果：**
-- ✅ 显示多行文本框（TextArea）
-- ✅ 默认 4 行
-- ✅ 可以输入多行文本
-- ✅ 显示字符计数（如果配置了 showCount）
+- 显示多行文本框（TextArea）
+- 默认 4 行
+- 可以输入多行文本
+- 显示字符计数（如果配置了 showCount）
 
 ---
 
@@ -338,7 +338,7 @@ export const FIELD_TYPE_REGISTRY = {
 ```javascript
 search: (config) => {
   const props = {
-    // ✅ 优先级（从高到低）：
+    // 优先级（从高到低）：
     placeholder: 
       config.search?.placeholder ||      // 1. search 配置中的 placeholder
       config.placeholder ||              // 2. 顶层 placeholder
@@ -375,7 +375,7 @@ search: (config) => {
   // 搜索配置
   search: {
     mode: 'like',
-    placeholder: 'Search by remark',  // ✅ search 特有配置
+    placeholder: 'Search by remark',  // search 特有配置
     fieldProps: {
       allowClear: true,  // 可以覆盖默认值
     },

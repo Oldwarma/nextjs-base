@@ -14,7 +14,7 @@
 
 ---
 
-## ✅ 修复方案
+## 修复方案
 
 ### 问题 1：Parent Permission 下拉菜单显示 "---"
 
@@ -26,9 +26,9 @@ TreeSelect 需要的数据格式：
 ```javascript
 [
   {
-    title: "显示文本",  // ✅ 必需
-    value: "值",        // ✅ 必需
-    key: "唯一键",      // ✅ 必需
+    title: "显示文本",  // 必需
+    value: "值",        // 必需
+    key: "唯一键",      // 必需
     children: [...]     // 可选
   }
 ]
@@ -56,15 +56,15 @@ export const getPermissionTreeForSelectAction = wrapQueryAction('permission', as
 	// 使用 sysDao.getPermissionTreeForSelect 获取完整的权限树
 	const tree = await sysDao.getPermissionTreeForSelect({ withLabel: false });
 	
-	// ✅ 转换为 TreeSelect 需要的格式
+	// 转换为 TreeSelect 需要的格式
 	const convertToTreeSelectFormat = (nodes) => {
 		if (!nodes || !Array.isArray(nodes)) return [];
 		
 		return nodes.map(node => {
 			const treeNode = {
-				title: node.name,    // ✅ 显示名称
-				value: node.id,      // ✅ 值为 ID
-				key: node.id,        // ✅ key 也是 ID
+				title: node.name,    // 显示名称
+				value: node.id,      // 值为 ID
+				key: node.id,        // key 也是 ID
 			};
 			
 			// 递归处理子节点
@@ -86,9 +86,9 @@ export const getPermissionTreeForSelectAction = wrapQueryAction('permission', as
 ```
 
 **修复效果：**
-- ✅ 下拉菜单正确显示所有权限名称
-- ✅ 可以正确选择父权限
-- ✅ 支持树形结构展示和选择
+- 下拉菜单正确显示所有权限名称
+- 可以正确选择父权限
+- 支持树形结构展示和选择
 
 ---
 
@@ -106,11 +106,11 @@ export const getPermissionTreeForSelectAction = wrapQueryAction('permission', as
 {
   key: 'actions',
   title: 'Actions',
-  type: 'text',  // ✅ 改为 text 类型
+  type: 'text',  // 改为 text 类型
   table: {
     width: 250,
     ellipsis: true,
-    render: (value) => {  // ✅ 使用 render 而不是 formatter
+    render: (value) => {  // 使用 render 而不是 formatter
       // 1. 处理空值
       if (!value) return <span style={{ color: '#999' }}>-</span>;
       if (!Array.isArray(value)) return <span>{String(value)}</span>;
@@ -175,11 +175,11 @@ export const getPermissionTreeForSelectAction = wrapQueryAction('permission', as
 ```
 
 **修复效果：**
-- ✅ 表格中正确显示数组内容（不再是 [object Object]）
-- ✅ 只显示前 2 个元素，多余的显示 " (+N more)"
-- ✅ 鼠标悬停显示完整列表
-- ✅ 详情页显示完整列表（每行一个）
-- ✅ 表格行高正常
+- 表格中正确显示数组内容（不再是 [object Object]）
+- 只显示前 2 个元素，多余的显示 " (+N more)"
+- 鼠标悬停显示完整列表
+- 详情页显示完整列表（每行一个）
+- 表格行高正常
 
 ---
 
@@ -189,10 +189,10 @@ export const getPermissionTreeForSelectAction = wrapQueryAction('permission', as
 
 | 功能 | 修复前 | 修复后 |
 |------|--------|--------|
-| **Parent Permission 下拉** | 显示 "---" | ✅ 显示权限名称 |
-| **Actions 表格列** | [object Object] | ✅ 正确显示数组内容 |
-| **Actions 详情页** | "-" | ✅ 完整列表（换行） |
-| **表格行高** | 异常大 | ✅ 正常 |
+| **Parent Permission 下拉** | 显示 "---" | 显示权限名称 |
+| **Actions 表格列** | [object Object] | 正确显示数组内容 |
+| **Actions 详情页** | "-" | 完整列表（换行） |
+| **表格行高** | 异常大 | 正常 |
 
 ---
 
@@ -203,7 +203,7 @@ export const getPermissionTreeForSelectAction = wrapQueryAction('permission', as
 Ant Design 的 TreeSelect 组件**严格要求**数据格式：
 
 ```javascript
-// ✅ 正确格式
+// 正确格式
 {
   title: "显示文本",  // 必需
   value: "选择值",    // 必需
@@ -255,7 +255,7 @@ Ant Design TreeSelect 的 `treeData` 格式要求在官方文档中有明确说�
 ### 3. 复杂数据渲染优先使用 render
 
 对于数组、对象等复杂数据类型：
-- ✅ 使用 `render` 返回 JSX
+- 使用 `render` 返回 JSX
 - ❌ 不要依赖 `formatter` 或默认类型渲染
 
 ---

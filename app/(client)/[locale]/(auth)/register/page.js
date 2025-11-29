@@ -62,7 +62,7 @@ export default function RegisterPage() {
 					{success ? (
 						<div className="rounded-md bg-green-50 p-4 text-center">
 							<p className="text-sm font-medium text-green-800">
-								✅ Registration successful! Redirecting...
+								Registration successful! Redirecting...
 							</p>
 						</div>
 					) : (

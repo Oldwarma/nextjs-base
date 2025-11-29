@@ -21,7 +21,7 @@ pagination: {
   defaultPageSize: 10000, // 一次渲染 10000 个 DOM 节点
 }
 
-✅ 正确示例：
+正确示例：
 pagination: {
   defaultPageSize: 20,    // 一次只渲染 20 个 DOM 节点
   pageSizeOptions: [10, 20, 50, 100],
@@ -41,7 +41,7 @@ export default function MyPage() {
   return <SmartCrudPage dataSource={data} />;
 }
 
-✅ 正确示例：
+正确示例：
 export default function MyPage() {
   // 使用 useMemo，只创建一次
   const data = useMemo(() => {
@@ -62,7 +62,7 @@ export default function MyPage() {
 ❌ 问题：无限高度的表格
 scroll: { x: 1200 }
 
-✅ 优化：固定表格高度，启用滚动
+优化：固定表格高度，启用滚动
 scroll: { 
   x: 1200,
   y: 600  // 固定高度，超出部分滚动
@@ -167,7 +167,7 @@ export default function MyPage() {
 | 方案 | 首次渲染 | 用户体验 |
 |------|---------|---------|
 | ❌ 同步创建 | 卡顿 2-3 秒 | 页面冻结 |
-| ✅ 延迟加载 | 立即显示 loading | 流畅 |
+| 延迟加载 | 立即显示 loading | 流畅 |
 
 **原理：**
 1. 组件首次渲染：显示 loading 状态（几乎瞬间）
@@ -189,7 +189,7 @@ export default function MyPage() {
 ### 1. 合理的分页配置
 
 ```javascript
-✅ 推荐配置：
+推荐配置：
 - 默认每页：20 条
 - 可选范围：10, 20, 50, 100
 - 最大不超过：200 条
@@ -202,7 +202,7 @@ export default function MyPage() {
 ### 2. 数据处理优化
 
 ```javascript
-✅ 使用 useMemo 缓存计算结果
+使用 useMemo 缓存计算结果
 const processedData = useMemo(() => {
   return rawData.map(item => ({
     ...item,
@@ -217,7 +217,7 @@ const processedData = rawData.map(...); // 组件重渲染就重新计算
 ### 3. 条件渲染大数据
 
 ```javascript
-✅ 根据数据量选择渲染方式
+根据数据量选择渲染方式
 const dataCount = data.length;
 
 if (dataCount > 10000) {
@@ -235,7 +235,7 @@ if (dataCount > 10000) {
 ### 4. 禁用不必要的功能
 
 ```javascript
-✅ 只读表格，禁用所有操作
+只读表格，禁用所有操作
 <SmartCrudPage
   dataSource={data}
   enableCreate={false}

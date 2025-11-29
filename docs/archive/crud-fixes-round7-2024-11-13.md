@@ -87,7 +87,7 @@ form: (config) => {
 
 ```javascript
 const formattedTree = [
-  { title: '--- Root Menu ---', value: '', key: '' }, // ✅ 使用空字符串
+  { title: '--- Root Menu ---', value: '', key: '' }, // 使用空字符串
   ...convertToTreeSelectFormat(result.rows || []),
 ];
 ```
@@ -105,10 +105,10 @@ const formattedTree = [
 4. **数据库层：** 保存为 `parent_id: null`（顶级菜单）
 
 **为什么这样做：**
-- ✅ TreeSelect 兼容（空字符串是有效值）
-- ✅ 数据库语义正确（`null` 表示顶级）
-- ✅ `key` 和 `value` 一致（都是 `''`）
-- ✅ 通过 `transforms.input` 分离 UI 层和数据层
+- TreeSelect 兼容（空字符串是有效值）
+- 数据库语义正确（`null` 表示顶级）
+- `key` 和 `value` 一致（都是 `''`）
+- 通过 `transforms.input` 分离 UI 层和数据层
 
 ---
 
@@ -124,11 +124,11 @@ form: (config) => {
   const options = config.options || config.data || config.form?.options || config.form?.data;
   const fieldProps = {
     showSearch: true,
-    placeholder: config.form?.placeholder || config.placeholder || `Select ${config.title}`, // ✅ 添加到 fieldProps
+    placeholder: config.form?.placeholder || config.placeholder || `Select ${config.title}`, // 添加到 fieldProps
     ...props.fieldProps,
   };
   
-  // ✅ 移除顶层的 placeholder（Select 不需要）
+  // 移除顶层的 placeholder（Select 不需要）
   const { placeholder, ...propsWithoutPlaceholder } = props;
   
   return (
@@ -143,9 +143,9 @@ form: (config) => {
 ```
 
 **关键改动：**
-1. ✅ 在 `fieldProps` 中添加 `placeholder`
-2. ✅ 从顶层 props 中移除 `placeholder`
-3. ✅ 使用更合适的默认文案 `Select ${config.title}`
+1. 在 `fieldProps` 中添加 `placeholder`
+2. 从顶层 props 中移除 `placeholder`
+3. 使用更合适的默认文案 `Select ${config.title}`
 
 ---
 
@@ -163,14 +163,14 @@ const fieldProps = {
   treeCheckable,
   showSearch,
   treeDefaultExpandAll: true,
-  placeholder: config.form?.placeholder || config.placeholder || `Select ${config.title}`, // ✅ 添加 placeholder
+  placeholder: config.form?.placeholder || config.placeholder || `Select ${config.title}`, // 添加 placeholder
   ...rawFieldProps,
 };
 ```
 
 **关键改动：**
-1. ✅ 在 `fieldProps` 中添加 `placeholder`
-2. ✅ 默认文案：`Select ${config.title}`
+1. 在 `fieldProps` 中添加 `placeholder`
+2. 默认文案：`Select ${config.title}`
 
 ---
 
@@ -179,9 +179,9 @@ const fieldProps = {
 ### 1. TreeSelect 的 Value 要求
 
 **Ant Design TreeSelect 文档：**
-- ✅ `value` 可以是：`string | number | string[] | number[]`
+- `value` 可以是：`string | number | string[] | number[]`
 - ❌ `value` 不能是：`null | undefined`
-- ✅ `key` 和 `value` 必须相同（单选时）
+- `key` 和 `value` 必须相同（单选时）
 
 **我们的选择：**
 - 使用 **空字符串 `''`** 而不是 `null`
@@ -197,7 +197,7 @@ const fieldProps = {
 // ❌ 错误：在顶层
 <Select placeholder="Please select" />
 
-// ✅ 正确：在 ProForm 中通过 fieldProps
+// 正确：在 ProForm 中通过 fieldProps
 <ProFormSelect
   fieldProps={{
     placeholder: "Please select"
@@ -221,7 +221,7 @@ const fieldProps = {
 | `value: null` | 语义清晰 | ❌ TreeSelect 不支持 |
 | `value: 'root'` | TreeSelect 支持 | ❌ 需要在多处特殊处理 "root" |
 | `value: 0` | TreeSelect 支持 | ❌ 与真实 ID 冲突 |
-| `value: ''` (空字符串) | ✅ TreeSelect 支持<br>✅ 转换简单<br>✅ 语义合理 | 需要 transform |
+| `value: ''` (空字符串) | TreeSelect 支持<br>转换简单<br>语义合理 | 需要 transform |
 
 **最终选择：** 空字符串 + Transform
 
@@ -240,15 +240,15 @@ const fieldProps = {
 
 ### 影响的功能
 
-✅ **Menus 页面**
+**Menus 页面**
 - Create Modal 的 Parent Menu 字段
 - Update Modal 的 Parent Menu 字段
 
-✅ **Permissions 页面**
+**Permissions 页面**
 - Create Modal 的 Parent Permission 字段
 - Update Modal 的 Parent Permission 字段
 
-✅ **所有使用 Select/TreeSelect 的页面**
+**所有使用 Select/TreeSelect 的页面**
 - 现在都会正确显示 placeholder
 
 ---
@@ -263,9 +263,9 @@ const fieldProps = {
 3. 查看浏览器控制台
 
 **预期结果：**
-- ✅ 没有 TreeSelect 警告
-- ✅ Parent Menu 字段显示 "Select Parent Menu" placeholder
-- ✅ 下拉菜单中有 "--- Root Menu ---" 选项
+- 没有 TreeSelect 警告
+- Parent Menu 字段显示 "Select Parent Menu" placeholder
+- 下拉菜单中有 "--- Root Menu ---" 选项
 
 ---
 
@@ -277,8 +277,8 @@ const fieldProps = {
 3. 观察所有 Select/TreeSelect 字段
 
 **预期结果：**
-- ✅ Parent Menu 显示 "Select Parent Menu"
-- ✅ 所有 Select 字段都有合适的 placeholder
+- Parent Menu 显示 "Select Parent Menu"
+- 所有 Select 字段都有合适的 placeholder
 
 ---
 
@@ -291,9 +291,9 @@ const fieldProps = {
 4. 填写其他必填字段，保存
 
 **预期结果：**
-- ✅ 创建成功
-- ✅ 数据库中 `parent_id` 为 `null`
-- ✅ 列表中显示为顶级菜单
+- 创建成功
+- 数据库中 `parent_id` 为 `null`
+- 列表中显示为顶级菜单
 
 ---
 
@@ -305,9 +305,9 @@ const fieldProps = {
 3. 观察 `remark` 字段（非必填，可能为空）
 
 **预期结果：**
-- ✅ 如果 `remark` 为空，显示 placeholder "Enter Remark"
-- ✅ 不会显示空白
-- ✅ 用户体验良好
+- 如果 `remark` 为空，显示 placeholder "Enter Remark"
+- 不会显示空白
+- 用户体验良好
 
 ---
 
@@ -324,7 +324,7 @@ export const getTreeForSelectAction = async () => {
   return {
     success: true,
     data: [
-      { title: '--- Root ---', value: '', key: '' }, // ✅ 空字符串
+      { title: '--- Root ---', value: '', key: '' }, // 空字符串
       ...actualTreeData,
     ],
   };
@@ -335,7 +335,7 @@ export const config = {
   transforms: {
     input: (data) => {
       if (data.parent_id === '') {
-        data.parent_id = null; // ✅ 转为 null
+        data.parent_id = null; // 转为 null
       }
       return data;
     },
@@ -355,7 +355,7 @@ export const config = {
   title: 'Parent Menu',
   type: 'tree-select',
   form: {
-    placeholder: 'Select Parent Menu', // ✅ 显式配置
+    placeholder: 'Select Parent Menu', // 显式配置
     action: getMenuTreeForSelectAction,
   },
 }
@@ -379,12 +379,12 @@ export const config = {
 ```javascript
 <ProFormSelect
   name="field"
-  label="Label"              // ✅ ProForm 属性
-  rules={[...]}              // ✅ ProForm 属性
+  label="Label"              // ProForm 属性
+  rules={[...]}              // ProForm 属性
   fieldProps={{
-    placeholder: "Select",   // ✅ 传递给 Select
-    showSearch: true,        // ✅ 传递给 Select
-    allowClear: true,        // ✅ 传递给 Select
+    placeholder: "Select",   // 传递给 Select
+    showSearch: true,        // 传递给 Select
+    allowClear: true,        // 传递给 Select
   }}
 />
 ```
@@ -416,8 +416,8 @@ export const config = {
   key: 'parent_id',
   type: 'tree-select',
   form: {
-    showRootOption: true,           // ✅ 是否显示 Root 选项
-    rootOptionLabel: '--- Root ---', // ✅ Root 选项文案
+    showRootOption: true,           // 是否显示 Root 选项
+    rootOptionLabel: '--- Root ---', // Root 选项文案
   },
 }
 ```

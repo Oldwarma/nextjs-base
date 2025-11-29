@@ -27,7 +27,7 @@ async function migrateUsers() {
 		console.log(`📊 Found ${needsMigration} users that need migration\n`);
 
 		if (needsMigration === 0) {
-			console.log('✅ All users already migrated!');
+			console.log('All users already migrated!');
 			process.exit(0);
 		}
 
@@ -48,7 +48,7 @@ async function migrateUsers() {
 			}
 		);
 
-		console.log(`✅ Migration completed!`);
+		console.log(`Migration completed!`);
 		console.log(`   - Matched: ${result.matchedCount}`);
 		console.log(`   - Modified: ${result.modifiedCount}\n`);
 

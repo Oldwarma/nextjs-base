@@ -25,10 +25,10 @@
 
 ### 🎯 目标
 
-- ✅ **一致性**：数据库、后端、前端使用相同的字段名
-- ✅ **可读性**：字段名清晰表达含义
-- ✅ **可维护性**：降低理解和修改成本
-- ✅ **可扩展性**：兼容多种数据库（MongoDB、PostgreSQL、CloudflareD1）
+- **一致性**：数据库、后端、前端使用相同的字段名
+- **可读性**：字段名清晰表达含义
+- **可维护性**：降低理解和修改成本
+- **可扩展性**：兼容多种数据库（MongoDB、PostgreSQL、CloudflareD1）
 
 ### 📌 适用范围
 
@@ -44,7 +44,7 @@
 
 ### 1. 使用 snake_case（蛇形命名）
 
-**✅ 推荐**：
+**推荐**：
 ```javascript
 parent_id
 sort_order
@@ -66,7 +66,7 @@ PARENT_ID      // SCREAMING_SNAKE_CASE
 
 ### 2. 使用语义化名称
 
-**✅ 推荐**：
+**推荐**：
 ```javascript
 user_id        // 清晰表达"用户ID"
 created_at     // 清晰表达"创建时间"
@@ -82,7 +82,7 @@ flag           // 含义模糊
 
 ### 3. 避免冗余前缀
 
-**✅ 推荐**：
+**推荐**：
 ```javascript
 // roles 表
 {
@@ -104,14 +104,14 @@ flag           // 含义模糊
 ```javascript
 // articles 表
 {
-  author_id: String,    // ✅ 保留前缀，表明是 users 表的 id
-  category_id: String   // ✅ 保留前缀，表明是 categories 表的 id
+  author_id: String,    // 保留前缀，表明是 users 表的 id
+  category_id: String   // 保留前缀，表明是 categories 表的 id
 }
 ```
 
 ### 4. 统一布尔值命名
 
-**✅ 推荐**：
+**推荐**：
 ```javascript
 enable: Boolean        // 是否启用
 hidden: Boolean        // 是否隐藏
@@ -262,7 +262,7 @@ can_edit: Boolean      // 不需要 can_ 前缀
 - 使用 snake_case
 - 语义清晰
 
-**✅ 推荐**：
+**推荐**：
 ```javascript
 users
 roles
@@ -286,7 +286,7 @@ UserRoles              // 不要使用 PascalCase
 - 格式：`idx_{collection}_{field1}_{field2}`
 - 使用 snake_case
 
-**✅ 推荐**：
+**推荐**：
 ```javascript
 // 单字段索引
 db.users.createIndex({ "email": 1 }, { name: "idx_users_email" })
@@ -315,7 +315,7 @@ db.roles.createIndex(
 - 语义清晰
 - 避免缩写
 
-**✅ 推荐**：
+**推荐**：
 ```javascript
 // 变量
 const userId = "user-uuid";
@@ -344,7 +344,7 @@ const RoleList = [];         // 不要用 PascalCase
 - 组件名使用 PascalCase
 - 文件名使用 kebab-case 或 PascalCase
 
-**✅ 推荐**：
+**推荐**：
 ```javascript
 // 组件定义
 export default function SmartCrudPage() { }
@@ -362,7 +362,7 @@ SmartCrudPage.jsx          // 也可以
 - 参数使用 camelCase
 - 返回值字段使用 camelCase
 
-**✅ 推荐**：
+**推荐**：
 ```javascript
 // Action 定义
 export async function getUserRolesAction(userId) {
@@ -383,7 +383,7 @@ export async function bindUserRolesAction(userId, roles, reset) {
 - 配置对象的 key 使用 camelCase
 - 但 `fields` 中的字段名必须与数据库一致（snake_case）
 
-**✅ 推荐**：
+**推荐**：
 ```javascript
 export const userCrudConfig = {
   collectionName: 'users',       // camelCase
@@ -618,7 +618,7 @@ const role = {
   sortOrder: 10
 };
 
-// ✅ 正确
+// 正确
 const role = {
   id: "uuid",
   name: "超级管理员",
@@ -635,7 +635,7 @@ export async function bindUserRoles({ userId, roleIds }) {
   await collection.updateOne({ id: userId }, { $set: { ids: roleIds } });
 }
 
-// ✅ 正确
+// 正确
 export async function bindUserRoles({ userId, roles }) {
   await collection.updateOne({ id: userId }, { $set: { roles: roles } });
 }
@@ -655,7 +655,7 @@ export async function bindUserRoles({ userId, roles }) {
   }
 }
 
-// ✅ 正确
+// 正确
 {
   key: 'roles',
   detail: {

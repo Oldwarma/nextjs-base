@@ -45,7 +45,7 @@ app/(admin)/
 - ❌ config 文件意义不大
 - ❌ 依然容易出错
 
-### v3.0 - 完全合并（✅ 当前推荐）
+### v3.0 - 完全合并（当前推荐）
 
 ```
 app/(admin)/
@@ -56,11 +56,11 @@ app/(admin)/
 ```
 
 **优势：**
-- ✅ 只需 2 个文件
-- ✅ 职责清晰：UI vs 服务端
-- ✅ 不会出现构建错误
-- ✅ 修改配置只需改一个文件
-- ✅ 代码组织清晰
+- 只需 2 个文件
+- 职责清晰：UI vs 服务端
+- 不会出现构建错误
+- 修改配置只需改一个文件
+- 代码组织清晰
 
 ---
 
@@ -72,7 +72,7 @@ app/(admin)/
 |------|---------|------------|-------------|------|
 | v1.0 | 1 | 2 | 1 | **4** |
 | v2.0 | 1 | 2 | 1 | **4** |
-| v3.0 | 1 | 0 | 1 | **2** ✅ |
+| v3.0 | 1 | 0 | 1 | **2** |
 
 **节省：50% 的文件数量！**
 
@@ -80,12 +80,12 @@ app/(admin)/
 
 | 配置项 | v1.0 | v2.0 | v3.0 |
 |--------|------|------|------|
-| fieldsConfig | crud-config.permission.js | page.js | page.js ✅ |
-| collectionName | crud-config.permission.js | crud-config.permission.js | crud-action.permission.js ✅ |
-| fields | crud-config.permission.js | crud-config.permission.js | crud-action.permission.js ✅ |
-| validation | permission-server.config.js | permission-server.config.js | crud-action.permission.js ✅ |
-| hooks | permission-server.config.js | permission-server.config.js | crud-action.permission.js ✅ |
-| transforms | permission-server.config.js | permission-server.config.js | crud-action.permission.js ✅ |
+| fieldsConfig | crud-config.permission.js | page.js | page.js |
+| collectionName | crud-config.permission.js | crud-config.permission.js | crud-action.permission.js |
+| fields | crud-config.permission.js | crud-config.permission.js | crud-action.permission.js |
+| validation | permission-server.config.js | permission-server.config.js | crud-action.permission.js |
+| hooks | permission-server.config.js | permission-server.config.js | crud-action.permission.js |
+| transforms | permission-server.config.js | permission-server.config.js | crud-action.permission.js |
 
 **结论：v3.0 位置最清晰，只需记住 2 个位置！**
 
@@ -132,11 +132,11 @@ const crudActions = createCrudActions(permissionConfig);
 
 | 场景 | v1.0 | v3.0 |
 |------|------|------|
-| 修改字段配置 | 改 3 个文件 | 改 2 个文件 ✅ |
+| 修改字段配置 | 改 3 个文件 | 改 2 个文件 |
 | 修改验证规则 | 改 1 个文件 | 改 1 个文件 |
-| 添加新字段 | 改 3 个文件 | 改 2 个文件 ✅ |
+| 添加新字段 | 改 3 个文件 | 改 2 个文件 |
 | 添加新钩子 | 改 1 个文件 | 改 1 个文件 |
-| 调试配置问题 | 查看 4 个文件 | 查看 2 个文件 ✅ |
+| 调试配置问题 | 查看 4 个文件 | 查看 2 个文件 |
 
 **节省：平均减少 40% 的文件修改次数！**
 
@@ -172,10 +172,10 @@ export default function PermissionsManagementPage() {
 
 **新代码（v3.0）：**
 ```javascript
-// ✅ 不需要导入任何 config
+// 不需要导入任何 config
 
 export default function PermissionsManagementPage() {
-  // ✅ 直接在这里定义 fieldsConfig
+  // 直接在这里定义 fieldsConfig
   const fieldsConfig = [
     {
       key: 'name',
@@ -211,9 +211,9 @@ const crudActions = createCrudActions({
 
 **新代码（v3.0）：**
 ```javascript
-// ✅ 不需要导入任何 config
+// 不需要导入任何 config
 
-// ✅ 所有配置直接在这里定义
+// 所有配置直接在这里定义
 const permissionConfig = {
   // 基础配置
   collectionName: 'permissions',
@@ -349,11 +349,11 @@ app/(admin)/actions/rbac/crud-action.permission.js  (320 行)
 
 | 指标 | 迁移前 | 迁移后 | 改进 |
 |------|--------|--------|------|
-| 文件数 | 4 | 2 | **-50%** ✅ |
-| 总行数 | 1064 | 628 | **-41%** ✅ |
-| Config 文件 | 2 | 0 | **-100%** ✅ |
-| 导入语句 | 3 | 0 | **-100%** ✅ |
-| 维护成本 | 高 | 低 | **大幅降低** ✅ |
+| 文件数 | 4 | 2 | **-50%** |
+| 总行数 | 1064 | 628 | **-41%** |
+| Config 文件 | 2 | 0 | **-100%** |
+| 导入语句 | 3 | 0 | **-100%** |
+| 维护成本 | 高 | 低 | **大幅降低** |
 
 ---
 
@@ -367,9 +367,9 @@ app/(admin)/actions/rbac/crud-action.permission.js  (320 行)
 - transforms 只在服务端转换
 
 把它们放在 action 文件中：
-- ✅ 避免客户端导入服务端代码
-- ✅ 完全避免构建错误
-- ✅ 代码位置清晰
+- 避免客户端导入服务端代码
+- 完全避免构建错误
+- 代码位置清晰
 
 ### Q2: fieldsConfig 为什么要放在 page.js 中？
 
@@ -379,9 +379,9 @@ app/(admin)/actions/rbac/crud-action.permission.js  (320 行)
 - 定义搜索项
 
 把它放在 page.js 中：
-- ✅ 客户端安全（不包含 MongoDB）
-- ✅ 便于调整 UI
-- ✅ 与组件代码在一起
+- 客户端安全（不包含 MongoDB）
+- 便于调整 UI
+- 与组件代码在一起
 
 ### Q3: 配置文件会不会太长？
 
@@ -457,7 +457,7 @@ const config = {
 
 ---
 
-## ✅ 迁移完成标志
+## 迁移完成标志
 
 迁移完成后，你的项目应该：
 
