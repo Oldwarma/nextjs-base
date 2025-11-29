@@ -99,7 +99,7 @@ export default function MenusManagementPage() {
 			form: {
 				placeholder: 'e.g., /admin/users or https://example.com',
 				fieldProps: {
-					addonBefore: '🔗',
+					prefix: '🔗',
 				},
 				tips: 'Internal URLs start with "/" (e.g., /admin/users). External URLs start with "http"',
 			},
