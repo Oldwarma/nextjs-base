@@ -290,17 +290,16 @@ export const getRoleListForSelectAction = wrapQueryAction('role', async ({ withL
  * 分配权限给角色
  */
 export const assignPermissionsToRoleAction = wrapAdminAction('assign_permissions', 'role', async (params) => {
-	// 使用 Zod Schema 验证输入
-	const validationResult = validate(assignPermissionsSchema, params);
-	if (!validationResult.success) {
-		return {
-			success: false,
-			error: validationResult.error,
-			errors: validationResult.errors,
-		};
+	const { roleId, permissionIds } = params;
+
+	// 简单验证
+	if (!roleId) {
+		return { success: false, error: 'roleId is required' };
 	}
 
-	const { roleId, permissionIds } = validationResult.data;
+	if (!Array.isArray(permissionIds)) {
+		return { success: false, error: 'permissionIds must be an array' };
+	}
 
 	// 更新角色的权限列表
 	const result = await crudActions._dao.update(roleId, { permission: permissionIds });
@@ -312,17 +311,16 @@ export const assignPermissionsToRoleAction = wrapAdminAction('assign_permissions
  * 分配菜单给角色
  */
 export const assignMenusToRoleAction = wrapAdminAction('assign_menus', 'role', async (params) => {
-	// 使用 Zod Schema 验证输入
-	const validationResult = validate(assignMenusSchema, params);
-	if (!validationResult.success) {
-		return {
-			success: false,
-			error: validationResult.error,
-			errors: validationResult.errors,
-		};
+	const { roleId, menuIds } = params;
+
+	// 简单验证
+	if (!roleId) {
+		return { success: false, error: 'roleId is required' };
 	}
 
-	const { roleId, menuIds } = validationResult.data;
+	if (!Array.isArray(menuIds)) {
+		return { success: false, error: 'menuIds must be an array' };
+	}
 
 	// 更新角色的菜单列表
 	const result = await crudActions._dao.update(roleId, { menu: menuIds });

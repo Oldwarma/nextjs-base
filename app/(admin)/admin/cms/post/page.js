@@ -1,27 +1,21 @@
 /**
  * Post Management Page
- * 
- * 重构为符合最新 SmartCrudPage 架构
+ *
+ * 基于 SmartCrudPage 实现
  * - fieldsConfig 直接在 page.js 中定义
  * - Server Actions 在 crud-action.post.js 中
  */
 
 'use client';
 
-import { useMemo } from 'react';
-import dynamic from 'next/dynamic';
+import SmartCrudPage from '@/components/admin/smart-crud-page';
 import * as postActions from '@/app/(admin)/actions/cms/crud-action.post';
-
-const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
-	ssr: false,
-	loading: () => <div style={{ padding: 24, textAlign: 'center' }}>Loading...</div>,
-});
 
 export default function PostManagementPage() {
 	// ============================================
 	// 字段配置
 	// ============================================
-	const fieldsConfig = useMemo(() => [
+	const fieldsConfig = [
 		// ID 字段（MongoDB _id）
 		{
 			key: '_id',
@@ -31,7 +25,7 @@ export default function PostManagementPage() {
 			form: false,
 			search: false,
 		},
-		
+
 		// 名称
 		{
 			key: 'name',
@@ -55,7 +49,7 @@ export default function PostManagementPage() {
 				mode: 'like',
 			},
 		},
-		
+
 		// 状态
 		{
 			key: 'status',
@@ -77,7 +71,7 @@ export default function PostManagementPage() {
 				mode: 'exact',
 			},
 		},
-		
+
 		// 显示顺序
 		{
 			key: 'order',
@@ -97,7 +91,7 @@ export default function PostManagementPage() {
 			},
 			search: false,
 		},
-		
+
 		// 过期时间
 		{
 			key: 'expiresAt',
@@ -111,7 +105,7 @@ export default function PostManagementPage() {
 			},
 			search: false,
 		},
-		
+
 		// 描述
 		{
 			key: 'description',
@@ -132,7 +126,7 @@ export default function PostManagementPage() {
 			},
 			search: false,
 		},
-		
+
 		// 内容（Markdown）
 		{
 			key: 'content',
@@ -149,13 +143,11 @@ export default function PostManagementPage() {
 				rules: [{ max: 5000, message: 'Content max length: 5000' }],
 			},
 			detail: {
-				render: (value) => (
-					<div dangerouslySetInnerHTML={{ __html: value }} />
-				),
+				render: (value) => <div dangerouslySetInnerHTML={{ __html: value }} />,
 			},
 			search: false,
 		},
-		
+
 		// 创建时间
 		{
 			key: 'createdAt',
@@ -168,7 +160,7 @@ export default function PostManagementPage() {
 			form: false,
 			search: false,
 		},
-		
+
 		// 更新时间
 		{
 			key: 'updatedAt',
@@ -181,18 +173,7 @@ export default function PostManagementPage() {
 			form: false,
 			search: false,
 		},
-	], []);
-
-	// ============================================
-	// Actions 配置
-	// ============================================
-	const actions = {
-		getList: postActions.getPostListAction,
-		// getDetail: postActions.getPostDetailAction, // 注释掉后，直接使用表格行内数据展示详情
-		create: postActions.createPostAction,
-		update: postActions.updatePostAction,
-		delete: postActions.deletePostAction,
-	};
+	];
 
 	// ============================================
 	// 批量操作配置
@@ -235,20 +216,22 @@ export default function PostManagementPage() {
 	return (
 		<SmartCrudPage
 			fieldsConfig={fieldsConfig}
-			actions={actions}
+			actions={{
+				getList: postActions.getPostListAction,
+				create: postActions.createPostAction,
+				update: postActions.updatePostAction,
+				delete: postActions.deletePostAction,
+			}}
 			title='Post Management'
 			rowKey='_id'
-			
 			// 功能开关
 			enableCreate={true}
 			enableEdit={true}
 			enableDelete={true}
 			enableDetail={true}
 			enableIndexColumn={true}
-			
 			// 批量操作
 			batchActions={batchActions}
-			
 			// 表格配置
 			tableProps={{
 				pagination: {
@@ -258,7 +241,6 @@ export default function PostManagementPage() {
 				},
 				scroll: { x: 1200 },
 			}}
-			
 			// 表单配置
 			formProps={{
 				width: 800, // Markdown 编辑器需要更宽
@@ -266,4 +248,3 @@ export default function PostManagementPage() {
 		/>
 	);
 }
-

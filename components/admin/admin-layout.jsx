@@ -409,11 +409,11 @@ export default function AdminLayout({ children, user }) {
 						colorBgMenuItemSelected: '#e6f4ff',
 						colorBgMenuItemHover: '#f5f5f5',
 					},
-					// pageContainer: {
-					// 	paddingBlockPageContainerContent: 24,
-					// 	paddingInlinePageContainerContent: 24,
-					// 	colorBgPageContainer: '#f5f5f5',
-					// },
+					pageContainer: {
+						paddingBlockPageContainerContent: 24,
+						paddingInlinePageContainerContent: 24,
+						colorBgPageContainer: '#f5f5f5',
+					},
 				}}
 				style={{
 					height: '100vh',

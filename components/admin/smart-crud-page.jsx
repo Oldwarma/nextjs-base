@@ -18,9 +18,12 @@
 'use client';
 
 import React, { useState, useRef, useMemo } from 'react';
-import { ProTable, DrawerForm } from '@ant-design/pro-components';
+import { ProTable, DrawerForm, createIntl } from '@ant-design/pro-components';
 import { Button, Space, Dropdown, Popconfirm, Descriptions, App } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, MoreOutlined } from '@ant-design/icons';
+
+// ProComponents 英文语言包
+import enUSIntl from '@ant-design/pro-provider/es/locale/en_US';
 
 // 导入字段生成器
 import {
@@ -34,6 +37,9 @@ import { buildSortCondition } from '@/lib/crud/search-transformer';
 
 // 导入万能表单组件
 import { SmartModalForm } from '@/components/admin/smart-form';
+
+// 创建英文 intl 实例
+const enUSProIntl = createIntl('en_US', enUSIntl);
 
 
 /**
@@ -620,6 +626,7 @@ export default function SmartCrudPage({
 	return (
 		<>
 			<ProTable
+				intl={enUSProIntl}
 				columns={columnsWithActions}
 				actionRef={actionRef}
 				// 如果提供了 dataSource，使用静态数据模式；否则使用 request 模式
