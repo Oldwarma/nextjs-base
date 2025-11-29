@@ -227,10 +227,33 @@ export const approveXxxAction = wrapAdminAction(
 		return { success: true };
 	},
 	{
-		permissionId: 'approveXxxAction',  // 权限标识
+		// permissionId 可选，如果不提供会自动生成
+		// 自动生成格式：{actionType}{ResourceType}Action
+		// 例如：'approve' + 'xxx' => 'approveXxxAction'
+		permissionId: 'approveXxxAction',  // 权限标识（可选）
 		skipLog: false,                     // 是否跳过日志
+		skipPermission: false,              // 是否跳过 RBAC 权限检查
 	}
 );
+```
+
+**permissionId 自动生成规则**：
+
+当不提供 `permissionId` 时，系统会根据 `actionType` 和 `resourceType` 自动生成：
+
+| actionType | resourceType | 生成的 permissionId |
+|------------|--------------|---------------------|
+| `create` | `user` | `createUserAction` |
+| `update` | `role` | `updateRoleAction` |
+| `delete` | `permission` | `deletePermissionAction` |
+| `assign_permissions` | `role` | `assignPermissionsRoleAction` |
+| `batch_delete` | `user` | `batchDeleteUserAction` |
+| `query` | `menu` | `queryMenuAction` |
+
+这意味着：
+1. **默认安全**：所有 Action 都会进行 RBAC 权限检查
+2. **无需手动配置**：只要在权限表的 `actions` 字段中配置对应的模式即可
+3. **支持通配符**：如 `**/create*Action` 匹配所有创建操作
 ```
 
 ## 配置详解
