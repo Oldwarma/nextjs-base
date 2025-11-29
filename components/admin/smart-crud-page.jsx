@@ -288,7 +288,7 @@ export default function SmartCrudPage({
 										modalApi.confirm({
 											title: confirmConfig.title || 'Confirmation',
 											content: confirmConfig.description || 'Are you sure?',
-											okText: confirmConfig.okText || 'OK',
+											okText: confirmConfig.okText || 'Confirm',
 											okType: confirmConfig.okType || 'primary',
 											cancelText: confirmConfig.cancelText || 'Cancel',
 											onOk: () => action.onClick(record),
@@ -316,7 +316,7 @@ export default function SmartCrudPage({
 										key={action.key || actionText}
 										title={confirmConfig.title || 'Confirmation'}
 										description={confirmConfig.description || 'Are you sure?'}
-										okText={confirmConfig.okText || 'OK'}
+										okText={confirmConfig.okText || 'Confirm'}
 										okType={confirmConfig.okType || 'primary'}
 										cancelText={confirmConfig.cancelText || 'Cancel'}
 										placement={confirmConfig.placement || 'topRight'}
