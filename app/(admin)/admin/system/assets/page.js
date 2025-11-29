@@ -590,15 +590,21 @@ export default function AssetsPage() {
 					<div style={{ flex: 1 }} />
 
 					{/* 搜索框 */}
-					<Input.Search
-						placeholder='Search files...'
-						value={search}
-						onChange={handleSearchChange}
-						onSearch={handleSearch}
-						style={{ width: 240 }}
-						allowClear
-						enterButton
-					/>
+					<Space.Compact>
+						<Input
+							placeholder='Search files...'
+							value={search}
+							onChange={handleSearchChange}
+							onPressEnter={() => handleSearch(search)}
+							style={{ width: 200 }}
+							allowClear
+						/>
+						<Button 
+							type='primary' 
+							icon={<SearchOutlined />}
+							onClick={() => handleSearch(search)}
+						/>
+					</Space.Compact>
 
 					{/* 类型筛选 */}
 					<Select
