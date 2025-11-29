@@ -1,4 +1,4 @@
-import localFont from 'next/font/local';
+import { Poppins } from 'next/font/google';
 import { checkBackendAccess } from '@/lib/auth/admin-auth';
 import { Toaster } from '@/components/ui/sonner';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
@@ -7,26 +7,11 @@ import AntdConfigProvider from '@/components/admin/antd-config-provider';
 import '../globals.css';
 import './admin-styles.css';
 
-// 使用本地 HarmonyOS Sans 字体
-const harmonyOS = localFont({
-	src: [
-		{
-			path: '../../public/fonts/HarmonyOS_Sans_SC_Medium.ttf',
-			weight: '500',
-			style: 'normal',
-		},
-		{
-			path: '../../public/fonts/HarmonyOS_Sans_SC_Bold.ttf',
-			weight: '700',
-			style: 'normal',
-		},
-		{
-			path: '../../public/fonts/HarmonyOS_Sans_SC_Black.ttf',
-			weight: '900',
-			style: 'normal',
-		},
-	],
-	variable: '--font-harmony-os',
+// 使用 Google Fonts Poppins 字体
+const poppins = Poppins({
+	subsets: ['latin'],
+	weight: ['400', '500', '600', '700', '800', '900'],
+	variable: '--font-poppins',
 	display: 'swap',
 });
 
@@ -46,7 +31,7 @@ export default async function AdminLayoutRoot({ children }) {
 
 	return (
 		<html lang='en' suppressHydrationWarning>
-			<body className={`${harmonyOS.variable} antialiased`}>
+			<body className={`${poppins.variable} antialiased`}>
 				<AntdRegistry>
 					<AntdConfigProvider>
 						<AdminLayout user={session?.user}>

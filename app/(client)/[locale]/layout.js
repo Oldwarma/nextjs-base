@@ -1,4 +1,4 @@
-import localFont from 'next/font/local';
+import { Poppins } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -7,26 +7,11 @@ import { ThemeProvider } from '@/components/common/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import '@/app/globals.css';
 
-// 使用本地 HarmonyOS Sans 字体（多字重）
-const harmonyOS = localFont({
-	src: [
-		{
-			path: '../../../public/fonts/HarmonyOS_Sans_SC_Medium.ttf',
-			weight: '500',
-			style: 'normal',
-		},
-		{
-			path: '../../../public/fonts/HarmonyOS_Sans_SC_Bold.ttf',
-			weight: '700',
-			style: 'normal',
-		},
-		{
-			path: '../../../public/fonts/HarmonyOS_Sans_SC_Black.ttf',
-			weight: '900',
-			style: 'normal',
-		},
-	],
-	variable: '--font-harmony-os',
+// 使用 Google Fonts Poppins 字体
+const poppins = Poppins({
+	subsets: ['latin'],
+	weight: ['400', '500', '600', '700', '800', '900'],
+	variable: '--font-poppins',
 	display: 'swap',
 });
 
@@ -63,7 +48,7 @@ export default async function LocaleLayout({ children, params }) {
 
 	return (
 		<html lang={locale} suppressHydrationWarning>
-			<body className={`${harmonyOS.variable} antialiased`}>
+			<body className={`${poppins.variable} antialiased`}>
 				<ThemeProvider
 					attribute='class'
 					defaultTheme='dark'

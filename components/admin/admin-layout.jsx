@@ -285,165 +285,172 @@ export default function AdminLayout({ children, user }) {
 				navTheme='light'
 				colorPrimary='#1890ff'
 				menuItemRender={(item, dom) => {
-				// item.path 已经是数据库中的 url 字段（在 convertMenuToRoute 中设置）
-				const linkPath = item.path || '/admin';
+					// item.path 已经是数据库中的 url 字段（在 convertMenuToRoute 中设置）
+					const linkPath = item.path || '/admin';
 
-				// 检查是否是外部链接（以 http:// 或 https:// 开头）
-				const isExternalLink = linkPath.startsWith('http://') || linkPath.startsWith('https://');
+					// 检查是否是外部链接（以 http:// 或 https:// 开头）
+					const isExternalLink = linkPath.startsWith('http://') || linkPath.startsWith('https://');
 
-				if (isExternalLink) {
-					// 外部链接：在新标签页打开，添加外部链接图标
-					return (
-						<a
-							href={linkPath}
-							target='_blank'
-							rel='noopener noreferrer'
-							style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+					if (isExternalLink) {
+						// 外部链接：在新标签页打开，添加外部链接图标
+						return (
+							<a
+								href={linkPath}
+								target='_blank'
+								rel='noopener noreferrer'
+								style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+							>
+								{dom}
+								<LinkOutlined style={{ fontSize: '12px', opacity: 0.65 }} />
+							</a>
+						);
+					} else {
+						// 内部链接：使用 Next.js Link
+						return <Link href={linkPath}>{dom}</Link>;
+					}
+				}}
+				avatarProps={{
+					src: user?.image,
+					icon: <UserOutlined />,
+					size: 'default',
+					title: user?.name || 'Admin',
+					render: (_, dom) => (
+						<Dropdown
+							menu={{ items: userMenuItems }}
+							placement='bottomRight'
 						>
-							{dom}
-							<LinkOutlined style={{ fontSize: '12px', opacity: 0.65 }} />
-						</a>
-					);
-				} else {
-					// 内部链接：使用 Next.js Link
-					return <Link href={linkPath}>{dom}</Link>;
-				}
-			}}
-			avatarProps={{
-				src: user?.image,
-				icon: <UserOutlined />,
-				size: 'default',
-				title: user?.name || 'Admin',
-				render: (_, dom) => (
-					<Dropdown
-						menu={{ items: userMenuItems }}
-						placement='bottomRight'
-					>
-						<div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-							{dom}
-							{/* <span style={{ fontWeight: 500 }}>{user?.name || 'Admin'}</span> */}
-						</div>
-					</Dropdown>
-				),
-			}}
-			actionsRender={() => []}
-			headerTitleRender={(logo, title) => (
-				<div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-					<Link
-						href='/admin'
-						style={{
-							display: 'flex',
-							alignItems: 'center',
-							gap: 8,
-							textDecoration: 'none',
-							color: 'inherit',
-						}}
-					>
-						{logo}
-						{title}
-					</Link>
-					<Button
-						type='text'
-						icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-						onClick={() => setCollapsed(!collapsed)}
-						style={{
-							marginLeft: 16,
-							color: '#595959',
-							fontSize: '16px',
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'center',
-							width: 32,
-							height: 32,
-							padding: 0,
-						}}
-					/>
-					{breadcrumbItems.length > 0 && (
-						<>
-							<div
-								style={{
-									width: 1,
-									height: 16,
-									background: '#e8e8e8',
-									margin: '0 16px',
-									flexShrink: 0,
-								}}
-							/>
-							<Breadcrumb
-								items={breadcrumbItems}
-								separator={
-									<span
-										style={{
-											color: '#d9d9d9',
-											margin: '0px',
-											fontSize: '8px',
-										}}
-									>
-										<RightOutlined />
-									</span>
-								}
-								style={{
-									flex: 'none',
-								}}
-							/>
-						</>
-					)}
-				</div>
-			)}
-			menuProps={{
-				style: { paddingTop: 8 },
-			}}
-			token={{
-				header: {
-					colorBgHeader: '#fff',
-					colorHeaderTitle: '#000',
-					colorTextMenu: '#595959',
-					colorTextMenuSelected: '#1890ff',
-					colorBgMenuItemSelected: '#e6f4ff',
-					heightLayoutHeader: 56,
-				},
-				sider: {
-					colorMenuBackground: '#fff',
-					colorTextMenu: '#595959',
-					colorTextMenuSelected: '#1890ff',
-					colorBgMenuItemSelected: '#e6f4ff',
-					colorBgMenuItemHover: '#f5f5f5',
-				},
-				// pageContainer: {
-				// 	paddingBlockPageContainerContent: 24,
-				// 	paddingInlinePageContainerContent: 24,
-				// 	colorBgPageContainer: '#f5f5f5',
-				// },
-			}}
-			style={{
-				height: '100vh',
-			}}
-		>
+							<div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+								{dom}
+								{/* <span style={{ fontWeight: 500 }}>{user?.name || 'Admin'}</span> */}
+							</div>
+						</Dropdown>
+					),
+				}}
+				actionsRender={() => []}
+				headerTitleRender={(logo, title) => (
+					<div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+						<Link
+							href='/admin'
+							style={{
+								display: 'flex',
+								alignItems: 'center',
+								gap: 8,
+								textDecoration: 'none',
+								color: 'inherit',
+							}}
+						>
+							{logo}
+							{title}
+						</Link>
+						<Button
+							type='text'
+							icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+							onClick={() => setCollapsed(!collapsed)}
+							style={{
+								marginLeft: 16,
+								color: '#595959',
+								fontSize: '16px',
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								width: 32,
+								height: 32,
+								padding: 0,
+							}}
+						/>
+						{breadcrumbItems.length > 0 && (
+							<>
+								<div
+									style={{
+										width: 1,
+										height: 16,
+										background: '#e8e8e8',
+										margin: '0 16px',
+										flexShrink: 0,
+									}}
+								/>
+								<Breadcrumb
+									items={breadcrumbItems}
+									separator={
+										<span
+											style={{
+												color: '#d9d9d9',
+												margin: '0px',
+												fontSize: '8px',
+											}}
+										>
+											<RightOutlined />
+										</span>
+									}
+									style={{
+										flex: 'none',
+									}}
+								/>
+							</>
+						)}
+					</div>
+				)}
+				menuProps={{
+					style: { paddingTop: 8 },
+				}}
+				token={{
+					header: {
+						colorBgHeader: '#fff',
+						colorHeaderTitle: '#000',
+						colorTextMenu: '#595959',
+						colorTextMenuSelected: '#1890ff',
+						colorBgMenuItemSelected: '#e6f4ff',
+						heightLayoutHeader: 56,
+					},
+					sider: {
+						colorMenuBackground: '#fff',
+						colorTextMenu: '#595959',
+						colorTextMenuSelected: '#1890ff',
+						colorBgMenuItemSelected: '#e6f4ff',
+						colorBgMenuItemHover: '#f5f5f5',
+					},
+					// pageContainer: {
+					// 	paddingBlockPageContainerContent: 24,
+					// 	paddingInlinePageContainerContent: 24,
+					// 	colorBgPageContainer: '#f5f5f5',
+					// },
+				}}
+				style={{
+					height: '100vh',
+				}}
+			>
 				<div style={{ minHeight: '100%', background: '#f5f5f5' }}>
 					<PageAccessGuard>{children}</PageAccessGuard>
 				</div>
 			</ProLayout>
 
-		{/* 修改密码弹窗 */}
-		<Modal
-			title='Change Password'
-			open={passwordModalOpen}
-			onCancel={handleClosePasswordModal}
-			onOk={() => passwordForm.submit()}
-			confirmLoading={passwordLoading}
-			okText='Change'
-			cancelText='Cancel'
-			width={500}
-			destroyOnHidden
-		>
+			{/* 修改密码弹窗 */}
+			<Modal
+				title='Change Password'
+				open={passwordModalOpen}
+				onCancel={handleClosePasswordModal}
+				onOk={() => passwordForm.submit()}
+				confirmLoading={passwordLoading}
+				okText='Change'
+				cancelText='Cancel'
+				width={500}
+				destroyOnHidden
+			>
 				<Form
 					form={passwordForm}
 					layout='vertical'
 					onFinish={handleChangePassword}
 					autoComplete='off'
 				>
-					<Form.Item label='Account' style={{ marginBottom: 16 }}>
-						<Input value={user?.name || 'admin'} disabled style={{ backgroundColor: '#f5f5f5' }} />
+					<Form.Item
+						label='Account'
+						style={{ marginBottom: 16 }}
+					>
+						<Input
+							value={user?.name || 'admin'}
+							disabled
+							style={{ backgroundColor: '#f5f5f5' }}
+						/>
 					</Form.Item>
 
 					<Form.Item
