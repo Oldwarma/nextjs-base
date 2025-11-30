@@ -17,9 +17,12 @@
  * - 单文件: { success: true, url: '...', key: '...' }
  * - 多文件: { success: true, files: [{ url, key }, ...] }
  * 
+ * GET /api/upload
+ * - 公开接口，获取上传配置信息
+ * 
  * DELETE /api/upload
  * - 需要登录认证
- * - 只能删除自己上传的文件
+ * - 只能删除自己上传的文件（管理员可删除任何文件）
  */
 
 import { headers } from 'next/headers';
@@ -259,7 +262,7 @@ export async function POST(request) {
 }
 
 /**
- * 获取上传配置信息
+ * 获取上传配置信息（公开接口）
  */
 export async function GET() {
 	const r2Config = checkR2Config();
@@ -316,6 +319,7 @@ export async function DELETE(request) {
 		}
 		
 		const userId = session.user.id;
+		const isAdmin = session.user.role === 'admin';
 		
 		// 2. 获取要删除的文件 URL
 		const body = await request.json();
@@ -333,11 +337,11 @@ export async function DELETE(request) {
 		
 		// 提取文件名用于日志
 		const fileName = url.split('/').pop();
-		logParams = { userId, fileName };
+		logParams = { userId, fileName, isAdmin };
 		logUploadStart(action, logParams);
 		
-		// 3. 删除文件
-		const result = await deleteFile(url, userId);
+		// 3. 删除文件（管理员可以删除任何文件）
+		const result = await deleteFile(url, userId, { isAdmin });
 		
 		if (!result.success) {
 			logUploadEnd(action, { error: result.error }, Date.now() - startTime, true);
