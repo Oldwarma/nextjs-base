@@ -38,7 +38,7 @@ export default function Navbar() {
 		},
 	];
 	return (
-		<nav className='fixed top-10 left-1/2 -translate-x-1/2 w-3xl h-14 mx-auto z-50 flex items-center justify-between bg-black/5 backdrop-blur-sm shadow-xs border border-white/10 p-2 rounded-full'>
+		<nav className='fixed top-10 left-1/2 -translate-x-1/2 w-3xl h-14 mx-auto z-50 flex items-center justify-between dark:bg-[#0f0f12]/5 backdrop-blur-sm shadow-xs border border-white/10 p-2 rounded-full'>
 			<Link
 				className='ml-4'
 				href='/'

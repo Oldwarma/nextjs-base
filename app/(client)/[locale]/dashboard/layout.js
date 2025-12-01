@@ -11,7 +11,7 @@ export default async function GenerateLayout({ children }) {
 	return (
 		<div className="flex min-h-screen w-full">
 			<AppSidebar user={session?.user} />
-			<main className="flex-1 bg-[#0f0f12] p-10 text-zinc-50">{children}</main>
+			<main className="flex-1 dark:bg-[#0f0f12] p-10 text-zinc-50">{children}</main>
 		</div>
 	);
 }

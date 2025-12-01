@@ -1,7 +1,7 @@
 # RBAC 权限系统文档索引
 
-> **最后更新**: 2024-11-14  
-> **版本**: v2.0
+> **最后更新**: 2024-12-01  
+> **版本**: v3.0
 
 本目录包含完整的 RBAC 权限系统设计与实施文档。
 
@@ -11,23 +11,22 @@
 
 ### 🎯 核心文档（必读）
 
-1. **[权限系统最终设计总结](./PERMISSION_SYSTEM_FINAL_DESIGN.md)** ⭐️
+1. **[权限命名约定指南](./PERMISSION_NAMING_CONVENTION.md)** ⭐️ **推荐首先阅读**
+   - 像 vk-unicloud 一样的自动权限拦截
+   - API 路由自动拦截（proxy.js）
+   - Server Actions 命名约定（wrapAction）
+   - 前端调用封装（fetchApi / callAction）
+   - 多层级路径支持
+
+2. **[权限系统最终设计总结](./PERMISSION_SYSTEM_FINAL_DESIGN.md)**
    - 最终定案的设计方案
    - 设计决策过程
    - 最佳实践和安全建议
-   - **推荐首先阅读**
 
-2. **[Actions 路径配置指南](./ACTIONS_PATH_GUIDE.md)**
+3. **[Actions 路径配置指南](./ACTIONS_PATH_GUIDE.md)**
    - 如何配置 `actions` 字段
    - 通配符规则详解
    - 实际案例和最佳实践
-   - 常见问题排查
-
-3. **[Server Actions vs Client Actions](./SERVER_VS_CLIENT_ACTIONS.md)**
-   - 概念对比和区别说明
-   - 使用场景划分
-   - 权限验证流程对比
-   - 决策树和快速判断表
 
 ### 🔧 实施文档
 
@@ -41,14 +40,13 @@
    - 添加 `apis` 字段的迁移步骤
    - 迁移脚本和验证方法
    - 回滚方案
-   - 常见问题 FAQ
 
 ### 📖 参考文档
 
-6. **[RBAC 系统总览](./RBAC_SYSTEM.md)**
-   - 系统架构概览
-   - 数据结构说明
-   - 角色、权限、菜单关系
+6. **[Server Actions vs Client Actions](./SERVER_VS_CLIENT_ACTIONS.md)**
+   - 概念对比和区别说明
+   - 使用场景划分
+   - 权限验证流程对比
 
 ---
 
@@ -56,112 +54,133 @@
 
 ### 新手入门
 
-如果你是第一次接触本权限系统，推荐按以下顺序阅读：
-
 ```
-1. PERMISSION_SYSTEM_FINAL_DESIGN.md (了解整体设计)
+1. PERMISSION_NAMING_CONVENTION.md (了解自动权限拦截)
    ↓
-2. ACTIONS_PATH_GUIDE.md (学习如何配置权限)
+2. 创建 API: app/api/v1/pub|auth|sys/xxx/route.js
    ↓
-3. SERVER_VS_CLIENT_ACTIONS.md (理解前后台区别)
+3. 创建 Action: pubXxx / authXxx / sysXxx
    ↓
-4. PERMISSION_SYSTEM_EXTENSION.md (查看代码实现)
+4. 前端调用: fetchApi() / callAction()
 ```
 
-### 常见任务
+### 快速示例
 
-#### 任务 1: 配置一个新权限
+#### 1. 创建 API（自动拦截）
 
-1. 阅读 [Actions 路径配置指南](./ACTIONS_PATH_GUIDE.md)
-2. 在权限管理页面 (`/admin/rbac/permissions`) 创建权限
-3. 配置 `actions` 字段（如 `**/getUserAction`）
-4. 将权限分配给角色
-5. 将角色分配给用户
+```javascript
+// app/api/v1/pub/config/route.js - 公开
+// app/api/v1/auth/user/route.js  - 需要登录
+// app/api/v1/sys/admin/route.js  - 需要后台权限
+```
 
-#### 任务 2: 为 Client Action 添加 RBAC
+#### 2. 创建 Action（命名约定）
 
-1. 在 `app/(client)/actions/` 中编写 Action
-2. 使用 `wrapClientAction` 包装
-3. 配置 `permissionId`（函数名）
-4. 在权限系统中添加对应的权限配置
+```javascript
+import { wrapAction } from '@/lib/core/action-wrapper';
 
-#### 任务 3: 为 API Route 添加权限控制
+export const pubGetConfig = wrapAction('pubGetConfig', handler);   // 公开
+export const authGetProfile = wrapAction('authGetProfile', handler); // 登录
+export const sysGetUsers = wrapAction('sysGetUsers', handler);       // 后台
+```
 
-1. 阅读 [权限系统扩展方案](./PERMISSION_SYSTEM_EXTENSION.md) 的 API 部分
-2. 使用 `withApiPermission` 包装 API handler
-3. 在权限配置中添加 `apis` 字段（如 `/api/v1/users/*`）
-4. 将权限分配给角色
+#### 3. 前端调用（自动 Toast）
+
+```javascript
+import { fetchApi } from '@/lib/api/fetch-client';
+import { callAction } from '@/lib/api/action-client';
+
+// API 调用 - 401 自动跳转登录，403 自动 toast
+const { data, error } = await fetchApi('/api/v1/auth/user/profile');
+
+// Action 调用 - 同样自动处理
+const { data, success } = await callAction(authGetProfile);
+```
 
 ---
 
 ## 🎯 核心设计
 
-### 权限字段（定案）
+### 权限级别
+
+| 前缀/路径 | 级别 | 说明 |
+|----------|------|------|
+| `pub` / `/api/pub/*` | public | 公开，无需登录 |
+| `auth` / `/api/auth/*` | auth | 需要登录 |
+| `sys` / `/api/sys/*` | system | 需要后台权限 + RBAC |
+| `_` | private | 私有，不能被前端调用 |
+
+### 权限字段
 
 ```javascript
 {
   "actions": [        // Server Actions（函数名匹配）
-    "**/getUserAction",
-    "**/deleteMyAccountAction"
+    "sysGetUserList",
+    "sysDeleteUser"
   ],
   
   "apis": [          // API Routes（HTTP 路径匹配）
-    "/api/v1/users/*"
+    "/api/v1/sys/users",
+    "GET:/api/v1/sys/users/*"
   ]
 }
 ```
 
-**只需要 2 个字段！**
+### 检查流程
 
-- `actions` - 所有 Server Actions（不区分前后台）
-- `apis` - API Routes
+```
+请求 → 解析权限级别 → 登录检查 → admin 检查 → RBAC 检查 → 执行
+```
 
-### 设计原则
-
-1. **简洁原则** - 能用 2 个字段解决，不用 3 个或 4 个
-2. **统一原则** - 前后台使用统一的权限模型
-3. **YAGNI 原则** - 不为"可能需要"的功能提前设计
-4. **明确职责** - 每个字段有清晰的匹配对象
+- **admin** 直接通过所有检查
+- **非 admin** 需要 `isBackendAllowed` + RBAC 权限
 
 ---
 
-## 📊 设计决策
+## 📁 相关文件
 
-### 为什么不区分 client_actions？
-
-- ❌ **不需要** `client_actions` 字段
-- Backend Admin Actions 和 Client Actions 统一使用 `actions`
-- 理由：它们都是 Server Actions（函数名匹配），本质相同
-
-### 为什么不需要 resources？
-
-- ❌ **不需要** `resources` 字段
-- `actions` 已经能表达"对资源的操作"
-- 理由：功能重叠，YAGNI 原则
-
-### 为什么 apis 不叫 api_routes？
-
-- ❌ `api_routes` 太长，拗口
-- `apis` 简洁，与 `actions` 命名风格一致
+| 文件 | 说明 |
+|------|------|
+| `proxy.js` | API 自动拦截（Next.js 16） |
+| `lib/core/action-wrapper.js` | Action 包装器 |
+| `lib/core/permission-naming.js` | 权限命名解析 |
+| `lib/api/fetch-client.js` | 前端 API 调用封装 |
+| `lib/api/action-client.js` | 前端 Action 调用封装 |
+| `lib/api/api-context.js` | API 上下文获取 |
+| `app/(admin)/actions/dao/sys.js` | RBAC 检查函数 |
 
 ---
 
-## 🔗 相关文档
+## 🧪 测试
 
-### 后台管理相关
+访问 `/zh/test` 测试所有权限级别：
 
-- [后台认证系统](../admin/AUTH.md)
-- [BaseDAO 使用指南](../admin/BASE_DAO.md)
-- [Action Wrapper 文档](../admin/ACTION_LOGGER.md)
-
-### 数据库相关
-
-- [DB API 使用指南](../database/DB_API_GUIDE.md)
-- [MongoDB 集成文档](../database/MONGODB.md)
+- API Routes: pub / auth / sys
+- Server Actions: pub / auth / sys
 
 ---
 
 ## 📝 更新日志
+
+### v3.0 (2024-12-01)
+
+**重大更新**：自动权限拦截
+
+- 新增 `proxy.js` 自动拦截 API 请求
+- 新增 `wrapAction` 统一 Action 包装器
+- 新增 `fetchApi` / `callAction` 前端封装
+- 支持多层级路径权限识别
+- 自动 Toast 提示（使用 shadcn/sonner）
+- 401 自动跳转登录
+
+**新增文件**：
+- `lib/api/fetch-client.js` - 前端 API 调用封装
+- `lib/api/action-client.js` - 前端 Action 调用封装
+- `app/(client)/actions/test-actions.js` - 测试 Actions
+- `app/(client)/[locale]/test/page.js` - 测试页面
+
+**更新文档**：
+- [权限命名约定指南](./PERMISSION_NAMING_CONVENTION.md) - 完整重写
 
 ### v2.0 (2024-11-14)
 
@@ -172,14 +191,6 @@
 - 改名 `api_routes` → `apis`（更简洁）
 - 最终定案：只需要 2 个字段（`actions` 和 `apis`）
 
-**新增文档**：
-- [权限系统最终设计总结](./PERMISSION_SYSTEM_FINAL_DESIGN.md)
-- [数据库迁移指南](./DATABASE_MIGRATION_GUIDE.md)
-
-**更新文档**：
-- [权限系统扩展方案](./PERMISSION_SYSTEM_EXTENSION.md) - v2.0 简化版
-- [Server Actions vs Client Actions](./SERVER_VS_CLIENT_ACTIONS.md) - 澄清概念
-
 ### v1.0 (2024-11-05)
 
 - 初始 RBAC 系统实现
@@ -189,51 +200,41 @@
 
 ## 🎓 常见问题
 
-### Q1: actions 和 apis 有什么区别？
+### Q1: API 和 Action 有什么区别？
 
-**A**: 它们的**匹配对象不同**：
-- `actions` 匹配 **Action 函数名**（如 `getUserAction`）
-- `apis` 匹配 **HTTP 路径**（如 `/api/v1/users/123`）
+| | API Routes | Server Actions |
+|---|------------|----------------|
+| 调用方式 | HTTP 请求 | 函数调用 |
+| 权限配置 | 路径匹配 | 函数名匹配 |
+| 前端封装 | `fetchApi()` | `callAction()` |
 
-### Q2: Backend Admin Actions 和 Client Actions 有什么区别？
+### Q2: admin 角色和 RBAC 的关系？
 
-**A**: 
-- **使用者不同**：Backend 是给管理员用的，Client 是给普通用户用的
-- **权限模型不同**：Backend 需要 RBAC，Client 可选 RBAC
-- **但它们都是 Server Actions**，统一使用 `actions` 字段配置权限
-
-### Q3: 为什么不区分 client_actions？
-
-**A**: 因为它们本质相同：
-- 都是 Server Actions（函数名匹配）
-- 使用相同的模式匹配逻辑
-- 区分只会增加复杂度，没有实际价值
-
-### Q4: 如何为现有系统添加 apis 字段？
-
-**A**: 查看 [数据库迁移指南](./DATABASE_MIGRATION_GUIDE.md)，按步骤执行：
-1. 备份数据库
-2. 运行迁移脚本
-3. 验证结果
-4. 渐进式配置 `apis` 值
-
-### Q5: admin 角色和 RBAC 的关系？
-
-**A**: 
 - `admin` 角色自动拥有所有权限（跳过 RBAC 检查）
 - `user` 角色需要通过 RBAC 检查
 - `user` + `isBackendAllowed = true` 可以访问后台，但受 RBAC 限制
 
----
+### Q3: 如何禁用自动 Toast？
 
-## 📞 技术支持
+```javascript
+// API
+await fetchApi('/api/xxx', {}, { showErrorToast: false });
 
-如有疑问，请查看：
-1. 相关文档（优先）
-2. 代码注释和示例
-3. 测试用例
+// Action
+await callAction(action, params, { showErrorToast: false });
+```
+
+### Q4: 如何禁用 401 自动跳转？
+
+```javascript
+// API
+await fetchApi('/api/xxx', {}, { redirectOnUnauth: false });
+
+// Action
+await callAction(action, params, { redirectOnUnauth: false });
+```
 
 ---
 
 **维护团队**: 开发团队  
-**最后更新**: 2024-11-14
+**最后更新**: 2024-12-01

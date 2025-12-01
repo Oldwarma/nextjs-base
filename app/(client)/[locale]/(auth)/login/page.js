@@ -17,7 +17,7 @@ export default async function LoginPage({ searchParams }) {
 			<div className='w-full max-w-sm md:max-w-lg z-10'>
 				<LoginForm callbackUrl={callbackUrl} />
 			</div>
-			<div className='absolute top-0 left-0 w-full h-full bg-[#0f0f12]'>
+			<div className='absolute top-0 left-0 w-full h-full dark:bg-[#0f0f12]'>
 				<Prism
 					animationType='3drotate'
 					timeScale={0.5}

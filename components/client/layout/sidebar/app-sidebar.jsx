@@ -13,7 +13,7 @@ export function AppSidebar({ user }) {
 	const router = useRouter();
 	const t = useTranslations();
 	return (
-		<aside className='w-[78px] min-w-[78px] h-screen bg-[#0f0f12] flex flex-col items-center justify-between'>
+		<aside className='w-[78px] min-w-[78px] h-screen dark:bg-[#0f0f12] flex flex-col items-center justify-between'>
 			{/* Logo Section - Top */}
 			<div className='flex items-start justify-start py-8 h-1/6'>
 				<Link

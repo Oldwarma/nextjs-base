@@ -52,11 +52,11 @@ export default async function LocaleLayout({ children, params }) {
 				<ThemeProvider
 					attribute='class'
 					defaultTheme='dark'
-					enableSystem
+					enableSystem={false}
 					disableTransitionOnChange
 				>
 				<NextIntlClientProvider messages={messages}>
-						<div className='min-h-svh bg-[#0f0f12]'>{children}</div>
+						<div className='min-h-svh dark:dark:bg-[#0f0f12]'>{children}</div>
 						<Toaster />
 				</NextIntlClientProvider>
 				</ThemeProvider>

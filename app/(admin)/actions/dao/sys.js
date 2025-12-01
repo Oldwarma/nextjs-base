@@ -898,13 +898,12 @@ export async function checkUserHasApiPermission(userId, apiPath) {
  */
 async function getApisByPermissionIds(permissionIds) {
 	const collection = await getCollection(COLLECTION_NAMES.PERMISSIONS);
-	const permissions = await collection
-		.find({
-			id: { $in: permissionIds },
-			enable: true,
-			apis: { $exists: true, $ne: null, $not: { $size: 0 } },
-		})
-		.toArray();
+	// getCollection 返回的 find 方法已经包含 toArray()
+	const permissions = await collection.find({
+		id: { $in: permissionIds },
+		enable: true,
+		apis: { $exists: true, $ne: null, $not: { $size: 0 } },
+	});
 
 	const allApis = [];
 	permissions.forEach((perm) => {
