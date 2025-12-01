@@ -1,0 +1,271 @@
+// Prisma Schema for NextJS Base Admin
+// 
+// 本 Schema 主要包含：
+// 1. Better Auth 相关表（users, sessions, accounts, verifications）
+// 2. RBAC 权限系统（roles, permissions, menus）
+// 3. System 系统管理（assets, action_logs）
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Better Auth 相关表
+// ============================================
+
+/// 用户表 - Better Auth 核心表
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  emailVerified      Boolean   @default(false)
+  name               String?
+  username           String?   @unique
+  image              String?
+  
+  // 角色与权限
+  role               String    @default("user")        // 基础角色: user, admin
+  roles              String[]  @default([])            // RBAC 角色 ID 数组
+  isBackendAllowed   Boolean   @default(false)         // 是否允许访问后台
+  
+  // 积分系统（可选，后续扩展用）
+  credits            Int       @default(0)
+  totalCreditsEarned Int       @default(0)
+  totalCreditsUsed   Int       @default(0)
+  
+  // 套餐系统（可选，后续扩展用）
+  currentPackageId   String?
+  packageExpireAt    DateTime?
+  
+  // 封禁相关
+  banned             Boolean   @default(false)
+  banReason          String?
+  banExpires         DateTime?
+  
+  // 时间戳
+  lastLoginAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  
+  // 关联
+  sessions           Session[]
+  accounts           Account[]
+  actionLogs         ActionLog[]
+  assets             Asset[]
+  
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
+  @@map("users")
+}
+
+/// 会话表 - Better Auth 会话管理
+model Session {
+  id             String    @id @default(uuid())
+  userId         String
+  token          String    @unique
+  expiresAt      DateTime
+  ipAddress      String?
+  userAgent      String?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+/// 账户表 - Better Auth OAuth 账户关联
+model Account {
+  id                    String    @id @default(uuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+/// 验证表 - Better Auth 邮箱验证/密码重置
+model Verification {
+  id         String    @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  
+  @@index([identifier])
+  @@map("verifications")
+}
+
+// ============================================
+// RBAC 权限系统
+// ============================================
+
+/// 角色表
+model Role {
+  id                     String    @id @default(uuid())
+  name                   String    @unique
+  remark                 String?
+  enable                 Boolean   @default(true)
+  
+  // 权限和菜单（存储 ID 数组）
+  permission             String[]  @default([])         // 权限 ID 数组
+  menu                   String[]  @default([])         // 菜单 ID 数组
+  inheritMenuPermissions Boolean   @default(false)      // 是否继承菜单关联的权限
+  
+  // 时间戳
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  
+  @@index([name])
+  @@index([enable])
+  @@map("roles")
+}
+
+/// 权限表（树形结构）
+model Permission {
+  id            String    @id @default(uuid())
+  name          String
+  parentId      String?   @map("parent_id")
+  remark        String?
+  enable        Boolean   @default(true)
+  sort          Int       @default(0)
+  
+  // 权限分类和级别
+  crudCategory  Int       @default(0) @map("crud_category")   // 0-5: 无/查询/创建/更新/删除/全部
+  level         Int       @default(0)                         // 0-4: 普通/敏感/高危/超级/系统
+  
+  // 关联的 actions 和 apis
+  actions       String[]  @default([])                        // Server Action 名称数组
+  apis          String[]  @default([])                        // API 路径数组
+  
+  // 时间戳
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@unique([name, parentId])
+  @@index([parentId])
+  @@index([enable])
+  @@index([sort])
+  @@map("permissions")
+}
+
+/// 菜单表（树形结构）
+model Menu {
+  id         String    @id @default(uuid())
+  name       String
+  parentId   String?   @map("parent_id")
+  url        String?
+  icon       String?
+  sort       Int       @default(0)
+  enable     Boolean   @default(true)
+  hidden     Boolean   @default(false)
+  remark     String?
+  
+  // 菜单关联的权限
+  permission String[]  @default([])                           // 权限 ID 数组
+  
+  // 时间戳
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  
+  @@index([parentId])
+  @@index([enable])
+  @@index([sort])
+  @@map("menus")
+}
+
+// ============================================
+// System 系统管理
+// ============================================
+
+/// 素材/文件表
+model Asset {
+  id           String    @id @default(uuid())
+  
+  // 文件信息
+  originalName String    @map("original_name")
+  filename     String
+  key          String    @unique                              // R2/S3 存储 key
+  url          String
+  type         String                                         // image, video, document, audio, other
+  mimeType     String    @map("mime_type")
+  size         Int                                            // 文件大小（字节）
+  
+  // 图片特有信息
+  width        Int?
+  height       Int?
+  
+  // 关联用户
+  userId       String?   @map("user_id")
+  remark       String?
+  
+  // 时间戳
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("assets")
+}
+
+/// 操作日志表
+model ActionLog {
+  id           String    @id @default(uuid())
+  
+  // 操作信息
+  userId       String    @map("user_id")
+  action       String                                         // create, update, delete, query 等
+  resourceType String    @map("resource_type")                // 资源类型: user, role, permission 等
+  resourceId   String?   @map("resource_id")
+  
+  // 请求和响应
+  params       Json?     @default("{}")                       // 请求参数
+  result       Json?     @default("{}")                       // 返回结果
+  
+  // 状态
+  success      Boolean   @default(true)
+  duration     Int       @default(0)                          // 执行时长（毫秒）
+  
+  // 客户端信息
+  ip           String?
+  userAgent    String?   @map("user_agent")
+  
+  // 时间戳
+  createdAt    DateTime  @default(now())
+  
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([createdAt])
+  @@map("action_logs")
+}
