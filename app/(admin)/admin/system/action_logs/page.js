@@ -18,9 +18,9 @@ import { getActionLogListAction as getList } from '@/app/(admin)/actions/system/
 export default function ActionLogsPage() {
 	// 字段配置
 	const fieldsConfig = [
-		// MongoDB _id
+		// ID
 		{
-			key: '_id',
+			key: 'id',
 			title: 'ID',
 			type: 'text',
 			table: false,
@@ -284,7 +284,7 @@ export default function ActionLogsPage() {
 		<SmartCrudPage
 			title='Action Logs'
 			description='View all system operation logs'
-			rowKey='_id'
+			rowKey='id'
 			fieldsConfig={fieldsConfig}
 			actions={{
 				getList,

@@ -44,7 +44,7 @@ export default function PermissionsManagementPage() {
 		},
 
 		{
-			key: 'parent_id',
+			key: 'parentId',
 			title: 'Parent Permission',
 			type: 'tree-select',
 			table: false,  // 不在表格中显示
@@ -74,7 +74,7 @@ export default function PermissionsManagementPage() {
 		},
 
 		{
-			key: 'crud_category',
+			key: 'crudCategory',
 			title: 'CRUD Category',
 			type: 'select',
 			table: {

@@ -1,24 +1,24 @@
 # NextJS Base - Full-Stack Admin Platform
 
-A full-stack SaaS platform for AI image generation with user authentication, credit system, package management, and usage tracking.
+A full-stack SaaS platform with user authentication, RBAC permission system, and admin management.
 
 ## Features
 
 ### Core Functionality
-- 🎨 **AI Image Generation**: Text-to-image, image-to-image, upscaling, and more
-- 👤 **Multi-Auth Support**: Email/Password, Google OAuth, GitHub OAuth
-- 💳 **Credit System**: Flexible credit-based payment system with expiration
-- 📦 **Package Management**: Multiple subscription tiers with different features
-- 📊 **Usage Tracking**: Detailed logs and statistics for all operations
-- 👨‍💼 **Admin Dashboard**: User management, package configuration, statistics
+- 👤 **Multi-Auth Support**: Email/Password, Google OAuth, GitHub OAuth (Better Auth)
+- 🔐 **RBAC System**: Role-based access control with permissions and menus
+- 👨‍💼 **Admin Dashboard**: User management, role configuration, menu management
+- 📊 **Action Logging**: Detailed logs for all admin operations
+- 📁 **Asset Management**: File upload and management system
 
 ### Technical Stack
 - **Framework**: Next.js 15 (App Router)
-- **Database**: MongoDB with optimized connection pooling
-- **Authentication**: Better Auth with multiple providers
-- **UI**: Modern, responsive design with shadcn/ui
+- **Database**: PostgreSQL
+- **ORM**: Prisma
+- **Authentication**: Better Auth with Prisma Adapter
+- **UI**: Ant Design + ProComponents
 - **Language**: JavaScript (ES6+)
-- **i18n**: next-intl with support for English, Chinese, and Japanese
+- **i18n**: next-intl (English, Chinese, Japanese)
 
 ## Project Structure
 
@@ -29,24 +29,16 @@ nextjs-base/
 │   │   ├── [locale]/      # Dynamic language routes (en, zh, ja)
 │   │   └── actions/       # Client-side Server Actions
 │   └── (admin)/           # Admin panel (English only)
+│       ├── admin/         # Admin pages
 │       └── actions/       # Admin Server Actions
-├── lib/                    # Core business logic
-│   ├── auth.js            # Authentication configuration
-│   ├── mongodb.js         # MongoDB connection and utilities
-│   ├── credits.js         # Credit management
-│   ├── packages.js        # Package management
-│   ├── user-profile.js    # User profile management
-│   └── usage-logs.js      # Usage tracking and logging
-├── i18n/                  # Internationalization config
-│   ├── config.js          # Language settings
-│   └── request.js         # next-intl configuration
-├── messages/              # Translation files
-│   ├── en.json           # English
-│   ├── zh.json           # Chinese
-│   └── ja.json           # Japanese
+├── lib/                    # Core libraries
+│   ├── auth/              # Authentication
+│   ├── database/          # Database (Prisma)
+│   ├── core/              # Core utilities
+│   └── logging/           # Action logging
+├── prisma/                # Prisma schema and migrations
+│   └── schema.prisma      # Database schema
 ├── components/            # React components
-├── scripts/               # Utility scripts
-│   └── init-db.js        # Database initialization
 ├── docs/                  # Documentation
 └── README.md             # This file
 ```
@@ -55,7 +47,7 @@ nextjs-base/
 
 ### Prerequisites
 - Node.js 18+ or Bun
-- MongoDB 4.4+
+- PostgreSQL 14+
 - (Optional) Google/GitHub OAuth credentials
 
 ### Installation
@@ -78,20 +70,32 @@ bun install
 cp .env.example .env
 ```
 
-Edit `.env` and configure:
-- MongoDB connection (`MONGODB_URI`, `MONGODB_DB_NAME`)
-- Auth secrets (`BETTER_AUTH_SECRET`)
-- OAuth credentials (optional)
+Edit `.env`:
+```env
+# PostgreSQL Database
+DATABASE_URL="postgresql://postgres:password@localhost:5432/nextjs_base?schema=public"
+
+# Better Auth
+BETTER_AUTH_SECRET="your-secret-key-at-least-32-characters"
+NEXT_PUBLIC_BETTER_AUTH_URL="http://localhost:3000"
+
+# OAuth (optional)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
+```
 
 4. Initialize the database:
 ```bash
-node scripts/init-db.js
+# Generate Prisma Client (需要先配置 DATABASE_URL)
+npx prisma generate
+
+# Push schema to database
+npx prisma db push
 ```
 
-This will:
-- Create necessary indexes
-- Insert default packages
-- Set up collections
+> **注意**: Prisma 7 需要在 `.env` 文件中配置 `DATABASE_URL`（不是 `.env.local`）。
 
 5. Run the development server:
 ```bash
@@ -104,190 +108,99 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 
 ## Database Schema
 
-### Collections
+### Core Tables
 
-- **users**: User accounts with auth info, credits, and package data
-- **packages**: Subscription package configurations
-- **user_packages**: User purchase records
-- **credit_transactions**: Credit transaction history
-- **usage_logs**: Feature usage records
+| Table | Description |
+|-------|-------------|
+| `user` | User accounts (Better Auth) |
+| `account` | OAuth accounts |
+| `session` | User sessions |
+| `role` | RBAC roles |
+| `permission` | RBAC permissions |
+| `menu` | Admin menu items |
+| `action_log` | Admin action logs |
+| `asset` | Uploaded files |
 
-See [API_USAGE.md](./docs/API_USAGE.md) for detailed schema definitions.
+See [prisma/schema.prisma](./prisma/schema.prisma) for detailed schema.
 
 ## Core Modules
 
-### 1. Authentication (`lib/auth.js`)
+### 1. Authentication (`lib/auth/auth.js`)
+- Better Auth with Prisma Adapter
 - Multi-provider authentication (Email, Google, GitHub)
 - Session management with custom fields
-- Role-based access control
-- Automatic user initialization
+- Admin plugin for user management
 
-### 2. Credit System (`lib/credits.js`)
-- Add/deduct/refund credits
-- Transaction history
-- Expiration handling
-- Batch operations
+### 2. RBAC System
+- **Roles**: Define user roles with permissions and menus
+- **Permissions**: Granular permission control
+- **Menus**: Dynamic admin menu based on user roles
 
-### 3. Package Management (`lib/packages.js`)
-- Create/update packages
-- Purchase processing
-- Expiration tracking
-- Revenue statistics
-
-### 4. User Profiles (`lib/user-profile.js`)
-- Update profile (name, avatar, email)
-- Username management
-- User statistics
-- Admin user management
-
-### 5. Usage Tracking (`lib/usage-logs.js`)
-- Feature usage logging
-- Automatic credit deduction
-- Usage statistics
-- Pricing configuration
-
-## Server Actions (推荐使用)
-
-本项目使用 Next.js 15 的 Server Actions，无需创建 API 路由即可调用服务器端功能。
-
-### 客户端使用示例
-
-#### 获取用户资料
-```javascript
-import { getUserProfileAction } from '@/app/(client)/actions';
-
-const result = await getUserProfileAction();
-if (result.success) {
-  console.log(result.data); // 用户资料
-}
-```
-
-#### 购买套餐
-```javascript
-import { purchasePackageAction } from '@/app/(client)/actions';
-
-const result = await purchasePackageAction(packageId, paymentInfo);
-```
-
-#### 生成图片（自动扣除积分）
-```javascript
-import { textToImageAction } from '@/app/(client)/actions';
-
-const result = await textToImageAction({
-  prompt: 'A beautiful sunset',
-  size: '1024x1024',
-  model: 'hd'
-});
-
-if (result.success) {
-  console.log(`Image: ${result.data.imageUrl}`);
-  console.log(`Remaining credits: ${result.data.remainingCredits}`);
-}
-```
-
-### 管理员使用示例
-
-```javascript
-import { 
-  getUserListAction, 
-  adminAdjustCreditsAction 
-} from '@/app/(admin)/actions';
-
-// 获取用户列表
-const users = await getUserListAction({ pageIndex: 1, pageSize: 20 });
-
-// 调整用户积分
-await adminAdjustCreditsAction(userId, 100, 'Promotion reward');
-```
-
-查看完整文档：
-- [Server Actions 使用指南](./docs/SERVER_ACTIONS.md) - 推荐优先阅读
-- [API 路由文档](./docs/API_USAGE.md) - 传统 API 路由（保留兼容）
-
-## Scheduled Tasks
-
-Set up cron jobs for:
-
-1. **Expired Credits**: Run `processExpiredCredits()` daily
-2. **Expired Packages**: Run `processExpiredPackages()` hourly
-
-Example with node-cron:
-```javascript
-import cron from 'node-cron';
-import { processExpiredCredits } from '@/lib/credits';
-import { processExpiredPackages } from '@/lib/packages';
-
-// Every day at 00:00
-cron.schedule('0 0 * * *', async () => {
-  await processExpiredCredits();
-});
-
-// Every hour
-cron.schedule('0 * * * *', async () => {
-  await processExpiredPackages();
-});
-```
+### 3. Admin Dashboard
+- **SmartCrudPage**: Generic CRUD page component
+- **BaseDAO**: Data access object with hooks and validation
+- **Action Logger**: Automatic logging of admin operations
 
 ## Development
+
+### Prisma Commands
+
+```bash
+# Generate Prisma Client
+npx prisma generate
+
+# Push schema to database (dev)
+npx prisma db push
+
+# Create migration (production)
+npx prisma migrate dev --name <name>
+
+# Apply migrations (production)
+npx prisma migrate deploy
+
+# Open Prisma Studio
+npx prisma studio
+```
 
 ### Code Style
 - Use ES6+ features
 - Follow functional programming principles
 - Add JSDoc comments for functions
-- Keep functions focused and small
+- Use camelCase for JavaScript, snake_case for database columns
 
 ### Database Operations
-- Always use the provided utilities in `lib/mongodb.js`
-- Handle ObjectId conversions automatically
-- Use pagination for large datasets
-- Add proper indexes for queries
-
-### Error Handling
-- Throw descriptive errors
-- Use try-catch in API routes
-- Return consistent error formats
-- Log errors appropriately
+- Use Prisma Client directly
+- Handle pagination with `skip` and `take`
+- Use transactions for complex operations
 
 ## Deployment
 
 ### Environment Variables
-Ensure all production environment variables are set:
-- `NODE_ENV=production`
-- `BETTER_AUTH_SECRET` (generate a strong secret)
-- `MONGODB_URI` (production MongoDB URL)
-- OAuth credentials (if using social login)
+```env
+NODE_ENV=production
+DATABASE_URL="postgresql://..."
+BETTER_AUTH_SECRET="..."
+```
 
 ### Database
-- Run `init-db.js` on production database
-- Set up proper indexes
-- Configure backup strategy
-- Monitor connection pool
+```bash
+# Run migrations
+npx prisma migrate deploy
 
-### Monitoring
-- Set up error tracking (e.g., Sentry)
-- Monitor MongoDB performance
-- Track API response times
-- Set up alerts for critical failures
+# Generate client
+npx prisma generate
+```
 
-## Contributing
+## Documentation
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
+- [PostgreSQL + Prisma 配置指南](./docs/database/POSTGRESQL_SETUP.md)
+- [RBAC 系统文档](./docs/rbac/README.md)
+- [Smart CRUD 开发指南](./docs/admin/SMART_CRUD_GUIDE.md)
 
 ## License
 
-This project is licensed under the MIT License.
-
-## Support
-
-For issues and questions:
-- Check [API_USAGE.md](./docs/API_USAGE.md)
-- Open an issue on GitHub
-- Contact support team
+MIT License
 
 ---
 
-Built with ❤️ using Next.js and MongoDB
+Built with ❤️ using Next.js, PostgreSQL, and Prisma

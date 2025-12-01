@@ -2,7 +2,49 @@
 
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
-import { initializeNewUser, updateLastLogin } from '@/lib/business/init-user';
+import prisma from '@/lib/database/prisma';
+
+/**
+ * 更新用户最后登录时间
+ */
+async function updateLastLogin(userId) {
+	try {
+		await prisma.user.update({
+			where: { id: userId },
+			data: { lastLoginAt: new Date() },
+		});
+	} catch (error) {
+		console.error('Failed to update last login:', error);
+	}
+}
+
+/**
+ * 初始化新用户（确保用户有默认积分等）
+ */
+async function initializeNewUser(userId) {
+	try {
+		const user = await prisma.user.findUnique({
+			where: { id: userId },
+			select: { credits: true },
+		});
+		
+		// 如果用户已存在且有积分，跳过初始化
+		if (user && user.credits > 0) {
+			return;
+		}
+		
+		// 给新用户初始积分
+		await prisma.user.update({
+			where: { id: userId },
+			data: {
+				credits: 100, // 初始积分
+				lastLoginAt: new Date(),
+			},
+		});
+	} catch (error) {
+		console.error('Failed to initialize new user:', error);
+	}
+}
 
 /**
  * 邮箱密码登录 - 仅用于已有账号

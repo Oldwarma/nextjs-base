@@ -17,7 +17,7 @@ const exampleConfig = {
 	 * 基础配置
 	 */
 	collectionName: 'example_data',
-	primaryKey: '_id',
+	primaryKey: 'id',
 	softDelete: false,
 
 	/**

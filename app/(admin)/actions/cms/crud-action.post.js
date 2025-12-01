@@ -17,7 +17,7 @@ const postConfig = {
 	collectionName: 'post',
 	
 	// 主键字段
-	primaryKey: '_id',
+	primaryKey: 'id',
 	
 	// 字段配置
 	fields: {
@@ -34,7 +34,7 @@ const postConfig = {
 	// 查询配置
 	query: {
 		// 默认排序
-		defaultSort: { createdAt: -1 },
+		defaultSort: { createdAt: 'desc' },
 		
 		// 默认分页大小
 		defaultPageSize: 10,

@@ -107,8 +107,7 @@ export default function UsersManagementPage() {
 
 	// Handle assign roles
 	const handleAssignRoles = async (record) => {
-		// Better Auth 应该使用 id 字段，但如果没有则使用 _id
-		const userId = record.id || record._id;
+		const userId = record.id;
 
 		if (!userId) {
 			messageApi.error('User ID is missing');
@@ -120,24 +119,20 @@ export default function UsersManagementPage() {
 		setRoleLoading(true);
 
 		try {
-			// Get current user roles (使用 Better Auth 的 id 字段，或 _id 作为后备)
 			const result = await userActions.getUserRolesAction(userId);
 
 			if (result.success) {
 				const userRoles = result.data || [];
 				console.log('[Users] User roles:', userRoles);
 
-				// 将角色对象数组转换为 ID 字符串数组
-				// getUserRolesAction 返回的是角色对象数组，需要提取 id
 				const roleIds = userRoles
 					.map((role) => {
-						// 兼容不同的数据格式
 						if (typeof role === 'string') {
-							return role; // 已经是字符串 ID
+							return role;
 						}
-						return String(role.id || role._id || '');
+						return String(role.id || '');
 					})
-					.filter((id) => id); // 过滤空值
+					.filter((id) => id);
 
 				console.log('[Users] Role IDs:', roleIds);
 				setSelectedRoles(roleIds);
@@ -157,8 +152,7 @@ export default function UsersManagementPage() {
 	const handleSaveRoles = async () => {
 		if (!selectedUser) return;
 
-		// Better Auth 应该使用 id 字段，但如果没有则使用 _id
-		const userId = selectedUser.id || selectedUser._id;
+		const userId = selectedUser.id;
 
 		if (!userId) {
 			messageApi.error('User ID is missing');
@@ -168,7 +162,6 @@ export default function UsersManagementPage() {
 		setRoleLoading(true);
 
 		try {
-			// 使用 Better Auth 的 id 字段，或 _id 作为后备
 			const result = await userActions.bindUserRolesAction(userId, selectedRoles, true);
 
 			if (result.success) {
@@ -230,7 +223,7 @@ export default function UsersManagementPage() {
 
 	// Handle ban/unban user
 	const handleToggleBanUser = async (record) => {
-		const userId = record.id || record._id;
+		const userId = record.id;
 		if (!userId) {
 			messageApi.error('User ID is missing');
 			return;
@@ -269,15 +262,6 @@ export default function UsersManagementPage() {
 			{
 				key: 'id',
 				title: 'ID',
-				type: 'text',
-				table: false,
-				form: false,
-				search: false,
-			},
-			// MongoDB _id
-			{
-				key: '_id',
-				title: 'MongoDB ID',
 				type: 'text',
 				table: false,
 				form: false,
@@ -716,7 +700,7 @@ export default function UsersManagementPage() {
 			icon: <KeyOutlined />,
 			inMore: true,
 			onClick: (record) => {
-				const userId = record.id || record._id;
+				const userId = record.id;
 				if (!userId) {
 					messageApi.error('User ID is missing');
 					return;

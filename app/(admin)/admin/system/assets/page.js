@@ -149,22 +149,21 @@ export default function AssetsPage() {
 	 */
 	const loadFiles = async (targetPage = page, targetSearch = search, targetType = typeFilter) => {
 		startTransition(async () => {
-			// 构建搜索条件
+			// 构建搜索条件 (Prisma 格式)
 			const whereJson = {};
 
 			if (targetSearch) {
-				whereJson.originalName = { $regex: targetSearch, $options: 'i' };
+				whereJson.originalName = { contains: targetSearch, mode: 'insensitive' };
 			}
 
 			if (targetType && targetType !== 'all') {
 				if (targetType === 'image') {
-					whereJson.type = { $in: ['image', 'images'] };
+					whereJson.type = { in: ['image', 'images'] };
 				} else {
 					whereJson.type = targetType;
 				}
 			}
 
-			// 使用 BaseDAO 期望的参数格式
 			const result = await uploadActions.getList({
 				pageIndex: targetPage,
 				pageSize,

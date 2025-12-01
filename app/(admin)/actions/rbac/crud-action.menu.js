@@ -2,39 +2,28 @@
 
 import { createCrudActions } from '@/lib/core/crud-helper';
 import { wrapAction } from '@/lib/core/action-wrapper';
+import { prisma } from '@/lib/database/prisma';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
 
 /**
  * Menu CRUD 配置
  */
 const menuConfig = {
-	/**
-	 * 基础配置
-	 */
-	collectionName: 'menus',
+	modelName: 'menu',
 	primaryKey: 'id',
 	softDelete: false,
 
-	/**
-	 * BaseDAO 字段配置
-	 */
 	fields: {
-		creatable: ['name', 'parent_id', 'url', 'icon', 'sort', 'enable', 'hidden', 'remark', 'permission'],
-		updatable: ['name', 'parent_id', 'url', 'icon', 'sort', 'enable', 'hidden', 'remark', 'permission'],
+		creatable: ['name', 'parentId', 'url', 'icon', 'sort', 'enable', 'hidden', 'remark', 'permission'],
+		updatable: ['name', 'parentId', 'url', 'icon', 'sort', 'enable', 'hidden', 'remark', 'permission'],
 		searchable: ['name', 'url'],
 	},
 
-	/**
-	 * 查询配置
-	 */
 	query: {
-		defaultSort: { sort: 1, createdAt: 1 },
-		defaultPageSize: 1000, // 菜单数量通常不多，一次性加载
+		defaultSort: { sort: 'asc' },
+		defaultPageSize: 1000,
 	},
 
-	/**
-	 * 字段验证规则
-	 */
 	validation: {
 		name: {
 			required: true,
@@ -47,7 +36,6 @@ const menuConfig = {
 			required: false,
 			type: 'string',
 			maxLength: 200,
-			message: 'URL max length: 200 characters',
 		},
 		icon: {
 			required: false,
@@ -83,24 +71,14 @@ const menuConfig = {
 		},
 	},
 
-	/**
-	 * 生命周期钩子
-	 */
 	hooks: {
 		beforeCreate: async (data) => {
-			// 设置默认值
-			if (data.enable === undefined) {
-				data.enable = true;
-			}
-			if (data.hidden === undefined) {
-				data.hidden = false;
-			}
-			if (data.sort === undefined) {
-				data.sort = 0;
-			}
+			if (data.enable === undefined) data.enable = true;
+			if (data.hidden === undefined) data.hidden = false;
+			if (data.sort === undefined) data.sort = 0;
 
-			// 如果选择了父级菜单，清空图标（子菜单不显示图标）
-			if (data.parent_id && data.icon) {
+			// 子菜单不显示图标
+			if (data.parentId && data.icon) {
 				data.icon = null;
 			}
 
@@ -108,25 +86,19 @@ const menuConfig = {
 		},
 
 		beforeUpdate: async (id, data) => {
-			// 如果选择了父级菜单，清空图标（子菜单不显示图标）
-			if (data.parent_id !== undefined && data.parent_id && data.icon !== undefined) {
+			if (data.parentId !== undefined && data.parentId && data.icon !== undefined) {
 				data.icon = null;
 			}
-
 			return data;
 		},
 
 		beforeDelete: async (id) => {
-			// 检查是否有子菜单
-			const { getCollection } = await import('@/lib/database/mongodb');
-			const collection = await getCollection(menuConfig.collectionName);
-
-			const existing = await collection.findOne({ id });
+			const existing = await prisma.menu.findUnique({ where: { id } });
 			if (!existing) {
 				throw new Error('Menu not found');
 			}
 
-			const childCount = await collection.countDocuments({ parent_id: id });
+			const childCount = await prisma.menu.count({ where: { parentId: id } });
 			if (childCount > 0) {
 				throw new Error(`Cannot delete menu "${existing.name}": it has ${childCount} child menu(s). Please delete or reassign them first.`);
 			}
@@ -136,94 +108,60 @@ const menuConfig = {
 
 		afterDelete: async (id) => {
 			// 从角色的 menu 数组中移除该菜单
-			const { getCollection } = await import('@/lib/database/mongodb');
-			const rolesCollection = await getCollection('roles');
+			const roles = await prisma.role.findMany({
+				where: { menu: { has: id } },
+			});
 
-			await rolesCollection.updateMany({ menu: id }, { $pull: { menu: id } });
+			for (const role of roles) {
+				await prisma.role.update({
+					where: { id: role.id },
+					data: { menu: role.menu.filter(m => m !== id) },
+				});
+			}
 
 			console.log(`Menu ${id} deleted, cleaned up from roles`);
 		},
 
 		beforeBatchDelete: async (ids) => {
-			// 检查所有要删除的菜单是否有子菜单
-			const { getCollection } = await import('@/lib/database/mongodb');
-			const collection = await getCollection(menuConfig.collectionName);
-
 			for (const id of ids) {
-				const childCount = await collection.countDocuments({ parent_id: id });
+				const childCount = await prisma.menu.count({ where: { parentId: id } });
 				if (childCount > 0) {
-					const menu = await collection.findOne({ id });
+					const menu = await prisma.menu.findUnique({ where: { id } });
 					throw new Error(`Cannot delete menu "${menu?.name || id}": it has child menus`);
 				}
 			}
-
 			return true;
 		},
 	},
 
-	/**
-	 * 数据转换
-	 */
 	transforms: {
 		input: (data) => {
-			// 确保 boolean 类型
 			if (data.enable !== undefined) {
 				data.enable = data.enable === true || data.enable === 'true';
 			}
 			if (data.hidden !== undefined) {
 				data.hidden = data.hidden === true || data.hidden === 'true';
 			}
-
-			// 去除字符串首尾空格
-			if (data.name) {
-				data.name = data.name.trim();
-			}
-			if (data.url) {
-				data.url = data.url.trim();
-			}
-			if (data.remark) {
-				data.remark = data.remark.trim();
-			}
-
-			// 处理空字符串为 null
-			if (data.parent_id === '') {
-				data.parent_id = null;
-			}
-			if (data.icon === '') {
-				data.icon = null;
-			}
-			if (data.remark === '') {
-				data.remark = null;
-			}
-
+			if (data.name) data.name = data.name.trim();
+			if (data.url) data.url = data.url.trim();
+			if (data.remark) data.remark = data.remark.trim();
+			if (data.parentId === '') data.parentId = null;
+			if (data.icon === '') data.icon = null;
+			if (data.remark === '') data.remark = null;
 			return data;
 		},
 
 		output: (data) => {
-			// 确保默认值
-			if (data.enable === undefined) {
-				data.enable = true;
-			}
-			if (data.hidden === undefined) {
-				data.hidden = false;
-			}
-			if (data.sort === undefined || data.sort === null) {
-				data.sort = 0;
-			}
-
+			if (data.enable === undefined) data.enable = true;
+			if (data.hidden === undefined) data.hidden = false;
+			if (data.sort === undefined || data.sort === null) data.sort = 0;
 			return data;
 		},
 	},
 };
 
-/**
- * 创建标准 CRUD Actions
- */
 const crudActions = createCrudActions(menuConfig);
 
-/**
- * 导出标准 CRUD Actions
- */
 export const getMenuListAction = crudActions.getList;
 export const getMenuDetailAction = crudActions.getDetail;
 export const createMenuAction = crudActions.create;
@@ -233,15 +171,9 @@ export const batchUpdateMenusAction = crudActions.batchUpdate;
 export const batchDeleteMenusAction = crudActions.batchDelete;
 
 /**
- * 自定义 Actions
- */
-
-/**
- * 获取菜单树（用于树形展示）
- * 返回扁平化格式，适配 SmartCrudPage 的树形表格
+ * 获取菜单树
  */
 export const getMenuTreeAction = wrapAction('sysQueryMenuTree', async ({ pageIndex = 1, pageSize = 1000, whereJson = {}, sortJson = null } = {}, ctx) => {
-	// 如果有搜索条件，使用标准查询（支持搜索所有层级）
 	if (whereJson && Object.keys(whereJson).length > 0) {
 		const result = await crudActions._dao.getList({
 			pageIndex,
@@ -252,7 +184,6 @@ export const getMenuTreeAction = wrapAction('sysQueryMenuTree', async ({ pageInd
 		return result;
 	}
 
-	// 没有搜索条件时，返回完整的树形结构
 	const result = await sysDao.getMenuTree({
 		pageIndex,
 		pageSize,
@@ -267,21 +198,17 @@ export const getMenuTreeAction = wrapAction('sysQueryMenuTree', async ({ pageInd
 }, { skipLog: true });
 
 /**
- * 获取菜单树（用于 TreeSelect 选择器）
- * 返回树形结构，用于父级菜单选择
- * @param {Object} params
- * @param {boolean} params.includeRootOption - 是否包含 "Root Menu" 选项（用于父级选择时需要，用于分配菜单时不需要）
+ * 获取菜单树（用于选择器）
  */
 export const getMenuTreeForSelectAction = wrapAction('sysQueryMenuTreeForSelect', async (params = {}, ctx) => {
 	const { includeRootOption = true } = params;
-	
+
 	const result = await sysDao.getMenuTree({
 		pageIndex: 1,
 		pageSize: 1000,
 		filters: { enable: true },
 	});
 
-	// 转换为 TreeSelect 需要的格式
 	const convertToTreeSelectFormat = (nodes) => {
 		if (!nodes || !Array.isArray(nodes)) return [];
 
@@ -292,7 +219,6 @@ export const getMenuTreeForSelectAction = wrapAction('sysQueryMenuTreeForSelect'
 				key: node.id,
 			};
 
-			// 递归处理子节点
 			if (node.children && node.children.length > 0) {
 				treeNode.children = convertToTreeSelectFormat(node.children);
 			}
@@ -302,8 +228,7 @@ export const getMenuTreeForSelectAction = wrapAction('sysQueryMenuTreeForSelect'
 	};
 
 	const menuItems = convertToTreeSelectFormat(result.rows || []);
-	
-	// 只有在需要时才添加 "Root Menu" 选项（用于父级菜单选择）
+
 	const formattedTree = includeRootOption
 		? [{ title: '--- Root Menu ---', value: '', key: '' }, ...menuItems]
 		: menuItems;
@@ -316,7 +241,6 @@ export const getMenuTreeForSelectAction = wrapAction('sysQueryMenuTreeForSelect'
 
 /**
  * 分配权限给菜单
- * 菜单可以绑定权限，当用户拥有该菜单时，自动获得菜单绑定的权限
  */
 export const assignPermissionsToMenuAction = wrapAction('sysAssignPermissionsToMenu', async (params, ctx) => {
 	const { menuId, permissionIds } = params;

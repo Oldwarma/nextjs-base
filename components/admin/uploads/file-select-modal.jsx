@@ -182,7 +182,7 @@ export default function FileSelectModal({
 			return;
 		}
 		
-		const selectedFiles = files.filter(f => selectedIds.includes(f._id));
+		const selectedFiles = files.filter(f => selectedIds.includes(f.id));
 		
 		if (multiple) {
 			onSelect(selectedFiles.map(f => ({
@@ -349,9 +349,9 @@ export default function FileSelectModal({
 						>
 							<Row gutter={[12, 12]}>
 								{files.map(file => (
-									<Col key={file._id} xs={12} sm={8} md={6} lg={4}>
+									<Col key={file.id} xs={12} sm={8} md={6} lg={4}>
 										<CheckCard
-											value={file._id}
+											value={file.id}
 											cover={renderCover(file)}
 											title={
 												<div style={{

@@ -618,7 +618,7 @@ export default function ExamplePage() {
 			fieldsConfig={fieldsConfig}
 			actions={actions}
 			title="Example Page"
-			rowKey="_id"
+			rowKey="id"
 			// 表格配置
 			tableProps={{
 				scroll: { x: 2500 },

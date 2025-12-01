@@ -915,7 +915,7 @@ export default function ExamplePermissionPage() {
 				delete: actions.deleteAction,
 			}}
 			title='SmartCrudPage Full Example'
-			rowKey='_id'
+			rowKey='id'
 			// 表格配置
 			tableProps={{
 				scroll: { x: 1800 },

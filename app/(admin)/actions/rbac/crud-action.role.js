@@ -2,30 +2,22 @@
 
 import { createCrudActions } from '@/lib/core/crud-helper';
 import { wrapAction } from '@/lib/core/action-wrapper';
+import { prisma } from '@/lib/database/prisma';
 
 /**
  * Role CRUD 配置
  */
 const roleConfig = {
-	/**
-	 * 基础配置
-	 */
-	collectionName: 'roles',
+	modelName: 'role',
 	primaryKey: 'id',
 	softDelete: false,
 
-	/**
-	 * BaseDAO 字段配置
-	 */
 	fields: {
 		creatable: ['name', 'remark', 'enable'],
 		updatable: ['name', 'remark', 'enable', 'permission', 'menu', 'inheritMenuPermissions'],
 		searchable: ['name', 'remark'],
 	},
 
-	/**
-	 * 字段验证规则
-	 */
 	validation: {
 		name: {
 			required: true,
@@ -61,54 +53,22 @@ const roleConfig = {
 		},
 	},
 
-	/**
-	 * 查询配置
-	 */
 	query: {
-		defaultSort: { name: 1 },
+		defaultSort: { name: 'asc' },
 		defaultPageSize: 20,
-		foreignDB: [
-			{
-				dbName: 'permissions',
-				localKey: 'permission',
-				foreignKey: 'id',
-				as: 'permissionList',
-				fieldJson: { id: 1, name: 1 },
-			},
-			{
-				dbName: 'menus',
-				localKey: 'menu',
-				foreignKey: 'id',
-				as: 'menuList',
-				fieldJson: { id: 1, name: 1 },
-			},
-		],
 	},
 
-	/**
-	 * 生命周期钩子
-	 */
 	hooks: {
 		beforeCreate: async (data) => {
-			if (data.enable === undefined) {
-				data.enable = true;
-			}
-			if (data.permission === undefined) {
-				data.permission = [];
-			}
-			if (data.menu === undefined) {
-				data.menu = [];
-			}
-			if (data.inheritMenuPermissions === undefined) {
-				data.inheritMenuPermissions = false;
-			}
+			if (data.enable === undefined) data.enable = true;
+			if (data.permission === undefined) data.permission = [];
+			if (data.menu === undefined) data.menu = [];
+			if (data.inheritMenuPermissions === undefined) data.inheritMenuPermissions = false;
 			return data;
 		},
 
 		beforeUpdate: async (id, data) => {
-			const { getCollection } = await import('@/lib/database/mongodb');
-			const collection = await getCollection(roleConfig.collectionName);
-			const existing = await collection.findOne({ id });
+			const existing = await prisma.role.findUnique({ where: { id } });
 
 			if (!existing) {
 				throw new Error('Role not found');
@@ -122,9 +82,7 @@ const roleConfig = {
 		},
 
 		beforeDelete: async (id) => {
-			const { getCollection } = await import('@/lib/database/mongodb');
-			const collection = await getCollection(roleConfig.collectionName);
-			const existing = await collection.findOne({ id });
+			const existing = await prisma.role.findUnique({ where: { id } });
 
 			if (!existing) {
 				throw new Error('Role not found');
@@ -138,21 +96,27 @@ const roleConfig = {
 		},
 
 		afterDelete: async (id) => {
-			const { getCollection } = await import('@/lib/database/mongodb');
-			const usersCollection = await getCollection('users');
+			// 从用户的 roles 数组中移除该角色
+			const users = await prisma.user.findMany({
+				where: { roles: { has: id } },
+			});
 
-			await usersCollection.updateMany({ roles: id }, { $pull: { roles: id } });
+			for (const user of users) {
+				await prisma.user.update({
+					where: { id: user.id },
+					data: { roles: user.roles.filter(r => r !== id) },
+				});
+			}
 
 			console.log(`Role ${id} deleted, cleaned up from users`);
 		},
 
 		beforeBatchDelete: async (ids) => {
-			const { getCollection } = await import('@/lib/database/mongodb');
-			const collection = await getCollection(roleConfig.collectionName);
-
-			const adminRoles = await collection.find({
-				id: { $in: ids },
-				$or: [{ name: 'admin' }, { name: 'Admin' }],
+			const adminRoles = await prisma.role.findMany({
+				where: {
+					id: { in: ids },
+					OR: [{ name: 'admin' }, { name: 'Admin' }],
+				},
 			});
 
 			if (adminRoles.length > 0) {
@@ -163,49 +127,28 @@ const roleConfig = {
 		},
 	},
 
-	/**
-	 * 数据转换
-	 */
 	transforms: {
 		input: (data) => {
 			if (data.enable !== undefined) {
 				data.enable = data.enable === true || data.enable === 'true';
 			}
-			if (data.name) {
-				data.name = data.name.trim();
-			}
-			if (data.remark) {
-				data.remark = data.remark.trim();
-			}
+			if (data.name) data.name = data.name.trim();
+			if (data.remark) data.remark = data.remark.trim();
 			return data;
 		},
 
 		output: (data) => {
-			if (data.enable === undefined) {
-				data.enable = true;
-			}
-			if (!data.permission || !Array.isArray(data.permission)) {
-				data.permission = [];
-			}
-			if (!data.menu || !Array.isArray(data.menu)) {
-				data.menu = [];
-			}
-			if (data.inheritMenuPermissions === undefined) {
-				data.inheritMenuPermissions = false;
-			}
+			if (data.enable === undefined) data.enable = true;
+			if (!data.permission || !Array.isArray(data.permission)) data.permission = [];
+			if (!data.menu || !Array.isArray(data.menu)) data.menu = [];
+			if (data.inheritMenuPermissions === undefined) data.inheritMenuPermissions = false;
 			return data;
 		},
 	},
 };
 
-/**
- * 创建标准 CRUD Actions
- */
 const crudActions = createCrudActions(roleConfig);
 
-/**
- * 导出标准 CRUD Actions
- */
 export const getRoleListAction = crudActions.getList;
 export const getRoleDetailAction = crudActions.getDetail;
 export const createRoleAction = crudActions.create;
@@ -215,12 +158,7 @@ export const batchUpdateRolesAction = crudActions.batchUpdate;
 export const batchDeleteRolesAction = crudActions.batchDelete;
 
 /**
- * 自定义 Actions
- */
-
-/**
  * 获取角色列表（用于选择器）
- * 只返回启用的角色，可选添加标签
  */
 export const getRoleListForSelectAction = wrapAction('sysQueryRoleListForSelect', async ({ withLabel = false } = {}, ctx) => {
 	const result = await crudActions._dao.getList({
@@ -239,19 +177,13 @@ export const getRoleListForSelectAction = wrapAction('sysQueryRoleListForSelect'
 		roles = roles.map((role) => {
 			const badges = [];
 
-			if (!role.enable) {
-				badges.push('[已禁用]');
-			}
+			if (!role.enable) badges.push('[已禁用]');
 
 			const permCount = Array.isArray(role.permission) ? role.permission.length : 0;
-			if (permCount > 0) {
-				badges.push(`${permCount}权限`);
-			}
+			if (permCount > 0) badges.push(`${permCount}权限`);
 
 			const menuCount = Array.isArray(role.menu) ? role.menu.length : 0;
-			if (menuCount > 0) {
-				badges.push(`${menuCount}菜单`);
-			}
+			if (menuCount > 0) badges.push(`${menuCount}菜单`);
 
 			const badgeStr = badges.length > 0 ? ` ${badges.join(' ')}` : '';
 			const remarkStr = role.remark ? ` - ${role.remark}` : '';
@@ -291,10 +223,6 @@ export const assignPermissionsToRoleAction = wrapAction('sysAssignPermissionsToR
 
 /**
  * 分配菜单给角色
- * @param {Object} params
- * @param {string} params.roleId - 角色ID
- * @param {string[]} params.menuIds - 菜单ID数组
- * @param {boolean} params.inheritPermissions - 是否继承菜单关联的权限（默认 false）
  */
 export const assignMenusToRoleAction = wrapAction('sysAssignMenusToRole', async (params, ctx) => {
 	const { roleId, menuIds, inheritPermissions = false } = params;
@@ -307,10 +235,9 @@ export const assignMenusToRoleAction = wrapAction('sysAssignMenusToRole', async 
 		return { success: false, error: 'menuIds must be an array' };
 	}
 
-	// 更新角色的菜单和是否继承权限的标志
-	const result = await crudActions._dao.update(roleId, { 
+	const result = await crudActions._dao.update(roleId, {
 		menu: menuIds,
-		inheritMenuPermissions: inheritPermissions 
+		inheritMenuPermissions: inheritPermissions,
 	});
 
 	return result;

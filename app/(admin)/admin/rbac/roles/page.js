@@ -87,7 +87,7 @@ export default function RolesManagementPage() {
 				const currentPerms = result.data?.permission || [];
 				console.log('[Roles] Current permissions:', currentPerms);
 				// 确保权限ID是字符串数组
-				const permIds = currentPerms.map((p) => String(typeof p === 'object' ? p.id || p._id : p));
+				const permIds = currentPerms.map((p) => String(typeof p === 'object' ? p.id : p));
 				console.log('[Roles] Converted permission IDs:', permIds);
 				setSelectedPermissions(permIds);
 			} else {

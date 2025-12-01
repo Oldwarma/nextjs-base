@@ -16,9 +16,9 @@ export default function PostManagementPage() {
 	// 字段配置
 	// ============================================
 	const fieldsConfig = [
-		// ID 字段（MongoDB _id）
+		// ID 字段
 		{
-			key: '_id',
+			key: 'id',
 			title: 'ID',
 			type: 'text',
 			table: false,
@@ -223,7 +223,7 @@ export default function PostManagementPage() {
 				delete: postActions.deletePostAction,
 			}}
 			title='Post Management'
-			rowKey='_id'
+			rowKey='id'
 			// 功能开关
 			enableCreate={true}
 			enableEdit={true}

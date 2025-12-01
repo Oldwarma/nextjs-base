@@ -57,7 +57,7 @@ export default function MenusManagementPage() {
 			const result = await menuActions.getMenuDetailAction(record.id);
 			if (result.success) {
 				const currentPerms = result.data?.permission || [];
-				const permIds = currentPerms.map((p) => String(typeof p === 'object' ? p.id || p._id : p));
+				const permIds = currentPerms.map((p) => String(typeof p === 'object' ? p.id : p));
 				setSelectedPermissions(permIds);
 			} else {
 				message.error(result.error || 'Failed to load permissions');
@@ -143,12 +143,11 @@ export default function MenusManagementPage() {
 				form: {
 					placeholder: 'Select an icon',
 					tips: 'Icon is only for top-level menus. Sub-menu items do not display icons.',
-					// 依赖 parent_id 字段，当 parent_id 有值时禁用图标选择
-					dependencies: ['parent_id'],
+					dependencies: ['parentId'],
 					fieldProps: (form) => {
-						const parent_id = form?.getFieldValue('parent_id');
+						const parentId = form?.getFieldValue('parentId');
 						return {
-							disabled: !!parent_id, // 有父级菜单时禁用图标选择
+							disabled: !!parentId,
 						};
 					},
 				},
@@ -240,7 +239,7 @@ export default function MenusManagementPage() {
 
 			// 父级菜单
 			{
-				key: 'parent_id',
+				key: 'parentId',
 				title: 'Parent Menu',
 				type: 'tree-select',
 				table: false,

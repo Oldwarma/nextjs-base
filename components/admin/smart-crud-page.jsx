@@ -54,7 +54,7 @@ const enUSProIntl = createIntl('en_US', enUSIntl);
  * @param {Function} actions.delete - 删除 (必需)
  * @param {Function} actions.batchUpdate - 批量更新 (可选)
  * @param {String} title - 页面标题
- * @param {String} rowKey - 主键字段 (默认 '_id')
+ * @param {String} rowKey - 主键字段 (默认 'id')
  * @param {Object} tableProps - ProTable 额外属性
  * @param {Object} formProps - ModalForm 额外属性
  * @param {Number} formProps.width - 表单弹窗宽度 (默认 800，全屏时为 100vw)
@@ -77,7 +77,7 @@ export default function SmartCrudPage({
 	dataSource, // 可选：直接传入数据（不使用 request）
 	loading, // 可选：加载状态
 	title = 'Data Management',
-	rowKey = 'id',  // 默认使用 'id' 而不是 '_id'，兼容未来数据库迁移
+	rowKey = 'id',
 	tableProps = {},
 	formProps = {},
 	batchActions = [],
