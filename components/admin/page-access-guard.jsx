@@ -52,8 +52,8 @@ export default function PageAccessGuard({ children }) {
 				return;
 			}
 
-			// Dashboard 首页始终允许访问
-			if (pathname === '/admin/profile') {
+			// Dashboard 首页和个人资料页始终允许访问
+			if (pathname === '/admin' || pathname === '/admin/profile') {
 				setAccessState({
 					loading: false,
 					hasAccess: true,

@@ -1,6 +1,6 @@
 # RBAC 快速参考
 
-> 一页纸速查手册
+> 一页纸速查手册 | v3.1
 
 ---
 
@@ -43,20 +43,45 @@ export async function GET(request) {
 import { wrapAction } from '@/lib/core/action-wrapper';
 
 // 公开
-export const pubGetConfig = wrapAction('pubGetConfig', async (_, ctx) => {
+export const pubGetConfig = wrapAction('pubGetConfig', async (params, ctx) => {
   return { success: true, data: {} };
 });
 
 // 需要登录
-export const authGetProfile = wrapAction('authGetProfile', async (_, ctx) => {
+export const authGetProfile = wrapAction('authGetProfile', async (params, ctx) => {
   const { userId } = ctx;
   return { success: true, data: { userId } };
 });
 
 // 后台权限
-export const sysGetUsers = wrapAction('sysGetUsers', async (_, ctx) => {
+export const sysGetUsers = wrapAction('sysGetUsers', async (params, ctx) => {
   return { success: true, data: [] };
 });
+```
+
+### Handler 签名
+
+```javascript
+handler(params, ctx)
+// params - 前端传入的参数对象
+// ctx - { userId, isAdmin, user }
+```
+
+---
+
+## CRUD Actions
+
+```javascript
+import { createCrudActions } from '@/lib/core/crud-helper';
+
+const crud = createCrudActions({ collectionName: 'users', ... });
+
+// 参数格式
+await crud.getList({ pageIndex: 1, pageSize: 20 });
+await crud.getDetail('id');           // 或 { id: 'xxx' }
+await crud.create({ name: 'xxx' });
+await crud.update({ id: 'xxx', name: 'new' });  // 必须包含 id！
+await crud.delete('id');              // 或 { id: 'xxx' }
 ```
 
 ---
@@ -89,7 +114,7 @@ const { data } = await callAction(authUpdateProfile, { name: 'xxx' });
 ```javascript
 // 禁用 401 跳转
 await fetchApi('/api/xxx', {}, { redirectOnUnauth: false });
-
+  
 // 禁用错误 toast
 await fetchApi('/api/xxx', {}, { showErrorToast: false });
 
@@ -99,6 +124,23 @@ await callAction(action, params, {
   successMessage: '操作成功'
 });
 ```
+
+---
+
+## 权限来源（v3.1）
+
+```
+用户 → 角色 → 权限（始终生效）
+        ↓
+      菜单 → 权限（可选，需开启继承）
+```
+
+### 菜单权限继承
+
+| 开关 | 行为 |
+|------|------|
+| 关闭（默认） | 菜单仅控制页面访问 |
+| 开启 | 菜单同时授予关联权限 |
 
 ---
 
@@ -126,6 +168,7 @@ await callAction(action, params, {
 |------|------|
 | `proxy.js` | API 自动拦截 |
 | `lib/core/action-wrapper.js` | Action 包装器 |
+| `lib/core/crud-helper.js` | CRUD 生成器 |
 | `lib/api/fetch-client.js` | 前端 API 封装 |
 | `lib/api/action-client.js` | 前端 Action 封装 |
 

@@ -19,8 +19,8 @@ const menuConfig = {
 	 * BaseDAO 字段配置
 	 */
 	fields: {
-		creatable: ['name', 'parent_id', 'url', 'icon', 'sort', 'enable', 'hidden', 'remark'],
-		updatable: ['name', 'parent_id', 'url', 'icon', 'sort', 'enable', 'hidden', 'remark'],
+		creatable: ['name', 'parent_id', 'url', 'icon', 'sort', 'enable', 'hidden', 'remark', 'permission'],
+		updatable: ['name', 'parent_id', 'url', 'icon', 'sort', 'enable', 'hidden', 'remark', 'permission'],
 		searchable: ['name', 'url'],
 	},
 
@@ -75,6 +75,11 @@ const menuConfig = {
 			required: false,
 			type: 'string',
 			maxLength: 200,
+		},
+		permission: {
+			required: false,
+			type: 'array',
+			itemType: 'string',
 		},
 	},
 
@@ -264,8 +269,12 @@ export const getMenuTreeAction = wrapAction('sysQueryMenuTree', async ({ pageInd
 /**
  * 获取菜单树（用于 TreeSelect 选择器）
  * 返回树形结构，用于父级菜单选择
+ * @param {Object} params
+ * @param {boolean} params.includeRootOption - 是否包含 "Root Menu" 选项（用于父级选择时需要，用于分配菜单时不需要）
  */
-export const getMenuTreeForSelectAction = wrapAction('sysQueryMenuTreeForSelect', async (_, ctx) => {
+export const getMenuTreeForSelectAction = wrapAction('sysQueryMenuTreeForSelect', async (params = {}, ctx) => {
+	const { includeRootOption = true } = params;
+	
 	const result = await sysDao.getMenuTree({
 		pageIndex: 1,
 		pageSize: 1000,
@@ -292,13 +301,35 @@ export const getMenuTreeForSelectAction = wrapAction('sysQueryMenuTreeForSelect'
 		});
 	};
 
-	const formattedTree = [
-		{ title: '--- Root Menu ---', value: '', key: '' }, // 使用空字符串而不是 null，避免 TreeSelect 警告
-		...convertToTreeSelectFormat(result.rows || []),
-	];
+	const menuItems = convertToTreeSelectFormat(result.rows || []);
+	
+	// 只有在需要时才添加 "Root Menu" 选项（用于父级菜单选择）
+	const formattedTree = includeRootOption
+		? [{ title: '--- Root Menu ---', value: '', key: '' }, ...menuItems]
+		: menuItems;
 
 	return {
 		success: true,
 		data: formattedTree,
 	};
 }, { skipLog: true });
+
+/**
+ * 分配权限给菜单
+ * 菜单可以绑定权限，当用户拥有该菜单时，自动获得菜单绑定的权限
+ */
+export const assignPermissionsToMenuAction = wrapAction('sysAssignPermissionsToMenu', async (params, ctx) => {
+	const { menuId, permissionIds } = params;
+
+	if (!menuId) {
+		return { success: false, error: 'menuId is required' };
+	}
+
+	if (!Array.isArray(permissionIds)) {
+		return { success: false, error: 'permissionIds must be an array' };
+	}
+
+	const result = await crudActions._dao.update(menuId, { permission: permissionIds });
+
+	return result;
+});

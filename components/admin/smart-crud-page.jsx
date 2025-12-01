@@ -518,7 +518,8 @@ export default function SmartCrudPage({
 			// 获取 row 的 key（支持 string 或 function）
 			const id = typeof rowKey === 'function' ? rowKey(currentRow) : currentRow[rowKey];
 			
-			const result = await actions.update(id, values);
+			// 统一传递 { id, ...values } 格式，兼容 wrapAction 的单参数设计
+			const result = await actions.update({ id, ...values });
 
 			if (result.success) {
 				messageApi.success(result.message || 'Updated successfully');

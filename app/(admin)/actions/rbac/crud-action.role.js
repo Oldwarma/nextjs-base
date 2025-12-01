@@ -19,7 +19,7 @@ const roleConfig = {
 	 */
 	fields: {
 		creatable: ['name', 'remark', 'enable'],
-		updatable: ['name', 'remark', 'enable', 'permission', 'menu'],
+		updatable: ['name', 'remark', 'enable', 'permission', 'menu', 'inheritMenuPermissions'],
 		searchable: ['name', 'remark'],
 	},
 
@@ -53,6 +53,11 @@ const roleConfig = {
 			required: false,
 			type: 'array',
 			itemType: 'string',
+		},
+		inheritMenuPermissions: {
+			required: false,
+			type: 'boolean',
+			default: false,
 		},
 	},
 
@@ -93,6 +98,9 @@ const roleConfig = {
 			}
 			if (data.menu === undefined) {
 				data.menu = [];
+			}
+			if (data.inheritMenuPermissions === undefined) {
+				data.inheritMenuPermissions = false;
 			}
 			return data;
 		},
@@ -181,6 +189,9 @@ const roleConfig = {
 			}
 			if (!data.menu || !Array.isArray(data.menu)) {
 				data.menu = [];
+			}
+			if (data.inheritMenuPermissions === undefined) {
+				data.inheritMenuPermissions = false;
 			}
 			return data;
 		},
@@ -280,9 +291,13 @@ export const assignPermissionsToRoleAction = wrapAction('sysAssignPermissionsToR
 
 /**
  * 分配菜单给角色
+ * @param {Object} params
+ * @param {string} params.roleId - 角色ID
+ * @param {string[]} params.menuIds - 菜单ID数组
+ * @param {boolean} params.inheritPermissions - 是否继承菜单关联的权限（默认 false）
  */
 export const assignMenusToRoleAction = wrapAction('sysAssignMenusToRole', async (params, ctx) => {
-	const { roleId, menuIds } = params;
+	const { roleId, menuIds, inheritPermissions = false } = params;
 
 	if (!roleId) {
 		return { success: false, error: 'roleId is required' };
@@ -292,7 +307,11 @@ export const assignMenusToRoleAction = wrapAction('sysAssignMenusToRole', async 
 		return { success: false, error: 'menuIds must be an array' };
 	}
 
-	const result = await crudActions._dao.update(roleId, { menu: menuIds });
+	// 更新角色的菜单和是否继承权限的标志
+	const result = await crudActions._dao.update(roleId, { 
+		menu: menuIds,
+		inheritMenuPermissions: inheritPermissions 
+	});
 
 	return result;
 });

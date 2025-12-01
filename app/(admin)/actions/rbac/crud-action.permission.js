@@ -270,7 +270,7 @@ export const getPermissionTreeAction = wrapAction('sysQueryPermissionTree', asyn
 		data: result.rows || [],
 		total: result.total || 0,
 	};
-}, { skipLog: true });
+}, { skipLog: false });
 
 /**
  * 获取权限树（用于 TreeSelect 选择器）

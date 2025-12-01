@@ -7,18 +7,29 @@
  * - 获取当前用户的菜单权限
  * - 获取当前用户的操作权限
  * - 验证用户是否有访问特定页面的权限
+ * 
+ * 注意：这些方法是后台基础设施方法，使用 auth 前缀
+ * 只要有后台访问权限就能调用，不受 RBAC 权限管理
  */
 
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth/auth';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
 import { wrapAction } from '@/lib/core/action-wrapper';
+import { checkBackendAccessAction } from '@/lib/auth/admin-auth';
 
 /**
  * Get current user's accessible menus (RBAC-aware)
+ * 
+ * 使用 auth 前缀：只需要登录 + 后台访问权限，不需要 RBAC 检查
  * @returns {Promise<Object>} User's menu tree result
  */
-export const getUserAccessibleMenusAction = wrapAction('sysQueryUserAccessibleMenus', async (_, ctx) => {
+export const getUserAccessibleMenusAction = wrapAction('authQueryUserAccessibleMenus', async (_, ctx) => {
+	// 检查后台访问权限
+	const backendCheck = await checkBackendAccessAction();
+	if (!backendCheck.hasAccess) {
+		return { success: false, error: backendCheck.error };
+	}
 	// Get current session
 	const session = await auth.api.getSession({
 		headers: await headers(),
@@ -75,9 +86,17 @@ export const getUserAccessibleMenusAction = wrapAction('sysQueryUserAccessibleMe
 
 /**
  * Get current user's permission IDs
+ * 
+ * 使用 auth 前缀：只需要登录 + 后台访问权限，不需要 RBAC 检查
  * @returns {Promise<Object>} User's permission IDs result
  */
-export const getUserPermissionIdsAction = wrapAction('sysQueryUserPermissionIds', async (_, ctx) => {
+export const getUserPermissionIdsAction = wrapAction('authQueryUserPermissionIds', async (_, ctx) => {
+	// 检查后台访问权限
+	const backendCheck = await checkBackendAccessAction();
+	if (!backendCheck.hasAccess) {
+		return { success: false, error: backendCheck.error };
+	}
+
 	const session = await auth.api.getSession({
 		headers: await headers(),
 	});
@@ -110,10 +129,18 @@ export const getUserPermissionIdsAction = wrapAction('sysQueryUserPermissionIds'
 
 /**
  * Check if current user can access a specific page URL
+ * 
+ * 使用 auth 前缀：只需要登录 + 后台访问权限，不需要 RBAC 检查
  * @param {String} pageUrl - Page URL to check, e.g. '/admin/users'
  * @returns {Promise<Object>} Access check result
  */
-export const checkPageAccessAction = wrapAction('sysCheckPageAccess', async (pageUrl, ctx) => {
+export const checkPageAccessAction = wrapAction('authCheckPageAccess', async (pageUrl, ctx) => {
+	// 检查后台访问权限
+	const backendCheck = await checkBackendAccessAction();
+	if (!backendCheck.hasAccess) {
+		return { success: false, hasAccess: false, error: backendCheck.error };
+	}
+
 	const session = await auth.api.getSession({
 		headers: await headers(),
 	});
@@ -205,9 +232,17 @@ function checkUrlInMenuTree(url, menuTree) {
 
 /**
  * Get current user's roles
+ * 
+ * 使用 auth 前缀：只需要登录 + 后台访问权限，不需要 RBAC 检查
  * @returns {Promise<Object>} User's roles result
  */
-export const getUserRolesAction = wrapAction('sysQueryUserRoles', async (_, ctx) => {
+export const getUserRolesAction = wrapAction('authQueryUserRoles', async (_, ctx) => {
+	// 检查后台访问权限
+	const backendCheck = await checkBackendAccessAction();
+	if (!backendCheck.hasAccess) {
+		return { success: false, error: backendCheck.error };
+	}
+
 	const session = await auth.api.getSession({
 		headers: await headers(),
 	});

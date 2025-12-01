@@ -312,68 +312,68 @@ export async function batchUpdateUsersAction(userIds, updateData) {
  * 重置用户密码
  */
 export const resetUserPasswordAction = wrapAction('sysResetUserPassword', async ({ userId, newPassword }, ctx) => {
-	if (!userId || !newPassword) {
-		return {
-			success: false,
-			error: 'User ID and new password are required',
-		};
-	}
-
-	if (newPassword.length < 8) {
-		return {
-			success: false,
-			error: 'Password must be at least 8 characters',
-		};
-	}
-
-	// 优先使用 DAO 层方法
-	try {
-		await userDao.resetUserPassword(userId, newPassword);
-		return {
-			success: true,
-			message: 'Password reset successfully',
-			data: { userId },
-		};
-	} catch (daoError) {
-		// 如果 DAO 失败，尝试使用 Better Auth Admin API
-		const result = await auth.api.setUserPassword({
-			headers: await headers(),
-			body: {
-				newPassword,
-				userId,
-			},
-		});
-
-		if (result?.error) {
-			throw new Error(result.error.message || daoError.message || 'Failed to reset password');
+		if (!userId || !newPassword) {
+			return {
+				success: false,
+				error: 'User ID and new password are required',
+			};
 		}
 
-		return {
-			success: true,
-			message: 'Password reset successfully',
-			data: { userId },
-		};
-	}
+		if (newPassword.length < 8) {
+			return {
+				success: false,
+				error: 'Password must be at least 8 characters',
+			};
+		}
+
+		// 优先使用 DAO 层方法
+		try {
+			await userDao.resetUserPassword(userId, newPassword);
+			return {
+				success: true,
+				message: 'Password reset successfully',
+				data: { userId },
+			};
+		} catch (daoError) {
+			// 如果 DAO 失败，尝试使用 Better Auth Admin API
+			const result = await auth.api.setUserPassword({
+				headers: await headers(),
+				body: {
+					newPassword,
+					userId,
+				},
+			});
+
+			if (result?.error) {
+				throw new Error(result.error.message || daoError.message || 'Failed to reset password');
+			}
+
+			return {
+				success: true,
+				message: 'Password reset successfully',
+				data: { userId },
+			};
+		}
 });
 
 /**
  * 为用户绑定角色
  */
 export const bindUserRolesAction = wrapAction('sysBindUserRoles', async ({ userId, roleIds, reset = false }, ctx) => {
-	if (!userId) {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+		}
+
+		await userDao.bindUserRoles(userId, roleIds, reset);
+
 		return {
-			success: false,
-			error: 'User ID is required',
+			success: true,
+			message: 'Roles assigned successfully',
+			data: { userId, roleIds, reset },
 		};
-	}
-
-	await userDao.bindUserRoles(userId, roleIds, reset);
-
-	return {
-		success: true,
-		message: 'Roles assigned successfully',
-		data: { userId, roleIds, reset },
-	};
 });
 
 /**
@@ -415,52 +415,52 @@ export async function getUserRolesAction(userId) {
  * 封禁用户
  */
 export const banUserAction = wrapAction('sysBanUser', async ({ userId, banReason, banExpiresIn }, ctx) => {
-	if (!userId) {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+		}
+
+		await auth.api.banUser({
+			headers: await headers(),
+			body: {
+				userId,
+				banReason,
+				banExpiresIn,
+			},
+		});
+
 		return {
-			success: false,
-			error: 'User ID is required',
+			success: true,
+			message: 'User banned successfully',
+			data: { userId, banReason, banExpiresIn },
 		};
-	}
-
-	await auth.api.banUser({
-		headers: await headers(),
-		body: {
-			userId,
-			banReason,
-			banExpiresIn,
-		},
-	});
-
-	return {
-		success: true,
-		message: 'User banned successfully',
-		data: { userId, banReason, banExpiresIn },
-	};
 });
 
 /**
  * 解封用户
  */
 export const unbanUserAction = wrapAction('sysUnbanUser', async ({ userId }, ctx) => {
-	if (!userId) {
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+		}
+
+		await auth.api.unbanUser({
+			headers: await headers(),
+			body: {
+				userId,
+			},
+		});
+
 		return {
-			success: false,
-			error: 'User ID is required',
+			success: true,
+			message: 'User unbanned successfully',
+			data: { userId },
 		};
-	}
-
-	await auth.api.unbanUser({
-		headers: await headers(),
-		body: {
-			userId,
-		},
-	});
-
-	return {
-		success: true,
-		message: 'User unbanned successfully',
-		data: { userId },
-	};
 });
 
 /**

@@ -756,7 +756,7 @@ export default function UsersManagementPage() {
 				fieldsConfig={fieldsConfig}
 				actions={{
 					getList: userActions.getUserListAction,
-					getDetail: userActions.getUserDetailAction,
+					// getDetail: userActions.getUserDetailAction,
 					update: userActions.updateUserAction,
 					delete: userActions.deleteUserAction,
 				}}

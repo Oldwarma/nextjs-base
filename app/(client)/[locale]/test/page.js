@@ -89,27 +89,27 @@ export default function TestAuthPage() {
 			<div className="mb-8">
 				<h2 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">API Routes 测试</h2>
 				<div className="space-y-3">
-					<button
-						onClick={testPubApi}
-						disabled={loading}
-						className="w-full p-3 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
-					>
+				<button
+					onClick={testPubApi}
+					disabled={loading}
+					className="w-full p-3 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+				>
 						pub - 公开 API (/api/v1/pub/cms/getList)
-					</button>
-					
-					<button
-						onClick={testAuthApi}
-						disabled={loading}
-						className="w-full p-3 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-					>
+				</button>
+				
+				<button
+					onClick={testAuthApi}
+					disabled={loading}
+					className="w-full p-3 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+				>
 						auth - 需要登录 (/api/v1/auth/user/profile)
-					</button>
-					
-					<button
-						onClick={testSysApi}
-						disabled={loading}
-						className="w-full p-3 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
-					>
+				</button>
+				
+				<button
+					onClick={testSysApi}
+					disabled={loading}
+					className="w-full p-3 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+				>
 						sys - 后台权限 (/api/v1/sys/test)
 					</button>
 				</div>
@@ -141,7 +141,7 @@ export default function TestAuthPage() {
 						className="w-full p-3 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
 					>
 						sys - 后台权限 (sysGetSystemInfo)
-					</button>
+				</button>
 				</div>
 			</div>
 

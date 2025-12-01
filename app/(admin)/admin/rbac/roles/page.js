@@ -12,8 +12,8 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Tag, Button, Modal, Tree, App, Space, Checkbox } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, KeyOutlined, MenuOutlined } from '@ant-design/icons';
+import { Tag, Button, Modal, Tree, App, Space, Switch, Tooltip } from 'antd';
+import { CheckCircleOutlined, CloseCircleOutlined, KeyOutlined, MenuOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 
 // Dynamically import SmartCrudPage
 const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
@@ -42,7 +42,7 @@ export default function RolesManagementPage() {
 	const [menuTree, setMenuTree] = useState([]);
 	const [selectedMenus, setSelectedMenus] = useState([]);
 	const [menuLoading, setMenuLoading] = useState(false);
-	const [autoBindMenuPermissions, setAutoBindMenuPermissions] = useState(true);
+	const [inheritMenuPermissions, setInheritMenuPermissions] = useState(false);
 
 	// Load permission and menu trees
 	useEffect(() => {
@@ -56,7 +56,8 @@ export default function RolesManagementPage() {
 		};
 
 		const loadMenuTree = async () => {
-			const result = await getMenuTreeForSelectAction();
+			// 不包含 "Root Menu" 选项，因为这里是分配菜单，不是选择父级
+			const result = await getMenuTreeForSelectAction({ includeRootOption: false });
 			if (result.success) {
 				console.log('[Roles] Raw menu data:', result.data);
 				// getMenuTreeForSelectAction 已经返回正确格式，直接使用
@@ -110,10 +111,11 @@ export default function RolesManagementPage() {
 			setMenuLoading(true);
 			setMenuModalVisible(true);
 
-			// Get current menus
+			// Get current menus and inheritMenuPermissions setting
 			const result = await roleActions.getRoleDetailAction(record.id);
 			if (result.success) {
 				setSelectedMenus(result.data?.menu || []);
+				setInheritMenuPermissions(result.data?.inheritMenuPermissions || false);
 			} else {
 				message.error(result.error || 'Failed to load menus');
 			}
@@ -154,6 +156,7 @@ export default function RolesManagementPage() {
 		const result = await roleActions.assignMenusToRoleAction({
 			roleId: selectedRole.id,
 			menuIds: selectedMenus,
+			inheritPermissions: inheritMenuPermissions,
 		});
 
 		if (result.success) {
@@ -428,13 +431,38 @@ export default function RolesManagementPage() {
 				width={600}
 				confirmLoading={menuLoading}
 			>
-				<Checkbox
-					checked={autoBindMenuPermissions}
-					onChange={(e) => setAutoBindMenuPermissions(e.target.checked)}
-					style={{ marginBottom: 12 }}
-				>
-					Auto bind menu permissions
-				</Checkbox>
+				{/* 继承权限开关 */}
+				<div style={{ 
+					marginBottom: 16, 
+					padding: '12px 16px', 
+					background: inheritMenuPermissions ? '#e6f7ff' : '#f5f5f5', 
+					borderRadius: 8,
+					border: inheritMenuPermissions ? '1px solid #91d5ff' : '1px solid #d9d9d9',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'space-between',
+					transition: 'all 0.3s'
+				}}>
+					<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+						<Switch
+							checked={inheritMenuPermissions}
+							onChange={setInheritMenuPermissions}
+							size="small"
+						/>
+						<span style={{ fontWeight: 500, color: '#333' }}>
+							Inherit Menu Permissions
+						</span>
+						<Tooltip 
+							title="When enabled, users with this role will also inherit the permissions assigned to these menus. When disabled, menus only control page access without granting additional permissions."
+							placement="right"
+						>
+							<QuestionCircleOutlined style={{ color: '#999', cursor: 'help' }} />
+						</Tooltip>
+					</div>
+					{inheritMenuPermissions && (
+						<Tag color="blue" style={{ margin: 0 }}>Active</Tag>
+					)}
+				</div>
 
 				{menuTree.length > 0 ? (
 					<Tree

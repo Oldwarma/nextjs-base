@@ -791,13 +791,98 @@ export async function getUserRoleIds(userId) {
 }
 
 /**
- * 获取用户的所有权限ID（通过角色继承）
+ * 获取用户的所有权限ID（通过角色和菜单双渠道继承）
+ * 
+ * 权限来源：
+ * 1. 角色(roles) → 权限(permissions)  （始终生效）
+ * 2. 菜单(menus) → 权限(permissions)  （仅当角色设置了 inheritMenuPermissions: true 时生效）
+ * 
  * @param {String} userId - 用户ID
- * @returns {Promise<Array<String>>} 权限ID数组
+ * @returns {Promise<Array<String>>} 权限ID数组（已去重）
  */
 export async function getUserPermissionIds(userId) {
 	const roleIds = await getUserRoleIds(userId);
-	return await getPermissionIdsByRoleIds(roleIds);
+	
+	// 1. 从角色获取权限（始终生效）
+	const rolePermissionIds = await getPermissionIdsByRoleIds(roleIds);
+	
+	// 2. 检查哪些角色启用了菜单权限继承
+	const roles = await findRolesByIds(roleIds);
+	const rolesWithMenuInheritance = roles.filter(role => role.inheritMenuPermissions === true);
+	
+	let menuPermissionIds = [];
+	
+	// 只有当角色启用了菜单权限继承时，才从菜单获取权限
+	if (rolesWithMenuInheritance.length > 0) {
+		// 获取这些角色关联的菜单ID
+		const menuIds = [];
+		rolesWithMenuInheritance.forEach(role => {
+			if (role.menu && Array.isArray(role.menu)) {
+				menuIds.push(...role.menu);
+			}
+		});
+		
+		const uniqueMenuIds = [...new Set(menuIds)];
+		if (uniqueMenuIds.length > 0) {
+			menuPermissionIds = await getPermissionIdsByMenuIds(uniqueMenuIds);
+		}
+	}
+	
+	// 3. 合并去重
+	const allPermissionIds = [...new Set([...rolePermissionIds, ...menuPermissionIds])];
+	
+	return allPermissionIds;
+}
+
+/**
+ * 根据角色ID数组获取菜单ID数组
+ * @param {Array<String>} roleIds - 角色ID数组
+ * @returns {Promise<Array<String>>} 菜单ID数组
+ */
+async function getMenuIdsByRoleIds(roleIds) {
+	if (!Array.isArray(roleIds) || roleIds.length === 0) {
+		return [];
+	}
+
+	// admin角色拥有所有菜单
+	if (roleIds.includes('admin')) {
+		const collection = await getCollection(COLLECTION_NAMES.MENUS);
+		const allMenus = await collection.find({ enable: true });
+		return allMenus.map(m => m.id);
+	}
+
+	const roles = await findRolesByIds(roleIds);
+	const menuIds = [];
+
+	roles.forEach((role) => {
+		if (role.menu && Array.isArray(role.menu)) {
+			menuIds.push(...role.menu);
+		}
+	});
+
+	return [...new Set(menuIds)];
+}
+
+/**
+ * 根据菜单ID数组获取权限ID数组
+ * @param {Array<String>} menuIds - 菜单ID数组
+ * @returns {Promise<Array<String>>} 权限ID数组
+ */
+async function getPermissionIdsByMenuIds(menuIds) {
+	if (!Array.isArray(menuIds) || menuIds.length === 0) {
+		return [];
+	}
+
+	const menus = await findMenusByIds(menuIds);
+	const permissionIds = [];
+
+	menus.forEach((menu) => {
+		if (menu.permission && Array.isArray(menu.permission)) {
+			permissionIds.push(...menu.permission);
+		}
+	});
+
+	return [...new Set(permissionIds)];
 }
 
 /**

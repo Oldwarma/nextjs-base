@@ -29,18 +29,18 @@ const crudActions = createCrudActions({
 	collectionName: 'assets',
 	resourceType: 'asset',
 	primaryKey: 'id',
-
+	
 	fields: {
 		creatable: [],
 		updatable: ['originalName', 'remark'],
 		searchable: ['originalName', 'type', 'mimeType'],
 	},
-
+	
 	query: {
 		defaultSort: { createdAt: -1 },
 		baseFilter: {},
 	},
-
+	
 	softDelete: false,
 });
 
@@ -70,18 +70,18 @@ export async function update(id, data) {
  */
 export const remove = wrapAction('sysDeleteAsset', async ({ id }, ctx) => {
 	const { userId, isAdmin } = ctx;
-
+	
 	// 先获取文件信息
 	const detail = await crudActions.getDetail(id);
 	if (!detail.success || !detail.data) {
 		return { success: false, error: 'File not found' };
 	}
-
+	
 	const file = detail.data;
-
+	
 	// 删除 R2 文件和数据库记录（管理员可以删除任何文件）
 	const result = await deleteFile(file.url || file.key, userId, { isAdmin });
-
+	
 	return result;
 });
 
@@ -90,10 +90,10 @@ export const remove = wrapAction('sysDeleteAsset', async ({ id }, ctx) => {
  */
 export const batchDelete = wrapAction('sysBatchDeleteAsset', async ({ ids }, ctx) => {
 	const { userId, isAdmin } = ctx;
-
+	
 	const errors = [];
 	let successCount = 0;
-
+	
 	for (const id of ids) {
 		try {
 			const detail = await crudActions.getDetail(id);
@@ -110,7 +110,7 @@ export const batchDelete = wrapAction('sysBatchDeleteAsset', async ({ ids }, ctx
 			errors.push(`${id}: ${error.message}`);
 		}
 	}
-
+	
 	return {
 		success: errors.length === 0,
 		deletedCount: successCount,

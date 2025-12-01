@@ -1,7 +1,7 @@
 # RBAC 权限系统文档索引
 
 > **最后更新**: 2024-12-01  
-> **版本**: v3.0
+> **版本**: v3.1
 
 本目录包含完整的 RBAC 权限系统设计与实施文档。
 
@@ -110,18 +110,34 @@ const { data, success } = await callAction(authGetProfile);
 | `sys` / `/api/sys/*` | system | 需要后台权限 + RBAC |
 | `_` | private | 私有，不能被前端调用 |
 
+### 权限来源（v3.1 新增）
+
+用户的权限来自两个渠道：
+
+1. **角色权限**：角色(roles) → 权限(permissions) *（始终生效）*
+2. **菜单权限**：菜单(menus) → 权限(permissions) *（可选，需开启继承）*
+
+```
+用户 → 角色 → 权限（始终）
+        ↓
+      菜单 → 权限（可选继承）
+```
+
 ### 权限字段
 
 ```javascript
 {
   "actions": [        // Server Actions（函数名匹配）
     "sysGetUserList",
-    "sysDeleteUser"
+    "sysDeleteUser",
+    "sysCreate*",      // 支持通配符
+    "**/get*Action"
   ],
   
   "apis": [          // API Routes（HTTP 路径匹配）
     "/api/v1/sys/users",
-    "GET:/api/v1/sys/users/*"
+    "GET:/api/v1/sys/users/*",
+    "POST:/api/upload"
   ]
 }
 ```
@@ -137,17 +153,60 @@ const { data, success } = await callAction(authGetProfile);
 
 ---
 
+## 🔑 菜单权限继承（v3.1 新增）
+
+### 功能说明
+
+菜单可以关联权限，当角色分配菜单时，可以选择是否同时继承菜单的权限。
+
+### 使用方式
+
+1. **在菜单管理页面**：为菜单分配权限（Assign Permissions）
+2. **在角色管理页面**：分配菜单时，开启 "Inherit Menu Permissions" 开关
+
+### 开关行为
+
+| 开关状态 | 行为 |
+|---------|------|
+| **关闭**（默认） | 菜单仅控制页面访问权限，不授予额外 API/Action 权限 |
+| **开启** | 菜单同时授予页面访问权限和菜单关联的所有权限 |
+
+### 数据库字段
+
+```javascript
+// roles 集合
+{
+  "id": "role-uuid",
+  "name": "Editor",
+  "menu": ["menu-uuid-1", "menu-uuid-2"],
+  "permission": ["perm-uuid-1", "perm-uuid-2"],
+  "inheritMenuPermissions": true  // v3.1 新增
+}
+
+// menus 集合
+{
+  "id": "menu-uuid-1",
+  "name": "User Management",
+  "url": "/admin/rbac/users",
+  "permission": ["perm-uuid-3", "perm-uuid-4"]  // 菜单关联的权限
+}
+```
+
+---
+
 ## 📁 相关文件
 
 | 文件 | 说明 |
 |------|------|
 | `proxy.js` | API 自动拦截（Next.js 16） |
-| `lib/core/action-wrapper.js` | Action 包装器 |
+| `lib/core/action-wrapper.js` | Action 包装器（wrapAction） |
+| `lib/core/crud-helper.js` | CRUD Actions 生成器 |
 | `lib/core/permission-naming.js` | 权限命名解析 |
 | `lib/api/fetch-client.js` | 前端 API 调用封装 |
 | `lib/api/action-client.js` | 前端 Action 调用封装 |
 | `lib/api/api-context.js` | API 上下文获取 |
 | `app/(admin)/actions/dao/sys.js` | RBAC 检查函数 |
+| `app/(admin)/actions/dao/base.js` | BaseDAO 基类 |
 
 ---
 
@@ -161,6 +220,26 @@ const { data, success } = await callAction(authGetProfile);
 ---
 
 ## 📝 更新日志
+
+### v3.1 (2024-12-01)
+
+**新功能**：菜单权限继承
+
+- 菜单可以关联权限（`permission` 字段）
+- 角色分配菜单时可选择是否继承权限（`inheritMenuPermissions` 字段）
+- 权限来源：角色权限 + 菜单权限（可选）
+
+**Bug 修复**：
+
+- 修复 `crud-helper.js` 中 update/delete/getDetail 参数传递错误
+- 修复 `SmartCrudPage` 调用 update 时参数格式不正确
+- 统一 handler 签名为 `handler(params, ctx)`
+
+**改进**：
+
+- `getMenuTreeForSelectAction` 支持 `includeRootOption` 参数
+- Assign Menus 弹窗不再显示 "Root Menu" 选项
+- Assign Menus 弹窗添加 "Inherit Menu Permissions" 开关
 
 ### v3.0 (2024-12-01)
 
@@ -232,6 +311,41 @@ await fetchApi('/api/xxx', {}, { redirectOnUnauth: false });
 
 // Action
 await callAction(action, params, { redirectOnUnauth: false });
+```
+
+### Q5: 菜单权限继承和角色权限有什么区别？
+
+| | 角色权限 | 菜单权限 |
+|---|---------|---------|
+| 来源 | 角色 → 权限 | 菜单 → 权限 |
+| 生效条件 | 始终生效 | 需要开启 `inheritMenuPermissions` |
+| 用途 | 功能权限 | 页面相关权限 |
+
+### Q6: wrapAction 的 handler 签名是什么？
+
+```javascript
+handler(params, ctx)
+```
+
+- **params** - 前端传入的参数对象
+- **ctx** - 上下文 `{ userId, isAdmin, user }`
+
+### Q7: CRUD Actions 如何传参？
+
+```javascript
+// 创建
+await actions.create({ name: 'xxx', ... });
+
+// 更新 - 必须包含 id
+await actions.update({ id: 'xxx', name: 'new name', ... });
+
+// 删除 - 直接传 id 或 { id }
+await actions.delete('xxx');
+await actions.delete({ id: 'xxx' });
+
+// 获取详情 - 直接传 id 或 { id }
+await actions.getDetail('xxx');
+await actions.getDetail({ id: 'xxx' });
 ```
 
 ---
