@@ -6,13 +6,13 @@
  */
 
 import { getCollection } from '@/lib/database/mongodb';
-import { wrapAdminAction } from '@/lib/core/action-wrapper';
+import { wrapAction } from '@/lib/core/action-wrapper';
 
 /**
  * 获取 Dashboard 统计数据
  * @returns {Promise<Object>} 统计数据
  */
-export const getDashboardStats = wrapAdminAction('query', 'dashboard', async (params, context) => {
+export const getDashboardStats = wrapAction('sysQueryDashboard', async (_, ctx) => {
 	const usersCollection = await getCollection('users');
 	const assetsCollection = await getCollection('assets');
 	const actionLogsCollection = await getCollection('action_logs');
@@ -52,7 +52,7 @@ export const getDashboardStats = wrapAdminAction('query', 'dashboard', async (pa
 			},
 		},
 	};
-});
+}, { skipLog: true });
 
 /**
  * 生成最近7天的访问趋势数据（虚拟）
@@ -113,4 +113,3 @@ function generateUserTrend(currentTotal) {
 	
 	return days;
 }
-

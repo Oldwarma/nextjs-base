@@ -6,7 +6,7 @@
  */
 
 import { createReadOnlyActions } from '@/lib/core/crud-helper';
-import { wrapQueryAction } from '@/lib/core/action-wrapper';
+import { wrapAction } from '@/lib/core/action-wrapper';
 import { getSystemUsageStatistics, getSystemUsageLogs } from '@/lib/logging/usage-logs';
 
 /**
@@ -62,19 +62,19 @@ export const getUsageDetailAction = crudActions.getDetail;
 /**
  * 获取系统使用统计
  */
-export const getSystemUsageStatsAction = wrapQueryAction('usage', async ({ timeRange = '7d' } = {}) => {
+export const getSystemUsageStatsAction = wrapAction('sysQueryUsageStats', async ({ timeRange = '7d' } = {}, ctx) => {
 	const stats = await getSystemUsageStatistics(timeRange);
 
 	return {
 		success: true,
 		data: stats,
 	};
-});
+}, { skipLog: true });
 
 /**
  * 获取用户使用统计
  */
-export const getUserUsageStatsAction = wrapQueryAction('usage', async ({ userId, timeRange = '7d' } = {}) => {
+export const getUserUsageStatsAction = wrapAction('sysQueryUserUsageStats', async ({ userId, timeRange = '7d' } = {}, ctx) => {
 	if (!userId) {
 		return {
 			success: false,
@@ -91,4 +91,4 @@ export const getUserUsageStatsAction = wrapQueryAction('usage', async ({ userId,
 		success: true,
 		data: logs,
 	};
-});
+}, { skipLog: true });

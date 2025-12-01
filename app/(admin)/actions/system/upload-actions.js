@@ -1,7 +1,7 @@
 'use server';
 
 import { selects } from '@/lib/database/db-api';
-import { wrapAdminAction } from '@/lib/core/action-wrapper';
+import { wrapAction } from '@/lib/core/action-wrapper';
 
 /**
  * 获取上传文件列表
@@ -13,12 +13,12 @@ import { wrapAdminAction } from '@/lib/core/action-wrapper';
  * @param {string} params.type - 文件类型筛选
  * @returns {Promise<{success: boolean, data?: Object, error?: string}>}
  */
-export const getUploadList = wrapAdminAction('query', 'upload', async ({
+export const getUploadList = wrapAction('sysQueryUploadList', async ({
 	pageIndex = 1,
 	pageSize = 20,
 	search = '',
 	type = 'all',
-} = {}) => {
+} = {}, ctx) => {
 	// 构建查询条件
 	const whereJson = {};
 	
@@ -56,5 +56,4 @@ export const getUploadList = wrapAdminAction('query', 'upload', async ({
 		totalPages: result.totalPages,
 		hasMore: result.hasMore,
 	};
-}, { skipLog: true }); // 查询操作跳过日志记录
-
+}, { skipLog: true });

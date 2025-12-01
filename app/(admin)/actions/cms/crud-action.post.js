@@ -7,7 +7,7 @@
 'use server';
 
 import { createCrudActions } from '@/lib/core/crud-helper';
-import { wrapAdminAction } from '@/lib/core/action-wrapper';
+import { wrapAction } from '@/lib/core/action-wrapper';
 
 // ============================================
 // 配置对象
@@ -148,12 +148,12 @@ export const batchDeletePostsAction = crudActions.batchDelete;
 /**
  * 激活 Post
  */
-export const activatePostAction = wrapAdminAction('activate', 'post', async ({ id }, context) => {
+export const activatePostAction = wrapAction('sysActivatePost', async ({ id }, ctx) => {
 	const dao = crudActions._dao;
 	const result = await dao.update({
 		id,
 		data: { status: 'active' },
-		userId: context.userId,
+		userId: ctx.userId,
 	});
 	return result;
 });
@@ -161,12 +161,12 @@ export const activatePostAction = wrapAdminAction('activate', 'post', async ({ i
 /**
  * 停用 Post
  */
-export const deactivatePostAction = wrapAdminAction('deactivate', 'post', async ({ id }, context) => {
+export const deactivatePostAction = wrapAction('sysDeactivatePost', async ({ id }, ctx) => {
 	const dao = crudActions._dao;
 	const result = await dao.update({
 		id,
 		data: { status: 'inactive' },
-		userId: context.userId,
+		userId: ctx.userId,
 	});
 	return result;
 });

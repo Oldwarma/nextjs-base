@@ -8,7 +8,7 @@
 'use server';
 
 import { createCrudActions } from '@/lib/core/crud-helper';
-import { wrapQueryAction } from '@/lib/core/action-wrapper';
+import { wrapAction } from '@/lib/core/action-wrapper';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
 
 /**
@@ -42,17 +42,6 @@ const permissionConfig = {
 
 	/**
 	 * 字段验证规则
-	 * 
-	 * 支持的配置项：
-	 * - required: 是否必填（create 时生效）
-	 * - type: 类型（string, number, boolean, array, date, email, url）
-	 * - minLength/maxLength: 长度限制
-	 * - min/max: 数值范围
-	 * - pattern: 正则表达式
-	 * - enum: 枚举值
-	 * - itemType: 数组元素类型
-	 * - default: 默认值
-	 * - message: 自定义错误消息
 	 */
 	validation: {
 		name: {
@@ -192,7 +181,7 @@ const permissionConfig = {
 			const collection = await getCollection(permissionConfig.collectionName);
 			const parentIds = [...new Set(records.map((r) => r.parent_id).filter((id) => id && id !== ''))];
 			if (parentIds.length === 0) return records;
-			const parents = await collection.find({ id: { $in: parentIds } }).toArray();
+			const parents = await collection.find({ id: { $in: parentIds } });
 			const parentMap = new Map(parents.map((p) => [p.id, p]));
 			return records.map((record) => {
 				if (record.parent_id && parentMap.has(record.parent_id)) {
@@ -257,14 +246,13 @@ export const batchDeletePermissionsAction = crudActions.batchDelete;
  * 获取权限树（用于树形展示）
  * 返回扁平化格式，适配 SmartCrudPage 的树形表格
  */
-export const getPermissionTreeAction = wrapQueryAction('permission', async ({ pageIndex = 1, pageSize = 1000, whereJson = {}, sortJson = null } = {}) => {
+export const getPermissionTreeAction = wrapAction('sysQueryPermissionTree', async ({ pageIndex = 1, pageSize = 1000, whereJson = {}, sortJson = null } = {}, ctx) => {
 	// 如果有搜索条件，使用标准查询（支持搜索所有层级）
 	if (whereJson && Object.keys(whereJson).length > 0) {
-		// 使用标准的 getList 查询（支持 searchable 字段搜索）
 		const result = await crudActions._dao.getList({
 			pageIndex,
 			pageSize,
-			whereJson,  // 使用 whereJson（SmartCrudPage 传递的参数）
+			whereJson,
 			sortJson,
 		});
 		return result;
@@ -277,20 +265,18 @@ export const getPermissionTreeAction = wrapQueryAction('permission', async ({ pa
 		filters: {},
 	});
 
-	// 返回扁平化的格式，适配 SmartCrudPage
 	return {
 		success: true,
 		data: result.rows || [],
 		total: result.total || 0,
 	};
-});
+}, { skipLog: true });
 
 /**
  * 获取权限树（用于 TreeSelect 选择器）
  * 返回树形结构，用于父级权限选择
  */
-export const getPermissionTreeForSelectAction = wrapQueryAction('permission', async () => {
-	// 使用 sysDao.getPermissionTreeForSelect 获取完整的权限树
+export const getPermissionTreeForSelectAction = wrapAction('sysQueryPermissionTreeForSelect', async (_, ctx) => {
 	const tree = await sysDao.getPermissionTreeForSelect({ withLabel: false });
 
 	// 转换为 TreeSelect 需要的格式
@@ -304,7 +290,6 @@ export const getPermissionTreeForSelectAction = wrapQueryAction('permission', as
 				key: node.id,
 			};
 
-			// 递归处理子节点
 			if (node.children && node.children.length > 0) {
 				treeNode.children = convertToTreeSelectFormat(node.children);
 			}
@@ -319,14 +304,13 @@ export const getPermissionTreeForSelectAction = wrapQueryAction('permission', as
 		success: true,
 		data: formattedTree || [],
 	};
-});
+}, { skipLog: true });
 
 /**
  * 获取权限列表（用于普通 Select 或 Checkbox）
  * 返回扁平化列表，适配角色页面的权限分配
  */
-export const getPermissionListForSelectAction = wrapQueryAction('permission', async () => {
-	// 获取所有启用的权限（扁平化）
+export const getPermissionListForSelectAction = wrapAction('sysQueryPermissionListForSelect', async (_, ctx) => {
 	const result = await crudActions._dao.getList({
 		pageIndex: 1,
 		pageSize: 1000,
@@ -349,4 +333,4 @@ export const getPermissionListForSelectAction = wrapQueryAction('permission', as
 		success: true,
 		data: permissions,
 	};
-});
+}, { skipLog: true });

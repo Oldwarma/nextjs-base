@@ -13,7 +13,7 @@
 
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
-import { wrapQueryAction, wrapAdminAction } from '@/lib/core/action-wrapper';
+import { wrapAction } from '@/lib/core/action-wrapper';
 import { checkBackendAccessAction } from '@/lib/auth/admin-auth';
 import * as userDao from '@/app/(admin)/actions/dao/user';
 
@@ -108,7 +108,7 @@ export async function createUserAction(userData) {
  * 获取用户列表（分页）
  * 兼容 SmartCrudPage 的参数格式
  */
-export const getUserListAction = wrapQueryAction('user', async (params = {}) => {
+export const getUserListAction = wrapAction('sysQueryUserList', async (params = {}, ctx) => {
 	const pageIndex = params.pageIndex || params.page || 1;
 	const pageSize = params.pageSize || 20;
 	const sortJson = params.sortJson || params.sort || { createdAt: -1 };
@@ -132,7 +132,7 @@ export const getUserListAction = wrapQueryAction('user', async (params = {}) => 
 		page: result.page,
 		pageSize: result.pageSize,
 	};
-});
+}, { skipLog: true });
 
 /**
  * 获取单个用户详情
@@ -310,89 +310,71 @@ export async function batchUpdateUsersAction(userIds, updateData) {
 
 /**
  * 重置用户密码
- * 权限检查：根据 actions 模式匹配 (如 ** /resetUserPassword*Action)
  */
-export const resetUserPasswordAction = wrapAdminAction(
-	'set_password',
-	'user',
-	async (userId, newPassword, { userId: operatorId, isAdmin }) => {
-		if (!userId || !newPassword) {
-			return {
-				success: false,
-				error: 'User ID and new password are required',
-			};
-		}
-
-		if (newPassword.length < 8) {
-			return {
-				success: false,
-				error: 'Password must be at least 8 characters',
-			};
-		}
-
-		// 优先使用 DAO 层方法
-		try {
-			await userDao.resetUserPassword(userId, newPassword);
-			return {
-				success: true,
-				message: 'Password reset successfully',
-				data: { userId },
-			};
-		} catch (daoError) {
-			// 如果 DAO 失败，尝试使用 Better Auth Admin API
-			const result = await auth.api.setUserPassword({
-				headers: await headers(),
-				body: {
-					newPassword,
-					userId,
-				},
-			});
-
-			if (result?.error) {
-				throw new Error(result.error.message || daoError.message || 'Failed to reset password');
-			}
-
-			return {
-				success: true,
-				message: 'Password reset successfully',
-				data: { userId },
-			};
-		}
-	},
-	{
-		permissionId: 'resetUserPasswordAction', // action 函数名，用于匹配 actions 模式
-		skipLog: false,
+export const resetUserPasswordAction = wrapAction('sysResetUserPassword', async ({ userId, newPassword }, ctx) => {
+	if (!userId || !newPassword) {
+		return {
+			success: false,
+			error: 'User ID and new password are required',
+		};
 	}
-);
 
-/**
- * 为用户绑定角色
- * 权限检查：根据 actions 模式匹配 (如 ** /bindUser*Action 或 ** /updateUser*Action)
- */
-export const bindUserRolesAction = wrapAdminAction(
-	'update',
-	'user_roles',
-	async (userId, roleIds, reset = false, { userId: operatorId, isAdmin }) => {
-		if (!userId) {
-			return {
-				success: false,
-				error: 'User ID is required',
-			};
+	if (newPassword.length < 8) {
+		return {
+			success: false,
+			error: 'Password must be at least 8 characters',
+		};
+	}
+
+	// 优先使用 DAO 层方法
+	try {
+		await userDao.resetUserPassword(userId, newPassword);
+		return {
+			success: true,
+			message: 'Password reset successfully',
+			data: { userId },
+		};
+	} catch (daoError) {
+		// 如果 DAO 失败，尝试使用 Better Auth Admin API
+		const result = await auth.api.setUserPassword({
+			headers: await headers(),
+			body: {
+				newPassword,
+				userId,
+			},
+		});
+
+		if (result?.error) {
+			throw new Error(result.error.message || daoError.message || 'Failed to reset password');
 		}
-
-		await userDao.bindUserRoles(userId, roleIds, reset);
 
 		return {
 			success: true,
-			message: 'Roles assigned successfully',
-			data: { userId, roleIds, reset },
+			message: 'Password reset successfully',
+			data: { userId },
 		};
-	},
-	{
-		permissionId: 'bindUserRolesAction', // action 函数名，用于匹配 actions 模式
-		skipLog: false,
 	}
-);
+});
+
+/**
+ * 为用户绑定角色
+ */
+export const bindUserRolesAction = wrapAction('sysBindUserRoles', async ({ userId, roleIds, reset = false }, ctx) => {
+	if (!userId) {
+		return {
+			success: false,
+			error: 'User ID is required',
+		};
+	}
+
+	await userDao.bindUserRoles(userId, roleIds, reset);
+
+	return {
+		success: true,
+		message: 'Roles assigned successfully',
+		data: { userId, roleIds, reset },
+	};
+});
 
 /**
  * 获取用户的角色列表
@@ -431,73 +413,55 @@ export async function getUserRolesAction(userId) {
 
 /**
  * 封禁用户
- * 权限检查：根据 actions 模式匹配 (如 ** /banUser*Action)
  */
-export const banUserAction = wrapAdminAction(
-	'ban',
-	'user',
-	async (userId, banReason, banExpiresIn, { userId: operatorId, isAdmin }) => {
-		if (!userId) {
-			return {
-				success: false,
-				error: 'User ID is required',
-			};
-		}
-
-		await auth.api.banUser({
-			headers: await headers(),
-			body: {
-				userId,
-				banReason,
-				banExpiresIn,
-			},
-		});
-
+export const banUserAction = wrapAction('sysBanUser', async ({ userId, banReason, banExpiresIn }, ctx) => {
+	if (!userId) {
 		return {
-			success: true,
-			message: 'User banned successfully',
-			data: { userId, banReason, banExpiresIn },
+			success: false,
+			error: 'User ID is required',
 		};
-	},
-	{
-		permissionId: 'banUserAction', // action 函数名，用于匹配 actions 模式
-		skipLog: false,
 	}
-);
+
+	await auth.api.banUser({
+		headers: await headers(),
+		body: {
+			userId,
+			banReason,
+			banExpiresIn,
+		},
+	});
+
+	return {
+		success: true,
+		message: 'User banned successfully',
+		data: { userId, banReason, banExpiresIn },
+	};
+});
 
 /**
  * 解封用户
- * 权限检查：根据 actions 模式匹配 (如 ** /unbanUser*Action)
  */
-export const unbanUserAction = wrapAdminAction(
-	'unban',
-	'user',
-	async (userId, { userId: operatorId, isAdmin }) => {
-		if (!userId) {
-			return {
-				success: false,
-				error: 'User ID is required',
-			};
-		}
-
-		await auth.api.unbanUser({
-			headers: await headers(),
-			body: {
-				userId,
-			},
-		});
-
+export const unbanUserAction = wrapAction('sysUnbanUser', async ({ userId }, ctx) => {
+	if (!userId) {
 		return {
-			success: true,
-			message: 'User unbanned successfully',
-			data: { userId },
+			success: false,
+			error: 'User ID is required',
 		};
-	},
-	{
-		permissionId: 'unbanUserAction', // action 函数名，用于匹配 actions 模式
-		skipLog: false,
 	}
-);
+
+	await auth.api.unbanUser({
+		headers: await headers(),
+		body: {
+			userId,
+		},
+	});
+
+	return {
+		success: true,
+		message: 'User unbanned successfully',
+		data: { userId },
+	};
+});
 
 /**
  * 获取用户统计信息

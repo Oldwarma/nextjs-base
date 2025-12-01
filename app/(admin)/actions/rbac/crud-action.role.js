@@ -1,7 +1,7 @@
 'use server';
 
 import { createCrudActions } from '@/lib/core/crud-helper';
-import { wrapQueryAction, wrapAdminAction } from '@/lib/core/action-wrapper';
+import { wrapAction } from '@/lib/core/action-wrapper';
 
 /**
  * Role CRUD 配置
@@ -62,7 +62,6 @@ const roleConfig = {
 	query: {
 		defaultSort: { name: 1 },
 		defaultPageSize: 20,
-		// 连表配置 - 自动关联权限和菜单的名称
 		foreignDB: [
 			{
 				dbName: 'permissions',
@@ -86,25 +85,19 @@ const roleConfig = {
 	 */
 	hooks: {
 		beforeCreate: async (data) => {
-			// 设置默认值
 			if (data.enable === undefined) {
 				data.enable = true;
 			}
-
-			// 初始化权限和菜单数组
 			if (data.permission === undefined) {
 				data.permission = [];
 			}
-
 			if (data.menu === undefined) {
 				data.menu = [];
 			}
-
 			return data;
 		},
 
 		beforeUpdate: async (id, data) => {
-			// 获取当前角色信息
 			const { getCollection } = await import('@/lib/database/mongodb');
 			const collection = await getCollection(roleConfig.collectionName);
 			const existing = await collection.findOne({ id });
@@ -113,7 +106,6 @@ const roleConfig = {
 				throw new Error('Role not found');
 			}
 
-			// 防止修改 admin 角色
 			if (existing.name === 'admin' || existing.name === 'Admin') {
 				throw new Error('Cannot modify admin role');
 			}
@@ -122,7 +114,6 @@ const roleConfig = {
 		},
 
 		beforeDelete: async (id) => {
-			// 获取角色信息
 			const { getCollection } = await import('@/lib/database/mongodb');
 			const collection = await getCollection(roleConfig.collectionName);
 			const existing = await collection.findOne({ id });
@@ -131,7 +122,6 @@ const roleConfig = {
 				throw new Error('Role not found');
 			}
 
-			// 防止删除 admin 角色
 			if (existing.name === 'admin' || existing.name === 'Admin') {
 				throw new Error('Cannot delete admin role');
 			}
@@ -140,7 +130,6 @@ const roleConfig = {
 		},
 
 		afterDelete: async (id) => {
-			// 删除角色后，清理用户表中的引用
 			const { getCollection } = await import('@/lib/database/mongodb');
 			const usersCollection = await getCollection('users');
 
@@ -150,7 +139,6 @@ const roleConfig = {
 		},
 
 		beforeBatchDelete: async (ids) => {
-			// 防止批量删除 admin 角色
 			const { getCollection } = await import('@/lib/database/mongodb');
 			const collection = await getCollection(roleConfig.collectionName);
 
@@ -172,38 +160,28 @@ const roleConfig = {
 	 */
 	transforms: {
 		input: (data) => {
-			// 确保 boolean 类型
 			if (data.enable !== undefined) {
 				data.enable = data.enable === true || data.enable === 'true';
 			}
-
-			// 去除字符串首尾空格
 			if (data.name) {
 				data.name = data.name.trim();
 			}
-
 			if (data.remark) {
 				data.remark = data.remark.trim();
 			}
-
 			return data;
 		},
 
 		output: (data) => {
-			// 确保 enable 是 boolean
 			if (data.enable === undefined) {
 				data.enable = true;
 			}
-
-			// 确保 permission 和 menu 是数组
 			if (!data.permission || !Array.isArray(data.permission)) {
 				data.permission = [];
 			}
-
 			if (!data.menu || !Array.isArray(data.menu)) {
 				data.menu = [];
 			}
-
 			return data;
 		},
 	},
@@ -233,8 +211,7 @@ export const batchDeleteRolesAction = crudActions.batchDelete;
  * 获取角色列表（用于选择器）
  * 只返回启用的角色，可选添加标签
  */
-export const getRoleListForSelectAction = wrapQueryAction('role', async ({ withLabel = false } = {}) => {
-	// 获取所有启用的角色（不分页）
+export const getRoleListForSelectAction = wrapAction('sysQueryRoleListForSelect', async ({ withLabel = false } = {}, ctx) => {
 	const result = await crudActions._dao.getList({
 		pageIndex: 1,
 		pageSize: 1000,
@@ -247,23 +224,19 @@ export const getRoleListForSelectAction = wrapQueryAction('role', async ({ withL
 
 	let roles = result.data || [];
 
-	// 如果需要标签，添加详细标签
 	if (withLabel) {
 		roles = roles.map((role) => {
 			const badges = [];
 
-			// 禁用标签
 			if (!role.enable) {
 				badges.push('[已禁用]');
 			}
 
-			// 权限数量
 			const permCount = Array.isArray(role.permission) ? role.permission.length : 0;
 			if (permCount > 0) {
 				badges.push(`${permCount}权限`);
 			}
 
-			// 菜单数量
 			const menuCount = Array.isArray(role.menu) ? role.menu.length : 0;
 			if (menuCount > 0) {
 				badges.push(`${menuCount}菜单`);
@@ -284,15 +257,14 @@ export const getRoleListForSelectAction = wrapQueryAction('role', async ({ withL
 		success: true,
 		data: roles,
 	};
-});
+}, { skipLog: true });
 
 /**
  * 分配权限给角色
  */
-export const assignPermissionsToRoleAction = wrapAdminAction('assign_permissions', 'role', async (params) => {
+export const assignPermissionsToRoleAction = wrapAction('sysAssignPermissionsToRole', async (params, ctx) => {
 	const { roleId, permissionIds } = params;
 
-	// 简单验证
 	if (!roleId) {
 		return { success: false, error: 'roleId is required' };
 	}
@@ -301,7 +273,6 @@ export const assignPermissionsToRoleAction = wrapAdminAction('assign_permissions
 		return { success: false, error: 'permissionIds must be an array' };
 	}
 
-	// 更新角色的权限列表
 	const result = await crudActions._dao.update(roleId, { permission: permissionIds });
 
 	return result;
@@ -310,10 +281,9 @@ export const assignPermissionsToRoleAction = wrapAdminAction('assign_permissions
 /**
  * 分配菜单给角色
  */
-export const assignMenusToRoleAction = wrapAdminAction('assign_menus', 'role', async (params) => {
+export const assignMenusToRoleAction = wrapAction('sysAssignMenusToRole', async (params, ctx) => {
 	const { roleId, menuIds } = params;
 
-	// 简单验证
 	if (!roleId) {
 		return { success: false, error: 'roleId is required' };
 	}
@@ -322,7 +292,6 @@ export const assignMenusToRoleAction = wrapAdminAction('assign_menus', 'role', a
 		return { success: false, error: 'menuIds must be an array' };
 	}
 
-	// 更新角色的菜单列表
 	const result = await crudActions._dao.update(roleId, { menu: menuIds });
 
 	return result;
@@ -331,8 +300,7 @@ export const assignMenusToRoleAction = wrapAdminAction('assign_menus', 'role', a
 /**
  * 切换角色启用/禁用状态
  */
-export const toggleRoleStatusAction = wrapAdminAction('toggle_status', 'role', async ({ roleId, enable }) => {
-	// 简单验证
+export const toggleRoleStatusAction = wrapAction('sysToggleRoleStatus', async ({ roleId, enable }, ctx) => {
 	if (!roleId) {
 		return { success: false, error: 'roleId is required' };
 	}
@@ -341,4 +309,3 @@ export const toggleRoleStatusAction = wrapAdminAction('toggle_status', 'role', a
 
 	return result;
 });
-

@@ -12,13 +12,13 @@
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth/auth';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
-import { wrapAdminAction } from '@/lib/core/action-wrapper';
+import { wrapAction } from '@/lib/core/action-wrapper';
 
 /**
  * Get current user's accessible menus (RBAC-aware)
  * @returns {Promise<Object>} User's menu tree result
  */
-export const getUserAccessibleMenusAction = wrapAdminAction('query', 'menu', async () => {
+export const getUserAccessibleMenusAction = wrapAction('sysQueryUserAccessibleMenus', async (_, ctx) => {
 	// Get current session
 	const session = await auth.api.getSession({
 		headers: await headers(),
@@ -71,13 +71,13 @@ export const getUserAccessibleMenusAction = wrapAdminAction('query', 'menu', asy
 		data: serializedTree,
 		isAdmin: false,
 	};
-}, { skipPermission: true, skipLog: false });
+}, { skipLog: true });
 
 /**
  * Get current user's permission IDs
  * @returns {Promise<Object>} User's permission IDs result
  */
-export const getUserPermissionIdsAction = wrapAdminAction('query', 'permission', async () => {
+export const getUserPermissionIdsAction = wrapAction('sysQueryUserPermissionIds', async (_, ctx) => {
 	const session = await auth.api.getSession({
 		headers: await headers(),
 	});
@@ -106,14 +106,14 @@ export const getUserPermissionIdsAction = wrapAdminAction('query', 'permission',
 		data: permissionIds,
 		isAdmin: false,
 	};
-}, { skipPermission: true, skipLog: false });
+}, { skipLog: true });
 
 /**
  * Check if current user can access a specific page URL
  * @param {String} pageUrl - Page URL to check, e.g. '/admin/users'
  * @returns {Promise<Object>} Access check result
  */
-export const checkPageAccessAction = wrapAdminAction('query', 'page_access', async (pageUrl) => {
+export const checkPageAccessAction = wrapAction('sysCheckPageAccess', async (pageUrl, ctx) => {
 	const session = await auth.api.getSession({
 		headers: await headers(),
 	});
@@ -145,7 +145,7 @@ export const checkPageAccessAction = wrapAdminAction('query', 'page_access', asy
 		hasAccess,
 		isAdmin: false,
 	};
-}, { skipPermission: true, skipLog: false });
+}, { skipLog: true });
 
 /**
  * Helper: Build menu tree from flat array
@@ -207,7 +207,7 @@ function checkUrlInMenuTree(url, menuTree) {
  * Get current user's roles
  * @returns {Promise<Object>} User's roles result
  */
-export const getUserRolesAction = wrapAdminAction('query', 'role', async () => {
+export const getUserRolesAction = wrapAction('sysQueryUserRoles', async (_, ctx) => {
 	const session = await auth.api.getSession({
 		headers: await headers(),
 	});
@@ -229,4 +229,4 @@ export const getUserRolesAction = wrapAdminAction('query', 'role', async () => {
 			rbacRoles: roleIds, // RBAC role UUIDs
 		},
 	};
-}, { skipPermission: true, skipLog: false });
+}, { skipLog: true });

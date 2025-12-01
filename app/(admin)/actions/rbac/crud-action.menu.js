@@ -1,7 +1,7 @@
 'use server';
 
 import { createCrudActions } from '@/lib/core/crud-helper';
-import { wrapQueryAction } from '@/lib/core/action-wrapper';
+import { wrapAction } from '@/lib/core/action-wrapper';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
 
 /**
@@ -235,7 +235,7 @@ export const batchDeleteMenusAction = crudActions.batchDelete;
  * 获取菜单树（用于树形展示）
  * 返回扁平化格式，适配 SmartCrudPage 的树形表格
  */
-export const getMenuTreeAction = wrapQueryAction('menu', async ({ pageIndex = 1, pageSize = 1000, whereJson = {}, sortJson = null } = {}) => {
+export const getMenuTreeAction = wrapAction('sysQueryMenuTree', async ({ pageIndex = 1, pageSize = 1000, whereJson = {}, sortJson = null } = {}, ctx) => {
 	// 如果有搜索条件，使用标准查询（支持搜索所有层级）
 	if (whereJson && Object.keys(whereJson).length > 0) {
 		const result = await crudActions._dao.getList({
@@ -259,13 +259,13 @@ export const getMenuTreeAction = wrapQueryAction('menu', async ({ pageIndex = 1,
 		data: result.rows || [],
 		total: result.total || 0,
 	};
-});
+}, { skipLog: true });
 
 /**
  * 获取菜单树（用于 TreeSelect 选择器）
  * 返回树形结构，用于父级菜单选择
  */
-export const getMenuTreeForSelectAction = wrapQueryAction('menu', async () => {
+export const getMenuTreeForSelectAction = wrapAction('sysQueryMenuTreeForSelect', async (_, ctx) => {
 	const result = await sysDao.getMenuTree({
 		pageIndex: 1,
 		pageSize: 1000,
@@ -301,4 +301,4 @@ export const getMenuTreeForSelectAction = wrapQueryAction('menu', async () => {
 		success: true,
 		data: formattedTree,
 	};
-});
+}, { skipLog: true });
