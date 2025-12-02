@@ -940,12 +940,6 @@ export default function ExamplePermissionPage() {
 			enableEdit={true}
 			enableDelete={true}
 			enableDetail={true}
-			// 权限配置（可选）
-			// permissions={{
-			// 	create: 'example:create',
-			// 	update: 'example:update',
-			// 	delete: 'example:delete',
-			// }}
 		/>
 	);
 }

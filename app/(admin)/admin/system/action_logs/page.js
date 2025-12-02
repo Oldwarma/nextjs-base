@@ -116,7 +116,7 @@ export default function ActionLogsPage() {
 				{ label: 'Batch Delete', value: 'batch_delete' },
 			],
 			table: {
-				width: 100,
+				width: 200,
 				render: (value) => {
 					const tagColors = {
 						query: 'blue',
@@ -150,11 +150,7 @@ export default function ActionLogsPage() {
 			key: 'resourceId',
 			title: 'Resource ID',
 			type: 'text',
-			table: {
-				width: 150,
-				copyable: true,
-				ellipsis: true,
-			},
+			table: false,
 			form: false,
 			search: true,
 		},
@@ -289,9 +285,6 @@ export default function ActionLogsPage() {
 			actions={{
 				getList,
 				// 不提供 getDetail，直接使用表格数据（已包含连表的 userInfo）
-			}}
-			tableOptions={{
-				scroll: { x: 1200 },
 			}}
 			enableCreate={false}
 			enableEdit={false}

@@ -141,7 +141,7 @@ export default function {RESOURCE_LABEL}ManagementPage() {
 			enableDetail={true}
 			// 表格配置
 			tableProps={{
-				scroll: { x: 1200 },
+				// scroll: { x: 1200 },
 			}}
 			// 表单配置
 			formProps={{

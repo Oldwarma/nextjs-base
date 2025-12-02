@@ -160,7 +160,7 @@ export default function MenusManagementPage() {
 				title: 'URL',
 				type: 'text',
 				table: {
-					width: 200,
+					width: 150,
 					ellipsis: true,
 					copyable: true,
 				},
@@ -184,9 +184,9 @@ export default function MenusManagementPage() {
 					render: (value) => {
 						const count = Array.isArray(value) ? value.length : 0;
 						return count > 0 ? (
-							<Tag color='blue'>{count} permissions</Tag>
+							<Tag color='green'>{count} permissions</Tag>
 						) : (
-							<span style={{ color: '#999' }}>-</span>
+							<Tag color='blue'>0 permission</Tag>
 						);
 					},
 				},
@@ -356,9 +356,7 @@ export default function MenusManagementPage() {
 				key: 'updatedAt',
 				title: 'Updated At',
 				type: 'datetime',
-				table: {
-					width: 180,
-				},
+				table: false,
 				form: false,
 				search: false,
 			},

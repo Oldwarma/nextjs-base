@@ -238,8 +238,7 @@ export default function PostManagementPage() {
 					defaultPageSize: 10,
 					showSizeChanger: true,
 					pageSizeOptions: [10, 20, 50, 100],
-				},
-				scroll: { x: 1200 },
+				}
 			}}
 			// 表单配置
 			formProps={{

@@ -193,9 +193,6 @@ export default function XxxManagementPage() {
 			enableEdit={true}
 			enableDelete={true}
 			enableDetail={true}
-			tableProps={{
-				scroll: { x: 1200 },
-			}}
 			formProps={{
 				width: 600,
 			}}

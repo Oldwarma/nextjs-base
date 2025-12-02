@@ -386,9 +386,6 @@ export default function RolesManagementPage() {
 					update: roleActions.updateRoleAction,
 					delete: roleActions.deleteRoleAction,
 				}}
-				tableProps={{
-					scroll: { x: 1200 },
-				}}
 				formProps={{
 					width: 600,
 				}}

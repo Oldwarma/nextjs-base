@@ -381,6 +381,65 @@ export default function SmartCrudPage({
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [tableColumns, enableDetail, enableEdit, enableDelete, customRowActions, rowKey]);
 
+	// 处理列宽度并计算 scroll.x
+	// 规则：
+	// 1. 有设置 width 的列：保持不变
+	// 2. 没设置 width 的列：
+	//    - 如果有剩余空间 → 平分剩余空间
+	//    - 如果没有剩余空间 → 使用最小宽度 100px
+	const { processedColumns, calculatedScrollX } = useMemo(() => {
+		const MIN_COLUMN_WIDTH = 100;
+		const CONTAINER_WIDTH = 1000; // 假设容器宽度约 1000px
+		
+		// 统计有宽度和无宽度的列
+		let fixedWidthTotal = 0;
+		let noWidthCount = 0;
+		
+		columnsWithActions.forEach(col => {
+			if (col.width) {
+				fixedWidthTotal += col.width;
+			} else {
+				noWidthCount++;
+			}
+		});
+		
+		// 如果没有无宽度的列，直接返回原列配置
+		if (noWidthCount === 0) {
+			return {
+				processedColumns: columnsWithActions,
+				calculatedScrollX: fixedWidthTotal,
+			};
+		}
+		
+		// 计算剩余空间
+		const remainingWidth = CONTAINER_WIDTH - fixedWidthTotal;
+		
+		// 计算每个无宽度列应该分配的宽度
+		// 如果剩余空间足够，平分；否则使用最小宽度
+		const widthPerColumn = remainingWidth > noWidthCount * MIN_COLUMN_WIDTH
+			? Math.floor(remainingWidth / noWidthCount)
+			: MIN_COLUMN_WIDTH;
+		
+		// 为无宽度的列设置计算出的宽度
+		const columns = columnsWithActions.map(col => {
+			if (col.width) {
+				return col;
+			}
+			return {
+				...col,
+				width: widthPerColumn,
+			};
+		});
+		
+		// 计算总宽度
+		const totalWidth = fixedWidthTotal + (noWidthCount * widthPerColumn);
+		
+		return {
+			processedColumns: columns,
+			calculatedScrollX: totalWidth,
+		};
+	}, [columnsWithActions]);
+
 	// 获取数据
 	const request = async (params, sort, filter) => {
 		try {
@@ -628,7 +687,7 @@ export default function SmartCrudPage({
 		<>
 			<ProTable
 				intl={enUSProIntl}
-				columns={columnsWithActions}
+				columns={processedColumns}
 				actionRef={actionRef}
 				// 如果提供了 dataSource，使用静态数据模式；否则使用 request 模式
 				{...(dataSource ? { dataSource } : { request })}
@@ -653,7 +712,7 @@ export default function SmartCrudPage({
 						...userPagination, // 用户配置覆盖默认值
 					}
 				)}
-				scroll={{ x: 1400, y: 'calc(100vh - 400px)', ...userScroll }}
+				scroll={{ x: userScroll?.x ?? calculatedScrollX, y: 'calc(100vh - 400px)', ...userScroll }}
 				expandable={finalExpandable}
 				rowSelection={
 					batchActions.length > 0

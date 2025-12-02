@@ -47,7 +47,7 @@ export default function PermissionsManagementPage() {
 			key: 'parentId',
 			title: 'Parent Permission',
 			type: 'tree-select',
-			table: false,  // 不在表格中显示
+			table: false, // 不在表格中显示
 			form: {
 				required: false,
 				placeholder: 'Select parent permission (leave empty for root)',
@@ -169,18 +169,14 @@ export default function PermissionsManagementPage() {
 					if (!value || !Array.isArray(value) || value.length === 0) {
 						return <span style={{ color: '#999' }}>-</span>;
 					}
-					const stringValues = value.map(item => {
+					const stringValues = value.map((item) => {
 						if (typeof item === 'string') return item;
 						if (typeof item === 'object' && item !== null) {
 							return item.value || item.name || JSON.stringify(item);
 						}
 						return String(item);
 					});
-					return (
-						<div style={{ whiteSpace: 'pre-wrap' }}>
-							{stringValues.join('\n')}
-						</div>
-					);
+					return <div style={{ whiteSpace: 'pre-wrap' }}>{stringValues.join('\n')}</div>;
 				},
 			},
 		},
@@ -203,18 +199,14 @@ export default function PermissionsManagementPage() {
 					if (!value || !Array.isArray(value) || value.length === 0) {
 						return <span style={{ color: '#999' }}>-</span>;
 					}
-					const stringValues = value.map(item => {
+					const stringValues = value.map((item) => {
 						if (typeof item === 'string') return item;
 						if (typeof item === 'object' && item !== null) {
 							return item.value || item.name || JSON.stringify(item);
 						}
 						return String(item);
 					});
-					return (
-						<div style={{ whiteSpace: 'pre-wrap' }}>
-							{stringValues.join('\n')}
-						</div>
-					);
+					return <div style={{ whiteSpace: 'pre-wrap' }}>{stringValues.join('\n')}</div>;
 				},
 			},
 		},
@@ -224,7 +216,7 @@ export default function PermissionsManagementPage() {
 			title: 'Sort',
 			type: 'number',
 			table: {
-				width: 80
+				width: 50,
 			},
 			form: {
 				required: false,
@@ -267,7 +259,7 @@ export default function PermissionsManagementPage() {
 			title: 'Remark',
 			type: 'textarea',
 			table: {
-				width: 200,
+				width: 100,
 				ellipsis: true,
 			},
 			form: {
@@ -289,7 +281,6 @@ export default function PermissionsManagementPage() {
 			title: 'Created At',
 			type: 'datetime',
 			table: {
-				width: 180,
 				sorter: true,
 			},
 			form: false,
@@ -301,7 +292,6 @@ export default function PermissionsManagementPage() {
 			title: 'Updated At',
 			type: 'datetime',
 			table: {
-				width: 180,
 				sorter: true,
 			},
 			form: false,
@@ -338,7 +328,6 @@ export default function PermissionsManagementPage() {
 					showSizeChanger: true,
 					pageSizeOptions: [50, 100, 200, 500],
 				},
-				scroll: { x: 1400 },
 			}}
 		/>
 	);
