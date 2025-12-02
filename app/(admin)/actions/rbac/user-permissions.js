@@ -15,6 +15,7 @@ import { prisma } from '@/lib/database/prisma';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
 import { wrapAction } from '@/lib/core/action-wrapper';
 import { checkBackendAccessAction } from '@/lib/auth/admin-auth';
+import nb from '@/lib/function';
 
 /**
  * Get current user's accessible menus (RBAC-aware)
@@ -46,7 +47,11 @@ export const getUserAccessibleMenusAction = wrapAction('authQueryUserAccessibleM
 			orderBy: [{ sort: 'asc' }, { createdAt: 'asc' }],
 		});
 
-		const menuTree = buildMenuTreeFromFlat(allMenus);
+		// 使用 arrayToTree 构建树形结构
+		const menuTree = nb.pubfn.tree.arrayToTree(allMenus, {
+			filter: (item) => item.enable && !item.hidden,
+			sortBy: [{ field: 'sort', order: 'asc' }],
+		});
 
 		return {
 			success: true,
@@ -133,7 +138,8 @@ export const checkPageAccessAction = wrapAction('authCheckPageAccess', async (pa
 	}
 
 	const menuTree = await sysDao.getUserMenus(userId);
-	const hasAccess = checkUrlInMenuTree(pageUrl, menuTree);
+	// 使用 findInTree 检查 URL 是否存在
+	const hasAccess = !!nb.pubfn.tree.findInTree(menuTree, (item) => item.url === pageUrl);
 
 	return {
 		success: true,
@@ -141,53 +147,6 @@ export const checkPageAccessAction = wrapAction('authCheckPageAccess', async (pa
 		isAdmin: false,
 	};
 }, { skipLog: true });
-
-/**
- * Helper: Build menu tree from flat array
- */
-function buildMenuTreeFromFlat(menus, parentId = null) {
-	const tree = [];
-
-	for (const menu of menus) {
-		if (!menu.enable || menu.hidden) {
-			continue;
-		}
-
-		if (menu.parentId === parentId) {
-			const children = buildMenuTreeFromFlat(menus, menu.id);
-			const menuNode = { ...menu };
-			if (children.length > 0) {
-				menuNode.children = children;
-			}
-			tree.push(menuNode);
-		}
-	}
-
-	return tree.sort((a, b) => (a.sort || 0) - (b.sort || 0));
-}
-
-/**
- * Helper: Check if URL exists in menu tree (recursive)
- */
-function checkUrlInMenuTree(url, menuTree) {
-	if (!Array.isArray(menuTree)) {
-		return false;
-	}
-
-	for (const menu of menuTree) {
-		if (menu.url === url) {
-			return true;
-		}
-
-		if (menu.children && menu.children.length > 0) {
-			if (checkUrlInMenuTree(url, menu.children)) {
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
 
 /**
  * Get current user's roles

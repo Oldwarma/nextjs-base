@@ -5,6 +5,7 @@
  */
 
 import { prisma, generateId } from '@/lib/database/prisma';
+import { selects } from '@/lib/database/selects';
 
 /**
  * 创建用户
@@ -119,76 +120,66 @@ export async function getUserByUsername(username) {
 
 /**
  * 获取用户列表（分页）
+ * 使用 selects 万能连表查询，一次查询获取用户及其角色信息
  */
 export async function getUserList({ page = 1, pageSize = 20, filters = {}, sort = { createdAt: 'desc' } }) {
-	const where = {};
+	// 构建查询条件
+	const whereJson = {};
 
-	// 处理搜索条件
 	if (filters.email) {
-		where.email = { contains: filters.email, mode: 'insensitive' };
+		whereJson.email = { contains: filters.email };
 	}
 
 	if (filters.name) {
-		where.name = { contains: filters.name, mode: 'insensitive' };
+		whereJson.name = { contains: filters.name };
 	}
 
 	if (filters.role) {
-		where.role = filters.role;
+		whereJson.role = filters.role;
 	}
 
 	if (filters.isBackendAllowed !== undefined) {
-		where.isBackendAllowed = filters.isBackendAllowed;
+		whereJson.isBackendAllowed = filters.isBackendAllowed;
 	}
 
 	if (filters.banned !== undefined) {
-		where.banned = filters.banned;
+		whereJson.banned = filters.banned;
 	}
 
 	// 处理角色数组查询
 	if (filters.roles_in && Array.isArray(filters.roles_in) && filters.roles_in.length > 0) {
-		where.roles = { hasSome: filters.roles_in };
+		whereJson.roles = { hasSome: filters.roles_in };
 	}
 
-	const skip = (page - 1) * pageSize;
+	// 构建排序
+	const sortField = Object.keys(sort)[0] || 'createdAt';
+	const sortDir = sort[sortField] || 'desc';
 
-	const [users, total] = await Promise.all([
-		prisma.user.findMany({
-			where,
-			orderBy: sort,
-			skip,
-			take: pageSize,
-		}),
-		prisma.user.count({ where }),
-	]);
-
-	// 查询关联的角色信息
-	const roleIds = new Set();
-	users.forEach(user => {
-		if (user.roles?.length > 0) {
-			user.roles.forEach(id => roleIds.add(id));
-		}
+	// 使用 selects 连表查询
+	// 注意：必须使用数据库表名，不是 Prisma model 名
+	const result = await selects({
+		dbName: 'users',           // 数据库表名
+		pageIndex: page,
+		pageSize,
+		whereJson,
+		sortArr: [{ name: sortField, type: sortDir }],
+		foreignDB: [
+			{
+				dbName: 'roles',       // 数据库表名
+				localKey: 'roles',     // users 表的 roles 字段（数组）
+				foreignKey: 'id',      // roles 表的 id 字段
+				as: 'roleList',        // 结果字段名
+				type: 'array',         // 数组关联
+				fieldJson: { id: true, name: true, enable: true },
+			}
+		]
 	});
 
-	let roleMap = new Map();
-	if (roleIds.size > 0) {
-		const roles = await prisma.role.findMany({
-			where: { id: { in: Array.from(roleIds) } },
-			select: { id: true, name: true, enable: true },
-		});
-		roles.forEach(role => roleMap.set(role.id, role));
-	}
-
-	// 附加角色信息
-	const usersWithRoles = users.map(user => ({
-		...user,
-		roleList: user.roles?.map(id => roleMap.get(id)).filter(Boolean) || [],
-	}));
-
 	return {
-		data: usersWithRoles,
-		total,
-		page,
-		pageSize,
+		data: result.data,
+		total: result.total,
+		page: result.pageIndex,
+		pageSize: result.pageSize,
 	};
 }
 

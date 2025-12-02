@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/database/prisma';
+import nb from '@/lib/function';
 
 /**
  * SysDAO - 系统权限相关的数据访问对象
@@ -189,42 +190,25 @@ export async function findPermissionsByIds(permissionIds) {
 
 /**
  * 获取权限树形列表
+ * 优化：一次性查询所有数据，在内存中构建树形结构
  */
 export async function getPermissionTree({ pageIndex = 1, pageSize = 1000, filters = {} }) {
-	// 查询顶级权限
-	const topLevelPermissions = await prisma.permission.findMany({
-		where: {
-			...filters,
-			parentId: null,
-		},
+	// 一次性查询所有权限
+	const allPermissions = await prisma.permission.findMany({
+		where: filters,
 		orderBy: [{ sort: 'asc' }, { name: 'asc' }],
 	});
 
-	// 递归获取子权限
-	const buildTree = async (permissions) => {
-		const result = [];
-		for (const perm of permissions) {
-			const children = await prisma.permission.findMany({
-				where: { parentId: perm.id },
-				orderBy: [{ sort: 'asc' }, { name: 'asc' }],
-			});
-
-			const item = { ...perm };
-			if (children.length > 0) {
-				item.children = await buildTree(children);
-			}
-			result.push(item);
-		}
-		return result;
-	};
-
-	const rows = await buildTree(topLevelPermissions);
+	// 使用 arrayToTree 构建树形结构
+	const rows = nb.pubfn.tree.arrayToTree(allPermissions, {
+		sortBy: [{ field: 'sort', order: 'asc' }, { field: 'name', order: 'asc' }],
+	});
 
 	return {
 		code: 0,
 		msg: 'ok',
 		rows,
-		total: rows.length,
+		total: allPermissions.length,
 		pageIndex,
 		pageSize,
 	};
@@ -315,42 +299,25 @@ export async function findMenusByIds(menuIds) {
 
 /**
  * 获取菜单树形列表
+ * 优化：一次性查询所有数据，在内存中构建树形结构
  */
 export async function getMenuTree({ pageIndex = 1, pageSize = 1000, filters = {} }) {
-	// 查询顶级菜单
-	const topLevelMenus = await prisma.menu.findMany({
-		where: {
-			...filters,
-			parentId: null,
-		},
+	// 一次性查询所有菜单
+	const allMenus = await prisma.menu.findMany({
+		where: filters,
 		orderBy: [{ sort: 'asc' }, { name: 'asc' }],
 	});
 
-	// 递归获取子菜单
-	const buildTree = async (menus) => {
-		const result = [];
-		for (const menu of menus) {
-			const children = await prisma.menu.findMany({
-				where: { parentId: menu.id },
-				orderBy: [{ sort: 'asc' }, { name: 'asc' }],
-			});
-
-			const item = { ...menu };
-			if (children.length > 0) {
-				item.children = await buildTree(children);
-			}
-			result.push(item);
-		}
-		return result;
-	};
-
-	const rows = await buildTree(topLevelMenus);
+	// 使用 arrayToTree 构建树形结构
+	const rows = nb.pubfn.tree.arrayToTree(allMenus, {
+		sortBy: [{ field: 'sort', order: 'asc' }, { field: 'name', order: 'asc' }],
+	});
 
 	return {
 		code: 0,
 		msg: 'ok',
 		rows,
-		total: rows.length,
+		total: allMenus.length,
 		pageIndex,
 		pageSize,
 	};
@@ -403,104 +370,22 @@ export async function getMenusByRoleIds(roleIds) {
 		return [];
 	}
 
+	// 获取所有菜单用于补全父级
+	const allMenus = await prisma.menu.findMany({
+		where: { deletedAt: null },
+	});
+
 	const menus = await findMenusByIds(Array.from(menuIds));
 	const enableMenus = menus.filter((m) => m.enable !== false);
 
-	// 自动补全缺失的父级菜单
-	const menusWithParents = await fillMissingParentMenus(enableMenus);
+	// 使用 fillMissingParents 补全缺失的父级菜单
+	const menusWithParents = nb.pubfn.tree.fillMissingParents(enableMenus, allMenus);
 
-	return buildMenuTree(menusWithParents);
-}
-
-/**
- * 自动补全缺失的父级菜单
- */
-async function fillMissingParentMenus(menus) {
-	if (!Array.isArray(menus) || menus.length === 0) {
-		return menus;
-	}
-
-	const menuMap = new Map();
-	const missingParentIds = new Set();
-
-	menus.forEach((menu) => {
-		menuMap.set(menu.id, menu);
+	// 使用 arrayToTree 构建树形结构
+	return nb.pubfn.tree.arrayToTree(menusWithParents, {
+		filter: (item) => item.enable !== false,
+		sortBy: [{ field: 'sort', order: 'asc' }],
 	});
-
-	menus.forEach((menu) => {
-		if (menu.parentId && !menuMap.has(menu.parentId)) {
-			missingParentIds.add(menu.parentId);
-		}
-	});
-
-	if (missingParentIds.size === 0) {
-		return menus;
-	}
-
-	const parentMenus = await findMenusByIds(Array.from(missingParentIds));
-	const result = [...menus];
-	const addedParentIds = new Set();
-
-	parentMenus.forEach((parentMenu) => {
-		if (parentMenu.enable !== false) {
-			result.push({ ...parentMenu, _autoFilled: true });
-			addedParentIds.add(parentMenu.id);
-		}
-	});
-
-	// 递归检查
-	const newMissingParentIds = new Set();
-	parentMenus.forEach((menu) => {
-		if (menu.parentId && !menuMap.has(menu.parentId) && !addedParentIds.has(menu.parentId)) {
-			newMissingParentIds.add(menu.parentId);
-		}
-	});
-
-	if (newMissingParentIds.size > 0) {
-		return await fillMissingParentMenus(result);
-	}
-
-	return result;
-}
-
-/**
- * 构建菜单树形结构
- */
-function buildMenuTree(menus) {
-	const menuMap = new Map();
-	const rootMenus = [];
-
-	menus.forEach((menu) => {
-		menuMap.set(menu.id, { ...menu, children: [] });
-	});
-
-	menus.forEach((menu) => {
-		const node = menuMap.get(menu.id);
-		if (!menu.parentId) {
-			rootMenus.push(node);
-		} else {
-			const parent = menuMap.get(menu.parentId);
-			if (parent) {
-				parent.children.push(node);
-			} else {
-				rootMenus.push(node);
-			}
-		}
-	});
-
-	const sortAndClean = (menuList) => {
-		menuList.sort((a, b) => (a.sort || 0) - (b.sort || 0));
-		menuList.forEach((menu) => {
-			if (menu.children?.length > 0) {
-				sortAndClean(menu.children);
-			} else {
-				delete menu.children;
-			}
-		});
-	};
-
-	sortAndClean(rootMenus);
-	return rootMenus;
 }
 
 /**
@@ -781,43 +666,17 @@ export async function getMenuTreeForSelect({ withLabel = true } = {}) {
 		orderBy: [{ sort: 'asc' }, { name: 'asc' }],
 	});
 
-	const tree = buildMenuTreeFromFlat(allMenus, null);
-
-	if (withLabel) {
-		addLabelsToMenuTree(tree);
-	}
-
-	return tree;
-}
-
-function buildMenuTreeFromFlat(menus, parentId = null) {
-	const tree = [];
-
-	for (const menu of menus) {
-		if (menu.parentId === parentId) {
-			const children = buildMenuTreeFromFlat(menus, menu.id);
-			const item = { ...menu };
-			if (children.length > 0) {
-				item.children = children;
-			}
-			tree.push(item);
-		}
-	}
-
-	return tree;
-}
-
-function addLabelsToMenuTree(tree) {
-	tree.forEach((node) => {
-		const badges = [];
-		if (node.enable === false) badges.push('已禁用');
-		if (node.hidden === true) badges.push('隐藏');
-
-		const badgeText = badges.length > 0 ? ` [${badges.join('/')}]` : '';
-		node.label = `${node.name}${badgeText}`;
-
-		if (node.children?.length > 0) {
-			addLabelsToMenuTree(node.children);
-		}
+	// 使用 arrayToTree 构建树形结构，可选添加 label
+	const tree = nb.pubfn.tree.arrayToTree(allMenus, {
+		sortBy: [{ field: 'sort', order: 'asc' }, { field: 'name', order: 'asc' }],
+		transform: withLabel ? (node) => {
+			const badges = [];
+			if (node.enable === false) badges.push('已禁用');
+			if (node.hidden === true) badges.push('隐藏');
+			const badgeText = badges.length > 0 ? ` [${badges.join('/')}]` : '';
+			return { ...node, label: `${node.name}${badgeText}` };
+		} : undefined,
 	});
+
+	return tree;
 }

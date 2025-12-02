@@ -4,6 +4,7 @@ import { createCrudActions } from '@/lib/core/crud-helper';
 import { wrapAction } from '@/lib/core/action-wrapper';
 import { prisma } from '@/lib/database/prisma';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
+import nb from '@/lib/function';
 
 /**
  * Permission CRUD 配置
@@ -223,29 +224,16 @@ export const getPermissionTreeAction = wrapAction('sysQueryPermissionTree', asyn
 export const getPermissionTreeForSelectAction = wrapAction('sysQueryPermissionTreeForSelect', async (_, ctx) => {
 	const tree = await sysDao.getPermissionTreeForSelect({ withLabel: false });
 
-	const convertToTreeSelectFormat = (nodes) => {
-		if (!nodes || !Array.isArray(nodes)) return [];
-
-		return nodes.map((node) => {
-			const treeNode = {
-				title: node.name,
-				value: node.id,
-				key: node.id,
-			};
-
-			if (node.children && node.children.length > 0) {
-				treeNode.children = convertToTreeSelectFormat(node.children);
-			}
-
-			return treeNode;
-		});
-	};
-
-	const formattedTree = convertToTreeSelectFormat(tree);
+	// 使用 mapTree 转换为 TreeSelect 格式
+	const formattedTree = nb.pubfn.tree.mapTree(tree || [], (node) => ({
+		title: node.name,
+		value: node.id,
+		key: node.id,
+	}));
 
 	return {
 		success: true,
-		data: formattedTree || [],
+		data: formattedTree,
 	};
 }, { skipLog: true });
 

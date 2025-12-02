@@ -2,7 +2,7 @@ import { prisma, generateId } from '@/lib/database/prisma';
 import { checkBackendAccessAction, checkIsAdminAction } from '@/lib/auth/admin-auth';
 import { logAction } from '@/lib/logging/action-logger';
 import { validateWithConfig, runCustomValidators } from '@/lib/validation/auto-schema';
-
+import { selects } from '@/lib/database/selects';
 /**
  * 检测是否为 Prisma Decimal 类型
  * 使用 duck typing 检测，因为 instanceof 可能因为不同模块实例化而失效
@@ -79,6 +79,7 @@ export class BaseDAO {
 	/**
 	 * @param {Object} config - DAO 配置
 	 * @param {string} config.modelName - Prisma 模型名（如 'user', 'role'）
+	 * @param {string} config.tableName - 数据库表名（如 'users', 'roles'），用于 selects 连表查询
 	 * @param {string} config.primaryKey - 主键字段名，默认 'id'
 	 * @param {Object} config.fields - 字段配置
 	 * @param {Object} config.query - 查询配置
@@ -91,6 +92,7 @@ export class BaseDAO {
 	constructor(config) {
 		this.config = {
 			modelName: config.modelName,
+			tableName: config.tableName, // 数据库表名，selects 连表查询时必填
 			primaryKey: config.primaryKey || 'id',
 			fields: config.fields || {},
 			query: config.query || {},
@@ -257,6 +259,22 @@ export class BaseDAO {
 
 	/**
 	 * 获取列表（分页）
+	 * 
+	 * 支持两种查询模式：
+	 * 1. Prisma 原生查询（使用 include）
+	 * 2. selects 连表查询（使用 foreignDB）- 支持数组字段关联
+	 * 
+	 * @param {Object} params - 查询参数
+	 * @param {number} params.pageIndex - 页码（从 1 开始）
+	 * @param {number} params.pageSize - 每页数量
+	 * @param {Object} params.sortJson - 排序配置 { fieldName: 'asc'|'desc' }
+	 * @param {Array} params.sortArr - selects 排序配置 [{ name: 'fieldName', type: 'asc'|'desc' }]
+	 * @param {Object} params.include - Prisma include 配置（原生关联查询）
+	 * @param {Array} params.foreignDB - selects 副表配置（支持数组字段关联）
+	 * @param {Object} params.fieldJson - 字段选择 { fieldName: true/false }
+	 * @param {Object} params.whereJson - 直接传入的查询条件
+	 * @param {Object} params.filters - 过滤条件
+	 * @param {string} params.search - 搜索关键词
 	 */
 	async getList(params = {}) {
 		await this.checkPermission();
@@ -265,9 +283,22 @@ export class BaseDAO {
 			pageIndex = 1,
 			pageSize = this.config.query.defaultPageSize,
 			sortJson,
+			sortArr,
 			include,
+			foreignDB,
+			fieldJson,
 		} = params;
 
+		// 合并配置中的默认 foreignDB 和参数中的 foreignDB
+		const defaultForeignDB = this.config.query.foreignDB || [];
+		const finalForeignDB = foreignDB || defaultForeignDB;
+
+		// 如果有 foreignDB 配置，使用 selects 连表查询
+		if (finalForeignDB && finalForeignDB.length > 0) {
+			return this._getListWithSelects({ ...params, foreignDB: finalForeignDB });
+		}
+
+		// 否则使用 Prisma 原生查询
 		const where = this.buildWhere(params);
 		const orderBy = sortJson || this.config.query.defaultSort;
 		const skip = (pageIndex - 1) * pageSize;
@@ -279,9 +310,22 @@ export class BaseDAO {
 			take: pageSize,
 		};
 
-		// 关联查询
+		// Prisma 关联查询
 		if (include) {
 			queryOptions.include = include;
+		}
+
+		// 字段选择
+		if (fieldJson && Object.keys(fieldJson).length > 0) {
+			const select = {};
+			for (const [key, value] of Object.entries(fieldJson)) {
+				if (value === true) {
+					select[key] = true;
+				}
+			}
+			if (Object.keys(select).length > 0) {
+				queryOptions.select = select;
+			}
 		}
 
 		const [rows, total] = await Promise.all([
@@ -307,11 +351,154 @@ export class BaseDAO {
 	}
 
 	/**
-	 * 获取详情
+	 * 使用 selects 进行连表查询（内部方法）
+	 * 支持数组字段关联，如 User.roles[] -> Role
 	 */
-	async getDetail(id, include) {
+	async _getListWithSelects(params = {}) {
+		const {
+			pageIndex = 1,
+			pageSize = this.config.query.defaultPageSize,
+			sortJson,
+			sortArr,
+			foreignDB = [],
+			fieldJson,
+		} = params;
+
+		// 构建 whereJson（selects 格式）
+		const whereJson = this._buildSelectsWhereJson(params);
+
+		// 构建 sortArr
+		let finalSortArr = sortArr;
+		if (!finalSortArr && sortJson) {
+			// 将 Prisma 格式转换为 selects 格式
+			finalSortArr = Object.entries(sortJson).map(([name, type]) => ({ name, type }));
+		}
+		if (!finalSortArr) {
+			// 使用默认排序
+			const defaultSort = this.config.query.defaultSort;
+			finalSortArr = Object.entries(defaultSort).map(([name, type]) => ({ name, type }));
+		}
+
+		// 调用 selects - 必须使用数据库表名
+		const tableName = this.config.tableName;
+		if (!tableName) {
+			throw new Error(`tableName is required for selects query. Model: ${this.config.modelName}`);
+		}
+
+		const result = await selects({
+			dbName: tableName,
+			pageIndex,
+			pageSize,
+			whereJson,
+			sortArr: finalSortArr,
+			foreignDB,
+			fieldJson,
+			getCount: true,
+		});
+
+		// 序列化 Prisma 特殊类型
+		const serializedRows = result.data.map(serializeRecord);
+
+		// 输出转换
+		const transform = this.config.transforms?.output;
+		const data = transform ? serializedRows.map(transform) : serializedRows;
+
+		return {
+			success: true,
+			data,
+			total: result.total,
+			pageIndex: result.pageIndex,
+			pageSize: result.pageSize,
+			totalPages: Math.ceil(result.total / pageSize) || 1,
+		};
+	}
+
+	/**
+	 * 构建 selects 格式的 whereJson（内部方法）
+	 */
+	_buildSelectsWhereJson(params = {}) {
+		const { search, filters = {}, whereJson = {} } = params;
+		
+		let where = { ...this.config.query.baseFilter, ...whereJson };
+
+		// 搜索条件（selects 不支持 OR，这里简化处理：只搜索第一个可搜索字段）
+		if (search && this.config.fields.searchable?.length > 0) {
+			const firstSearchField = this.config.fields.searchable[0];
+			where[firstSearchField] = { contains: search };
+		}
+
+		// 过滤条件
+		for (const [key, value] of Object.entries(filters)) {
+			if (value !== undefined && value !== null && value !== '') {
+				where[key] = value;
+			}
+		}
+
+		// 软删除
+		if (this.config.softDelete) {
+			where.deletedAt = null;
+		}
+
+		return where;
+	}
+
+	/**
+	 * 获取详情
+	 * 
+	 * 支持两种查询模式：
+	 * 1. Prisma 原生查询（使用 include）
+	 * 2. selects 连表查询（使用 foreignDB）- 支持数组字段关联
+	 * 
+	 * @param {string} id - 记录 ID
+	 * @param {Object} options - 查询选项
+	 * @param {Object} options.include - Prisma include 配置
+	 * @param {Array} options.foreignDB - selects 副表配置
+	 * @param {Object} options.fieldJson - 字段选择
+	 */
+	async getDetail(id, options = {}) {
 		await this.checkPermission();
 
+		// 兼容旧的调用方式：getDetail(id, include)
+		let include, foreignDB, fieldJson;
+		if (options && !options.include && !options.foreignDB && !options.fieldJson) {
+			// 旧方式：第二个参数直接是 include
+			include = options;
+		} else {
+			include = options.include;
+			foreignDB = options.foreignDB;
+			fieldJson = options.fieldJson;
+		}
+
+		// 如果有 foreignDB 配置，使用 selects 连表查询
+		if (foreignDB && foreignDB.length > 0) {
+			const { selectOne } = await import('@/lib/database/selects');
+			
+			const whereJson = { [this.config.primaryKey]: id };
+			if (this.config.softDelete) {
+				whereJson.deletedAt = null;
+			}
+
+			const record = await selectOne({
+				dbName: this.config.modelName,
+				whereJson,
+				foreignDB,
+				fieldJson,
+			});
+
+			if (!record) {
+				throw new Error('Record not found');
+			}
+
+			const serializedRecord = serializeRecord(record);
+			const transform = this.config.transforms?.output;
+
+			return {
+				success: true,
+				data: transform ? transform(serializedRecord) : serializedRecord,
+			};
+		}
+
+		// Prisma 原生查询
 		const queryOptions = {
 			where: { [this.config.primaryKey]: id },
 		};

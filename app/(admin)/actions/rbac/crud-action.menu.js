@@ -4,12 +4,14 @@ import { createCrudActions } from '@/lib/core/crud-helper';
 import { wrapAction } from '@/lib/core/action-wrapper';
 import { prisma } from '@/lib/database/prisma';
 import * as sysDao from '@/app/(admin)/actions/dao/sys';
+import nb from '@/lib/function';
 
 /**
  * Menu CRUD 配置
  */
 const menuConfig = {
 	modelName: 'menu',
+	tableName: 'menus', // 数据库表名，selects 连表查询需要
 	primaryKey: 'id',
 	softDelete: true,
 
@@ -22,6 +24,16 @@ const menuConfig = {
 	query: {
 		defaultSort: { sort: 'asc' },
 		defaultPageSize: 1000,
+		foreignDB: [
+			{
+				dbName: 'permissions',
+				localKey: 'permission',
+				foreignKey: 'id',
+				as: 'permissionList',
+				type: 'array',
+				fieldJson: { id: true, name: true, enable: true },
+			},
+		],
 	},
 
 	validation: {
@@ -209,25 +221,12 @@ export const getMenuTreeForSelectAction = wrapAction('sysQueryMenuTreeForSelect'
 		filters: { enable: true },
 	});
 
-	const convertToTreeSelectFormat = (nodes) => {
-		if (!nodes || !Array.isArray(nodes)) return [];
-
-		return nodes.map((node) => {
-			const treeNode = {
-				title: node.name,
-				value: node.id,
-				key: node.id,
-			};
-
-			if (node.children && node.children.length > 0) {
-				treeNode.children = convertToTreeSelectFormat(node.children);
-			}
-
-			return treeNode;
-		});
-	};
-
-	const menuItems = convertToTreeSelectFormat(result.rows || []);
+	// 使用 mapTree 转换为 TreeSelect 格式
+	const menuItems = nb.pubfn.tree.mapTree(result.rows || [], (node) => ({
+		title: node.name,
+		value: node.id,
+		key: node.id,
+	}));
 
 	const formattedTree = includeRootOption
 		? [{ title: '--- Root Menu ---', value: '', key: '' }, ...menuItems]

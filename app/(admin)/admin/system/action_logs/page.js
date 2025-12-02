@@ -138,11 +138,9 @@ export default function ActionLogsPage() {
 			key: 'resourceType',
 			title: 'Resource Type',
 			type: 'text',
-			table: {
-				width: 120,
-			},
+			table: false,
 			form: false,
-			search: true,
+			search: false,
 		},
 
 		// Resource ID
@@ -152,7 +150,7 @@ export default function ActionLogsPage() {
 			type: 'text',
 			table: false,
 			form: false,
-			search: true,
+			search: false,
 		},
 
 		// Status (success)

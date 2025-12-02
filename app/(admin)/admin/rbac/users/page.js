@@ -162,7 +162,7 @@ export default function UsersManagementPage() {
 		setRoleLoading(true);
 
 		try {
-			const result = await userActions.bindUserRolesAction(userId, selectedRoles, true);
+			const result = await userActions.bindUserRolesAction({ userId, roleIds: selectedRoles, reset: true });
 
 			if (result.success) {
 				messageApi.success('Roles assigned successfully');
