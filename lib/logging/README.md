@@ -14,7 +14,7 @@ lib/logging/
 
 1. **自动日志记录**：为 Server Actions 提供统一的日志记录
 2. **控制台输出**：开发环境下输出详细的彩色日志
-3. **数据库存储**：异步写入 `action_logs` 集合
+3. **数据库存储**：异步写入 `action_logs` 表
 4. **灵活配置**：支持多种日志模式和深度控制
 
 ### 环境变量配置
@@ -212,7 +212,7 @@ logActionToConsole(
 
 ### 数据库日志结构
 
-日志会异步写入 `action_logs` 集合：
+日志会异步写入 `action_logs` 表
 
 ```javascript
 {

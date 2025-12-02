@@ -174,7 +174,7 @@ const { data, success } = await callAction(authGetProfile);
 ### 数据库字段
 
 ```javascript
-// roles 集合
+// roles 表
 {
   "id": "role-uuid",
   "name": "Editor",
@@ -183,7 +183,7 @@ const { data, success } = await callAction(authGetProfile);
   "inheritMenuPermissions": true  // v3.1 新增
 }
 
-// menus 集合
+// menus 表
 {
   "id": "menu-uuid-1",
   "name": "User Management",

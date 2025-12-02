@@ -202,14 +202,14 @@ export async function checkUserHasApiPermission(userId, apiPath) {
  * @returns {Promise<Array<String>>}
  */
 async function getApisByPermissionIds(permissionIds) {
-  const collection = await prisma('permissions');
-  const permissions = await collection
-    .find({
+  const permissions = await prisma.permission.findMany({
+    where: {
       id: { in: permissionIds },
       enable: true,
-      apis: { $exists: true, $ne: null, $not: { $size: 0 } },
-    })
-    ;
+      apis: { isEmpty: false },
+    },
+    select: { apis: true },
+  });
   
   const allApis = [];
   permissions.forEach((perm) => {
@@ -594,15 +594,19 @@ export async function getUserProfileAction() {
 import { prisma } from '@/lib/database/prisma';
 
 async function migratePermissions() {
-  const collection = await prisma('permissions');
-  
   // 为所有现有权限添加 apis 字段（空数组）
-  const result = await collection.updateMany(
-    { apis: { $exists: false } },
-    { $set: { apis: [] } }
-  );
+  // 注意：Prisma 中数组字段默认值应在 schema 中定义
+  // 此脚本用于迁移已存在的数据
+  const result = await prisma.permission.updateMany({
+    where: {
+      apis: { equals: null },
+    },
+    data: {
+      apis: [],
+    },
+  });
   
-  console.log(`Migration completed: ${result.modifiedCount} documents updated`);
+  console.log(`Migration completed: ${result.count} records updated`);
 }
 
 migratePermissions();

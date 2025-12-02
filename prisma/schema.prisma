@@ -274,3 +274,117 @@ model ActionLog {
   @@index([createdAt])
   @@map("action_logs")
 }
+
+// ============================================
+// CMS 内容管理
+// ============================================
+
+/// 文章表 - CMS 示例
+model Post {
+  id          String    @id @default(uuid())
+  name        String
+  status      String    @default("active")                    // active, inactive, draft
+  order       Int       @default(0)
+  expiresAt   DateTime? @map("expires_at")
+  description String?
+  content     String?
+  
+  // 时间戳
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?                                       // 软删除时间
+  
+  @@index([status])
+  @@index([order])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("posts")
+}
+
+// ============================================
+// Example 示例数据
+// ============================================
+
+/// 示例数据表 - SmartCrudPage 完整功能演示
+model ExampleData {
+  id                   String    @id @default(uuid())
+  
+  // 基础信息
+  title                String
+  description          String?
+  status               String    @default("draft")            // draft, pending, published, archived
+  
+  // 分类信息
+  category             String?                                // electronics, clothing, food, books, sports, other
+  subCategory          String?   @map("sub_category")
+  
+  // 联系信息
+  contactType          String?   @map("contact_type")         // email, phone, wechat, none
+  email                String?
+  phone                String?
+  wechat               String?
+  address              String?
+  
+  // 价格信息
+  price                Decimal?  @db.Decimal(10, 2)
+  discount             Decimal?  @db.Decimal(5, 2)
+  quantity             Int?      @default(0)
+  
+  // 属性信息
+  priority             String?                                // low, medium, high, urgent
+  features             String[]  @default([])                 // 功能特性数组
+  tags                 String[]  @default([])                 // 标签数组
+  
+  // 组织信息
+  department           String?
+  location             String[]  @default([])                 // 地区级联数据
+  
+  // 日期时间
+  publishDate          DateTime? @map("publish_date")
+  eventTime            DateTime? @map("event_time")
+  validPeriod          String[]  @default([])  @map("valid_period")  // 有效期范围
+  
+  // 开关状态
+  isActive             Boolean   @default(true)  @map("is_active")
+  isPublic             Boolean   @default(false) @map("is_public")
+  isVip                Boolean   @default(false) @map("is_vip")
+  enableNotification   Boolean   @default(false) @map("enable_notification")
+  
+  // 媒体文件 - 上传
+  coverImage           String?   @map("cover_image")
+  gallery              String[]  @default([])                 // 多图数组
+  avatar               String?
+  documents            String[]  @default([])                 // 文档数组
+  attachments          String[]  @default([])                 // 附件数组
+  
+  // 媒体文件 - 从库选择
+  selectedImage        String?   @map("selected_image")
+  selectedGallery      String[]  @default([]) @map("selected_gallery")
+  selectedAvatar       String?   @map("selected_avatar")
+  selectedFiles        String[]  @default([]) @map("selected_files")
+  
+  // 高级字段
+  rating               Decimal?  @db.Decimal(2, 1)            // 评分 0-5
+  color                String?                                // 颜色
+  icon                 String?                                // 图标
+  
+  // 内容字段
+  richContent          String?   @map("rich_content")         // Markdown 富文本
+  
+  // 数据字段
+  keywords             String[]  @default([])                 // 关键词数组
+  metadata             Json?                                  // JSON 元数据
+  
+  // 时间戳
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  deletedAt            DateTime?                              // 软删除时间
+  
+  @@index([status])
+  @@index([category])
+  @@index([priority])
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("example_data")
+}

@@ -255,7 +255,7 @@ node scripts/migrate-add-apis-field.js
 
 1. 备份数据库（推荐）
    ```bash
-   mongodump --db=your_database --collection=permissions --out=/backup/path
+   pg_dump -U your_user -d your_database -t permissions -f /backup/path/permissions.sql
    ```
 
 2. 审查代码变更

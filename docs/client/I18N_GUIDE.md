@@ -362,7 +362,7 @@ export const localeNames = {
 ### 数据库设计
 
 ```javascript
-// packages 集合
+// packages 表
 {
   
   nameTranslations: {
@@ -475,7 +475,10 @@ A: next-intl 自动使用 Cookie 保存，也可以存储到数据库：
 ```javascript
 // 在用户更改语言时
 export async function updateUserLanguage(userId, locale) {
-	await db.collection('users').update({ id: userId }, { $set: { preferredLanguage: locale } });
+	await prisma.user.update({
+		where: { id: userId },
+		data: { preferredLanguage: locale },
+	});
 }
 ```
 

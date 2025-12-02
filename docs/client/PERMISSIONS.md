@@ -668,11 +668,10 @@ await updateUserRoleAction(userId, 'admin');
 // 方式 2: 直接修改数据库
 import { prisma } from '@/lib/database/prisma';
 
-const usersCollection = await prisma('users');
-await usersCollection.update(
-  { id: userId },
-  { $set: { role: 'admin' } }
-);
+await prisma.user.update({
+  where: { id: userId },
+  data: { role: 'admin' },
+});
 ```
 
 ### 角色类型

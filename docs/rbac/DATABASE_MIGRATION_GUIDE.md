@@ -26,10 +26,11 @@
 ### Step 1: 备份数据库（可选但推荐）
 
 ```bash
-# 导出 permissions 数据
-mongodump --db=your_database --collection=permissions --out=/backup/path
+# 使用 pg_dump 导出 permissions 表数据
+pg_dump -U your_user -d your_database -t permissions -f /backup/path/permissions.sql
 
-# 
+# 或者使用 Prisma 导出
+npx prisma db pull
 ```
 
 ### Step 2: 运行迁移脚本
@@ -51,12 +52,10 @@ async function migratePermissions() {
   console.log('🚀 开始迁移权限系统...\n');
   
   try {
-    const collection = await prisma('permissions');
-    
-    // 1. 统计需要迁移的文档
-    const totalCount = await collection.count();
-    const needMigrationCount = await collection.count({
-      apis: { $exists: false }
+    // 1. 统计需要迁移的记录
+    const totalCount = await prisma.permission.count();
+    const needMigrationCount = await prisma.permission.count({
+      where: { apis: { equals: null } },
     });
     
     console.log(`📊 统计信息:`);
@@ -71,19 +70,18 @@ async function migratePermissions() {
     
     // 2. 执行迁移
     console.log('🔄 正在添加 apis 字段...');
-    const result = await collection.updateMany(
-      { apis: { $exists: false } },
-      { $set: { apis: [] } }
-    );
+    const result = await prisma.permission.updateMany({
+      where: { apis: { equals: null } },
+      data: { apis: [] },
+    });
     
     console.log(`\n迁移完成!`);
-    console.log(`   更新文档数: ${result.modifiedCount}`);
-    console.log(`   匹配文档数: ${result.matchedCount}\n`);
+    console.log(`   更新记录数: ${result.count}\n`);
     
     // 3. 验证迁移结果
     console.log('🔍 验证迁移结果...');
-    const afterMigrationCount = await collection.count({
-      apis: { $exists: true }
+    const afterMigrationCount = await prisma.permission.count({
+      where: { apis: { not: { equals: null } } },
     });
     
     console.log(`   现在所有权限都有 apis 字段: ${afterMigrationCount}/${totalCount}`);
@@ -91,12 +89,14 @@ async function migratePermissions() {
     if (afterMigrationCount === totalCount) {
       console.log('\n🎉 迁移验证成功！');
     } else {
-      console.log('\n⚠️ 警告：部分文档可能未迁移成功，请检查');
+      console.log('\n⚠️ 警告：部分记录可能未迁移成功，请检查');
     }
     
   } catch (error) {
     console.error('\n❌ 迁移失败:', error);
     throw error;
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
@@ -147,9 +147,12 @@ node scripts/migrate-add-apis-field.js
 
 在数据库中查询验证：
 
-```javascript
-// Prisma Studio 或 SQL
-db.permissions.find({}, { name: 1, actions: 1, apis: 1 }).pretty()
+```bash
+# 使用 Prisma Studio 查看
+npx prisma studio
+
+# 或使用 SQL 查询
+SELECT name, actions, apis FROM permissions;
 ```
 
 **预期结果**：
@@ -248,16 +251,17 @@ db.permissions.find({}, { name: 1, actions: 1, apis: 1 }).pretty()
 
 ```bash
 # 从备份恢复
-mongorestore --db=your_database --collection=permissions /backup/path/your_database/permissions.bson
+psql -U your_user -d your_database -f /backup/path/permissions.sql
 ```
 
-### 方案 2: 删除 apis 字段
+### 方案 2: 重置 apis 字段为 null
 
 创建回滚脚本 `scripts/rollback-remove-apis-field.js`：
 
 ```javascript
 /**
- * 回滚脚本：删除 apis 字段
+ * 回滚脚本：重置 apis 字段为 null
+ * 注意：Prisma 中无法直接删除字段，需要通过 schema 迁移
  */
 
 import { prisma } from '@/lib/database/prisma';
@@ -266,19 +270,19 @@ async function rollbackPermissions() {
   console.log('🔙 开始回滚权限系统...\n');
   
   try {
-    const collection = await prisma('permissions');
-    
-    const result = await collection.updateMany(
-      { apis: { $exists: true } },
-      { $unset: { apis: "" } }
-    );
+    const result = await prisma.permission.updateMany({
+      where: { apis: { not: { equals: null } } },
+      data: { apis: null },
+    });
     
     console.log(`回滚完成!`);
-    console.log(`   删除 apis 字段的文档数: ${result.modifiedCount}\n`);
+    console.log(`   重置 apis 字段的记录数: ${result.count}\n`);
     
   } catch (error) {
     console.error('\n❌ 回滚失败:', error);
     throw error;
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

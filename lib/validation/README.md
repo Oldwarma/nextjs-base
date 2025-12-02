@@ -126,9 +126,10 @@ validation: {
     type: 'string',
     validator: async (value, context) => {
       // context 包含 { data, action, recordId, modelName }
-      const { getCollection } = await import('@/lib/database/mongodb');
-      const collection = await getCollection('users');
-      const exists = await collection.findOne({ username: value });
+      const { prisma } = await import('@/lib/database/prisma');
+      const exists = await prisma.user.findFirst({
+        where: { username: value },
+      });
       if (exists && exists.id !== context.recordId) {
         throw new Error('Username already taken');
       }

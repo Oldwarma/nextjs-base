@@ -56,7 +56,7 @@ components/admin/uploads/
 
 ## 数据模型
 
-### assets 集合
+### assets 表
 
 ```javascript
 {
@@ -299,9 +299,7 @@ export const batchDelete = wrapAdminAction('batch_delete', 'assets', async ({ id
 
 ```javascript
 import { uploadToR2, generateFileKey, deleteFromR2 } from './r2-client';
-import { add, remove, getOne } from '@/lib/database/db-api';
-
-const COLLECTION_NAME = 'assets';
+import { prisma } from '@/lib/database/prisma';
 
 /**
  * 上传单个文件
@@ -326,19 +324,19 @@ export async function uploadFile({ file, type, directory, userId, options = {} }
   });
   
   // 4. 保存数据库记录（使用 UUID 作为 id）
-  const uploadRecord = {
-    id: crypto.randomUUID(),
-    key,
-    url: uploadResult.url,
-    originalName,
-    mimeType,
-    size,
-    type,
-    directory: uploadDirectory,
-    userId,
-  };
-  
-  await add({ dbName: COLLECTION_NAME, dataJson: uploadRecord });
+  await prisma.asset.create({
+    data: {
+      id: crypto.randomUUID(),
+      key,
+      url: uploadResult.url,
+      originalName,
+      mimeType,
+      size,
+      type,
+      directory: uploadDirectory,
+      userId,
+    },
+  });
   
   return { success: true, data: { key, url, originalName, mimeType, size } };
 }
@@ -355,7 +353,9 @@ export async function deleteFile(keyOrUrl, userId) {
   }
   
   // 2. 查找记录
-  const record = await getOne({ dbName: COLLECTION_NAME, whereJson: { key } });
+  const record = await prisma.asset.findFirst({
+    where: { key },
+  });
   if (!record) {
     return { success: false, error: 'File not found' };
   }
@@ -364,7 +364,9 @@ export async function deleteFile(keyOrUrl, userId) {
   await deleteFromR2(key);
   
   // 4. 删除数据库记录
-  await remove({ dbName: COLLECTION_NAME, whereJson: { key } });
+  await prisma.asset.delete({
+    where: { key },
+  });
   
   return { success: true };
 }

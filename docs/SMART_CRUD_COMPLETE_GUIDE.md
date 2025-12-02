@@ -172,9 +172,9 @@ const xxxConfig = {
 		// 连表查询配置
 		foreignDB: [
 			{
-				dbName: 'users',              // 目标集合名
+				dbName: 'users',              // 目标表名
 				localKey: 'userId',           // 本地外键字段
-				foreignKey: 'id',             // 目标集合主键
+				foreignKey: 'id',             // 目标表主键
 				as: 'userInfo',               // 结果字段名
 				limit: 1,                     // 限制数量（1=一对一）
 				fieldJson: {                  // 返回字段（投影）
@@ -325,7 +325,7 @@ foreignDB: [
 ```javascript
 foreignDB: [
 	{
-		dbName: 'menus',           // 同一个集合
+		dbName: 'menus',           // 同一个表（自引用）
 		localKey: 'parent_id',
 		foreignKey: 'id',
 		as: 'parentInfo',

@@ -69,6 +69,6 @@ await authClient.signIn.social({ provider: 'google' });
 ## 🔗 依赖关系
 
 - Better Auth
-- Prisma (通过 `lib/database/mongodb`)
+- Prisma (通过 `lib/database/prisma`)
 - Next.js (headers, cookies)
 

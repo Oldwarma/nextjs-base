@@ -405,8 +405,7 @@ crud-helper.js
     │   └── lib/logging/action-logger
     │
     └── app/(admin)/actions/dao/base.js (BaseDAO)
-        ├── lib/database/mongodb
-        ├── lib/database/db-api
+        ├── lib/database/prisma
         └── lib/logging/action-logger
 ```
 

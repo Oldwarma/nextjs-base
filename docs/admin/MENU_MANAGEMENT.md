@@ -487,13 +487,17 @@ function buildMenuTree(menus, parentId = null) {
 **File**: `app/(admin)/actions/admin-menus.js`
 
 ```javascript
-const menus = await menusCollection.find(query, {
-  sort: { sortOrder: 1, createdAt: 1 }, // Sort by sortOrder ascending, then createdAt
+const menus = await prisma.menu.findMany({
+  where: query,
+  orderBy: [
+    { sortOrder: 'asc' },  // Sort by sortOrder ascending, then createdAt
+    { createdAt: 'asc' },
+  ],
 });
 ```
 
-- `sortOrder: 1` - Ascending order (smaller values first)
-- `createdAt: 1` - When sortOrder is same, sort by creation time
+- `sortOrder: 'asc'` - Ascending order (smaller values first)
+- `createdAt: 'asc'` - When sortOrder is same, sort by creation time
 
 ### Parent Selection
 
@@ -518,9 +522,11 @@ Using `TreeSelect` component:
 
 ```javascript
 // Check for child menus
-const childMenus = await menusCollection.findUnique({
-  parentId: id,
-  deletedAt: { $exists: false },
+const childMenus = await prisma.menu.findFirst({
+  where: {
+    parentId: id,
+    deletedAt: null,
+  },
 });
 
 if (childMenus) {

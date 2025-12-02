@@ -38,7 +38,7 @@ BaseDAO 是一个通用的数据访问对象（Data Access Object）系统，旨
 
 ```javascript
 export const userCrudConfig = {
-	// 集合名称
+	// 表名称
 	modelName: 'users',
 	
 	// 主键字段（默认 'id'）
@@ -787,14 +787,13 @@ export async function resetPasswordAction(userId) {
 	}
 	
 	try {
-		const usersCollection = await prisma('users');
 		const newPassword = generateRandomPassword();
 		const hashedPassword = await hashPassword(newPassword);
 		
-		await usersCollection.update(
-			{ id: userId },
-			{ $set: { password: hashedPassword, updatedAt: new Date() } }
-		);
+		await prisma.user.update({
+			where: { id: userId },
+			data: { password: hashedPassword, updatedAt: new Date() },
+		});
 		
 		// 发送邮件通知用户
 		await sendPasswordResetEmail(userId, newPassword);
@@ -813,11 +812,12 @@ export async function getUserStatsAction(userId) {
 	}
 	
 	try {
-		const usersCollection = await prisma('users');
-		const generationsCollection = await prisma('generations');
-		
-		const user = await usersCollection.findUnique({ id: userId });
-		const generationsCount = await generationsCollection.({ userId });
+		const user = await prisma.user.findUnique({
+			where: { id: userId },
+		});
+		const generationsCount = await prisma.generation.count({
+			where: { userId },
+		});
 		
 		return {
 			success: true,
@@ -1024,11 +1024,12 @@ export const productCrudConfig = {
 		beforeDelete: async (id, existing) => {
 			// 检查是否有未完成的订单
 			const { prisma } = await import('@/lib/database/prisma');
-			const ordersCollection = await prisma('orders');
 			
-			const pendingOrders = await ordersCollection.({
-				productId: id,
-				status: { in: ['pending', 'processing'] },
+			const pendingOrders = await prisma.order.count({
+				where: {
+					productId: id,
+					status: { in: ['pending', 'processing'] },
+				},
 			});
 			
 			if (pendingOrders > 0) {
@@ -1141,9 +1142,10 @@ export async function adjustStockAction(id, quantity, reason) {
 	
 	try {
 		const { prisma } = await import('@/lib/database/prisma');
-		const productsCollection = await prisma('products');
 		
-		const product = await productsCollection.findUnique({ id });
+		const product = await prisma.product.findUnique({
+			where: { id },
+		});
 		if (!product) {
 			throw new Error('Product not found');
 		}
@@ -1153,10 +1155,10 @@ export async function adjustStockAction(id, quantity, reason) {
 			throw new Error('Insufficient stock');
 		}
 		
-		await productsCollection.update(
-			{ id },
-			{ $set: { stock: newStock, updatedAt: new Date() } }
-		);
+		await prisma.product.update({
+			where: { id },
+			data: { stock: newStock, updatedAt: new Date() },
+		});
 		
 		// 记录库存变动
 		await logStockChange(id, product.stock, newStock, reason);
@@ -1339,10 +1341,11 @@ export async function getActiveUsersAction() {
 	}
 	
 	try {
-		const collection = await prisma('users');
-		const users = await collection.find({
-			status: 'active',
-			lastLoginAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+		const users = await prisma.user.findMany({
+			where: {
+				status: 'active',
+				lastLoginAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+			},
 		});
 		
 		return { success: true, data: users };
@@ -1360,18 +1363,20 @@ export async function getActiveUsersAction() {
 hooks: {
 	afterCreate: async (data, result) => {
 		// 创建用户后，初始化积分账户
-		const creditsCollection = await prisma('credits');
-		await creditsCollection.create({
-			userId: data.id,
-			balance: 0,
-			createdAt: new Date(),
+		await prisma.credit.create({
+			data: {
+				userId: data.id,
+				balance: 0,
+				createdAt: new Date(),
+			},
 		});
 	},
 	
 	beforeDelete: async (id, existing) => {
 		// 删除前检查关联数据
-		const ordersCollection = await prisma('orders');
-		const orderCount = await ordersCollection.({ userId: id });
+		const orderCount = await prisma.order.count({
+			where: { userId: id },
+		});
 		
 		if (orderCount > 0) {
 			throw new Error('Cannot delete user with existing orders');
@@ -1382,8 +1387,9 @@ hooks: {
 	
 	afterDelete: async (id, deleted) => {
 		// 删除后清理关联数据
-		const sessionsCollection = await prisma('sessions');
-		await sessionsCollection.deleteMany({ userId: id });
+		await prisma.session.deleteMany({
+			where: { userId: id },
+		});
 	},
 }
 ```
@@ -1458,15 +1464,16 @@ hooks: {
 }
 
 // 日志记录函数
-async function logAction(action, collection, recordId, data) {
-	const logsCollection = await prisma('operation_logs');
-	await logsCollection.create({
-		action,
-		collection,
-		recordId,
-		data,
-		userId: 'admin-user-id', // 从 session 获取
-		createdAt: new Date(),
+async function logAction(action, tableName, recordId, data) {
+	await prisma.operationLog.create({
+		data: {
+			action,
+			tableName,
+			recordId,
+			data,
+			userId: 'admin-user-id', // 从 session 获取
+			createdAt: new Date(),
+		},
 	});
 }
 ```
@@ -1568,18 +1575,15 @@ export async function getUsersWithCursorAction(cursor, limit = 20) {
 	}
 	
 	try {
-		const collection = await prisma('users');
-		const query = cursor ? { _id: { gt: cursor } } : {};
-		
-		const users = await collection
-			.find(query)
-			.sort({ createdAt: 1 })
-			.limit(limit + 1)
-			;
+		const users = await prisma.user.findMany({
+			where: cursor ? { id: { gt: cursor } } : undefined,
+			orderBy: { createdAt: 'asc' },
+			take: limit + 1,
+		});
 		
 		const hasMore = users.length > limit;
 		const data = hasMore ? users.slice(0, limit) : users;
-		const nextCursor = hasMore ? data[data.length - 1]._id : null;
+		const nextCursor = hasMore ? data[data.length - 1].id : null;
 		
 		return {
 			success: true,

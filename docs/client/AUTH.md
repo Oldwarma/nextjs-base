@@ -474,16 +474,16 @@ export async function createAuditLog({
     success,
     metadata
 }) {
-    const auditCollection = await prisma('audit_logs');
-    
-    await auditCollection.create({
-        userId,
-        action,
-        ip,
-        userAgent,
-        success,
-        metadata,
-        timestamp: new Date()
+    await prisma.auditLog.create({
+        data: {
+            userId,
+            action,
+            ip,
+            userAgent,
+            success,
+            metadata,
+            timestamp: new Date(),
+        },
     });
 }
 ```
@@ -763,8 +763,9 @@ session: {
 	updateAge: 60 * 60,          // 1小时更新一次
 	async fetchUser(userId) {
 		// 从数据库获取最新用户信息
-		const db = await getDatabase();
-		return await db.collection('users').findUnique({ id: userId });
+		return await prisma.user.findUnique({
+			where: { id: userId },
+		});
 	}
 }
 ```

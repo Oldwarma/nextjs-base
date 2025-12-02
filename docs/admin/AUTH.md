@@ -512,18 +512,14 @@ AdminLayout 调用 checkBackendAccess()
 ```js
 import { prisma } from '@/lib/database/prisma';
 
-const usersCollection = await prisma('users');
-
 // 授予用户后台访问权限
-await usersCollection.update(
-  { id: userId },
-  { 
-    $set: { 
-      isBackendAllowed: true,
-      updatedAt: new Date()
-    } 
-  }
-);
+await prisma.user.update({
+  where: { id: userId },
+  data: { 
+    isBackendAllowed: true,
+    updatedAt: new Date(),
+  },
+});
 
 // 同时绑定 RBAC 角色
 import { bindUserRoles } from '@/app/(admin)/actions/dao/sys';

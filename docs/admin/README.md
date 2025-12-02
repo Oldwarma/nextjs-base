@@ -181,7 +181,7 @@ export const updateUserAction = userCrud.update;
 ### 2. CRUD 配置
 
 每个实体都有一个配置文件，定义：
-- 集合名称
+- 表名称
 - 可创建/更新/搜索的字段
 - 验证规则
 - 生命周期钩子

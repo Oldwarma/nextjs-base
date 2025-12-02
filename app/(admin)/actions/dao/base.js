@@ -4,6 +4,69 @@ import { logAction } from '@/lib/logging/action-logger';
 import { validateWithConfig, runCustomValidators } from '@/lib/validation/auto-schema';
 
 /**
+ * 检测是否为 Prisma Decimal 类型
+ * 使用 duck typing 检测，因为 instanceof 可能因为不同模块实例化而失效
+ */
+function isDecimal(value) {
+	return (
+		value !== null &&
+		typeof value === 'object' &&
+		typeof value.toNumber === 'function' &&
+		typeof value.toString === 'function' &&
+		'd' in value && 'e' in value && 's' in value
+	);
+}
+
+/**
+ * 序列化 Prisma 返回的数据，将特殊类型转换为普通 JS 类型
+ * - Decimal -> number
+ * - Date -> ISO string（保持不变，Next.js 可以处理）
+ * - BigInt -> number
+ */
+function serializeRecord(record) {
+	if (!record || typeof record !== 'object') {
+		return record;
+	}
+
+	// 处理数组
+	if (Array.isArray(record)) {
+		return record.map(serializeRecord);
+	}
+
+	// 检测 Decimal（在递归前先检查，因为 Decimal 也是 object）
+	if (isDecimal(record)) {
+		return record.toNumber();
+	}
+
+	// 检测 Date
+	if (record instanceof Date) {
+		return record;
+	}
+
+	const serialized = {};
+	for (const [key, value] of Object.entries(record)) {
+		if (value === null || value === undefined) {
+			serialized[key] = value;
+		} else if (isDecimal(value)) {
+			// Prisma Decimal -> number
+			serialized[key] = value.toNumber();
+		} else if (typeof value === 'bigint') {
+			// BigInt -> number
+			serialized[key] = Number(value);
+		} else if (value instanceof Date) {
+			// Date 保持为 Date 对象，Next.js 可以序列化
+			serialized[key] = value;
+		} else if (typeof value === 'object') {
+			// 递归处理嵌套对象
+			serialized[key] = serializeRecord(value);
+		} else {
+			serialized[key] = value;
+		}
+	}
+	return serialized;
+}
+
+/**
  * BaseDAO - 通用数据访问对象基类
  * 
  * 直接使用 Prisma 客户端，提供标准的 CRUD 操作
@@ -226,9 +289,12 @@ export class BaseDAO {
 			this.model.count({ where }),
 		]);
 
+		// 序列化 Prisma 特殊类型（Decimal, BigInt 等）
+		const serializedRows = rows.map(serializeRecord);
+
 		// 输出转换
 		const transform = this.config.transforms?.output;
-		const data = transform ? rows.map(transform) : rows;
+		const data = transform ? serializedRows.map(transform) : serializedRows;
 
 		return {
 			success: true,
@@ -264,10 +330,13 @@ export class BaseDAO {
 			throw new Error('Record has been deleted');
 		}
 
+		// 序列化 Prisma 特殊类型
+		const serializedRecord = serializeRecord(record);
+
 		const transform = this.config.transforms?.output;
 		return {
 			success: true,
-			data: transform ? transform(record) : record,
+			data: transform ? transform(serializedRecord) : serializedRecord,
 		};
 	}
 

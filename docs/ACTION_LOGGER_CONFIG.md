@@ -217,7 +217,7 @@ ACTION_LOG_TYPE=all           # all | create,delete | create,read,update,delete 
 ### `ACTION_LOG_DATABASE=1`（默认）
 
 - 控制台输出（开发环境）
-- 写入 `action_logs` 集合（异步，不阻塞主流程）
+- 写入 `action_logs` 表（异步，不阻塞主流程）
 - 记录完整的请求参数和返回结果
 - 可用于后续审计、统计、分析
 
@@ -275,7 +275,7 @@ ACTION_LOG_MAX=
 
 **注意**：
 - 清理操作在后台异步执行，不影响性能
-- 如需永久保留日志，请定期导出或备份 `action_logs` 集合
+- 如需永久保留日志，请定期导出或备份 `action_logs` 表
 - 删除操作无法恢复，请谨慎设置
 
 ---
@@ -565,7 +565,7 @@ http://localhost:3000/api/test-logger?mode=full&depth=2
 
 ## 📊 日志数据库结构
 
-当 `ACTION_LOG_DATABASE=1` 时，日志会写入 `action_logs` 集合：
+当 `ACTION_LOG_DATABASE=1` 时，日志会写入 `action_logs` 表：
 
 ```javascript
 {
@@ -634,20 +634,27 @@ ACTION_LOG_TYPE=
 
 ### Q5: 如何查看历史日志？
 
-**A**: 从数据库查询 `action_logs` 集合：
+**A**: 从数据库查询 `action_logs` 表：
 
 ```javascript
 // 查询某用户的所有操作
-db.action_logs.find({ userId: 'user-123' })
+const logs = await prisma.actionLog.findMany({
+  where: { userId: 'user-123' },
+});
 
 // 查询最近的失败操作
-db.action_logs.find({ success: false }).sort({ createdAt: 'desc' }).limit(10)
+const failedLogs = await prisma.actionLog.findMany({
+  where: { success: false },
+  orderBy: { createdAt: 'desc' },
+  take: 10,
+});
 
 // 查询某资源类型的操作统计
-db.action_logs.aggregate([
-  { $match: { resourceType: 'user' } },
-  { $group: { _id: '$action', count: { $sum: 1 } } }
-])
+const stats = await prisma.actionLog.groupBy({
+  by: ['action'],
+  where: { resourceType: 'user' },
+  _count: { action: true },
+});
 ```
 
 ---

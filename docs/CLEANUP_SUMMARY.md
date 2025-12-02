@@ -123,8 +123,7 @@
 ### 保留的脚本 (3 个)
 
 **保留的有用脚本**：
-- `init-db.js` - 数据库初始化
-- `check-collections.js` - 检查集合
+- `init-db.js` / `init-db-pg.js` - 数据库初始化
 - `migrate-users-add-fields.js` - 用户字段迁移
 
 ---

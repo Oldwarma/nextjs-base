@@ -32,7 +32,7 @@
 
 ### 📌 适用范围
 
-- 数据库集合（Collection）字段
+- 数据库表（Table）字段
 - CRUD Config 配置文件
 - Server Actions 参数和返回值
 - 前端页面字段配置
@@ -133,7 +133,7 @@ can_edit: Boolean      // 不需要 can_ 前缀
 
 | 字段名 | 类型 | 说明 | 示例 |
 |--------|------|------|------|
-| `id` | String (UUID) | 主键，所有集合统一使用 | `"a1b2c3d4-..."` |
+| `id` | String (UUID) | 主键，所有表统一使用 | `"a1b2c3d4-..."` |
 | `_id` | （已废弃，使用 UUID） | `UUID` |
 | `parent_id` | String (UUID) | 父级引用（树形结构） | `"parent-uuid"` |
 | `user_id` | String (UUID) | 用户 ID（外键） | `"user-uuid"` |
@@ -255,7 +255,7 @@ can_edit: Boolean      // 不需要 can_ 前缀
 
 ## 数据库命名
 
-### 集合名称（Collection Name）
+### 表名称（Table Name）
 
 **规则**：
 - 使用复数形式
@@ -283,25 +283,29 @@ UserRoles              // 不要使用 PascalCase
 ### 索引命名
 
 **规则**：
-- 格式：`idx_{collection}_{field1}_{field2}`
+- 格式：`idx_{table}_{field1}_{field2}`
 - 使用 snake_case
 
 **推荐**：
-```javascript
-// 单字段索引
-db.users.createIndex({ "email": 1 }, { name: "idx_users_email" })
+```sql
+-- 单字段索引
+CREATE INDEX idx_users_email ON users(email);
 
-// 复合索引
-db.articles.createIndex(
-  { "author_id": 1, "status": 1 },
-  { name: "idx_articles_author_id_status" }
-)
+-- 复合索引
+CREATE INDEX idx_articles_author_id_status ON articles(author_id, status);
 
-// 唯一索引
-db.roles.createIndex(
-  { "name": 1 },
-  { name: "idx_roles_name_unique", unique: true }
-)
+-- 唯一索引
+CREATE UNIQUE INDEX idx_roles_name_unique ON roles(name);
+```
+
+```prisma
+// 在 Prisma schema 中定义索引
+model User {
+  id    String @id
+  email String
+  
+  @@index([email], name: "idx_users_email")
+}
 ```
 
 ---
@@ -422,118 +426,106 @@ export const userCrudConfig = {
 
 #### 1. roles 表迁移
 
-```javascript
-// Prisma
-db.roles.updateMany(
-  {},
-  [
-    {
-      $set: {
-        // 重命名字段
-        id: { $ifNull: ["$id", { $toString: "$_id" }] },  // 如果没有 id，用 _id 转换
-        name: "$role_name",
-        remark: { $ifNull: ["$remark", "$comment"] },
-        enable: { $ifNull: ["$enable", "$enabled", true] },
-        sort: { $ifNull: ["$sort", "$sortOrder", 0] },
-      }
-    },
-    {
-      $unset: [
-        "role_id",
-        "role_name",
-        "comment",
-        "enabled",
-        "sortOrder"
-      ]
-    }
-  ]
-);
+```sql
+-- PostgreSQL 迁移脚本
+-- 重命名字段
+ALTER TABLE roles RENAME COLUMN role_id TO id;
+ALTER TABLE roles RENAME COLUMN role_name TO name;
+ALTER TABLE roles RENAME COLUMN comment TO remark;
+ALTER TABLE roles RENAME COLUMN enabled TO enable;
+ALTER TABLE roles RENAME COLUMN sortOrder TO sort;
 
-// 为 id 字段创建唯一索引
-db.roles.createIndex({ "id": 1 }, { unique: true, name: "idx_roles_id_unique" });
+-- 设置默认值
+UPDATE roles SET enable = true WHERE enable IS NULL;
+UPDATE roles SET sort = 0 WHERE sort IS NULL;
+
+-- 创建唯一索引
+CREATE UNIQUE INDEX idx_roles_id_unique ON roles(id);
+```
+
+```javascript
+// 或使用 Prisma 迁移
+// 1. 更新 schema.prisma 中的字段名
+// 2. 运行 npx prisma migrate dev --name rename_role_fields
 ```
 
 #### 2. permissions 表迁移
 
-```javascript
-db.permissions.updateMany(
-  {},
-  [
-    {
-      $set: {
-        id: { $ifNull: ["$id", { $toString: "$_id" }] },
-        name: "$permission_name",
-        parent_id: "$parentId",
-        remark: { $ifNull: ["$remark", "$comment"] },
-        enable: { $ifNull: ["$enable", "$enabled", true] },
-        sort: { $ifNull: ["$sort", "$sortOrder", 0] },
-        crud_category: { $ifNull: ["$crud_category", "$curd_category", 0] },
-      }
-    },
-    {
-      $unset: [
-        "permission_id",
-        "permission_name",
-        "parentId",
-        "comment",
-        "enabled",
-        "sortOrder",
-        "curd_category"
-      ]
-    }
-  ]
-);
+```sql
+-- PostgreSQL 迁移脚本
+ALTER TABLE permissions RENAME COLUMN permission_id TO id;
+ALTER TABLE permissions RENAME COLUMN permission_name TO name;
+ALTER TABLE permissions RENAME COLUMN parentId TO parent_id;
+ALTER TABLE permissions RENAME COLUMN comment TO remark;
+ALTER TABLE permissions RENAME COLUMN enabled TO enable;
+ALTER TABLE permissions RENAME COLUMN sortOrder TO sort;
+ALTER TABLE permissions RENAME COLUMN curd_category TO crud_category;
 
-db.permissions.createIndex({ "id": 1 }, { unique: true, name: "idx_permissions_id_unique" });
+-- 设置默认值
+UPDATE permissions SET enable = true WHERE enable IS NULL;
+UPDATE permissions SET sort = 0 WHERE sort IS NULL;
+UPDATE permissions SET crud_category = 0 WHERE crud_category IS NULL;
+
+-- 创建唯一索引
+CREATE UNIQUE INDEX idx_permissions_id_unique ON permissions(id);
+```
+
+```javascript
+// 或使用 Prisma 迁移
+// 1. 更新 schema.prisma 中的字段名
+// 2. 运行 npx prisma migrate dev --name rename_permission_fields
 ```
 
 #### 3. menus 表迁移
 
-```javascript
-db.menus.updateMany(
-  {},
-  [
-    {
-      $set: {
-        id: { $ifNull: ["$id", "$key", { $toString: "$_id" }] },
-        parent_id: "$parentId",
-        enable: { $ifNull: ["$enable", "$enabled", true] },
-        sort: { $ifNull: ["$sort", "$sortOrder", 0] },
-        remark: { $ifNull: ["$remark", "$comment"] },
-      }
-    },
-    {
-      $unset: [
-        "menu_id",
-        "key",
-        "parentId",
-        "enabled",
-        "sortOrder",
-        "comment"
-      ]
-    }
-  ]
-);
+```sql
+-- PostgreSQL 迁移脚本
+ALTER TABLE menus RENAME COLUMN menu_id TO id;
+ALTER TABLE menus RENAME COLUMN parentId TO parent_id;
+ALTER TABLE menus RENAME COLUMN enabled TO enable;
+ALTER TABLE menus RENAME COLUMN sortOrder TO sort;
+ALTER TABLE menus RENAME COLUMN comment TO remark;
 
-db.menus.createIndex({ "id": 1 }, { unique: true, name: "idx_menus_id_unique" });
+-- 如果有 key 字段，可以作为 id 的备选
+UPDATE menus SET id = key WHERE id IS NULL AND key IS NOT NULL;
+
+-- 设置默认值
+UPDATE menus SET enable = true WHERE enable IS NULL;
+UPDATE menus SET sort = 0 WHERE sort IS NULL;
+
+-- 创建唯一索引
+CREATE UNIQUE INDEX idx_menus_id_unique ON menus(id);
+```
+
+```javascript
+// 或使用 Prisma 迁移
+// 1. 更新 schema.prisma 中的字段名
+// 2. 运行 npx prisma migrate dev --name rename_menu_fields
 ```
 
 #### 4. users 表迁移（RBAC 角色字段）
 
+```sql
+-- PostgreSQL 迁移脚本
+-- 重命名角色字段
+ALTER TABLE users RENAME COLUMN ids TO roles;
+-- 或者如果是 role_ids
+-- ALTER TABLE users RENAME COLUMN role_ids TO roles;
+
+-- 设置默认值
+UPDATE users SET roles = '[]'::jsonb WHERE roles IS NULL;
+```
+
 ```javascript
-db.users.updateMany(
-  { ids: { $exists: true } },
-  [
-    {
-      $set: {
-        roles: { $ifNull: ["$roles", "$ids", "$role_ids", []] }
-      }
-    },
-    {
-      $unset: ["ids", "role_ids"]
-    }
-  ]
-);
+// 或使用 Prisma 脚本
+async function migrateUserRoles() {
+  // 将 ids 或 role_ids 字段迁移到 roles
+  await prisma.$executeRaw`
+    UPDATE users 
+    SET roles = COALESCE(ids, role_ids, '[]'::jsonb)
+    WHERE roles IS NULL
+  `;
+}
 ```
 
 ### 代码迁移清单
@@ -632,12 +624,18 @@ const role = {
 ```javascript
 // ❌ 错误
 export async function bindUserRoles({ userId, roleIds }) {
-  await collection.update({ id: userId }, { $set: { ids: roleIds } });
+  await prisma.user.update({
+    where: { id: userId },
+    data: { ids: roleIds },
+  });
 }
 
-// 正确
+// ✅ 正确
 export async function bindUserRoles({ userId, roles }) {
-  await collection.update({ id: userId }, { $set: { roles: roles } });
+  await prisma.user.update({
+    where: { id: userId },
+    data: { roles },
+  });
 }
 ```
 

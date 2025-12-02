@@ -3,6 +3,8 @@
  *
  * 完整示例：展示 SmartCrudPage 的所有功能
  * 包括：权限验证、字段联动、showRule、各种字段类型等
+ * 
+ * 对应 Prisma 模型: ExampleData
  */
 
 'use server';
@@ -11,15 +13,16 @@ import { createCrudActions } from '@/lib/core/crud-helper';
 
 /**
  * Example CRUD 配置
+ * 
+ * 已在 schema.prisma 中创建对应的 ExampleData 模型
  */
 const exampleConfig = {
 	/**
 	 * 基础配置
-	 * 注意：这是示例配置，需要在 schema.prisma 中创建对应的 ExampleData 模型才能使用
 	 */
 	modelName: 'exampleData',
 	primaryKey: 'id',
-	softDelete: false,
+	softDelete: true,
 
 	/**
 	 * BaseDAO 字段配置
@@ -38,8 +41,10 @@ const exampleConfig = {
 			'publishDate', 'eventTime', 'validPeriod',
 			// 开关状态
 			'isActive', 'isPublic', 'isVip', 'enableNotification',
-			// 媒体文件
+			// 媒体文件 - 上传
 			'coverImage', 'gallery', 'avatar', 'documents', 'attachments',
+			// 媒体文件 - 从库选择
+			'selectedImage', 'selectedGallery', 'selectedAvatar', 'selectedFiles',
 			// 高级字段
 			'richContent', 'metadata', 'keywords', 'color', 'icon',
 		],
@@ -51,6 +56,7 @@ const exampleConfig = {
 			'publishDate', 'eventTime', 'validPeriod',
 			'isActive', 'isPublic', 'isVip', 'enableNotification',
 			'coverImage', 'gallery', 'avatar', 'documents', 'attachments',
+			'selectedImage', 'selectedGallery', 'selectedAvatar', 'selectedFiles',
 			'richContent', 'metadata', 'keywords', 'color', 'icon',
 		],
 		searchable: ['title', 'description', 'email'],
@@ -207,9 +213,33 @@ const exampleConfig = {
 			required: false,
 			type: 'string',
 		},
-		attachment: {
+		documents: {
+			required: false,
+			type: 'array',
+			itemType: 'string',
+		},
+		attachments: {
+			required: false,
+			type: 'array',
+			itemType: 'string',
+		},
+		selectedImage: {
 			required: false,
 			type: 'string',
+		},
+		selectedGallery: {
+			required: false,
+			type: 'array',
+			itemType: 'string',
+		},
+		selectedAvatar: {
+			required: false,
+			type: 'string',
+		},
+		selectedFiles: {
+			required: false,
+			type: 'array',
+			itemType: 'string',
 		},
 		richContent: {
 			required: false,
@@ -217,7 +247,7 @@ const exampleConfig = {
 		},
 		metadata: {
 			required: false,
-			type: 'string', // JSON string
+			type: 'object', // JSON object
 		},
 		keywords: {
 			required: false,

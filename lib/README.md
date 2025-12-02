@@ -15,8 +15,7 @@ lib/
 │   └── README.md
 │
 ├── database/            # 🗄️ 数据库访问
-│   ├── mongodb.js       # Prisma 连接与 ObjectId 处理
-│   ├── db-api.js        # 统一 DB API（CRUD、分页、连表）
+│   ├── prisma.js        # Prisma Client 单例
 │   └── README.md
 │
 ├── logging/             # 📝 日志系统
@@ -64,11 +63,11 @@ import { authClient } from '@/lib/auth/auth-client';
 ### 数据库操作
 
 ```javascript
-// 高层级 API（推荐）
-import { selects, add, updateOne, remove } from '@/lib/database/db-api';
+// Prisma Client（推荐）
+import { prisma } from '@/lib/database/prisma';
 
-// 低层级 API
-import { getCollection, fromObjectId, generateId } from '@/lib/database/mongodb';
+// 高层级 API（兼容层）
+import { selects, add, updateOne, remove } from '@/lib/database/db-api';
 ```
 
 ### 日志记录
@@ -168,8 +167,7 @@ import { z } from '@/lib/validation';
 ### 导入路径规范
 
 - 使用绝对路径：`@/lib/auth/auth`
-- 明确子目录：`@/lib/database/db-api`
-- ❌ 避免：`@/lib/database/mongodb`（旧路径）
+- 明确子目录：`@/lib/database/prisma`
 
 ### 文件命名规范
 

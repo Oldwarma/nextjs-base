@@ -270,26 +270,29 @@ constructor(config) {
 
 ```javascript
 // scripts/migrate-id-field.js
-const { getDb } = require('../lib/database/prisma');
-const { v4: uuidv4 } = require('uuid');
+import { prisma } from '@/lib/database/prisma';
+import { v4 as uuidv4 } from 'uuid';
 
 async function migrateIdField() {
-  const db = await getDb();
-  const collections = ['permissions', 'roles', 'menus', 'users'];
+  const tables = ['permission', 'role', 'menu', 'user'];
   
-  for (const modelName of collections) {
-    const collection = db.collection(modelName);
-    const docs = await collection.find({ id: { $exists: false } });
+  for (const table of tables) {
+    // 查找没有 id 的记录（如果使用自增 ID 迁移到 UUID）
+    const records = await prisma[table].findMany({
+      where: { id: null },
+    });
     
-    for (const doc of docs) {
-      await collection.update(
-        { _id: doc._id },
-        { $set: { id: uuidv4() } }
-      );
+    for (const record of records) {
+      await prisma[table].update({
+        where: { _id: record._id },  // 假设有内部 _id
+        data: { id: uuidv4() },
+      });
     }
     
-    console.log(`Migrated ${docs.length} documents in ${modelName}`);
+    console.log(`Migrated ${records.length} records in ${table}`);
   }
+  
+  await prisma.$disconnect();
 }
 ```
 

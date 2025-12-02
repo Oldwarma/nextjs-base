@@ -447,15 +447,14 @@ export async function updateUserRoleAction(userId, newRole) {
 
 		// 步骤3: 执行操作
 		const { prisma } = await import('@/lib/database/prisma');
-		const usersCollection = await prisma('users');
 		
-		const updateResult = await usersCollection.update(
-			{ id: userId },
-			{ $set: { role: newRole, updatedAt: new Date() } }
-		);
+		const updateResult = await prisma.user.update({
+			where: { id: userId },
+			data: { role: newRole, updatedAt: new Date() },
+		});
 
 		// 步骤4: 返回结果
-		if (updateResult.modifiedCount > 0) {
+		if (updateResult) {
 			const result = {
 				success: true,
 				message: 'User role updated successfully',
@@ -648,8 +647,7 @@ import { prisma } from '@/lib/database/prisma';
 // 获取用户列表 - 无需特殊权限
 export async function getUserListAction() {
 	try {
-		const usersCollection = await prisma('users');
-		const users = await usersCollection.find({});
+		const users = await prisma.user.findMany();
 		
 		return {
 			success: true,
@@ -675,12 +673,11 @@ export async function createUserAction(data) {
 	}
 
 	try {
-		const usersCollection = await prisma('users');
-		const result = await usersCollection.create(data);
+		const result = await prisma.user.create({ data });
 		
 		return {
 			success: true,
-			data: { id: result.insertedId },
+			data: { id: result.id },
 		};
 	} catch (error) {
 		return {
@@ -702,15 +699,14 @@ export async function updateUserAction(userId, data) {
 	}
 
 	try {
-		const usersCollection = await prisma('users');
-		const result = await usersCollection.update(
-			{ id: userId },
-			{ $set: data }
-		);
+		const result = await prisma.user.update({
+			where: { id: userId },
+			data,
+		});
 		
 		return {
 			success: true,
-			data: { modifiedCount: result.modifiedCount },
+			data: { id: result.id },
 		};
 	} catch (error) {
 		return {
@@ -732,8 +728,9 @@ export async function deleteUserAction(userId) {
 	}
 
 	try {
-		const usersCollection = await prisma('users');
-		const result = await usersCollection.delete({ id: userId });
+		const result = await prisma.user.delete({
+			where: { id: userId },
+		});
 		
 		return {
 			success: true,

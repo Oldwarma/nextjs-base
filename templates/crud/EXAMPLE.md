@@ -39,12 +39,12 @@ touch app/(admin)/actions/rbac/crud-action.coupon.js
 # macOS/Linux
 sed -i '' 's/{RESOURCE_NAME}/coupon/g' crud-action.coupon.js
 sed -i '' 's/{RESOURCE_LABEL}/Coupon/g' crud-action.coupon.js
-sed -i '' 's/{COLLECTION_NAME}/coupons/g' crud-action.coupon.js
+sed -i '' 's/{TABLE_NAME}/coupons/g' crud-action.coupon.js
 
 # Windows PowerShell
 (Get-Content crud-action.coupon.js) -replace '{RESOURCE_NAME}', 'coupon' | Set-Content crud-action.coupon.js
 (Get-Content crud-action.coupon.js) -replace '{RESOURCE_LABEL}', 'Coupon' | Set-Content crud-action.coupon.js
-(Get-Content crud-action.coupon.js) -replace '{COLLECTION_NAME}', 'coupons' | Set-Content crud-action.coupon.js
+(Get-Content crud-action.coupon.js) -replace '{TABLE_NAME}', 'coupons' | Set-Content crud-action.coupon.js
 ```
 
 ### 1.4 配置字段和验证
@@ -87,9 +87,10 @@ const couponConfig = {
 	hooks: {
 		beforeCreate: async (data) => {
 			// 检查优惠码是否重复
-			const { getCollection } = await import('@/lib/database/mongodb');
-			const collection = await getCollection('coupons');
-			const existing = await collection.findOne({ code: data.code });
+			const { prisma } = await import('@/lib/database/prisma');
+			const existing = await prisma.coupon.findFirst({
+				where: { code: data.code },
+			});
 			
 			if (existing) {
 				throw new Error('Coupon code already exists');

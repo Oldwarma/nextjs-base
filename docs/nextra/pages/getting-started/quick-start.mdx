@@ -48,15 +48,19 @@ async function checkBackendAccess() {
  * 获取产品列表
  */
 export const getProductListAction = wrapQueryAction('product', async (params = {}) => {
-  const { pageIndex = 1, pageSize = 20, whereJson = {}, sortJson = { createdAt: -1 } } = params;
+  const { pageIndex = 1, pageSize = 20, whereJson = {}, sortJson = { createdAt: 'desc' } } = params;
 
   const { prisma } = await import('@/lib/database/prisma');
-  const collection = await prisma('products');
 
   const skip = (pageIndex - 1) * pageSize;
   const [data, total] = await Promise.all([
-    collection.find(whereJson).sort(sortJson).skip(skip).limit(pageSize),
-    collection.count(whereJson),
+    prisma.product.findMany({
+      where: whereJson,
+      orderBy: sortJson,
+      skip,
+      take: pageSize,
+    }),
+    prisma.product.count({ where: whereJson }),
   ]);
 
   return {
@@ -78,16 +82,15 @@ export async function createProductAction(data) {
   }
 
   const { prisma } = await import('@/lib/database/prisma');
-  const collection = await prisma('products');
 
-  const newProduct = {
-    ...data,
-    id: crypto.randomUUID(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  await collection.create(newProduct);
+  const newProduct = await prisma.product.create({
+    data: {
+      ...data,
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
 
   return { success: true, data: newProduct };
 }
@@ -102,19 +105,17 @@ export async function updateProductAction(id, data) {
   }
 
   const { prisma } = await import('@/lib/database/prisma');
-  const collection = await prisma('products');
 
-  const result = await collection.findUniqueAndUpdate(
-    { id },
-    { $set: { ...data, updatedAt: new Date() } },
-    { returnDocument: 'after' }
-  );
+  const result = await prisma.product.update({
+    where: { id },
+    data: { ...data, updatedAt: new Date() },
+  });
 
-  if (!result.value) {
+  if (!result) {
     return { success: false, error: 'Product not found' };
   }
 
-  return { success: true, data: result.value };
+  return { success: true, data: result };
 }
 
 /**
@@ -127,9 +128,10 @@ export async function deleteProductAction(id) {
   }
 
   const { prisma } = await import('@/lib/database/prisma');
-  const collection = await prisma('products');
 
-  await collection.delete({ id });
+  await prisma.product.delete({
+    where: { id },
+  });
 
   return { success: true, message: 'Product deleted successfully' };
 }
