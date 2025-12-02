@@ -55,7 +55,7 @@
 // NextJS Base 方式: ~50 行配置
 
 export const userCrudConfig = {
-  collectionName: 'users',
+  modelName: 'users',
   fields: {
     creatable: ['name', 'email', 'role'],
     updatable: ['name', 'email', 'role'],
@@ -127,7 +127,7 @@ export const userCrudConfig = {
 
 ### 不适合
 
-- ❌ 纯前端开发者 (需要 Next.js + MongoDB 基础)
+- ❌ 纯前端开发者 (需要 Next.js + PostgreSQL 基础)
 - ❌ 大型企业级项目 (需要 Java/Spring 等企业技术栈)
 - ❌ 极高并发场景 (需要微服务架构)
 
@@ -200,7 +200,7 @@ Admin Framework  ← NextJS Base 在这里
 - AI 友好 (配置化适合 AI 生成)
 
 **劣势 (Weaknesses)**:
-- ❌ 数据库单一 (仅 MongoDB)
+- ❌ 数据库单一 (仅 PostgreSQL)
 - ❌ 缺少可视化 (vs Strapi)
 - ❌ 前端固定 (必须 Next.js)
 - ❌ 生态不成熟 (无插件市场)
@@ -297,7 +297,7 @@ Admin Framework  ← NextJS Base 在这里
 
 **最适合**: 
 - 需要快速开发管理后台的项目
-- 基于 Next.js + MongoDB 的全栈应用
+- 基于 Next.js + PostgreSQL 的全栈应用
 - 需要细粒度权限控制的系统
 
 **核心优势**: 

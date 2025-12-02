@@ -1,6 +1,6 @@
 # NextJS Base
 
-> 基于 Next.js + MongoDB 的开箱即用全栈开发框架
+> 基于 Next.js + PostgreSQL 的开箱即用全栈开发框架
 
 <div className="nx-mt-6 nx-flex nx-gap-2">
   <a
@@ -46,7 +46,7 @@
   <div className="nx-rounded-lg nx-border nx-border-gray-200 nx-p-6">
     <h3 className="nx-mb-2 nx-text-lg nx-font-semibold">📊 数据库灵活</h3>
     <p className="nx-text-sm nx-text-gray-600">
-      基于 MongoDB，支持 DB API 和 BaseDAO 两种操作方式，灵活高效
+      基于 PostgreSQL + Prisma，类型安全的数据库操作，灵活高效
     </p>
   </div>
 
@@ -81,13 +81,13 @@ import { wrapQueryAction } from '@/lib/core/action-wrapper';
 export const getProductListAction = wrapQueryAction('product', async (params) => {
   const { pageIndex = 1, pageSize = 20, whereJson = {}, sortJson = {} } = params;
   
-  const { getCollection } = await import('@/lib/database/mongodb');
-  const collection = await getCollection('products');
+  const { prisma } = await import('@/lib/database/prisma');
+  const collection = await prisma('products');
   
   const skip = (pageIndex - 1) * pageSize;
   const [data, total] = await Promise.all([
-    collection.find(whereJson).sort(sortJson).skip(skip).limit(pageSize).toArray(),
-    collection.countDocuments(whereJson),
+    collection.find(whereJson).sort(sortJson).skip(skip).limit(pageSize),
+    collection.count(whereJson),
   ]);
   
   return { success: true, data, total, page: pageIndex, pageSize };
@@ -187,7 +187,7 @@ export default function ProductsPage() {
   
   <div className="nx-rounded-lg nx-border nx-border-gray-200 nx-p-4 nx-text-center">
     <div className="nx-text-2xl">🍃</div>
-    <div className="nx-mt-2 nx-text-sm nx-font-medium">MongoDB</div>
+    <div className="nx-mt-2 nx-text-sm nx-font-medium">PostgreSQL</div>
   </div>
   
   <div className="nx-rounded-lg nx-border nx-border-gray-200 nx-p-4 nx-text-center">
@@ -215,12 +215,12 @@ export default function ProductsPage() {
 
 ## 🎯 对比其他框架
 
-| 特性 | NextJS Base | Express + MongoDB | Next.js 原生 |
+| 特性 | NextJS Base | Express + PostgreSQL | Next.js 原生 |
 |------|-----------------|-------------------|--------------|
 | **开发速度** | ⚡️⚡️⚡️ 极快 | 🐌 慢 | 🐌🐌 较慢 |
 | **CRUD 开发** | 配置驱动，自动生成 | 手写全部代码 | 手写全部代码 |
 | **权限系统** | 内置 RBAC | ❌ 需自己实现 | ❌ 需自己实现 |
-| **数据库操作** | DB API + BaseDAO | 原生 MongoDB | 需自己封装 |
+| **数据库操作** | Prisma + BaseDAO | Prisma ORM | 需自己封装 |
 | **国际化** | 内置 next-intl | ❌ 需自己实现 | 部分支持 |
 | **文档完善度** | ⭐️⭐️⭐️⭐️⭐️ | ⭐️⭐️ | ⭐️⭐️⭐️ |
 | **学习曲线** | 平缓 | 陡峭 | 中等 |

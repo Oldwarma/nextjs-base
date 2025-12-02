@@ -109,7 +109,7 @@ Click "..." → "Delete" on any menu row
 
 ```javascript
 {
-  _id: ObjectId,
+  
   key: String,          // Menu identifier (unique)
   name: String,         // Menu display name
   icon: String,         // Icon name
@@ -156,7 +156,7 @@ Backend menus are dynamically loaded from the database instead of being hard-cod
 
 ### Features
 
-1. **Dynamic Loading** - Read from MongoDB `menus` collection
+1. **Dynamic Loading** - Read from PostgreSQL menus table
 2. **Auto-Sort** - Sort by `sortOrder` ascending (smaller values first)
 3. **Tree Structure** - Support multi-level menu tree
 4. **Auto-Filter** - Filter out disabled and hidden menus
@@ -165,7 +165,7 @@ Backend menus are dynamically loaded from the database instead of being hard-cod
 
 ```javascript
 {
-  _id: 'ObjectId',
+  _id: 'UUID',
   key: 'dashboard',           // Menu unique identifier
   name: 'Dashboard',          // Menu display name
   icon: 'LayoutDashboard',    // Lucide React icon name
@@ -518,7 +518,7 @@ Using `TreeSelect` component:
 
 ```javascript
 // Check for child menus
-const childMenus = await menusCollection.findOne({
+const childMenus = await menusCollection.findUnique({
   parentId: id,
   deletedAt: { $exists: false },
 });

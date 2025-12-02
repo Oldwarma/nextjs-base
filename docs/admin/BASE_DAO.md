@@ -18,7 +18,7 @@ BaseDAO 是一个通用的数据访问对象（Data Access Object）系统，旨
 
 - **统一权限检查**：所有操作自动验证管理员权限
 - **字段白名单**：只允许配置的字段被更新
-- **防注入攻击**：使用 MongoDB 安全查询方式
+- **防注入攻击**：使用 Prisma 参数化查询
 - **唯一性验证**：自动检查字段唯一性
 
 ### ⚡ 开箱即用
@@ -39,7 +39,7 @@ BaseDAO 是一个通用的数据访问对象（Data Access Object）系统，旨
 ```javascript
 export const userCrudConfig = {
 	// 集合名称
-	collectionName: 'users',
+	modelName: 'users',
 	
 	// 主键字段（默认 'id'）
 	primaryKey: 'id',
@@ -58,7 +58,7 @@ export const userCrudConfig = {
 	
 	// 查询配置
 	query: {
-		defaultSort: { createdAt: -1 },
+		defaultSort: { createdAt: 'desc' },
 		defaultPageSize: 20,
 		baseFilter: {}, // 始终应用的过滤条件
 	},
@@ -224,7 +224,7 @@ fields: {
 
 **工作原理**：
 - `creatable` 和 `updatable` 是**白名单机制**，只有配置的字段才会被写入数据库
-- `searchable` 用于构建 MongoDB 的 `$or` 查询，支持不区分大小写的正则匹配
+- `searchable` 用于构建 Prisma 的 OR 查询，支持不区分大小写的正则匹配
 
 ---
 
@@ -447,7 +447,7 @@ hooks: {
 	beforeBatchDelete: async (ids) => {
 		// 防止删除所有管理员
 		const adminCount = await countAdmins();
-		const deletingAdmins = await countAdmins({ id: { $in: ids } });
+		const deletingAdmins = await countAdmins({ id: { in: ids } });
 		
 		if (adminCount - deletingAdmins < 1) {
 			return false; // 阻止删除
@@ -532,9 +532,9 @@ transforms: {
 
 ```javascript
 query: {
-	defaultSort: { createdAt: -1 }, // 按创建时间倒序
+	defaultSort: { createdAt: 'desc' }, // 按创建时间倒序
 	// 多字段排序
-	defaultSort: { role: 1, createdAt: -1 },
+	defaultSort: { role: 1, createdAt: 'desc' },
 }
 ```
 
@@ -621,7 +621,7 @@ const dao = new BaseDAO(config);
 		emailVerified: true,
 	},
 	sort: {                // 自定义排序（覆盖 defaultSort）
-		createdAt: -1,
+		createdAt: 'desc',
 	},
 }
 ```
@@ -787,11 +787,11 @@ export async function resetPasswordAction(userId) {
 	}
 	
 	try {
-		const usersCollection = await getCollection('users');
+		const usersCollection = await prisma('users');
 		const newPassword = generateRandomPassword();
 		const hashedPassword = await hashPassword(newPassword);
 		
-		await usersCollection.updateOne(
+		await usersCollection.update(
 			{ id: userId },
 			{ $set: { password: hashedPassword, updatedAt: new Date() } }
 		);
@@ -813,10 +813,10 @@ export async function getUserStatsAction(userId) {
 	}
 	
 	try {
-		const usersCollection = await getCollection('users');
-		const generationsCollection = await getCollection('generations');
+		const usersCollection = await prisma('users');
+		const generationsCollection = await prisma('generations');
 		
-		const user = await usersCollection.findOne({ id: userId });
+		const user = await usersCollection.findUnique({ id: userId });
 		const generationsCount = await generationsCollection.({ userId });
 		
 		return {
@@ -916,10 +916,10 @@ const request = async (params) => {
 	if (params.startDate || params.endDate) {
 		filters.createdAt = {};
 		if (params.startDate) {
-			filters.createdAt.$gte = new Date(params.startDate);
+			filters.createdAt.gte = new Date(params.startDate);
 		}
 		if (params.endDate) {
-			filters.createdAt.$lte = new Date(params.endDate);
+			filters.createdAt.lte = new Date(params.endDate);
 		}
 	}
 	
@@ -946,7 +946,7 @@ const request = async (params) => {
 
 ```javascript
 export const productCrudConfig = {
-	collectionName: 'products',
+	modelName: 'products',
 	primaryKey: 'id',
 	
 	fields: {
@@ -956,7 +956,7 @@ export const productCrudConfig = {
 	},
 	
 	query: {
-		defaultSort: { createdAt: -1 },
+		defaultSort: { createdAt: 'desc' },
 		defaultPageSize: 20,
 		baseFilter: {},
 	},
@@ -1023,12 +1023,12 @@ export const productCrudConfig = {
 		
 		beforeDelete: async (id, existing) => {
 			// 检查是否有未完成的订单
-			const { getCollection } = await import('@/lib/database/mongodb');
-			const ordersCollection = await getCollection('orders');
+			const { prisma } = await import('@/lib/database/prisma');
+			const ordersCollection = await prisma('orders');
 			
 			const pendingOrders = await ordersCollection.({
 				productId: id,
-				status: { $in: ['pending', 'processing'] },
+				status: { in: ['pending', 'processing'] },
 			});
 			
 			if (pendingOrders > 0) {
@@ -1140,10 +1140,10 @@ export async function adjustStockAction(id, quantity, reason) {
 	}
 	
 	try {
-		const { getCollection } = await import('@/lib/database/mongodb');
-		const productsCollection = await getCollection('products');
+		const { prisma } = await import('@/lib/database/prisma');
+		const productsCollection = await prisma('products');
 		
-		const product = await productsCollection.findOne({ id });
+		const product = await productsCollection.findUnique({ id });
 		if (!product) {
 			throw new Error('Product not found');
 		}
@@ -1153,7 +1153,7 @@ export async function adjustStockAction(id, quantity, reason) {
 			throw new Error('Insufficient stock');
 		}
 		
-		await productsCollection.updateOne(
+		await productsCollection.update(
 			{ id },
 			{ $set: { stock: newStock, updatedAt: new Date() } }
 		);
@@ -1319,7 +1319,7 @@ export async function customAction(params) {
 
 ```javascript
 export const config = {
-	collectionName: 'logs',
+	modelName: 'logs',
 	softDelete: false, // 启用硬删除
 	// ...
 };
@@ -1339,11 +1339,11 @@ export async function getActiveUsersAction() {
 	}
 	
 	try {
-		const collection = await getCollection('users');
+		const collection = await prisma('users');
 		const users = await collection.find({
 			status: 'active',
-			lastLoginAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-		}).toArray();
+			lastLoginAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+		});
 		
 		return { success: true, data: users };
 	} catch (error) {
@@ -1360,8 +1360,8 @@ export async function getActiveUsersAction() {
 hooks: {
 	afterCreate: async (data, result) => {
 		// 创建用户后，初始化积分账户
-		const creditsCollection = await getCollection('credits');
-		await creditsCollection.insertOne({
+		const creditsCollection = await prisma('credits');
+		await creditsCollection.create({
 			userId: data.id,
 			balance: 0,
 			createdAt: new Date(),
@@ -1370,7 +1370,7 @@ hooks: {
 	
 	beforeDelete: async (id, existing) => {
 		// 删除前检查关联数据
-		const ordersCollection = await getCollection('orders');
+		const ordersCollection = await prisma('orders');
 		const orderCount = await ordersCollection.({ userId: id });
 		
 		if (orderCount > 0) {
@@ -1382,7 +1382,7 @@ hooks: {
 	
 	afterDelete: async (id, deleted) => {
 		// 删除后清理关联数据
-		const sessionsCollection = await getCollection('sessions');
+		const sessionsCollection = await prisma('sessions');
 		await sessionsCollection.deleteMany({ userId: id });
 	},
 }
@@ -1394,7 +1394,7 @@ hooks: {
 
 ```javascript
 export const config = {
-	collectionName: 'products',
+	modelName: 'products',
 	query: {
 		// 始终过滤当前租户的数据
 		baseFilter: { tenantId: 'current-tenant-id' },
@@ -1459,8 +1459,8 @@ hooks: {
 
 // 日志记录函数
 async function logAction(action, collection, recordId, data) {
-	const logsCollection = await getCollection('operation_logs');
-	await logsCollection.insertOne({
+	const logsCollection = await prisma('operation_logs');
+	await logsCollection.create({
 		action,
 		collection,
 		recordId,
@@ -1529,10 +1529,10 @@ export async function getUserDashboardAction(userId) {
 确保 `searchable` 和 `unique` 字段有索引：
 
 ```javascript
-// 在 MongoDB 中创建索引
+// 在 Prisma Schema 中定义索引
 db.users.createIndex({ email: 1 }, { unique: true });
 db.users.createIndex({ name: 'text', username: 'text' }); // 全文索引
-db.users.createIndex({ createdAt: -1 }); // 排序索引
+db.users.createIndex({ createdAt: 'desc' }); // 排序索引
 ```
 
 ### 2. 查询优化
@@ -1568,14 +1568,14 @@ export async function getUsersWithCursorAction(cursor, limit = 20) {
 	}
 	
 	try {
-		const collection = await getCollection('users');
-		const query = cursor ? { _id: { $gt: cursor } } : {};
+		const collection = await prisma('users');
+		const query = cursor ? { _id: { gt: cursor } } : {};
 		
 		const users = await collection
 			.find(query)
 			.sort({ createdAt: 1 })
 			.limit(limit + 1)
-			.toArray();
+			;
 		
 		const hasMore = users.length > limit;
 		const data = hasMore ? users.slice(0, limit) : users;

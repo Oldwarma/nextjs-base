@@ -666,10 +666,10 @@ import { updateUserRoleAction } from '@/app/(admin)/actions';
 await updateUserRoleAction(userId, 'admin');
 
 // 方式 2: 直接修改数据库
-import { getCollection } from '@/lib/database/mongodb';
+import { prisma } from '@/lib/database/prisma';
 
-const usersCollection = await getCollection('users');
-await usersCollection.updateOne(
+const usersCollection = await prisma('users');
+await usersCollection.update(
   { id: userId },
   { $set: { role: 'admin' } }
 );

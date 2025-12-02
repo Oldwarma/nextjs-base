@@ -7,7 +7,7 @@
 - 🚀 **Smart CRUD 系统** - 统一字段配置，自动生成表格/表单/搜索（减少 50%+ 代码）
 - 🎯 **BaseDAO** - 通用数据访问层，配置化开发
 - 📊 **26 种字段类型** - 覆盖 95% 业务场景（90% 覆盖率 vs vk-unicloud）
-- 🔍 **11 种搜索模式** - 自动转换为 MongoDB 查询
+- 🔍 **11 种搜索模式** - 自动转换为 Prisma 查询
 - 🛠️ **高度可扩展** - 支持自定义渲染、钩子函数、工具栏按钮
 - ✨ **特性** - showRule、disabled、watch、tips、clearable
 
@@ -140,7 +140,7 @@ nextjs-base/
 │
 ├── lib/
 │   ├── admin-auth.js              # 管理员权限检查
-│   └── mongodb.js                 # MongoDB 工具
+│   └── prisma.js                  # Prisma 客户端
 │
 └── docs/admin/
     ├── README.md                  # 本文档
@@ -190,8 +190,8 @@ export const updateUserAction = userCrud.update;
 **示例**：
 ```javascript
 export const userCrudConfig = {
-	collectionName: 'users',
-	primaryKey: '_id',
+	modelName: 'user',              // Prisma 模型名（小写单数）
+	primaryKey: 'id',
 	fields: {
 		creatable: ['name', 'email'],
 		updatable: ['name', 'email', 'role'],
@@ -394,8 +394,8 @@ return <SomePage {...} />;
 
 ```javascript
 {
-	collectionName: 'users',      // 集合名称
-	primaryKey: '_id',            // 主键字段
+	modelName: 'user',            // Prisma 模型名（小写单数）
+	primaryKey: 'id',             // 主键字段
 	
 	fields: {
 		creatable: [...],         // 可创建字段
@@ -415,7 +415,7 @@ return <SomePage {...} />;
 	},
 	
 	query: {
-		defaultSort: { createdAt: -1 },
+		defaultSort: { createdAt: 'desc' },   // Prisma 排序语法
 		defaultPageSize: 20,
 		baseFilter: {},
 	},
@@ -492,24 +492,42 @@ return <SomePage {...} />;
 
 ### 1. 数据库索引
 
-```javascript
-// 为常用查询创建索引
-db.users.createIndex({ email: 1 }, { unique: true });
-db.users.createIndex({ createdAt: -1 });
-db.packages.createIndex({ isActive: 1, sort: 1 });
+在 Prisma schema 中定义索引：
+
+```prisma
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Package {
+  id       String  @id @default(uuid())
+  isActive Boolean @default(true)
+  sort     Int     @default(0)
+  
+  @@index([isActive, sort])
+  @@map("packages")
+}
 ```
 
 ### 2. 分页查询
 
-使用 `findWithPagination` 自动处理分页：
+使用 Prisma 进行分页查询：
 
 ```javascript
-await collection.findWithPagination({
-	query: { status: 'active' },
-	pageIndex: 1,
-	pageSize: 20,
-	sort: { createdAt: -1 },
-});
+const [data, total] = await Promise.all([
+  prisma.user.findMany({
+    where: { status: 'active' },
+    skip: (pageIndex - 1) * pageSize,
+    take: pageSize,
+    orderBy: { createdAt: 'desc' },
+  }),
+  prisma.user.count({ where: { status: 'active' } }),
+]);
 ```
 
 ### 3. 字段过滤

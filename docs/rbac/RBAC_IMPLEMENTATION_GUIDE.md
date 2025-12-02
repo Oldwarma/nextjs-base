@@ -446,10 +446,10 @@ export async function updateUserRoleAction(userId, newRole) {
 		}
 
 		// 步骤3: 执行操作
-		const { getCollection } = await import('@/lib/database/mongodb');
-		const usersCollection = await getCollection('users');
+		const { prisma } = await import('@/lib/database/prisma');
+		const usersCollection = await prisma('users');
 		
-		const updateResult = await usersCollection.updateOne(
+		const updateResult = await usersCollection.update(
 			{ id: userId },
 			{ $set: { role: newRole, updatedAt: new Date() } }
 		);
@@ -643,12 +643,12 @@ export default function MyComponent() {
 'use server';
 
 import { checkActionPermission } from '@/lib/permission-auth';
-import { getCollection } from '@/lib/database/mongodb';
+import { prisma } from '@/lib/database/prisma';
 
 // 获取用户列表 - 无需特殊权限
 export async function getUserListAction() {
 	try {
-		const usersCollection = await getCollection('users');
+		const usersCollection = await prisma('users');
 		const users = await usersCollection.find({});
 		
 		return {
@@ -675,8 +675,8 @@ export async function createUserAction(data) {
 	}
 
 	try {
-		const usersCollection = await getCollection('users');
-		const result = await usersCollection.insertOne(data);
+		const usersCollection = await prisma('users');
+		const result = await usersCollection.create(data);
 		
 		return {
 			success: true,
@@ -702,8 +702,8 @@ export async function updateUserAction(userId, data) {
 	}
 
 	try {
-		const usersCollection = await getCollection('users');
-		const result = await usersCollection.updateOne(
+		const usersCollection = await prisma('users');
+		const result = await usersCollection.update(
 			{ id: userId },
 			{ $set: data }
 		);
@@ -732,8 +732,8 @@ export async function deleteUserAction(userId) {
 	}
 
 	try {
-		const usersCollection = await getCollection('users');
-		const result = await usersCollection.deleteOne({ id: userId });
+		const usersCollection = await prisma('users');
+		const result = await usersCollection.delete({ id: userId });
 		
 		return {
 			success: true,

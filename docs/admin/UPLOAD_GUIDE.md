@@ -146,7 +146,7 @@ files/1701234567890-i9j0k1l2.pdf
 
 ```javascript
 {
-  _id: ObjectId,
+  
   key: 'images/1701234567890-a1b2c3d4.jpg',  // R2 中的文件路径
   url: 'https://files.example.com/images/...', // 公开访问 URL
   originalName: 'my-photo.jpg',               // 原始文件名

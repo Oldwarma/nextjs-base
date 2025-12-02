@@ -314,7 +314,7 @@ RBAC（Role-Based Access Control，基于角色的访问控制）是一种权限
     "role-uuid-2"
   ],
   
-  _id: ObjectId("..."),         // MongoDB 自动生成（兼容）
+  
 }
 ```
 
@@ -340,7 +340,7 @@ RBAC（Role-Based Access Control，基于角色的访问控制）是一种权限
   
   created_at: Date,
   updated_at: Date,
-  _id: ObjectId("..."),
+  
 }
 ```
 
@@ -365,7 +365,7 @@ RBAC（Role-Based Access Control，基于角色的访问控制）是一种权限
   
   created_at: Date,
   updated_at: Date,
-  _id: ObjectId("..."),
+  
 }
 ```
 
@@ -385,7 +385,7 @@ RBAC（Role-Based Access Control，基于角色的访问控制）是一种权限
   
   created_at: Date,
   updated_at: Date,
-  _id: ObjectId("..."),
+  
 }
 ```
 

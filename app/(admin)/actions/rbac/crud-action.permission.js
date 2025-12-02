@@ -11,7 +11,7 @@ import * as sysDao from '@/app/(admin)/actions/dao/sys';
 const permissionConfig = {
 	modelName: 'permission',
 	primaryKey: 'id',
-	softDelete: false,
+	softDelete: true,
 
 	fields: {
 		creatable: ['name', 'parentId', 'remark', 'enable', 'sort', 'crudCategory', 'level', 'actions', 'apis'],

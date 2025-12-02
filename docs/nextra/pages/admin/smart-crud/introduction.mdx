@@ -96,16 +96,16 @@ const fieldsConfig = [
 
 ### 3. 搜索自动转换
 
-搜索条件自动转换为 MongoDB 查询：
+搜索条件自动转换为 Prisma 查询：
 
 ```javascript
 // 用户输入
 { name: 'test', status: 'active' }
 
-// 自动转换（基于 search.mode）
+// 自动转换为 Prisma 查询（基于 search.mode）
 {
-  name: { $regex: 'test', $options: 'i' },  // mode: 'like'
-  status: 'active',                          // mode: 'exact'
+  name: { contains: 'test', mode: 'insensitive' },  // mode: 'like'
+  status: 'active',                                  // mode: 'exact'
 }
 ```
 
@@ -237,9 +237,9 @@ Server Action: getListAction
     ├─ 参数验证
     └─ 查询数据库
         ↓
-MongoDB
+PostgreSQL
     ├─ find().sort().skip().limit()
-    ├─ countDocuments()
+    ├─ count()
     └─ 返回结果
         ↓
 SmartCrudPage 更新表格

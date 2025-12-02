@@ -10,9 +10,9 @@
 
 - **统一接口**: 所有数据库操作使用一致的参数命名和返回格式
 - **自动时间戳**: 增改操作自动添加 `createdAt` 和 `updatedAt`
-- **ObjectId 处理**: 自动处理 MongoDB ObjectId 与字符串的转换
+- **主键处理: 使用 UUID 作为主键
 - **类型安全**: 完善的参数验证和错误提示
-- **兼容原生**: 完全兼容 MongoDB 原生查询语法
+- **兼容 Prisma: 完全兼容 Prisma 查询语法
 
 ---
 
@@ -167,7 +167,7 @@ const count = await remove({
 const count = await delMany({
   dbName: 'users',
   whereJson: {
-    createdAt: { $lt: new Date('2024-01-01') },
+    createdAt: { lt: new Date('2024-01-01') },
   },
 });
 
@@ -194,10 +194,10 @@ const count = await update({
 // 返回: 修改的记录数
 ```
 
-#### updateOne - 根据条件修改单条
+#### update - 根据条件修改单条
 
 ```javascript
-const count = await updateOne({
+const count = await update({
   dbName: 'users',
   whereJson: { email: 'john@example.com' },
   dataJson: {
@@ -213,7 +213,7 @@ const count = await updateMany({
   dbName: 'users',
   whereJson: {
     role: 'trial',
-    createdAt: { $lt: new Date('2024-01-01') },
+    createdAt: { lt: new Date('2024-01-01') },
   },
   dataJson: {
     role: 'user',
@@ -545,7 +545,7 @@ export async function getDashboardStatsAction() {
       count({ dbName: 'users' }),
       count({
         dbName: 'users',
-        whereJson: { createdAt: { $gte: today } },
+        whereJson: { createdAt: { gte: today } },
       }),
       sum({
         dbName: 'orders',
@@ -638,7 +638,7 @@ const users = await getList({
 // 使用批量操作而非循环
 await updateMany({
   dbName: 'users',
-  whereJson: { _id: { $in: userIds } },
+  whereJson: { _id: { in: userIds } },
   dataJson: { status: 'active' },
 });
 
@@ -682,8 +682,8 @@ DB API 的核心优势:
 
 - 统一的接口命名
 - 自动时间戳管理
-- ObjectId 自动转换
-- 完全兼容 MongoDB
+- UUID 自动生成
+- 完全兼容 Prisma
 - 丰富的统计方法
 
 **使用建议**:

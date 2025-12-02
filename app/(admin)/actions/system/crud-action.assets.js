@@ -26,7 +26,7 @@ import { wrapAction } from '@/lib/core/action-wrapper';
  *    - `sys*Asset` - 匹配所有素材相关操作
  */
 const crudActions = createCrudActions({
-	collectionName: 'assets',
+	modelName: 'asset',
 	resourceType: 'asset',
 	primaryKey: 'id',
 	
@@ -37,7 +37,7 @@ const crudActions = createCrudActions({
 	},
 	
 	query: {
-		defaultSort: { createdAt: -1 },
+		defaultSort: { createdAt: 'desc' },
 		baseFilter: {},
 	},
 	

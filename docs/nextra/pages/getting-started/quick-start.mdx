@@ -11,7 +11,7 @@
 确保你已经：
 
 - 安装 Node.js 18+
-- 安装 MongoDB (本地或云端)
+- 配置 PostgreSQL 数据库
 - 克隆或下载了 NextJS Base Framework
 
 如果还未安装，请先查看 [安装指南](/getting-started/installation)。
@@ -50,13 +50,13 @@ async function checkBackendAccess() {
 export const getProductListAction = wrapQueryAction('product', async (params = {}) => {
   const { pageIndex = 1, pageSize = 20, whereJson = {}, sortJson = { createdAt: -1 } } = params;
 
-  const { getCollection } = await import('@/lib/database/mongodb');
-  const collection = await getCollection('products');
+  const { prisma } = await import('@/lib/database/prisma');
+  const collection = await prisma('products');
 
   const skip = (pageIndex - 1) * pageSize;
   const [data, total] = await Promise.all([
-    collection.find(whereJson).sort(sortJson).skip(skip).limit(pageSize).toArray(),
-    collection.countDocuments(whereJson),
+    collection.find(whereJson).sort(sortJson).skip(skip).limit(pageSize),
+    collection.count(whereJson),
   ]);
 
   return {
@@ -77,8 +77,8 @@ export async function createProductAction(data) {
     return { success: false, error: backendCheck.error };
   }
 
-  const { getCollection } = await import('@/lib/database/mongodb');
-  const collection = await getCollection('products');
+  const { prisma } = await import('@/lib/database/prisma');
+  const collection = await prisma('products');
 
   const newProduct = {
     ...data,
@@ -87,7 +87,7 @@ export async function createProductAction(data) {
     updatedAt: new Date(),
   };
 
-  await collection.insertOne(newProduct);
+  await collection.create(newProduct);
 
   return { success: true, data: newProduct };
 }
@@ -101,10 +101,10 @@ export async function updateProductAction(id, data) {
     return { success: false, error: backendCheck.error };
   }
 
-  const { getCollection } = await import('@/lib/database/mongodb');
-  const collection = await getCollection('products');
+  const { prisma } = await import('@/lib/database/prisma');
+  const collection = await prisma('products');
 
-  const result = await collection.findOneAndUpdate(
+  const result = await collection.findUniqueAndUpdate(
     { id },
     { $set: { ...data, updatedAt: new Date() } },
     { returnDocument: 'after' }
@@ -126,10 +126,10 @@ export async function deleteProductAction(id) {
     return { success: false, error: backendCheck.error };
   }
 
-  const { getCollection } = await import('@/lib/database/mongodb');
-  const collection = await getCollection('products');
+  const { prisma } = await import('@/lib/database/prisma');
+  const collection = await prisma('products');
 
-  await collection.deleteOne({ id });
+  await collection.delete({ id });
 
   return { success: true, message: 'Product deleted successfully' };
 }
@@ -139,7 +139,7 @@ export async function deleteProductAction(id) {
 
 1. **权限检查**: `checkBackendAccess()` 确保只有登录的管理员才能操作
 2. **列表查询**: `getProductListAction` 使用 `wrapQueryAction` 包装，自动处理日志记录
-3. **CRUD 操作**: 创建、更新、删除都是标准的 MongoDB 操作
+3. **CRUD 操作**: 创建、更新、删除都是标准的 Prisma 操作
 4. **UUID 主键**: 使用 `crypto.randomUUID()` 生成唯一 ID
 5. **时间戳**: 自动添加 `createdAt` 和 `updatedAt`
 

@@ -78,7 +78,7 @@ handler(params, ctx)
 import { createCrudActions } from '@/lib/core/crud-helper';
 
 const crudActions = createCrudActions({
-  collectionName: 'posts',
+  modelName: 'post',  // Prisma 模型名（小写）
   // ... 配置
 });
 

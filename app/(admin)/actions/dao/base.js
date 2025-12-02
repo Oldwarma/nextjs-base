@@ -28,8 +28,6 @@ export class BaseDAO {
 	constructor(config) {
 		this.config = {
 			modelName: config.modelName,
-			// 兼容旧代码：collectionName 映射到 modelName
-			...(config.collectionName && !config.modelName && { modelName: config.collectionName }),
 			primaryKey: config.primaryKey || 'id',
 			fields: config.fields || {},
 			query: config.query || {},
@@ -48,7 +46,7 @@ export class BaseDAO {
 		this.config.query.baseFilter = this.config.query.baseFilter || {};
 
 		// 获取 Prisma 模型
-		const modelName = this.config.modelName || this.config.collectionName;
+		const modelName = this.config.modelName;
 		this.model = prisma[modelName];
 		
 		if (!this.model) {
@@ -554,7 +552,7 @@ export class BaseDAO {
  */
 export function createCrudActions(config) {
 	const dao = new BaseDAO(config);
-	const resourceType = config.modelName || config.collectionName;
+	const resourceType = config.modelName;
 
 	return {
 		getList: async (params) => {

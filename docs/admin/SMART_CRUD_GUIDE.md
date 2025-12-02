@@ -39,7 +39,7 @@ Smart CRUD 是一个统一的 CRUD 开发框架，通过**声明式配置**自�
 | 手写 500+ 行代码 | 配置 100 行 |
 | 重复定义字段 | 定义一次，到处使用 |
 | 手动处理增删改查 | 自动生成 |
-| 手动拼接查询条件 | 自动生成 MongoDB 查询 |
+| 手动拼接查询条件 | 自动生成 Prisma 查询 |
 | 手动处理表单验证 | 声明式验证规则 |
 
 ---
@@ -247,7 +247,7 @@ import { wrapQueryAction, wrapAdminAction } from '@/lib/core/action-wrapper';
  */
 const xxxConfig = {
 	// 基础配置
-	collectionName: 'xxx',
+	modelName: 'xxx',           // Prisma 模型名（小写单数）
 	primaryKey: 'id',
 	softDelete: false,
 
@@ -260,10 +260,10 @@ const xxxConfig = {
 
 	// 查询配置
 	query: {
-		defaultSort: { createdAt: -1 },
+		defaultSort: { createdAt: 'desc' },   // Prisma 排序语法
 		defaultPageSize: 20,
-		// 连表查询（可选）
-		foreignDB: [],
+		// 关联查询（可选）
+		include: {},
 	},
 
 	// 验证规则
@@ -469,7 +469,7 @@ query: {
 				name: 1,
 				email: 1,
 			},
-			convertToObjectId: true,      // 是否转换为 ObjectId
+			convertToUUID: true,      // 是否转换为 UUID
 		},
 	],
 }
@@ -539,12 +539,16 @@ query: {
 
 ### 搜索模式
 
-| 模式 | 说明 | MongoDB 转换 |
+| 模式 | 说明 | Prisma 转换 |
 |------|------|-------------|
-| `like` | 模糊搜索 | `{ $regex: value, $options: 'i' }` |
-| `exact` | 精确匹配 | `{ field: value }` |
-| `in` | 数组包含 | `{ field: { $in: values } }` |
-| `range` | 范围查询 | `{ field: { $gte: start, $lte: end } }` |
+| `like` / `%%` | 模糊搜索 | `{ contains: value, mode: 'insensitive' }` |
+| `exact` | 精确匹配 | `value` |
+| `in` | 数组包含 | `{ in: values }` |
+| `range` | 范围查询 | `{ gte: start, lte: end }` |
+| `gt` | 大于 | `{ gt: value }` |
+| `gte` | 大于等于 | `{ gte: value }` |
+| `lt` | 小于 | `{ lt: value }` |
+| `lte` | 小于等于 | `{ lte: value }` |
 
 ---
 
@@ -608,23 +612,18 @@ query: {
 
 ---
 
-## 连表查询配置
+## 关联查询配置 (Prisma)
 
 ### 一对一关联
 
 ```javascript
-// Server Action 配置
+// Server Action 配置 - 使用 Prisma include
 query: {
-	foreignDB: [
-		{
-			dbName: 'users',
-			localKey: 'userId',
-			foreignKey: 'id',
-			as: 'userInfo',
-			limit: 1,
-			fieldJson: { id: 1, name: 1, email: 1 },
+	include: {
+		user: {
+			select: { id: true, name: true, email: true },
 		},
-	],
+	},
 }
 
 // Page 字段配置
@@ -633,7 +632,7 @@ query: {
 	title: 'User',
 	table: {
 		render: (value, record) => {
-			const user = record.userInfo;
+			const user = record.user;
 			return user ? user.name : value;
 		},
 	},
@@ -643,17 +642,13 @@ query: {
 ### 一对多关联
 
 ```javascript
-// Server Action 配置
+// Server Action 配置 - 使用 Prisma include
 query: {
-	foreignDB: [
-		{
-			dbName: 'roles',
-			localKey: 'roles',        // 数组字段
-			foreignKey: 'id',
-			as: 'roleList',           // 结果也是数组
-			fieldJson: { id: 1, name: 1 },
+	include: {
+		roles: {
+			select: { id: true, name: true },
 		},
-	],
+	},
 }
 
 // Page 字段配置
@@ -662,7 +657,7 @@ query: {
 	title: 'Roles',
 	table: {
 		render: (value, record) => {
-			const roles = record.roleList || [];
+			const roles = record.roles || [];
 			return (
 				<Space wrap>
 					{roles.map(role => (
@@ -671,6 +666,30 @@ query: {
 				</Space>
 			);
 		},
+	},
+}
+```
+
+### 手动关联查询
+
+对于没有外键关系的字段（如存储 ID 数组），可以在 hooks.afterFind 中处理：
+
+```javascript
+hooks: {
+	afterFind: async (records) => {
+		// 批量获取关联数据
+		const roleIds = [...new Set(records.flatMap(r => r.roles || []))];
+		const roles = await prisma.role.findMany({
+			where: { id: { in: roleIds } },
+			select: { id: true, name: true },
+		});
+		const roleMap = new Map(roles.map(r => [r.id, r]));
+		
+		// 填充关联数据
+		return records.map(record => ({
+			...record,
+			roleList: (record.roles || []).map(id => roleMap.get(id)).filter(Boolean),
+		}));
 	},
 }
 ```

@@ -139,9 +139,11 @@ model Role {
   // 时间戳
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
+  deletedAt              DateTime?                      // 软删除时间
   
   @@index([name])
   @@index([enable])
+  @@index([deletedAt])
   @@map("roles")
 }
 
@@ -165,11 +167,13 @@ model Permission {
   // 时间戳
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?                                     // 软删除时间
   
   @@unique([name, parentId])
   @@index([parentId])
   @@index([enable])
   @@index([sort])
+  @@index([deletedAt])
   @@map("permissions")
 }
 
@@ -191,10 +195,12 @@ model Menu {
   // 时间戳
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?                                        // 软删除时间
   
   @@index([parentId])
   @@index([enable])
   @@index([sort])
+  @@index([deletedAt])
   @@map("menus")
 }
 

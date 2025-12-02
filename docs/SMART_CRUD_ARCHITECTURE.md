@@ -54,15 +54,15 @@
 │  │  BaseDAO / crud-helper.js                   │             │
 │  │                                              │             │
 │  │  • Generic CRUD Operations                  │             │
-│  │  • MongoDB Integration                      │             │
+│  │  • Prisma Integration                       │             │
 │  │  • Logging & Monitoring                     │             │
 │  └─────────────────┬───────────────────────────┘             │
 │                    │                                          │
 │                    ▼                                          │
 │  ┌─────────────────────────────────────────────┐             │
-│  │  MongoDB Database                           │             │
+│  │  PostgreSQL Database (via Prisma)           │             │
 │  │                                              │             │
-│  │  • sys_{resource} Collections               │             │
+│  │  • {resource} Tables                        │             │
 │  │  • Indexes                                  │             │
 │  └─────────────────────────────────────────────┘             │
 │                                                               │
@@ -87,11 +87,11 @@ SmartCrudPage (客户端)
 Server Action: get{Resource}ListAction
     ├─ 权限检查 (checkBackendAccess)
     ├─ 参数验证
-    └─ 调用 DAO/Collection
+    └─ 调用 DAO/Prisma
         ↓
-MongoDB
-    ├─ 执行查询 (find + sort + skip + limit)
-    ├─ 执行计数 (countDocuments)
+PostgreSQL (via Prisma)
+    ├─ 执行查询 (findMany + orderBy + skip + take)
+    ├─ 执行计数 (count)
     └─ 返回结果
         ↓
 Server Action 返回
@@ -127,8 +127,8 @@ Server Action: create{Resource}Action
     ├─ 添加元数据 (id, createdAt, updatedAt)
     └─ 插入数据库
         ↓
-MongoDB
-    └─ insertOne()
+Prisma
+    └─ create()
         ↓
 Server Action 返回
     └─ { success: true, data: {...} }
@@ -166,8 +166,8 @@ Server Action: update{Resource}Action
     ├─ 更新 updatedAt
     └─ 更新数据库
         ↓
-MongoDB
-    └─ findOneAndUpdate()
+Prisma
+    └─ update()
         ↓
 Server Action 返回
     └─ { success: true, data: {...} }
@@ -198,8 +198,8 @@ Server Action: delete{Resource}Action
     │   └─ 可以在此检查是否可删除（如：是否有子项）
     └─ 删除数据库记录
         ↓
-MongoDB
-    └─ deleteOne() 或 updateOne({ deletedAt: new Date() })
+Prisma
+    └─ delete() 或 update({ deletedAt: new Date() })
         ↓
 Server Action 返回
     └─ { success: true }
@@ -331,6 +331,7 @@ export function generateColumns(fieldsConfig, options = {}) {
 
 /**
  * 生成搜索转换函数
+ * 自动转换为 Prisma 查询语法
  */
 export function generateSearchTransform(fieldsConfig) {
 	return (searchValues) => {
@@ -346,17 +347,17 @@ export function generateSearchTransform(fieldsConfig) {
 
 			switch (mode) {
 				case 'like':
-					whereJson[field.key] = { $regex: value, $options: 'i' };
+					whereJson[field.key] = { contains: value, mode: 'insensitive' };
 					break;
 				case 'exact':
 					whereJson[field.key] = value;
 					break;
 				case 'in':
-					whereJson[field.key] = { $in: Array.isArray(value) ? value : [value] };
+					whereJson[field.key] = { in: Array.isArray(value) ? value : [value] };
 					break;
 				case 'range':
 					if (value[0] && value[1]) {
-						whereJson[field.key] = { $gte: value[0], $lte: value[1] };
+						whereJson[field.key] = { gte: value[0], lte: value[1] };
 					}
 					break;
 			}
@@ -422,7 +423,7 @@ async function checkBackendAccess() { ... }
 // 配置对象（可选，如果使用 createCrudActions）
 // ============================================
 const resourceConfig = {
-  collectionName: 'resources',
+  modelName: 'resource',      // Prisma 模型名（小写单数）
   primaryKey: 'id',
   fields: { ... },
   validation: { ... },
@@ -743,14 +744,16 @@ validation: {
 }
 ```
 
-### 4. MongoDB 注入防护
+### 4. SQL 注入防护
 
 ```javascript
-// 使用参数化查询
-collection.find({ id: userId });
+// 使用 Prisma 参数化查询（自动防注入）
+prisma.user.findMany({
+  where: { id: userId }
+});
 
 // ❌ 不要拼接字符串
-collection.find(`{ id: "${userId}" }`);
+prisma.$queryRaw`SELECT * FROM users WHERE id = ${userId}`;  // 这是安全的
 ```
 
 ---

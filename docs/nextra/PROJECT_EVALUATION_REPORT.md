@@ -23,7 +23,7 @@
 
 ## 📌 核心定位
 
-NextJS Base 是一个基于 Next.js 15 + MongoDB 的**配置驱动型管理后台开发框架**。
+NextJS Base 是一个基于 Next.js 15 + PostgreSQL 的**配置驱动型管理后台开发框架**。
 
 **一句话定位**: 
 > NextJS Base 是 Next.js 生态的 Django Admin
@@ -50,7 +50,7 @@ NextJS Base 是一个基于 Next.js 15 + MongoDB 的**配置驱动型管理后�
 | **目标平台** | 微信小程序、H5、App | Web 应用 (全栈) |
 | **开发模式** | Serverless | 传统 Server |
 | **核心特性** | 统一支付、Redis、云存储 | Smart CRUD、RBAC、DB API |
-| **学习曲线** | 中等 (需了解 UniCloud) | 低 (标准 Next.js + MongoDB) |
+| **学习曲线** | 中等 (需了解 UniCloud) | 低 (标准 Next.js + PostgreSQL) |
 | **部署方式** | 阿里云/腾讯云 | 任意 Node.js 环境 |
 | **生态系统** | DCloud 生态 | Next.js + React 生态 |
 | **适用场景** | 移动端优先 | Web 后台优先 |
@@ -112,7 +112,7 @@ NextJS Base 是一个基于 Next.js 15 + MongoDB 的**配置驱动型管理后�
 | **产品类型** | 无头 CMS | BaaS + Database | Admin Framework |
 | **核心功能** | 内容管理 | 数据库 + Auth + API | Admin UI + CRUD + RBAC |
 | **UI 提供** | 自动生成 Admin | 无 (需自建前端) | ProComponents + 配置化 |
-| **数据建模** | 可视化建模 | SQL Schema | MongoDB + 配置文件 |
+| **数据建模** | 可视化建模 | SQL Schema | Prisma Schema |
 | **权限系统** | 内置 RBAC | Row Level Security | 内置 RBAC (配置化) |
 | **API 生成** | 自动生成 REST/GraphQL | 自动生成 REST | Server Actions (手动) |
 | **前端框架** | 任意 | 任意 | Next.js (固定) |
@@ -179,7 +179,7 @@ export async function updateUserAction(id, data) {
 ```javascript
 // crud-config.js (50行)
 export const userCrudConfig = {
-  collectionName: 'users',
+  modelName: 'users',
   fields: {
     creatable: ['name', 'email', 'role'],
     updatable: ['name', 'email', 'role'],
@@ -295,7 +295,7 @@ export const getUserListAction = crud.getList;
     └──────┬───────┘
            │
     ┌──────▼──────┐
-    │   MongoDB   │
+    │  PostgreSQL │
     └─────────────┘
 ```
 
@@ -307,17 +307,17 @@ export const getUserListAction = crud.getList;
 
 | 特性 | NextJS Base DB API | Prisma | TypeORM |
 |------|---------------|--------|---------|
-| **Schema 定义** | MongoDB 原生 | Schema.prisma | Entity Class |
+| **Schema 定义** | Prisma | Schema.prisma | Entity Class |
 | **类型安全** | ❌ | | |
 | **学习曲线** | 低 | 中 | 高 |
-| **查询灵活性** | 高 (MongoDB 原生) | 中 | 高 |
+| **查询灵活性** | 高 (Prisma) | 中 | 高 |
 | **迁移工具** | 手动 | | |
 | **代码生成** | ❌ | | ❌ |
-| **MongoDB 支持** | 原生 | 部分 | 部分 |
+| **PostgreSQL 支持** | 原生 | 部分 | 部分 |
 
 **NextJS Base 的优势**:
-- **简单**: 不引入额外 DSL，直接 MongoDB 查询
-- **灵活**: 支持所有 MongoDB 特性
+- **简单**: 使用 Prisma ORM，类型安全
+- **灵活**: 支持所有 Prisma 特性
 - **性能**: 无 ORM 开销
 
 **劣势**:
@@ -476,7 +476,7 @@ export const getUserListAction = crud.getList;
 
 **不适配** ❌:
 8. **高并发系统** (秒杀、抢票)
-   - 性能瓶颈: MongoDB + Server Actions
+   - 性能瓶颈: PostgreSQL + Server Actions
    
 9. **实时协作** (在线编辑)
    - 缺少 WebSocket / CRDT 支持
@@ -535,7 +535,7 @@ export const getUserListAction = crud.getList;
 | **文档完善度** | ⭐⭐⭐⭐⭐ | 26 种字段类型详细说明 |
 | **学习曲线** | ⭐⭐⭐⭐ | 1-2 天上手 |
 | **灵活性** | ⭐⭐⭐⭐ | 钩子系统 + DB API |
-| **性能** | ⭐⭐⭐ | MongoDB + 单机部署 |
+| **性能** | ⭐⭐⭐ | PostgreSQL + Prisma |
 | **生态系统** | ⭐⭐ | 依赖 Next.js 生态 |
 | **可视化** | ⭐⭐ | 无可视化建模 |
 
@@ -569,8 +569,8 @@ export const getUserListAction = crud.getList;
 #### Weaknesses (劣势)
 
 1. **数据库单一** ❌
-   - 仅支持 MongoDB
-   - 不支持 PostgreSQL / MySQL
+   - 支持 PostgreSQL
+   - 通过 Prisma 支持多种数据库
    
 2. **缺少可视化** ❌
    - 无可视化建模工具
@@ -817,7 +817,7 @@ Code Review 时:
 // Prompt: "为 products 表生成 NextJS Base CRUD 配置"
 
 export const productCrudConfig = {
-  collectionName: 'products',
+  modelName: 'products',
   fields: {
     creatable: ['name', 'price', 'description', 'category'],
     updatable: ['name', 'price', 'description', 'category', 'status'],
@@ -865,7 +865,7 @@ export async function getTopProductsAction() {
   const result = await aggregate({
     dbName: 'orders',
     pipeline: [
-      { $match: { status: 'paid', createdAt: { $gte: startOfMonth } } },
+      { $match: { status: 'paid', createdAt: { gte: startOfMonth } } },
       { $group: { _id: '$productId', total: { $sum: '$quantity' } } },
       { $sort: { total: -1 } },
       { $limit: 10 },
@@ -1080,7 +1080,7 @@ Admin UI: 手写                   → 10天
 ```
 前端: Next.js (内置)              → 0天
 后台: Server Actions (内置)       → 0天
-数据库: MongoDB + DB API          → 1天
+数据库: PostgreSQL + Prisma          → 1天
 认证: Better Auth (集成)          → 0天
 权限: RBAC (内置)                 → 0天
 Admin UI: SmartCRUD (配置)        → 3天
@@ -1155,7 +1155,7 @@ Admin UI: SmartCRUD (配置)        → 3天
 #### 1. 独立全栈开发者 ⭐⭐⭐⭐⭐
 
 **技能要求**:
-- Next.js + MongoDB 基础
+- Next.js + PostgreSQL 基础
 - 熟悉 React 开发
 - 了解后台管理系统
 
@@ -1197,13 +1197,13 @@ Admin UI: SmartCRUD (配置)        → 3天
 ### 不适合的场景
 
 #### 1. 纯前端开发者 ❌
-- **原因**: 需要 Next.js Server Actions + MongoDB 知识
+- **原因**: 需要 Next.js Server Actions + Prisma 知识
 
 #### 2. 大型企业级项目 ❌
 - **原因**: 可能需要 Java/Spring 等企业技术栈
 
 #### 3. 极高并发场景 ❌
-- **原因**: 单机 MongoDB 部署，不适合超大规模
+- **原因**: 需要考虑数据库扩展，不适合超大规模
 
 #### 4. 零代码需求 ❌
 - **原因**: 需要编写配置文件，不是可视化工具
@@ -1215,7 +1215,7 @@ Admin UI: SmartCRUD (配置)        → 3天
 ### 1. 何时选择 NextJS Base
 
 **选择 NextJS Base 如果**:
-- 你熟悉 Next.js + MongoDB
+- 你熟悉 Next.js + PostgreSQL
 - 你需要快速开发管理后台
 - 你需要细粒度的权限控制
 - 你希望代码可控、可定制
@@ -1244,7 +1244,7 @@ Admin UI: SmartCRUD (配置)        → 3天
 
 #### 长期维护
 1. **定期升级**: 跟随 Next.js 版本更新
-2. **性能监控**: MongoDB 索引优化
+2. **性能监控**: 数据库索引优化
 3. **安全审计**: 定期检查权限配置
 
 ---
@@ -1386,7 +1386,7 @@ Admin UI: SmartCRUD (配置)        → 3天
 |------|--------|--------|----------|----------|
 | **前端** | Next.js 15 | React Admin | 自选 | Next.js |
 | **后端** | Next.js Server Actions | Koa.js | PostgreSQL | Next.js API |
-| **数据库** | MongoDB | SQLite/PostgreSQL | PostgreSQL | 自选 |
+| **数据库** | PostgreSQL | SQLite/PostgreSQL | PostgreSQL | 自选 |
 | **认证** | Better Auth | 内置 | 内置 | NextAuth |
 | **权限** | RBAC (配置) | RBAC (可视化) | RLS | 手动 |
 | **UI** | ProComponents | Ant Design | 无 | Tailwind |

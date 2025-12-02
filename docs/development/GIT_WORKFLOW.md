@@ -223,7 +223,7 @@ git push pro pro:main
 
 | 分支 | 数据库 | 部署平台 |
 |------|--------|----------|
-| `main` | MongoDB | Vercel |
+| `main` | PostgreSQL | Vercel |
 | `postgresql` | PostgreSQL/Neon | Vercel |
 | `cloudflare` | - | Cloudflare Workers |
 | `cloudflare-d1` | Cloudflare D1 | Cloudflare Workers |

@@ -13,8 +13,8 @@ import { wrapAction } from '@/lib/core/action-wrapper';
 // 配置对象
 // ============================================
 const postConfig = {
-	// 集合名称
-	collectionName: 'post',
+	// Prisma 模型名称
+	modelName: 'post',
 	
 	// 主键字段
 	primaryKey: 'id',

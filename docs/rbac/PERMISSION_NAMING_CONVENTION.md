@@ -178,7 +178,7 @@ await callAction(authUpdateProfile, { name: 'xxx', bio: 'xxx' });
 import { createCrudActions } from '@/lib/core/crud-helper';
 
 const crud = createCrudActions({
-  collectionName: 'users',
+  modelName: 'users',
   // ... BaseDAO 配置
 });
 

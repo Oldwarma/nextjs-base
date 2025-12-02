@@ -61,7 +61,7 @@ components/admin/uploads/
 ```javascript
 {
   id: String,              // UUID 主键（项目规范）
-  _id: ObjectId,           // MongoDB 自动生成
+  id: String (UUID)
   key: String,             // R2 存储路径（唯一）
   url: String,             // 文件访问 URL
   originalName: String,    // 原始文件名
@@ -204,7 +204,7 @@ const FileCard = ({ file }) => {
 import { createCrudActions } from '@/lib/core/crud-helper';
 
 const crudActions = createCrudActions({
-  collectionName: 'assets',
+  modelName: 'assets',
   resourceType: 'asset',
   primaryKey: 'id',  // 使用 UUID 作为主键
   
@@ -215,7 +215,7 @@ const crudActions = createCrudActions({
   },
   
   query: {
-    defaultSort: { createdAt: -1 },
+    defaultSort: { createdAt: 'desc' },
     baseFilter: {},
   },
   
@@ -435,7 +435,7 @@ if (result.success) {
 
 ### 1. 主键兼容性
 
-素材数据同时支持 `id`（UUID）和 `_id`（MongoDB ObjectId）作为主键：
+素材数据同时支持 `id`（UUID）和 `_id`（UUID）作为主键：
 
 ```javascript
 // 获取文件唯一标识（兼容新旧数据）

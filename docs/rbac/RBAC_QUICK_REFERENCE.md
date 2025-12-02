@@ -74,7 +74,7 @@ handler(params, ctx)
 ```javascript
 import { createCrudActions } from '@/lib/core/crud-helper';
 
-const crud = createCrudActions({ collectionName: 'users', ... });
+const crud = createCrudActions({ modelName: 'users', ... });
 
 // 参数格式
 await crud.getList({ pageIndex: 1, pageSize: 20 });

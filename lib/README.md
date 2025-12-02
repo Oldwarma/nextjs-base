@@ -15,7 +15,7 @@ lib/
 │   └── README.md
 │
 ├── database/            # 🗄️ 数据库访问
-│   ├── mongodb.js       # MongoDB 连接与 ObjectId 处理
+│   ├── mongodb.js       # Prisma 连接与 ObjectId 处理
 │   ├── db-api.js        # 统一 DB API（CRUD、分页、连表）
 │   └── README.md
 │

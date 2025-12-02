@@ -439,7 +439,7 @@ ACTION_LOG_TYPE=
 import { createCrudActions } from '@/lib/core/crud-helper';
 
 const crudActions = createCrudActions({
-  collectionName: 'users',
+  modelName: 'users',
   // ... config
 });
 
@@ -456,7 +456,7 @@ export const deleteUser = crudActions.delete;
 import { createCrudActions } from '@/app/(admin)/actions/dao/base';
 
 const crudActions = createCrudActions({
-  collectionName: 'products',
+  modelName: 'products',
   // ... config
 });
 
@@ -641,7 +641,7 @@ ACTION_LOG_TYPE=
 db.action_logs.find({ userId: 'user-123' })
 
 // 查询最近的失败操作
-db.action_logs.find({ success: false }).sort({ createdAt: -1 }).limit(10)
+db.action_logs.find({ success: false }).sort({ createdAt: 'desc' }).limit(10)
 
 // 查询某资源类型的操作统计
 db.action_logs.aggregate([

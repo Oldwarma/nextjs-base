@@ -7,7 +7,7 @@
 ### 技术架构
 
 - **认证框架**: better-auth v1.x
-- **数据库**: MongoDB
+- **数据库**: PostgreSQL (via Prisma)
 - **前端**: Next.js 15 App Router + React
 - **Session 管理**: Cookie-based sessions
 - **密码加密**: bcrypt (由 better-auth 内置处理)
@@ -56,7 +56,7 @@
                       ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  Better-auth 处理：                                               │
-│  1. 从 MongoDB 查询用户（通过 email）                             │
+│  1. 从数据库查询用户（通过 email）                             │
 │  2. 使用 bcrypt 验证密码                                          │
 │  3. 生成 session token                                            │
 │  4. 设置 HttpOnly Cookie                                          │
@@ -108,7 +108,7 @@
 │  Better-auth 处理：                                               │
 │  1. 检查邮箱是否已存在                                             │
 │  2. 使用 bcrypt 加密密码                                          │
-│  3. 创建用户记录到 MongoDB                                        │
+│  3. 创建用户记录到数据库                                        │
 │  4. 生成 session 并设置 Cookie                                    │
 └─────────────────────┬───────────────────────────────────────────┘
                       │
@@ -222,7 +222,7 @@
 #### 4. **数据验证**
 - Server Actions 进行服务端验证
 - 输入清理和验证（邮箱格式、密码长度）
-- MongoDB 防止 NoSQL 注入（使用参数化查询）
+- Prisma 防止 SQL 注入（使用参数化查询）
 
 #### 5. **OAuth 安全**
 - 使用标准 OAuth 2.0 流程
@@ -394,7 +394,7 @@ logger.error('Sign in failed', {
 
 **建议修复**:
 ```javascript
-// 在 MongoDB 中记录失败次数
+// 在数据库中记录失败次数
 export async function signInWithEmailAction(credentials) {
     const user = await getUserByEmail(credentials.email);
     
@@ -474,9 +474,9 @@ export async function createAuditLog({
     success,
     metadata
 }) {
-    const auditCollection = await getCollection('audit_logs');
+    const auditCollection = await prisma('audit_logs');
     
-    await auditCollection.insertOne({
+    await auditCollection.create({
         userId,
         action,
         ip,
@@ -540,9 +540,9 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 GITHUB_CLIENT_ID=your-github-client-id
 GITHUB_CLIENT_SECRET=your-github-client-secret
 
-# MongoDB
-MONGODB_URI=your-mongodb-uri
-MONGODB_DB_NAME=your-db-name
+# PostgreSQL
+DATABASE_URL=your-postgresql-url
+
 ```
 
 ### 第三方登录配置步骤
@@ -764,7 +764,7 @@ session: {
 	async fetchUser(userId) {
 		// 从数据库获取最新用户信息
 		const db = await getDatabase();
-		return await db.collection('users').findOne({ id: userId });
+		return await db.collection('users').findUnique({ id: userId });
 	}
 }
 ```
@@ -952,10 +952,10 @@ useEffect(() => {
 }, [session, router]);
 ```
 
-#### 3. MongoDB 连接错误
+#### 3. 数据库连接错误
 **检查**:
-- 环境变量 `MONGODB_URI` 和 `MONGODB_DB_NAME` 是否正确
-- MongoDB 服务是否运行
+- 环境变量 DATABASE_URL 是否正确
+- PostgreSQL 服务是否运行
 - 网络连接是否正常
 
 #### 4. OAuth 重定向失败
@@ -987,7 +987,7 @@ export async function getCachedSession(sessionToken) {
 ```
 
 ### 2. 减少数据库查询
-- 使用 MongoDB 索引优化查询性能
+- 使用数据库索引优化查询性能
 - 合并相关查询减少往返次数
 
 ### 3. 前端优化
@@ -1000,7 +1000,7 @@ export async function getCachedSession(sessionToken) {
 - [better-auth GitHub](https://github.com/better-auth/better-auth)
 - [Server Actions 文档](./SERVER_ACTIONS.md)
 - [多语言配置文档](./I18N_GUIDE.md)
-- [MongoDB 安全最佳实践](https://www.mongodb.com/docs/manual/security/)
+- [PostgreSQL 安全最佳实践](https://www.postgresql.org/docs/current/security.html)
 - [OWASP 认证指南](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
 
 

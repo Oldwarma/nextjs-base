@@ -113,7 +113,7 @@ function matchActionPath(actionPath, patterns) {
 // app/(admin)/actions/rbac/crud-action.permission.js
 
 const permissionConfig = {
-  collectionName: 'permissions',
+  modelName: 'permissions',
   
   fields: {
     // ... 现有字段 ...
@@ -202,14 +202,14 @@ export async function checkUserHasApiPermission(userId, apiPath) {
  * @returns {Promise<Array<String>>}
  */
 async function getApisByPermissionIds(permissionIds) {
-  const collection = await getCollection('permissions');
+  const collection = await prisma('permissions');
   const permissions = await collection
     .find({
-      id: { $in: permissionIds },
+      id: { in: permissionIds },
       enable: true,
       apis: { $exists: true, $ne: null, $not: { $size: 0 } },
     })
-    .toArray();
+    ;
   
   const allApis = [];
   permissions.forEach((perm) => {
@@ -591,10 +591,10 @@ export async function getUserProfileAction() {
 
 ```javascript
 // scripts/migrate-permissions-add-apis.js
-import { getCollection } from '@/lib/database/mongodb';
+import { prisma } from '@/lib/database/prisma';
 
 async function migratePermissions() {
-  const collection = await getCollection('permissions');
+  const collection = await prisma('permissions');
   
   // 为所有现有权限添加 apis 字段（空数组）
   const result = await collection.updateMany(

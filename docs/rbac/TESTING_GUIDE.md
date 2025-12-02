@@ -262,7 +262,7 @@
 ```javascript
 // 1. getUserAccessibleMenusAction
 if (userRole === 'admin') {
-    const { getCollection, fromObjectId } = await import('@/lib/database/mongodb');
+    const { prisma, fromUUID } = await import('@/lib/database/prisma');
     // ... 完整代码
     return result;
 }

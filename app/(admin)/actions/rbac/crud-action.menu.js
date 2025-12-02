@@ -11,7 +11,7 @@ import * as sysDao from '@/app/(admin)/actions/dao/sys';
 const menuConfig = {
 	modelName: 'menu',
 	primaryKey: 'id',
-	softDelete: false,
+	softDelete: true,
 
 	fields: {
 		creatable: ['name', 'parentId', 'url', 'icon', 'sort', 'enable', 'hidden', 'remark', 'permission'],

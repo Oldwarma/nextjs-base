@@ -262,7 +262,7 @@ const config: DocsThemeConfig = {
     <>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta property="og:title" content="NextJS Base Framework" />
-      <meta property="og:description" content="Next.js + MongoDB 开箱即用开发框架" />
+      <meta property="og:description" content="Next.js + PostgreSQL 开箱即用开发框架" />
       <link rel="icon" href="/favicon.ico" />
     </>
   ),
@@ -644,7 +644,7 @@ description: Get started with NextJS Base Framework in 5 minutes
 head: (
   <>
     <meta property="og:title" content="NextJS Base Framework" />
-    <meta property="og:description" content="Next.js + MongoDB 开箱即用开发框架" />
+    <meta property="og:description" content="Next.js + PostgreSQL 开箱即用开发框架" />
     <meta property="og:image" content="/og-image.png" />
     <meta property="og:url" content="https://nextjsbase.com" />
     <meta name="twitter:card" content="summary_large_image" />

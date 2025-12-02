@@ -48,7 +48,7 @@ cp templates/crud/action.template.js app/(admin)/actions/{module}/crud-action.{r
 |------|------|------|
 | `{RESOURCE_NAME}` | 资源名(小写单数) | `coupon` |
 | `{RESOURCE_LABEL}` | 资源标签(首字母大写) | `Coupon` |
-| `{COLLECTION_NAME}` | MongoDB 集合名(小写复数) | `coupons` |
+| `{MODEL_NAME}` | Prisma 模型名(小写单数) | `coupon` |
 | `{ACTION_PATH}` | Action 文件路径 | `cms`, `rbac`, `system` |
 
 **快捷替换命令**（macOS/Linux）：
@@ -62,7 +62,7 @@ sed -i '' 's/{ACTION_PATH}/cms/g' page.js
 # 在 action 文件中替换
 sed -i '' 's/{RESOURCE_NAME}/coupon/g' crud-action.coupon.js
 sed -i '' 's/{RESOURCE_LABEL}/Coupon/g' crud-action.coupon.js
-sed -i '' 's/{COLLECTION_NAME}/coupons/g' crud-action.coupon.js
+sed -i '' 's/{MODEL_NAME}/coupon/g' crud-action.coupon.js
 ```
 
 ### 步骤 3: 配置字段
@@ -190,12 +190,12 @@ const fieldsConfig = [
 
 ### 搜索模式
 
-| 模式 | 说明 | 适用场景 |
+| 模式 | 说明 | Prisma 转换 |
 |------|------|----------|
-| `like` | 模糊搜索 | 文本字段 |
-| `exact` | 精确搜索 | 状态、布尔值 |
-| `in` | 数组包含 | 多选字段 |
-| `range` | 范围搜索 | 日期范围 |
+| `like` | 模糊搜索 | `{ contains: value, mode: 'insensitive' }` |
+| `exact` | 精确搜索 | `value` |
+| `in` | 数组包含 | `{ in: values }` |
+| `range` | 范围搜索 | `{ gte: start, lte: end }` |
 
 ---
 
@@ -296,7 +296,7 @@ const fieldsConfig = [
 
 ```javascript
 const resourceConfig = {
-  collectionName: 'resources',      // MongoDB 集合名
+  modelName: 'resource',            // Prisma 模型名（小写单数）
   primaryKey: 'id',                 // 主键字段
   softDelete: false,                // 是否软删除
   
@@ -307,8 +307,8 @@ const resourceConfig = {
   },
   
   query: {
-    defaultSort: { createdAt: -1 },  // 默认排序
-    defaultPageSize: 20,             // 默认分页大小
+    defaultSort: { createdAt: 'desc' },  // 默认排序（Prisma 语法）
+    defaultPageSize: 20,                  // 默认分页大小
   },
   
   validation: {

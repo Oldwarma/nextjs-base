@@ -1,26 +1,23 @@
 # 搜索模式详解
 
-> SmartCRUD 支持 11 种搜索模式,自动转换为 MongoDB 查询
+> SmartCRUD 支持多种搜索模式，自动转换为 Prisma 查询
 
-搜索是 CRUD 系统的核心功能之一。SmartCRUD 通过 `search.mode` 配置,自动将用户输入转换为 MongoDB 查询条件。
+搜索是 CRUD 系统的核心功能之一。SmartCRUD 通过 `search.mode` 配置，自动将用户输入转换为 Prisma 查询条件。
 
 ---
 
 ## 📋 搜索模式总览
 
-| 模式 | 说明 | MongoDB 查询 | 适用场景 |
+| 模式 | 说明 | Prisma 查询 | 适用场景 |
 |------|------|-------------|---------|
-| `like` | 模糊搜索 | `$regex` | 文本搜索(名称、描述) |
-| `exact` | 精确匹配 | `=` | 状态、分类、ID |
-| `in` | 数组包含 | `$in` | 多选、标签 |
-| `range` | 范围查询 | `$gte`, `$lte` | 日期、价格、数量 |
-| `gt` | 大于 | `$gt` | 数字比较 |
-| `gte` | 大于等于 | `$gte` | 数字比较 |
-| `lt` | 小于 | `$lt` | 数字比较 |
-| `lte` | 小于等于 | `$lte` | 数字比较 |
-| `ne` | 不等于 | `$ne` | 排除特定值 |
-| `exists` | 字段存在 | `$exists` | 检查字段 |
-| `null` | 空值查询 | `null` or `$exists: false` | 空值筛选 |
+| `like` | 模糊搜索 | `contains` + `insensitive` | 文本搜索(名称、描述) |
+| `exact` | 精确匹配 | `equals` | 状态、分类、ID |
+| `in` | 数组包含 | `in` | 多选、标签 |
+| `range` | 范围查询 | `gte`, `lte` | 日期、价格、数量 |
+| `gt` | 大于 | `gt` | 数字比较 |
+| `gte` | 大于等于 | `gte` | 数字比较 |
+| `lt` | 小于 | `lt` | 数字比较 |
+| `lte` | 小于等于 | `lte` | 数字比较 |
 
 ---
 
@@ -28,7 +25,7 @@
 
 ### 说明
 
-最常用的搜索模式,用于文本模糊匹配,不区分大小写。
+最常用的搜索模式，用于文本模糊匹配，不区分大小写。
 
 ### 配置
 
@@ -50,11 +47,11 @@
 // 用户输入
 { name: 'test' }
 
-// 转换为 MongoDB 查询
+// 转换为 Prisma 查询
 {
   name: {
-    $regex: 'test',
-    $options: 'i'  // 不区分大小写
+    contains: 'test',
+    mode: 'insensitive'  // 不区分大小写
   }
 }
 ```
@@ -88,7 +85,7 @@
 
 ### 说明
 
-精确匹配,用于固定值搜索。
+精确匹配，用于固定值搜索。
 
 ### 配置
 
@@ -114,7 +111,7 @@
 // 用户输入
 { status: 'active' }
 
-// 转换为 MongoDB 查询
+// 转换为 Prisma 查询
 {
   status: 'active'
 }
@@ -147,7 +144,7 @@
 
 ### 说明
 
-用于多选搜索,匹配数组中任一值。
+用于多选搜索，匹配数组中任一值。
 
 ### 配置
 
@@ -179,10 +176,10 @@
 // 用户输入 (多选)
 { tags: ['hot', 'new'] }
 
-// 转换为 MongoDB 查询
+// 转换为 Prisma 查询
 {
   tags: {
-    $in: ['hot', 'new']
+    in: ['hot', 'new']
   }
 }
 ```
@@ -242,11 +239,11 @@
   ]
 }
 
-// 转换为 MongoDB 查询
+// 转换为 Prisma 查询
 {
   createdAt: {
-    $gte: new Date('2025-01-01'),
-    $lte: new Date('2025-01-31')
+    gte: new Date('2025-01-01'),
+    lte: new Date('2025-01-31')
   }
 }
 ```
@@ -297,7 +294,7 @@
 
 ### 说明
 
-用于数字比较,大于或大于等于某个值。
+用于数字比较，大于或大于等于某个值。
 
 ### 配置
 
@@ -318,10 +315,10 @@
 
 ```javascript
 // gt - 大于
-{ stock: 10 }  →  { stock: { $gt: 10 } }
+{ stock: 10 }  →  { stock: { gt: 10 } }
 
 // gte - 大于等于
-{ stock: 10 }  →  { stock: { $gte: 10 } }
+{ stock: 10 }  →  { stock: { gte: 10 } }
 ```
 
 ### 使用示例
@@ -350,7 +347,7 @@
 
 ### 说明
 
-用于数字比较,小于或小于等于某个值。
+用于数字比较，小于或小于等于某个值。
 
 ### 配置
 
@@ -371,10 +368,10 @@
 
 ```javascript
 // lt - 小于
-{ price: 100 }  →  { price: { $lt: 100 } }
+{ price: 100 }  →  { price: { lt: 100 } }
 
 // lte - 小于等于
-{ price: 100 }  →  { price: { $lte: 100 } }
+{ price: 100 }  →  { price: { lte: 100 } }
 ```
 
 ### 使用示例
@@ -396,169 +393,6 @@
 - 库存警告筛选
 - 评分筛选
 - 数量限制筛选
-
----
-
-## 7️⃣ ne - 不等于
-
-### 说明
-
-排除特定值的记录。
-
-### 配置
-
-```javascript
-{
-  key: 'status',
-  title: 'Exclude Status',
-  type: 'select',
-  search: {
-    enabled: true,
-    mode: 'ne',  // 不等于
-  },
-}
-```
-
-### 转换规则
-
-```javascript
-// 用户输入
-{ status: 'deleted' }
-
-// 转换为 MongoDB 查询
-{
-  status: { $ne: 'deleted' }
-}
-```
-
-### 使用示例
-
-```javascript
-// 排除已删除的记录
-{
-  key: 'status',
-  search: { enabled: true, mode: 'ne' },
-}
-
-// 用户选择: "deleted"
-// 匹配 status !== 'deleted' 的记录
-```
-
-### 适用场景
-
-- 排除特定状态
-- 排除测试数据
-- 排除特定分类
-
----
-
-## 8️⃣ exists - 字段存在性检查
-
-### 说明
-
-检查字段是否存在。
-
-### 配置
-
-```javascript
-{
-  key: 'deletedAt',
-  title: 'Show Deleted',
-  type: 'switch',
-  search: {
-    enabled: true,
-    mode: 'exists',
-  },
-}
-```
-
-### 转换规则
-
-```javascript
-// 用户输入
-{ deletedAt: true }
-
-// 转换为 MongoDB 查询
-{
-  deletedAt: { $exists: true }
-}
-```
-
-### 使用示例
-
-```javascript
-// 显示已软删除的记录
-{
-  key: 'deletedAt',
-  type: 'switch',
-  search: { enabled: true, mode: 'exists' },
-}
-
-// 用户选择: true
-// 匹配有 deletedAt 字段的记录
-```
-
-### 适用场景
-
-- 软删除筛选
-- 可选字段筛选
-- 数据完整性检查
-
----
-
-## 9️⃣ null - 空值查询
-
-### 说明
-
-查询字段为 null 或不存在的记录。
-
-### 配置
-
-```javascript
-{
-  key: 'email',
-  title: 'Missing Email',
-  type: 'switch',
-  search: {
-    enabled: true,
-    mode: 'null',
-  },
-}
-```
-
-### 转换规则
-
-```javascript
-// 用户输入
-{ email: true }
-
-// 转换为 MongoDB 查询
-{
-  $or: [
-    { email: null },
-    { email: { $exists: false } }
-  ]
-}
-```
-
-### 使用示例
-
-```javascript
-// 查找未填写邮箱的用户
-{
-  key: 'email',
-  search: { enabled: true, mode: 'null' },
-}
-
-// 用户选择: true
-// 匹配 email 为 null 或不存在的记录
-```
-
-### 适用场景
-
-- 查找缺失数据
-- 数据质量检查
-- 未完成信息筛选
 
 ---
 
@@ -589,20 +423,20 @@ const fieldsConfig = [
   price: [100, 500]
 }
 
-// 转换为 MongoDB 查询 (AND 关系)
+// 转换为 Prisma 查询 (AND 关系)
 {
-  name: { $regex: 'iPhone', $options: 'i' },
+  name: { contains: 'iPhone', mode: 'insensitive' },
   status: 'active',
-  price: { $gte: 100, $lte: 500 }
+  price: { gte: 100, lte: 500 }
 }
 ```
 
 ### 自定义搜索逻辑
 
-如果需要 OR 关系或更复杂的查询,可以在 Server Action 中自定义:
+如果需要 OR 关系或更复杂的查询，可以在 Server Action 中自定义:
 
 ```javascript
-export const getProductListAction = wrapQueryAction('product', async (params) => {
+export const getProductListAction = wrapAction('sysQueryProductList', async (params) => {
   const { whereJson = {} } = params;
   
   // 自定义复杂查询
@@ -611,9 +445,9 @@ export const getProductListAction = wrapQueryAction('product', async (params) =>
     delete whereJson.keyword;
     
     // OR 查询: 名称或描述包含关键词
-    whereJson.$or = [
-      { name: { $regex: keyword, $options: 'i' } },
-      { description: { $regex: keyword, $options: 'i' } },
+    whereJson.OR = [
+      { name: { contains: keyword, mode: 'insensitive' } },
+      { description: { contains: keyword, mode: 'insensitive' } },
     ];
   }
   
@@ -628,14 +462,21 @@ export const getProductListAction = wrapQueryAction('product', async (params) =>
 
 ### 1. 使用索引
 
-为常用搜索字段创建索引:
+为常用搜索字段创建索引（在 Prisma Schema 中）:
 
-```javascript
-// MongoDB 索引
-db.products.createIndex({ name: 'text' });  // 文本搜索
-db.products.createIndex({ status: 1 });     // 精确匹配
-db.products.createIndex({ price: 1 });      // 范围查询
-db.products.createIndex({ createdAt: -1 }); // 日期范围
+```prisma
+model Product {
+  id        String   @id @default(uuid())
+  name      String
+  status    String
+  price     Float
+  createdAt DateTime @default(now())
+
+  @@index([name])       // 文本搜索
+  @@index([status])     // 精确匹配
+  @@index([price])      // 范围查询
+  @@index([createdAt])  // 日期范围
+}
 ```
 
 ### 2. 限制搜索范围
@@ -643,21 +484,21 @@ db.products.createIndex({ createdAt: -1 }); // 日期范围
 避免全表扫描:
 
 ```javascript
-// 好: 使用索引字段搜索
-{ status: 'active', name: { $regex: 'test' } }
+// ✅ 好: 组合索引字段搜索
+{ status: 'active', name: { contains: 'test', mode: 'insensitive' } }
 
-// ❌ 差: 只用正则搜索(无索引)
-{ description: { $regex: 'test' } }
+// ❌ 差: 只用模糊搜索(可能无索引)
+{ description: { contains: 'test', mode: 'insensitive' } }
 ```
 
 ### 3. 合理使用模糊搜索
 
 ```javascript
-// 好: 精确字段用 exact
+// ✅ 好: 精确字段用 exact
 { status: 'active' }  // exact 模式
 
 // ❌ 差: 固定值用 like
-{ status: { $regex: 'active' } }  // like 模式(性能差)
+{ status: { contains: 'active', mode: 'insensitive' } }  // like 模式(性能差)
 ```
 
 ---
@@ -673,9 +514,6 @@ db.products.createIndex({ createdAt: -1 }); // 日期范围
 | 标签、多选 | `in` |
 | 日期、价格 | `range` |
 | 数字比较 | `gt`, `gte`, `lt`, `lte` |
-| 排除条件 | `ne` |
-| 软删除 | `exists` |
-| 数据质量 | `null` |
 
 ### 2. 搜索字段优先级
 
@@ -725,17 +563,17 @@ db.products.createIndex({ createdAt: -1 }); // 日期范围
 
 ```javascript
 // 在 Server Action 中自定义
-export const getListAction = wrapQueryAction('product', async (params) => {
+export const getListAction = wrapAction('sysQueryProductList', async (params) => {
   const { whereJson = {} } = params;
   
   if (whereJson.keyword) {
     const keyword = whereJson.keyword;
     delete whereJson.keyword;
     
-    whereJson.$or = [
-      { name: { $regex: keyword, $options: 'i' } },
-      { sku: { $regex: keyword, $options: 'i' } },
-      { description: { $regex: keyword, $options: 'i' } },
+    whereJson.OR = [
+      { name: { contains: keyword, mode: 'insensitive' } },
+      { sku: { contains: keyword, mode: 'insensitive' } },
+      { description: { contains: keyword, mode: 'insensitive' } },
     ];
   }
   
@@ -745,13 +583,13 @@ export const getListAction = wrapQueryAction('product', async (params) => {
 
 ### Q2: 如何实现高级筛选?
 
-可以在 `customToolbarButtons` 中添加高级筛选按钮,打开自定义筛选 Modal。
+可以在 `customToolbarButtons` 中添加高级筛选按钮，打开自定义筛选 Modal。
 
 ### Q3: 搜索性能差怎么办?
 
-1. 为搜索字段创建索引
-2. 避免过度使用 `$regex`
-3. 使用 MongoDB 文本索引
+1. 为搜索字段创建数据库索引
+2. 避免过度使用模糊搜索
+3. 使用 PostgreSQL 全文搜索
 4. 考虑使用 Elasticsearch
 
 ---
@@ -761,4 +599,3 @@ export const getListAction = wrapQueryAction('product', async (params) => {
 - [高级特性](/admin/smart-crud/advanced) - 自定义搜索、批量操作
 - [完整示例](/admin/smart-crud/examples) - 真实业务场景
 - [字段配置](/admin/smart-crud/fields-config) - 完整配置参数
-

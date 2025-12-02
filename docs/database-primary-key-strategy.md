@@ -7,12 +7,12 @@
 
 ## 🎯 当前策略：使用自定义 `id` 字段
 
-### 为什么使用 `id` 而不是 MongoDB 的 `_id`？
+### 为什么使用 UUID 作为主键`？
 
 1. **跨数据库兼容性**
    - 使用标准 UUID 格式
-   - 便于未来迁移到 PostgreSQL/MySQL
-   - 不依赖 MongoDB 特定的 ObjectId
+   - 已迁移到 PostgreSQL
+   - 使用 Prisma 的 UUID 生成
 
 2. **API 统一性**
    - 所有表使用相同的主键字段名
@@ -20,7 +20,7 @@
 
 3. **可读性**
    - UUID 格式更容易识别和调试
-   - 不会与 MongoDB 的内部字段混淆
+   - 符合 Prisma 最佳实践
 
 ---
 
@@ -33,7 +33,7 @@
 ```javascript
 // app/(admin)/actions/{module}/crud-action.{resource}.js
 const {resource}Config = {
-  collectionName: '{resource}',
+  modelName: '{resource}',
   primaryKey: 'id',  // 必需：指定使用 'id' 而不是 '_id'
   // ...
 };
@@ -54,7 +54,7 @@ const {resource}Config = {
 ```javascript
 {
   id: { type: String, required: true, unique: true },  // UUID
-  // 不要定义 _id，MongoDB 会自动创建但不使用
+  // Prisma 会自动处理主键
 }
 ```
 
@@ -80,7 +80,7 @@ const {resource}Config = {
 import { createCrudActions } from '@/lib/core/crud-helper';
 
 const {resource}Config = {
-  collectionName: '{resource}',
+  modelName: '{resource}',
   primaryKey: 'id',  // 重要！
   softDelete: false,
   
@@ -91,7 +91,7 @@ const {resource}Config = {
   },
   
   query: {
-    defaultSort: { createdAt: -1 },
+    defaultSort: { createdAt: 'desc' },
     defaultPageSize: 20,
   },
 };
@@ -177,9 +177,9 @@ const config = {
 
 **现象：** 查询结果混乱，ID 不一致
 
-**原因：** MongoDB 总是自动创建 `_id`，但我们使用 `id`
+**原因：** 使用 UUID 作为主键是最佳实践`
 
-**说明：** 这是正常的！MongoDB 会自动创建 `_id`，但我们的代码使用 `id`。两者可以共存，只要保持一致使用 `id` 即可。
+**说明：** 这是正常的！Prisma 会自动处理主键生成。
 
 ---
 
@@ -270,25 +270,25 @@ constructor(config) {
 
 ```javascript
 // scripts/migrate-id-field.js
-const { getDb } = require('../lib/database/mongodb');
+const { getDb } = require('../lib/database/prisma');
 const { v4: uuidv4 } = require('uuid');
 
 async function migrateIdField() {
   const db = await getDb();
   const collections = ['permissions', 'roles', 'menus', 'users'];
   
-  for (const collectionName of collections) {
-    const collection = db.collection(collectionName);
-    const docs = await collection.find({ id: { $exists: false } }).toArray();
+  for (const modelName of collections) {
+    const collection = db.collection(modelName);
+    const docs = await collection.find({ id: { $exists: false } });
     
     for (const doc of docs) {
-      await collection.updateOne(
+      await collection.update(
         { _id: doc._id },
         { $set: { id: uuidv4() } }
       );
     }
     
-    console.log(`Migrated ${docs.length} documents in ${collectionName}`);
+    console.log(`Migrated ${docs.length} documents in ${modelName}`);
   }
 }
 ```
@@ -299,7 +299,7 @@ async function migrateIdField() {
 
 | 场景 | 使用 _id | 使用 id |
 |------|---------|---------|
-| **纯 MongoDB 项目，不迁移** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **PostgreSQL 项目** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
 | **计划迁移到其他数据库** | ⭐⭐ | ⭐⭐⭐⭐⭐ |
 | **需要与外部系统集成** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | **快速原型开发** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |

@@ -510,12 +510,12 @@ AdminLayout 调用 checkBackendAccess()
 ### 方法 1: 直接更新数据库
 
 ```js
-import { getCollection } from '@/lib/database/mongodb';
+import { prisma } from '@/lib/database/prisma';
 
-const usersCollection = await getCollection('users');
+const usersCollection = await prisma('users');
 
 // 授予用户后台访问权限
-await usersCollection.updateOne(
+await usersCollection.update(
   { id: userId },
   { 
     $set: { 

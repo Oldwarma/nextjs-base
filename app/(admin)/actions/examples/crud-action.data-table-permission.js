@@ -15,8 +15,9 @@ import { createCrudActions } from '@/lib/core/crud-helper';
 const exampleConfig = {
 	/**
 	 * 基础配置
+	 * 注意：这是示例配置，需要在 schema.prisma 中创建对应的 ExampleData 模型才能使用
 	 */
-	collectionName: 'example_data',
+	modelName: 'exampleData',
 	primaryKey: 'id',
 	softDelete: false,
 
@@ -59,9 +60,8 @@ const exampleConfig = {
 	 * 查询配置
 	 */
 	query: {
-		defaultSort: { createdAt: -1 },
+		defaultSort: { createdAt: 'desc' },
 		defaultPageSize: 10,
-		populateFields: [],
 	},
 
 	/**

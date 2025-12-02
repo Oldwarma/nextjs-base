@@ -4,7 +4,7 @@
  * 使用说明：
  * 1. 替换 {RESOURCE_NAME} → 资源名(小写单数), 如: permission
  * 2. 替换 {RESOURCE_LABEL} → 资源标签(首字母大写), 如: Permission  
- * 3. 替换 {COLLECTION_NAME} → MongoDB 集合名(小写复数), 如: permissions
+ * 3. 替换 {MODEL_NAME} → Prisma 模型名(小写单数), 如: permission
  * 4. 根据需要配置 validation 验证规则和 hooks 钩子
  */
 
@@ -19,9 +19,9 @@ const {RESOURCE_NAME}Config = {
 	/**
 	 * 基础配置
 	 */
-	collectionName: '{COLLECTION_NAME}',
+	modelName: '{MODEL_NAME}',
 	primaryKey: 'id',
-	softDelete: false,
+	softDelete: true,
 
 	/**
 	 * 字段配置
@@ -36,7 +36,7 @@ const {RESOURCE_NAME}Config = {
 	 * 查询配置
 	 */
 	query: {
-		defaultSort: { createdAt: -1 },
+		defaultSort: { createdAt: 'desc' },
 		defaultPageSize: 20,
 	},
 

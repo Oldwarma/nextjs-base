@@ -23,7 +23,7 @@ base.js → createCrudActions() 🔵 在这里自动添加日志
   ↓
 BaseDAO.getList()
   ↓
-MongoDB
+PostgreSQL
 ```
 
 **优点**:
@@ -96,7 +96,7 @@ http://localhost:3000/admin/users
 ```javascript
 // 1. 创建配置文件 (configs/post-crud.config.js)
 export const postCrudConfig = {
-	collectionName: 'posts',
+	modelName: 'posts',
 	primaryKey: '_id',
 	logCategory: 'admin/posts',  // ← 添加这个字段
 	fields: {
@@ -304,7 +304,7 @@ DISABLE_ACTION_LOGS=true  # 禁用日志
 
 ```javascript
 export const xxxCrudConfig = {
-	collectionName: 'xxx',
+	modelName: 'xxx',
 	logCategory: 'admin/xxx',  // ← 日志分类，用于区分不同模块
 	// ... 其他配置
 };

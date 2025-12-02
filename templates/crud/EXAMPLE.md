@@ -53,7 +53,7 @@ sed -i '' 's/{COLLECTION_NAME}/coupons/g' crud-action.coupon.js
 
 ```javascript
 const couponConfig = {
-	collectionName: 'coupons',
+	modelName: 'coupons',
 	primaryKey: 'id',
 	
 	fields: {

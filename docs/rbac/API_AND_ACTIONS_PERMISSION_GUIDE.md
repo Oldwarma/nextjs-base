@@ -199,7 +199,7 @@ export const customAction = wrapAdminAction('custom', 'asset', async (params, co
 import { createCrudActions } from '@/lib/core/crud-helper';
 
 const crudActions = createCrudActions({
-  collectionName: 'assets',
+  modelName: 'assets',
   resourceType: 'asset',  // 使用单数形式
   // ... 其他配置
 });

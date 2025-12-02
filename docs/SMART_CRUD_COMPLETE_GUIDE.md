@@ -62,7 +62,7 @@ Smart CRUD 采用**声明式配置**模式，通过一套统一的配置自动�
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   Database Layer (MongoDB)                   │
+│                   Database Layer (PostgreSQL via Prisma)                   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -152,7 +152,7 @@ app/(admin)/
 ```javascript
 const xxxConfig = {
 	// ========== 基础配置 ==========
-	collectionName: 'xxx',        // MongoDB 集合名（必需）
+	modelName: 'xxx',        // Prisma 模型名（必需）
 	primaryKey: 'id',             // 主键字段（默认 'id'）
 	softDelete: false,            // 是否软删除（默认 false）
 
@@ -165,7 +165,7 @@ const xxxConfig = {
 
 	// ========== 查询配置 ==========
 	query: {
-		defaultSort: { createdAt: -1 },   // 默认排序
+		defaultSort: { createdAt: 'desc' },   // 默认排序
 		defaultPageSize: 20,               // 默认分页大小
 		maxPageSize: 100,                  // 最大分页大小
 
@@ -182,7 +182,7 @@ const xxxConfig = {
 					name: 1,
 					email: 1,
 				},
-				convertToObjectId: false,     // 是否转换为 ObjectId
+				convertToUUID: false,     // 是否转换为 UUID
 			},
 		],
 	},
@@ -277,7 +277,7 @@ fields: {
 	// - id（自动生成 UUID）
 	// - createdAt（自动设置）
 	// - updatedAt（自动设置）
-	// - _id（MongoDB 内部字段）
+	// - 
 
 	// 正确：只包含允许修改的字段
 	updatable: ['name', 'status', 'description'],
@@ -351,7 +351,7 @@ import { wrapQueryAction, wrapAdminAction } from '@/lib/core/action-wrapper';
  * Xxx CRUD 配置
  */
 const xxxConfig = {
-	collectionName: 'xxx',
+	modelName: 'xxx',
 	primaryKey: 'id',
 	fields: {
 		creatable: ['name', 'status'],
@@ -359,7 +359,7 @@ const xxxConfig = {
 		searchable: ['name'],
 	},
 	query: {
-		defaultSort: { createdAt: -1 },
+		defaultSort: { createdAt: 'desc' },
 	},
 };
 
@@ -404,13 +404,13 @@ import { createReadOnlyActions } from '@/lib/core/crud-helper';
  * Action Logs 配置
  */
 const actionLogsConfig = {
-	collectionName: 'action_logs',
+	modelName: 'action_logs',
 	primaryKey: 'id',
 	fields: {
 		searchable: ['action', 'resourceType', 'userId'],
 	},
 	query: {
-		defaultSort: { createdAt: -1 },
+		defaultSort: { createdAt: 'desc' },
 		foreignDB: [
 			{
 				dbName: 'users',

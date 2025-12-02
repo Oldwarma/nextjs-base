@@ -364,7 +364,7 @@ export const localeNames = {
 ```javascript
 // packages 集合
 {
-  _id: ObjectId,
+  
   nameTranslations: {
     en: 'Pro Plan',
     zh: '专业版',
@@ -475,7 +475,7 @@ A: next-intl 自动使用 Cookie 保存，也可以存储到数据库：
 ```javascript
 // 在用户更改语言时
 export async function updateUserLanguage(userId, locale) {
-	await db.collection('users').updateOne({ id: userId }, { $set: { preferredLanguage: locale } });
+	await db.collection('users').update({ id: userId }, { $set: { preferredLanguage: locale } });
 }
 ```
 

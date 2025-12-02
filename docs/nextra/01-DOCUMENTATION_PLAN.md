@@ -7,7 +7,7 @@
 
 ### 框架定位
 - **名称**: NextJS Base Framework (暂定)
-- **定位**: 基于 Next.js + MongoDB 的开箱即用全栈开发框架
+- **定位**: 基于 Next.js + PostgreSQL 的开箱即用全栈开发框架
 - **目标用户**: 
   - 独立开发者
   - 小团队快速开发

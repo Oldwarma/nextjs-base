@@ -26,10 +26,10 @@
 ### Step 1: 备份数据库（可选但推荐）
 
 ```bash
-# MongoDB 导出 permissions 集合
+# 导出 permissions 数据
 mongodump --db=your_database --collection=permissions --out=/backup/path
 
-# 或使用 MongoDB Compass 导出
+# 
 ```
 
 ### Step 2: 运行迁移脚本
@@ -45,17 +45,17 @@ mongodump --db=your_database --collection=permissions --out=/backup/path
  * node scripts/migrate-add-apis-field.js
  */
 
-import { getCollection } from '@/lib/database/mongodb';
+import { prisma } from '@/lib/database/prisma';
 
 async function migratePermissions() {
   console.log('🚀 开始迁移权限系统...\n');
   
   try {
-    const collection = await getCollection('permissions');
+    const collection = await prisma('permissions');
     
     // 1. 统计需要迁移的文档
-    const totalCount = await collection.countDocuments();
-    const needMigrationCount = await collection.countDocuments({
+    const totalCount = await collection.count();
+    const needMigrationCount = await collection.count({
       apis: { $exists: false }
     });
     
@@ -82,7 +82,7 @@ async function migratePermissions() {
     
     // 3. 验证迁移结果
     console.log('🔍 验证迁移结果...');
-    const afterMigrationCount = await collection.countDocuments({
+    const afterMigrationCount = await collection.count({
       apis: { $exists: true }
     });
     
@@ -145,10 +145,10 @@ node scripts/migrate-add-apis-field.js
 
 ### Step 4: 验证迁移结果
 
-在 MongoDB 中查询验证：
+在数据库中查询验证：
 
 ```javascript
-// MongoDB Shell 或 Compass
+// Prisma Studio 或 SQL
 db.permissions.find({}, { name: 1, actions: 1, apis: 1 }).pretty()
 ```
 
@@ -156,7 +156,7 @@ db.permissions.find({}, { name: 1, actions: 1, apis: 1 }).pretty()
 
 ```javascript
 {
-  "_id": ObjectId("..."),
+  "_id": UUID,
   "id": "crud-read-all",
   "name": "CRUD - Read (All)",
   "actions": [
@@ -260,13 +260,13 @@ mongorestore --db=your_database --collection=permissions /backup/path/your_datab
  * 回滚脚本：删除 apis 字段
  */
 
-import { getCollection } from '@/lib/database/mongodb';
+import { prisma } from '@/lib/database/prisma';
 
 async function rollbackPermissions() {
   console.log('🔙 开始回滚权限系统...\n');
   
   try {
-    const collection = await getCollection('permissions');
+    const collection = await prisma('permissions');
     
     const result = await collection.updateMany(
       { apis: { $exists: true } },
@@ -399,7 +399,7 @@ async function testAdminRole() {
 
 ### Q2: 如果迁移中断怎么办？
 
-**A**: 迁移脚本使用 `updateMany`，MongoDB 会保证操作的原子性。如果中断，部分文档可能已更新，重新运行脚本即可（脚本会跳过已有 `apis` 字段的文档）。
+**A**: 迁移脚本使用 `updateMany`，Prisma 会保证操作的原子性。如果中断，部分文档可能已更新，重新运行脚本即可（脚本会跳过已有 `apis` 字段的文档）。
 
 ### Q3: 需要更新应用代码吗？
 

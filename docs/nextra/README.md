@@ -11,7 +11,7 @@
 ### 目标定位
 
 - **框架名称**: NextJS Base
-- **技术栈**: Next.js 15 + MongoDB + Ant Design + Better Auth
+- **技术栈**: Next.js 15 + PostgreSQL + Ant Design + Better Auth
 - **定位**: 开箱即用全栈开发框架
 - **特色**: SmartCRUD 配置驱动开发,减少 60% 重复代码
 

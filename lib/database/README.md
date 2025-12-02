@@ -1,12 +1,12 @@
 # 数据库访问层
 
-MongoDB 连接管理和统一数据库 API。
+Prisma 连接管理和统一数据库 API。
 
 ## 📁 文件列表
 
 | 文件 | 说明 |
 |------|------|
-| `mongodb.js` | MongoDB 核心 - 连接池、集合获取、ObjectId 处理 |
+| `mongodb.js` | Prisma 核心 - 连接池、集合获取、ObjectId 处理 |
 | `db-api.js` | 统一 DB API - 封装所有数据库操作（CRUD、分页、连表） |
 
 ## 🎯 使用方式
@@ -19,7 +19,7 @@ import { getCollection, fromObjectId, toObjectId, generateId } from '@/lib/datab
 // 获取集合
 const usersCollection = await getCollection('users');
 
-// 执行原生 MongoDB 操作
+// 执行原生 Prisma 操作
 const user = await usersCollection.findOne({ _id: toObjectId(id) });
 
 // ObjectId 转换
@@ -120,6 +120,6 @@ foreignDB: [
 
 ## 🔗 依赖关系
 
-- MongoDB Node.js Driver
+- Prisma Node.js Driver
 - 环境变量：`MONGODB_URI`
 

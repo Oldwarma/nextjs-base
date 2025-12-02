@@ -313,7 +313,7 @@ const crudActions = createCrudActionsWithHooks(config, {
 ```javascript
 // app/(admin)/actions/coupons/configs/coupon-crud.config.js
 export const couponCrudConfig = {
-    collectionName: 'coupons',
+    modelName: 'coupons',
     fieldsConfig: {
         code: {
             type: 'text',

@@ -10,7 +10,7 @@ import { prisma } from '@/lib/database/prisma';
 const roleConfig = {
 	modelName: 'role',
 	primaryKey: 'id',
-	softDelete: false,
+	softDelete: true,
 
 	fields: {
 		creatable: ['name', 'remark', 'enable'],

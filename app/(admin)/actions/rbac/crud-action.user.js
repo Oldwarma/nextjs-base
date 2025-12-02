@@ -111,7 +111,7 @@ export async function createUserAction(userData) {
 export const getUserListAction = wrapAction('sysQueryUserList', async (params = {}, ctx) => {
 	const pageIndex = params.pageIndex || params.page || 1;
 	const pageSize = params.pageSize || 20;
-	const sortJson = params.sortJson || params.sort || { createdAt: -1 };
+	const sortJson = params.sortJson || params.sort || { createdAt: 'desc' };
 	
 	// 提取搜索条件
 	const { pageIndex: _, page: __, pageSize: ___, sortJson: ____, sort: _____, whereJson: ______, filters: _______, ...searchFields } = params;

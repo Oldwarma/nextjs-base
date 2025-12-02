@@ -96,12 +96,12 @@ docs/nextra/
 **必读文档**:
 
 1. **规划文档** (`01-DOCUMENTATION_PLAN.md`)
-   - 框架定位: 开箱即用的 Next.js + MongoDB 开发框架
+   - 框架定位: 开箱即用的 Next.js + PostgreSQL 开发框架
    - 核心特性: SmartCRUD 配置驱动,减少 60% 代码
 
 2. **架构设计** (`pages/admin/smart-crud/introduction.mdx`)
    - 设计理念: 一份配置,多处使用
-   - 数据流: 用户操作 → SmartCrudPage → Server Actions → MongoDB
+   - 数据流: 用户操作 → SmartCrudPage → Server Actions → PostgreSQL (Prisma)
 
 3. **进度报告** (`02-DOCUMENTATION_PROGRESS.md`)
    - 已完成功能清单

@@ -28,7 +28,7 @@
 - **一致性**：数据库、后端、前端使用相同的字段名
 - **可读性**：字段名清晰表达含义
 - **可维护性**：降低理解和修改成本
-- **可扩展性**：兼容多种数据库（MongoDB、PostgreSQL、CloudflareD1）
+- **可扩展性**：兼容 PostgreSQL (通过 Prisma)
 
 ### 📌 适用范围
 
@@ -134,7 +134,7 @@ can_edit: Boolean      // 不需要 can_ 前缀
 | 字段名 | 类型 | 说明 | 示例 |
 |--------|------|------|------|
 | `id` | String (UUID) | 主键，所有集合统一使用 | `"a1b2c3d4-..."` |
-| `_id` | ObjectId | MongoDB 自动生成，仅兼容性保留 | `ObjectId("...")` |
+| `_id` | （已废弃，使用 UUID） | `UUID` |
 | `parent_id` | String (UUID) | 父级引用（树形结构） | `"parent-uuid"` |
 | `user_id` | String (UUID) | 用户 ID（外键） | `"user-uuid"` |
 | `author_id` | String (UUID) | 作者 ID（外键） | `"user-uuid"` |
@@ -386,7 +386,7 @@ export async function bindUserRolesAction(userId, roles, reset) {
 **推荐**：
 ```javascript
 export const userCrudConfig = {
-  collectionName: 'users',       // camelCase
+  modelName: 'users',       // camelCase
   primaryKey: 'id',              // 数据库字段名（不变）
   
   fields: {
@@ -423,7 +423,7 @@ export const userCrudConfig = {
 #### 1. roles 表迁移
 
 ```javascript
-// MongoDB Shell
+// Prisma
 db.roles.updateMany(
   {},
   [
@@ -632,12 +632,12 @@ const role = {
 ```javascript
 // ❌ 错误
 export async function bindUserRoles({ userId, roleIds }) {
-  await collection.updateOne({ id: userId }, { $set: { ids: roleIds } });
+  await collection.update({ id: userId }, { $set: { ids: roleIds } });
 }
 
 // 正确
 export async function bindUserRoles({ userId, roles }) {
-  await collection.updateOne({ id: userId }, { $set: { roles: roles } });
+  await collection.update({ id: userId }, { $set: { roles: roles } });
 }
 ```
 

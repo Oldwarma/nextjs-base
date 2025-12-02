@@ -14,7 +14,7 @@
 
 ```javascript
 const userConfig = {
-  collectionName: 'users',
+  modelName: 'users',
   primaryKey: 'id',
   
   // 字段验证规则
@@ -125,7 +125,7 @@ validation: {
     required: true,
     type: 'string',
     validator: async (value, context) => {
-      // context 包含 { data, action, recordId, collectionName }
+      // context 包含 { data, action, recordId, modelName }
       const { getCollection } = await import('@/lib/database/mongodb');
       const collection = await getCollection('users');
       const exists = await collection.findOne({ username: value });
@@ -158,7 +158,7 @@ validation: {
 import { z } from 'zod';
 
 const userConfig = {
-  collectionName: 'users',
+  modelName: 'users',
   
   // 直接使用 Zod Schema（优先级高于 validation）
   schemas: {
@@ -220,7 +220,7 @@ import { runCustomValidators } from '@/lib/validation';
 
 await runCustomValidators(validation, data, 'create', {
   recordId: 'xxx',
-  collectionName: 'users',
+  modelName: 'users',
 });
 ```
 

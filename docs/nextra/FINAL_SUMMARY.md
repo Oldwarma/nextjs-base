@@ -71,7 +71,7 @@
 
 - **admin/smart-crud/search-modes.mdx** (5000字)
   - 11 种搜索模式详解
-  - 自动转换为 MongoDB 查询
+  - 自动转换为 Prisma 查询
   - 实战示例和最佳实践
   - 性能优化建议
 
