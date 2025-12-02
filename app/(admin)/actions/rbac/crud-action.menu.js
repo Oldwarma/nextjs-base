@@ -248,7 +248,7 @@ export const assignPermissionsToMenuAction = wrapAction('sysAssignPermissionsToM
 		return { success: false, error: 'menuId is required' };
 	}
 
-	if (!Array.isArray(permissionIds)) {
+	if (!nb.pubfn.isArray(permissionIds)) {
 		return { success: false, error: 'permissionIds must be an array' };
 	}
 

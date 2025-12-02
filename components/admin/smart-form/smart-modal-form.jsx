@@ -43,6 +43,7 @@ import { Button, App } from 'antd';
 import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 import DynamicFormFields from '../dynamic-form-fields';
 import { validateFieldsConfig } from '@/lib/crud/field-generator';
+import nb from '@/lib/function';
 
 /**
  * 表单内容包装组件
@@ -73,16 +74,16 @@ function cleanArrayFields(values) {
 		const value = cleaned[key];
 		
 		// 过滤掉函数类型的值（可能是配置中的动态函数被意外包含）
-		if (typeof value === 'function') {
+		if (nb.pubfn.isFunction(value)) {
 			delete cleaned[key];
 			return;
 		}
 		
-		if (Array.isArray(value)) {
+		if (nb.pubfn.isArray(value)) {
 			cleaned[key] = value.filter(item => {
 				if (item === null || item === undefined) return false;
-				if (typeof item === 'function') return false; // 过滤函数
-				if (typeof item === 'string') {
+				if (nb.pubfn.isFunction(item)) return false; // 过滤函数
+				if (nb.pubfn.isString(item)) {
 					return item.trim().length > 0;
 				}
 				return true;

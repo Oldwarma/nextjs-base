@@ -64,7 +64,7 @@ export async function findRoleByIdWithNames(roleId) {
  * 根据多个角色ID查询角色列表
  */
 export async function findRolesByIds(roleIds) {
-	if (!Array.isArray(roleIds) || roleIds.length === 0) {
+	if (!nb.pubfn.isArray(roleIds) || roleIds.length === 0) {
 		return [];
 	}
 
@@ -179,7 +179,7 @@ export async function findPermissionById(permissionId) {
  * 根据多个权限ID查询权限列表
  */
 export async function findPermissionsByIds(permissionIds) {
-	if (!Array.isArray(permissionIds) || permissionIds.length === 0) {
+	if (!nb.pubfn.isArray(permissionIds) || permissionIds.length === 0) {
 		return [];
 	}
 
@@ -228,7 +228,7 @@ export async function getAllPermissions(filters = {}) {
  * 根据角色ID数组获取所有权限ID
  */
 export async function getPermissionIdsByRoleIds(roleIds) {
-	if (!Array.isArray(roleIds) || roleIds.length === 0) {
+	if (!nb.pubfn.isArray(roleIds) || roleIds.length === 0) {
 		return [];
 	}
 
@@ -241,7 +241,7 @@ export async function getPermissionIdsByRoleIds(roleIds) {
 	const permissionIds = new Set();
 
 	roles.forEach((role) => {
-		if (role.permission && Array.isArray(role.permission)) {
+		if (role.permission && nb.pubfn.isArray(role.permission)) {
 			role.permission.forEach(id => permissionIds.add(id));
 		}
 	});
@@ -253,7 +253,7 @@ export async function getPermissionIdsByRoleIds(roleIds) {
  * 根据权限ID数组获取所有actions路径
  */
 export async function getActionsByPermissionIds(permissionIds) {
-	if (!Array.isArray(permissionIds) || permissionIds.length === 0) {
+	if (!nb.pubfn.isArray(permissionIds) || permissionIds.length === 0) {
 		return [];
 	}
 
@@ -261,7 +261,7 @@ export async function getActionsByPermissionIds(permissionIds) {
 	const actions = new Set();
 
 	permissions.forEach((permission) => {
-		if (permission.actions && Array.isArray(permission.actions)) {
+		if (permission.actions && nb.pubfn.isArray(permission.actions)) {
 			permission.actions.forEach(action => actions.add(action));
 		}
 	});
@@ -288,7 +288,7 @@ export async function findMenuById(menuId) {
  * 根据多个菜单ID查询菜单列表
  */
 export async function findMenusByIds(menuIds) {
-	if (!Array.isArray(menuIds) || menuIds.length === 0) {
+	if (!nb.pubfn.isArray(menuIds) || menuIds.length === 0) {
 		return [];
 	}
 
@@ -327,7 +327,7 @@ export async function getMenuTree({ pageIndex = 1, pageSize = 1000, filters = {}
  * 根据菜单ID数组获取关联的权限ID
  */
 export async function getPermissionsByMenuIds(menuIds) {
-	if (!Array.isArray(menuIds) || menuIds.length === 0) {
+	if (!nb.pubfn.isArray(menuIds) || menuIds.length === 0) {
 		return [];
 	}
 
@@ -335,7 +335,7 @@ export async function getPermissionsByMenuIds(menuIds) {
 	const permissionIds = new Set();
 
 	menus.forEach((menu) => {
-		if (menu.permission && Array.isArray(menu.permission)) {
+		if (menu.permission && nb.pubfn.isArray(menu.permission)) {
 			menu.permission.forEach(id => permissionIds.add(id));
 		}
 	});
@@ -347,7 +347,7 @@ export async function getPermissionsByMenuIds(menuIds) {
  * 根据角色ID数组获取菜单
  */
 export async function getMenusByRoleIds(roleIds) {
-	if (!Array.isArray(roleIds) || roleIds.length === 0) {
+	if (!nb.pubfn.isArray(roleIds) || roleIds.length === 0) {
 		return [];
 	}
 
@@ -361,7 +361,7 @@ export async function getMenusByRoleIds(roleIds) {
 	const menuIds = new Set();
 
 	roles.forEach((role) => {
-		if (role.menu && Array.isArray(role.menu)) {
+		if (role.menu && nb.pubfn.isArray(role.menu)) {
 			role.menu.forEach(id => menuIds.add(id));
 		}
 	});
@@ -447,7 +447,7 @@ export async function getUserPermissionIds(userId) {
 	if (rolesWithMenuInheritance.length > 0) {
 		const menuIds = [];
 		rolesWithMenuInheritance.forEach(role => {
-			if (role.menu && Array.isArray(role.menu)) {
+			if (role.menu && nb.pubfn.isArray(role.menu)) {
 				menuIds.push(...role.menu);
 			}
 		});

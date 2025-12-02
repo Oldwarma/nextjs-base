@@ -36,6 +36,7 @@ import { ProForm } from '@ant-design/pro-components';
 import { App } from 'antd';
 import DynamicFormFields from '../dynamic-form-fields';
 import { validateFieldsConfig } from '@/lib/crud/field-generator';
+import nb from '@/lib/function';
 
 /**
  * 清理表单数据中的空 array 项和非法值（如函数）
@@ -49,17 +50,17 @@ function cleanArrayFields(values) {
 		const value = cleaned[key];
 		
 		// 过滤掉函数类型的值（可能是配置中的动态函数被意外包含）
-		if (typeof value === 'function') {
+		if (nb.pubfn.isFunction(value)) {
 			delete cleaned[key];
 			return;
 		}
 		
 		// 如果是数组，过滤掉空值、空字符串、只有空格的项和函数
-		if (Array.isArray(value)) {
+		if (nb.pubfn.isArray(value)) {
 			cleaned[key] = value.filter(item => {
 				if (item === null || item === undefined) return false;
-				if (typeof item === 'function') return false;
-				if (typeof item === 'string') {
+				if (nb.pubfn.isFunction(item)) return false;
+				if (nb.pubfn.isString(item)) {
 					return item.trim().length > 0;
 				}
 				return true;

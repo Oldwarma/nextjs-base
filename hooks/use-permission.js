@@ -6,6 +6,7 @@ import {
 	getUserAccessibleMenusAction,
 	checkPageAccessAction 
 } from '@/app/(admin)/actions/rbac/user-permissions';
+import nb from '@/lib/function';
 
 /**
  * Hook to check if user has specific permission
@@ -60,7 +61,7 @@ export function usePermission() {
 	 */
 	const hasAnyPermission = useCallback(
 		(permissionIds) => {
-			if (!Array.isArray(permissionIds)) {
+			if (!nb.pubfn.isArray(permissionIds)) {
 				return false;
 			}
 
@@ -81,7 +82,7 @@ export function usePermission() {
 	 */
 	const hasAllPermissions = useCallback(
 		(permissionIds) => {
-			if (!Array.isArray(permissionIds)) {
+			if (!nb.pubfn.isArray(permissionIds)) {
 				return false;
 			}
 

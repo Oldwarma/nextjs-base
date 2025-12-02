@@ -16,6 +16,7 @@ import { headers } from 'next/headers';
 import { wrapAction } from '@/lib/core/action-wrapper';
 import { checkBackendAccessAction } from '@/lib/auth/admin-auth';
 import * as userDao from '@/app/(admin)/actions/dao/user';
+import nb from '@/lib/function';
 
 // ============================================
 // 标准 CRUD Actions
@@ -279,7 +280,7 @@ export async function batchUpdateUsersAction(userIds, updateData) {
 	}
 
 	try {
-		if (!Array.isArray(userIds) || userIds.length === 0) {
+		if (!nb.pubfn.isArray(userIds) || userIds.length === 0) {
 			return {
 				success: false,
 				error: 'User IDs array is required',

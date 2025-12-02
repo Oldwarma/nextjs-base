@@ -6,6 +6,7 @@ import { InboxOutlined, UploadOutlined, HolderOutlined, DeleteOutlined, PaperCli
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import nb from '@/lib/function';
 
 /**
  * 可拖拽的文件项组件
@@ -26,7 +27,7 @@ const SortableFileItem = ({ id, file, deleting, onRemove }) => {
 		opacity: isDragging ? 0.5 : 1,
 	};
 	
-	const fileName = file.name || (typeof file.url === 'string' ? file.url.split('/').pop() : 'file');
+	const fileName = file.name || (nb.pubfn.isString(file.url) ? file.url.split('/').pop() : 'file');
 	const fileUrl = file.url;
 	const isUploading = file.status === 'uploading';
 	
@@ -125,11 +126,11 @@ export default function FileUpload({
 		if (isInitializedRef.current) return;
 		isInitializedRef.current = true;
 		
-		if (Array.isArray(value) && value.length > 0) {
+		if (nb.pubfn.isArray(value) && value.length > 0) {
 			const newFileList = value
 				.filter(item => item)
 				.map((item, index) => {
-					if (typeof item === 'string') {
+					if (nb.pubfn.isString(item)) {
 						return {
 							uid: `existing-${index}-${Date.now()}`,
 							url: item,

@@ -148,7 +148,7 @@ export async function getUserList({ page = 1, pageSize = 20, filters = {}, sort 
 	}
 
 	// 处理角色数组查询
-	if (filters.roles_in && Array.isArray(filters.roles_in) && filters.roles_in.length > 0) {
+	if (filters.roles_in && nb.pubfn.isArray(filters.roles_in) && filters.roles_in.length > 0) {
 		whereJson.roles = { hasSome: filters.roles_in };
 	}
 

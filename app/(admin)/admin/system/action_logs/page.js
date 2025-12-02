@@ -10,6 +10,7 @@
 import { Tag } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import SmartCrudPage from '@/components/admin/smart-crud-page';
+import nb from '@/lib/function';
 
 // Server Actions
 import { getActionLogListAction as getList } from '@/app/(admin)/actions/system/admin-action-logs';
@@ -39,9 +40,9 @@ export default function ActionLogsPage() {
 					// 因为 limit: 1，selects 会将数组转为单个对象
 					// 所以 userInfo 可能是对象（转换后）或数组（转换前）
 					let user = null;
-					if (Array.isArray(userInfo) && userInfo.length > 0) {
+					if (nb.pubfn.isArray(userInfo) && userInfo.length > 0) {
 						user = userInfo[0]; // 数组形式
-					} else if (userInfo && typeof userInfo === 'object' && !Array.isArray(userInfo)) {
+					} else if (userInfo && nb.pubfn.isObject(userInfo) && !nb.pubfn.isArray(userInfo)) {
 						user = userInfo; // 对象形式
 					}
 
@@ -65,9 +66,9 @@ export default function ActionLogsPage() {
 					// 兼容处理：userInfo 可能是对象、数组或 null
 					let user = null;
 
-					if (Array.isArray(value) && value.length > 0) {
+					if (nb.pubfn.isArray(value) && value.length > 0) {
 						user = value[0]; // 数组格式（兼容）
-					} else if (value && typeof value === 'object') {
+					} else if (value && nb.pubfn.isObject(value)) {
 						user = value; // 对象格式（limit: 1 的结果）
 					}
 

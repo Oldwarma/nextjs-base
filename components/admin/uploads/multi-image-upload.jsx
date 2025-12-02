@@ -6,6 +6,7 @@ import { PlusOutlined, HolderOutlined, DeleteOutlined, EyeOutlined, LoadingOutli
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import nb from '@/lib/function';
 
 /**
  * 可拖拽的图片项组件
@@ -144,11 +145,11 @@ export default function MultiImageUpload({
 		if (isInitializedRef.current) return;
 		isInitializedRef.current = true;
 		
-		if (Array.isArray(value) && value.length > 0) {
+		if (nb.pubfn.isArray(value) && value.length > 0) {
 			const newFileList = value
 				.filter(item => item)
 				.map((item, index) => {
-					const url = typeof item === 'string' ? item : (item?.url || '');
+					const url = nb.pubfn.isString(item) ? item : (item?.url || '');
 					return {
 						uid: `existing-${index}-${Date.now()}`,
 						url,

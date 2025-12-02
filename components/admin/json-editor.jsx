@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button, Space, App } from 'antd';
 import { FormatPainterOutlined, CopyOutlined } from '@ant-design/icons';
+import nb from '@/lib/function';
 
 /**
  * 简单的 JSON 编辑器组件
@@ -50,9 +51,9 @@ export default function JsonEditor({
 		}
 		
 		let str = '';
-		if (typeof value === 'string') {
+		if (nb.pubfn.isString(value)) {
 			str = value;
-		} else if (typeof value === 'object') {
+		} else if (nb.pubfn.isObject(value)) {
 			try {
 				str = JSON.stringify(value, null, 2);
 			} catch (e) {

@@ -16,6 +16,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Tag, Modal, Tree, App, Space } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, EyeOutlined, EyeInvisibleOutlined, KeyOutlined } from '@ant-design/icons';
 import SmartCrudPage from '@/components/admin/smart-crud-page';
+import nb from '@/lib/function';
 
 // 导入图标渲染函数
 import { renderIcon } from '@/components/admin/icon-picker';
@@ -57,7 +58,7 @@ export default function MenusManagementPage() {
 			const result = await menuActions.getMenuDetailAction(record.id);
 			if (result.success) {
 				const currentPerms = result.data?.permission || [];
-				const permIds = currentPerms.map((p) => String(typeof p === 'object' ? p.id : p));
+				const permIds = currentPerms.map((p) => String(nb.pubfn.isObject(p) ? p.id : p));
 				setSelectedPermissions(permIds);
 			} else {
 				message.error(result.error || 'Failed to load permissions');
@@ -182,7 +183,7 @@ export default function MenusManagementPage() {
 				table: {
 					width: 120,
 					render: (value) => {
-						const count = Array.isArray(value) ? value.length : 0;
+						const count = nb.pubfn.isArray(value) ? value.length : 0;
 						return count > 0 ? (
 							<Tag color='green'>{count} permissions</Tag>
 						) : (
@@ -192,7 +193,7 @@ export default function MenusManagementPage() {
 				},
 				detail: {
 					render: (value) => {
-						if (!Array.isArray(value) || value.length === 0) {
+						if (!nb.pubfn.isArray(value) || value.length === 0) {
 							return <span style={{ color: '#999' }}>No permissions assigned</span>;
 						}
 						return (

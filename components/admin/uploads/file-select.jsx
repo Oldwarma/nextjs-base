@@ -18,6 +18,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, rectSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import FileSelectModal from './file-select-modal';
+import nb from '@/lib/function';
 
 /**
  * 获取文件图标
@@ -137,7 +138,7 @@ const SortableFileItem = ({ id, file, onRemove }) => {
 		opacity: isDragging ? 0.5 : 1,
 	};
 	
-	const fileName = file.name || (typeof file.url === 'string' ? file.url.split('/').pop() : 'file');
+	const fileName = file.name || (nb.pubfn.isString(file.url) ? file.url.split('/').pop() : 'file');
 	const fileUrl = file.url;
 	
 	return (
@@ -213,15 +214,15 @@ export default function FileSelect({
 		if (!value) return [];
 		
 		if (mode === 'image' || mode === 'avatar') {
-			if (typeof value === 'string' && value) {
+			if (nb.pubfn.isString(value) && value) {
 				return [{ uid: `existing-0-${Date.now()}`, url: value, name: value.split('/').pop() }];
 			}
 			return [];
 		}
 		
-		const arr = Array.isArray(value) ? value : [];
+		const arr = nb.pubfn.isArray(value) ? value : [];
 		return arr.filter(item => item).map((item, index) => {
-			if (typeof item === 'string') {
+			if (nb.pubfn.isString(item)) {
 				return { uid: `existing-${index}-${Date.now()}`, url: item, name: item.split('/').pop() };
 			}
 			return { uid: `existing-${index}-${Date.now()}`, ...item };
@@ -271,11 +272,11 @@ export default function FileSelect({
 	const handleSelect = (selected) => {
 		if (mode === 'image' || mode === 'avatar') {
 			// 单选
-			const file = Array.isArray(selected) ? selected[0] : selected;
+			const file = nb.pubfn.isArray(selected) ? selected[0] : selected;
 			setFileList([{ uid: `selected-${Date.now()}`, url: file.url, name: file.name, mimeType: file.mimeType }]);
 		} else {
 			// 多选
-			const files = Array.isArray(selected) ? selected : [selected];
+			const files = nb.pubfn.isArray(selected) ? selected : [selected];
 			const newFiles = files.map((f, i) => ({
 				uid: `selected-${Date.now()}-${i}`,
 				url: f.url,

@@ -3,6 +3,7 @@
 import { createCrudActions } from '@/lib/core/crud-helper';
 import { wrapAction } from '@/lib/core/action-wrapper';
 import { prisma } from '@/lib/database/prisma';
+import nb from '@/lib/function';
 
 /**
  * Role CRUD 配置
@@ -139,8 +140,8 @@ const roleConfig = {
 
 		output: (data) => {
 			if (data.enable === undefined) data.enable = true;
-			if (!data.permission || !Array.isArray(data.permission)) data.permission = [];
-			if (!data.menu || !Array.isArray(data.menu)) data.menu = [];
+			if (!data.permission || !nb.pubfn.isArray(data.permission)) data.permission = [];
+			if (!data.menu || !nb.pubfn.isArray(data.menu)) data.menu = [];
 			if (data.inheritMenuPermissions === undefined) data.inheritMenuPermissions = false;
 			return data;
 		},
@@ -179,10 +180,10 @@ export const getRoleListForSelectAction = wrapAction('sysQueryRoleListForSelect'
 
 			if (!role.enable) badges.push('[已禁用]');
 
-			const permCount = Array.isArray(role.permission) ? role.permission.length : 0;
+			const permCount = nb.pubfn.isArray(role.permission) ? role.permission.length : 0;
 			if (permCount > 0) badges.push(`${permCount}权限`);
 
-			const menuCount = Array.isArray(role.menu) ? role.menu.length : 0;
+			const menuCount = nb.pubfn.isArray(role.menu) ? role.menu.length : 0;
 			if (menuCount > 0) badges.push(`${menuCount}菜单`);
 
 			const badgeStr = badges.length > 0 ? ` ${badges.join(' ')}` : '';
@@ -212,7 +213,7 @@ export const assignPermissionsToRoleAction = wrapAction('sysAssignPermissionsToR
 		return { success: false, error: 'roleId is required' };
 	}
 
-	if (!Array.isArray(permissionIds)) {
+	if (!nb.pubfn.isArray(permissionIds)) {
 		return { success: false, error: 'permissionIds must be an array' };
 	}
 
@@ -231,7 +232,7 @@ export const assignMenusToRoleAction = wrapAction('sysAssignMenusToRole', async 
 		return { success: false, error: 'roleId is required' };
 	}
 
-	if (!Array.isArray(menuIds)) {
+	if (!nb.pubfn.isArray(menuIds)) {
 		return { success: false, error: 'menuIds must be an array' };
 	}
 

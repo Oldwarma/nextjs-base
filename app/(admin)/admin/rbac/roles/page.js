@@ -14,6 +14,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Tag, Button, Modal, Tree, App, Space, Switch, Tooltip } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, KeyOutlined, MenuOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import nb from '@/lib/function';
 
 // Dynamically import SmartCrudPage
 const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
@@ -87,7 +88,7 @@ export default function RolesManagementPage() {
 				const currentPerms = result.data?.permission || [];
 				console.log('[Roles] Current permissions:', currentPerms);
 				// 确保权限ID是字符串数组
-				const permIds = currentPerms.map((p) => String(typeof p === 'object' ? p.id : p));
+				const permIds = currentPerms.map((p) => String(nb.pubfn.isObject(p) ? p.id : p));
 				console.log('[Roles] Converted permission IDs:', permIds);
 				setSelectedPermissions(permIds);
 			} else {
@@ -214,7 +215,7 @@ export default function RolesManagementPage() {
 				table: {
 					width: 120,
 					render: (value) => {
-						const count = Array.isArray(value) ? value.length : 0;
+						const count = nb.pubfn.isArray(value) ? value.length : 0;
 						return <Tag color='blue'>{count} permissions</Tag>;
 					},
 				},
@@ -223,7 +224,7 @@ export default function RolesManagementPage() {
 						// 优先使用连表数据 permissionList，fallback 到原始字段 permission
 						const permissions = record.permissionList || value || [];
 
-						if (!Array.isArray(permissions) || permissions.length === 0) {
+						if (!nb.pubfn.isArray(permissions) || permissions.length === 0) {
 							return <span style={{ color: '#999' }}>No permissions assigned</span>;
 						}
 
@@ -258,7 +259,7 @@ export default function RolesManagementPage() {
 				table: {
 					width: 100,
 					render: (value) => {
-						const count = Array.isArray(value) ? value.length : 0;
+						const count = nb.pubfn.isArray(value) ? value.length : 0;
 						return <Tag color='cyan'>{count} menus</Tag>;
 					},
 				},
@@ -267,7 +268,7 @@ export default function RolesManagementPage() {
 						// 优先使用连表数据 menuList，fallback 到原始字段 menu
 						const menus = record.menuList || value || [];
 
-						if (!Array.isArray(menus) || menus.length === 0) {
+						if (!nb.pubfn.isArray(menus) || menus.length === 0) {
 							return <span style={{ color: '#999' }}>No menus assigned</span>;
 						}
 

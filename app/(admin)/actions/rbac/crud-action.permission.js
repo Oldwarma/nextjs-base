@@ -157,11 +157,11 @@ const permissionConfig = {
 	transforms: {
 		output: (data) => {
 			if (!data) return data;
-			if (data.actions && !Array.isArray(data.actions)) data.actions = [];
-			if (typeof data.sort !== 'number') data.sort = parseInt(data.sort) || 0;
-			if (typeof data.crudCategory !== 'number') data.crudCategory = parseInt(data.crudCategory) || 0;
-			if (typeof data.level !== 'number') data.level = parseInt(data.level) || 0;
-			if (typeof data.enable !== 'boolean') data.enable = data.enable === true || data.enable === 'true';
+			if (data.actions && !nb.pubfn.isArray(data.actions)) data.actions = [];
+			if (!nb.pubfn.isNumber(data.sort)) data.sort = parseInt(data.sort) || 0;
+			if (!nb.pubfn.isNumber(data.crudCategory)) data.crudCategory = parseInt(data.crudCategory) || 0;
+			if (!nb.pubfn.isNumber(data.level)) data.level = parseInt(data.level) || 0;
+			if (!nb.pubfn.isBoolean(data.enable)) data.enable = data.enable === true || data.enable === 'true';
 			return data;
 		},
 		input: (data) => {
@@ -169,8 +169,8 @@ const permissionConfig = {
 			if (data.parentId === '') data.parentId = null;
 			if (data.remark === '') data.remark = null;
 			if (data.actions) {
-				if (!Array.isArray(data.actions)) data.actions = [];
-				data.actions = [...new Set(data.actions.filter((a) => a && typeof a === 'string'))];
+				if (!nb.pubfn.isArray(data.actions)) data.actions = [];
+				data.actions = [...new Set(data.actions.filter((a) => a && nb.pubfn.isString(a)))];
 			}
 			if (data.sort !== undefined) data.sort = parseInt(data.sort) || 0;
 			if (data.crudCategory !== undefined) data.crudCategory = parseInt(data.crudCategory) || 0;

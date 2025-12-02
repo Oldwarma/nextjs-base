@@ -16,6 +16,7 @@ import {
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { getDashboardStats } from '@/app/(admin)/actions/dashboard/dashboard-stats';
+import nb from '@/lib/function';
 
 // 动态导入图表组件，避免 SSR 问题
 const Column = dynamic(() => import('@ant-design/charts').then(mod => mod.Column), { ssr: false });
@@ -49,7 +50,7 @@ function StatsCard({ icon, iconColor, iconBg, title, value, growthValue, growthT
 				<div style={{ flex: 1, minWidth: 0 }}>
 					<div style={{ fontSize: 13, color: '#8c8c8c', marginBottom: 4 }}>{title}</div>
 					<div style={{ fontSize: 28, fontWeight: 600, color: '#262626', lineHeight: 1.2 }}>
-						{typeof value === 'number' ? value.toLocaleString() : value}
+						{nb.pubfn.isNumber(value) ? value.toLocaleString() : value}
 					</div>
 					<div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
 						<span style={{ fontSize: 12, color: '#8c8c8c' }}>Weekly</span>

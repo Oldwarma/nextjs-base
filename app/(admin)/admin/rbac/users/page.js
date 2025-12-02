@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Avatar, Modal, Tree, Tag, Space, Button, Form, Input, Select, InputNumber, Switch, App } from 'antd';
 import { UserOutlined, TeamOutlined, PlusOutlined, KeyOutlined, StopOutlined } from '@ant-design/icons';
+import nb from '@/lib/function';
 
 // 动态导入 SmartCrudPage，禁用 SSR 避免 Hydration 错误
 const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page'), {
@@ -127,7 +128,7 @@ export default function UsersManagementPage() {
 
 				const roleIds = userRoles
 					.map((role) => {
-						if (typeof role === 'string') {
+						if (nb.pubfn.isString(role)) {
 							return role;
 						}
 						return String(role.id || '');
@@ -424,7 +425,7 @@ export default function UsersManagementPage() {
 					ellipsis: true,
 					render: (value, record) => {
 						const roles = record.roleList || value || [];
-						if (!Array.isArray(roles) || roles.length === 0) {
+						if (!nb.pubfn.isArray(roles) || roles.length === 0) {
 							return <span style={{ color: '#999' }}>No roles assigned</span>;
 						}
 						return (
@@ -458,7 +459,7 @@ export default function UsersManagementPage() {
 				detail: {
 					render: (value, record) => {
 						const roles = record.roleList || value || [];
-						if (!Array.isArray(roles) || roles.length === 0) {
+						if (!nb.pubfn.isArray(roles) || roles.length === 0) {
 							return <span style={{ color: '#999' }}>No roles assigned</span>;
 						}
 						return (

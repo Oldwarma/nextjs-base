@@ -2,6 +2,7 @@
 
 import SmartCrudPage from '@/components/admin/smart-crud-page';
 import * as actions from '@/app/(admin)/actions/rbac/crud-action.permission';
+import nb from '@/lib/function';
 
 /**
  * Permission Management Page
@@ -166,12 +167,12 @@ export default function PermissionsManagementPage() {
 			search: false,
 			detail: {
 				render: (value) => {
-					if (!value || !Array.isArray(value) || value.length === 0) {
+					if (!value || !nb.pubfn.isArray(value) || value.length === 0) {
 						return <span style={{ color: '#999' }}>-</span>;
 					}
 					const stringValues = value.map((item) => {
-						if (typeof item === 'string') return item;
-						if (typeof item === 'object' && item !== null) {
+						if (nb.pubfn.isString(item)) return item;
+						if (nb.pubfn.isObject(item) && item !== null) {
 							return item.value || item.name || JSON.stringify(item);
 						}
 						return String(item);
@@ -196,12 +197,12 @@ export default function PermissionsManagementPage() {
 			search: false,
 			detail: {
 				render: (value) => {
-					if (!value || !Array.isArray(value) || value.length === 0) {
+					if (!value || !nb.pubfn.isArray(value) || value.length === 0) {
 						return <span style={{ color: '#999' }}>-</span>;
 					}
 					const stringValues = value.map((item) => {
-						if (typeof item === 'string') return item;
-						if (typeof item === 'object' && item !== null) {
+						if (nb.pubfn.isString(item)) return item;
+						if (nb.pubfn.isObject(item) && item !== null) {
 							return item.value || item.name || JSON.stringify(item);
 						}
 						return String(item);

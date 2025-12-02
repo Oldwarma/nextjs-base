@@ -20,6 +20,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Form, Row, Col, Typography, Divider } from 'antd';
 import { evaluateRule } from '@/lib/crud/rule-evaluator';
 import { FIELD_TYPE_REGISTRY } from '@/lib/crud/field-types';
+import nb from '@/lib/function';
 
 const { Title, Text } = Typography;
 
@@ -87,7 +88,7 @@ export default function DynamicFormFields({
 	// 收集所有需要通过 action 加载数据的字段
 	useEffect(() => {
 		const fieldsWithAction = flattenFields.filter(
-			field => field.form?.action && typeof field.form.action === 'string'
+			field => field.form?.action && nb.pubfn.isString(field.form.action)
 		);
 
 		if (fieldsWithAction.length === 0) return;
@@ -147,7 +148,7 @@ export default function DynamicFormFields({
 		let processedField = { ...field };
 		
 		// 如果 data 是函数，调用它获取实际数据
-		if (typeof field.data === 'function') {
+		if (nb.pubfn.isFunction(field.data)) {
 			try {
 				const computedData = field.data(formData);
 				processedField = {
@@ -214,8 +215,8 @@ export default function DynamicFormFields({
 		// 1. watch: (params) => { ... }
 		// 2. watch: { handler: (value, helpers) => { ... } }
 		const hasWatch = field.watch && (
-			typeof field.watch === 'function' || 
-			(typeof field.watch === 'object' && typeof field.watch.handler === 'function')
+			nb.pubfn.isFunction(field.watch) || 
+			(nb.pubfn.isObject(field.watch) && nb.pubfn.isFunction(field.watch.handler))
 		);
 		
 		if (hasWatch) {
@@ -337,7 +338,7 @@ function FieldWithWatch({ field, fieldComponent, formInstance, formData, index }
 		if (currentValueStr !== prevValueStr) {
 			try {
 				// 获取当前选项数据（如果有）
-				const options = Array.isArray(field.data) ? field.data : [];
+				const options = nb.pubfn.isArray(field.data) ? field.data : [];
 				const option = options.find(item => item.value === currentValue);
 				
 				// 创建 setFieldValue 辅助函数
@@ -346,7 +347,7 @@ function FieldWithWatch({ field, fieldComponent, formInstance, formData, index }
 				};
 				
 				// 支持两种格式
-				if (typeof field.watch === 'function') {
+				if (nb.pubfn.isFunction(field.watch)) {
 					// 格式 1: watch: (params) => { ... }
 					field.watch({
 						value: currentValue,
@@ -357,7 +358,7 @@ function FieldWithWatch({ field, fieldComponent, formInstance, formData, index }
 						$set: setFieldValue,
 						setFieldValue: setFieldValue,
 					});
-				} else if (typeof field.watch === 'object' && typeof field.watch.handler === 'function') {
+				} else if (nb.pubfn.isObject(field.watch) && nb.pubfn.isFunction(field.watch.handler)) {
 					// 格式 2: watch: { handler: (value, helpers) => { ... } }
 					field.watch.handler(currentValue, {
 						formData: formData,

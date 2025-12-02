@@ -21,6 +21,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import { ProTable, DrawerForm, createIntl } from '@ant-design/pro-components';
 import { Button, Space, Dropdown, Popconfirm, Descriptions, App } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, MoreOutlined } from '@ant-design/icons';
+import nb from '@/lib/function';
 
 // ProComponents 英文语言包
 import enUSIntl from '@ant-design/pro-provider/es/locale/en_US';
@@ -270,8 +271,8 @@ export default function SmartCrudPage({
 						}
 
 						// 计算动态属性
-						const actionText = typeof action.text === 'function' ? action.text(record) : action.text;
-						const isDanger = typeof action.danger === 'function' ? action.danger(record) : action.danger || false;
+						const actionText = nb.pubfn.isFunction(action.text) ? action.text(record) : action.text;
+						const isDanger = nb.pubfn.isFunction(action.danger) ? action.danger(record) : action.danger || false;
 
 						// 判断是平铺显示还是放入更多菜单
 						// inMore 为 true 时放入更多菜单，否则平铺显示
@@ -281,7 +282,7 @@ export default function SmartCrudPage({
 							// 如果需要确认，必须使用 modalApi.confirm（模态对话框）
 							const handleClick = action.confirm
 								? () => {
-										const confirmConfig = typeof action.confirm === 'function' 
+										const confirmConfig = nb.pubfn.isFunction(action.confirm) 
 											? action.confirm(record) 
 											: action.confirm;
 										
@@ -307,7 +308,7 @@ export default function SmartCrudPage({
 						} else {
 							// 如果配置了 confirm，使用 Popconfirm 包裹
 							if (action.confirm) {
-								const confirmConfig = typeof action.confirm === 'function' 
+								const confirmConfig = nb.pubfn.isFunction(action.confirm) 
 									? action.confirm(record) 
 									: action.confirm;
 								
@@ -469,7 +470,7 @@ export default function SmartCrudPage({
 		const dataList = result.data || [];
 		if (dataList.length > 0) {
 			const hasChildren = dataList.some(item => 
-				item.children && Array.isArray(item.children) && item.children.length > 0
+				item.children && nb.pubfn.isArray(item.children) && item.children.length > 0
 			);
 			if (hasChildren && !isTreeData) {
 				setIsTreeData(true);
@@ -501,12 +502,12 @@ export default function SmartCrudPage({
 				if (value instanceof Date) {
 					// Date 对象转换为 ISO 字符串
 					cleaned[key] = value.toISOString();
-				} else if (Array.isArray(value)) {
+				} else if (nb.pubfn.isArray(value)) {
 					// 递归清理数组
 					cleaned[key] = value.map(item => 
-						typeof item === 'object' ? cleanRecord(item) : item
+						nb.pubfn.isObject(item) ? cleanRecord(item) : item
 					);
-				} else if (value && typeof value === 'object' && value.constructor === Object) {
+				} else if (value && nb.pubfn.isObject(value) && value.constructor === Object) {
 					// 递归清理普通对象
 					cleaned[key] = cleanRecord(value);
 				} else {
@@ -575,7 +576,7 @@ export default function SmartCrudPage({
 	const handleSave = async (values) => {
 		try {
 			// 获取 row 的 key（支持 string 或 function）
-			const id = typeof rowKey === 'function' ? rowKey(currentRow) : currentRow[rowKey];
+			const id = nb.pubfn.isFunction(rowKey) ? rowKey(currentRow) : currentRow[rowKey];
 			
 			// 统一传递 { id, ...values } 格式，兼容 wrapAction 的单参数设计
 			const result = await actions.update({ id, ...values });
@@ -818,7 +819,7 @@ export default function SmartCrudPage({
 							} else if (value === null || value === undefined) {
 								// 空值显示为 -
 								displayValue = '-';
-							} else if (value instanceof Date || (typeof value === 'string' && !isNaN(Date.parse(value)) && value.includes('T'))) {
+							} else if (value instanceof Date || (nb.pubfn.isString(value) && !isNaN(Date.parse(value)) && value.includes('T'))) {
 								// Date 对象或 ISO 日期字符串
 								const date = value instanceof Date ? value : new Date(value);
 								displayValue = date.toLocaleString('zh-CN', {
@@ -829,13 +830,13 @@ export default function SmartCrudPage({
 									minute: '2-digit',
 									second: '2-digit',
 								});
-							} else if (Array.isArray(value)) {
+							} else if (nb.pubfn.isArray(value)) {
 								// 数组转换为逗号分隔的字符串
 								displayValue = value.join(', ');
-							} else if (typeof value === 'object') {
+							} else if (nb.pubfn.isObject(value)) {
 								// 其他对象转换为 JSON
 								displayValue = JSON.stringify(value, null, 2);
-							} else if (typeof value === 'boolean') {
+							} else if (nb.pubfn.isBoolean(value)) {
 								// 布尔值转换为 Yes/No
 								displayValue = value ? 'Yes' : 'No';
 							} else {
