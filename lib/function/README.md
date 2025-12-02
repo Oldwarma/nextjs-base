@@ -2,6 +2,12 @@
 
 参考 [vk-unicloud 的 pubfn API](https://vkdoc.fsq.pub/client/jsapi.html#common) 设计，提供统一的工具函数库。
 
+> **注意**: 本工具库原本基于 MongoDB 设计（vk-unicloud），已适配 PostgreSQL/Prisma 环境。
+> 主要变更：
+> - `_id` → `id`（主键字段名）
+> - `parent_id` → `parentId`（父级字段名，遵循 Prisma 驼峰命名）
+> - 移除 MongoDB ObjectId 相关处理
+
 ## 使用方式
 
 ```javascript
@@ -312,14 +318,21 @@ const newObj = nb.pubfn.deleteObjectKeys(obj, ['password']);
 
 ### getListItem - 获取数组中某个对象
 
+根据指定的键名和键值，快速获取数组中的某个对象。
+
 ```javascript
 const list = [
   { id: 1, name: '张三' },
   { id: 2, name: '李四' }
 ];
 
+// 使用 id 作为键名
 nb.pubfn.getListItem(list, 'id', 2);
 // { id: 2, name: '李四' }
+
+// 使用其他字段
+nb.pubfn.getListItem(list, 'name', '张三');
+// { id: 1, name: '张三' }
 ```
 
 ### getListIndex - 获取数组中某个对象的索引
@@ -328,7 +341,16 @@ nb.pubfn.getListItem(list, 'id', 2);
 nb.pubfn.getListIndex(list, 'id', 2);  // 1
 ```
 
-### arrayToJson - 数组转对象
+### getListItemIndex - 同时获取对象和索引
+
+```javascript
+const result = nb.pubfn.getListItemIndex(list, 'id', 2);
+// { item: { id: 2, name: '李四' }, index: 1 }
+```
+
+### arrayToJson / listToJson - 数组转对象
+
+将对象数组转换为以指定字段为 key 的对象。
 
 ```javascript
 const list = [
@@ -338,6 +360,9 @@ const list = [
 
 nb.pubfn.arrayToJson(list, 'id');
 // { a: { id: 'a', name: '张三' }, b: { id: 'b', name: '李四' } }
+
+// listToJson 是 arrayToJson 的别名
+nb.pubfn.listToJson(list, 'id');
 ```
 
 ### arrayObjectGetArray - 从数组中提取某字段
@@ -384,7 +409,7 @@ nb.pubfn.tree.arrayToTree(arr, options);
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | id | String | 'id' | 主键字段名 |
-| parentId | String | 'parentId' | 父级字段名 |
+| parentId | String | 'parentId' | 父级字段名（Prisma 驼峰命名） |
 | children | String | 'children' | 子节点字段名 |
 | rootParentId | any | null | 根节点的 parentId 值 |
 | deleteParentId | Boolean | false | 是否删除 parentId 字段 |
@@ -409,10 +434,10 @@ const tree = nb.pubfn.tree.arrayToTree(list, {
   sortBy: [{ field: 'sort', order: 'asc' }]
 });
 
-// 自定义字段名
+// 自定义字段名（适配不同数据库命名）
 const tree = nb.pubfn.tree.arrayToTree(list, {
-  id: '_id',
-  parentId: 'pid',
+  id: 'id',           // PostgreSQL/Prisma 使用 id
+  parentId: 'parentId', // Prisma 驼峰命名
   children: 'items'
 });
 ```
@@ -662,4 +687,128 @@ const handleSearch = (keyword) => {
   }, 300);
 };
 ```
+
+---
+
+## 项目中的使用场景
+
+以下是本项目中实际使用 `nb.pubfn` 的场景：
+
+### 1. 时间格式化（action-logger.js）
+
+```javascript
+// 替代手写的时间格式化函数
+function formatTimePrefix(date) {
+  return nb.pubfn.timeFormat(date, 'hh:mm:ss.S');
+}
+
+function formatDateTime(date) {
+  if (nb.pubfn.isNull(date)) return 'N/A';
+  return nb.pubfn.timeFormat(date, 'yyyy-MM-dd hh:mm:ss');
+}
+```
+
+### 2. 空值判断（selects.js / base.js）
+
+```javascript
+// 替代 !whereJson || Object.keys(whereJson).length === 0
+if (nb.pubfn.isNull(whereJson)) {
+  return { clause: '', params: [], nextIndex: paramIndex };
+}
+
+// 替代 typeof value === 'object' && !Array.isArray(value)
+if (nb.pubfn.isObject(value) && !nb.pubfn.isArray(value)) {
+  // 处理对象类型
+}
+```
+
+### 3. 数组提取（action-logger.js）
+
+```javascript
+// 替代 oldestLogs.map((log) => log.id)
+const idsToDelete = nb.pubfn.arrayObjectGetArray(oldestLogs, 'id');
+```
+
+### 4. 树形结构转换（sys.js / crud-action.menu.js）
+
+```javascript
+// 构建菜单树
+const menuTree = nb.pubfn.tree.arrayToTree(allMenus, {
+  filter: (item) => item.enable && !item.hidden,
+  sortBy: [{ field: 'sort', order: 'asc' }],
+});
+
+// 转换为 TreeSelect 格式
+const selectTree = nb.pubfn.tree.mapTree(menuTree, (node) => ({
+  title: node.name,
+  value: node.id,
+  key: node.id,
+}));
+```
+
+### 5. 对象字段删除（selects.js）
+
+```javascript
+// 替代手动删除字段
+processedData = data.map(row => {
+  return nb.pubfn.deleteObjectKeys(row, excludeFields);
+});
+```
+
+---
+
+## 从 vk-unicloud 迁移说明
+
+如果你之前使用 vk-unicloud，以下是主要变更：
+
+| vk-unicloud | nb.pubfn | 说明 |
+|-------------|----------|------|
+| `vk.pubfn.xxx` | `nb.pubfn.xxx` | 命名空间变更 |
+| `_id` | `id` | 主键字段名（PostgreSQL） |
+| `parent_id` | `parentId` | 父级字段名（Prisma 驼峰命名） |
+| MongoDB ObjectId | String UUID | ID 类型变更 |
+
+```javascript
+// vk-unicloud (MongoDB)
+vk.pubfn.getListItem(list, '_id', value);
+vk.pubfn.arrayToTree(list, { id: '_id', parent_id: 'parent_id' });
+
+// nb.pubfn (PostgreSQL/Prisma)
+nb.pubfn.getListItem(list, 'id', value);
+nb.pubfn.tree.arrayToTree(list, { id: 'id', parentId: 'parentId' });
+```
+
+---
+
+## 已移除的 UniApp/小程序专属函数
+
+以下函数已从 `nb.pubfn` 中移除，因为它们依赖 UniApp/小程序环境：
+
+| 函数名 | 原因 |
+|--------|------|
+| `getListData` / `getListData2` | 依赖 `uni.vk`、`vk.callFunction` |
+| `getComponentsDynamicData` | 依赖 `uni.getStorageSync` |
+| `getPageFullPath` | 依赖 `getCurrentPages()` |
+| `getPlatform` | 依赖 UniApp 条件编译 `#ifdef` |
+| `getCurrentPage` / `getCurrentPageRoute` | 依赖 `getCurrentPages()` |
+| `requestSubscribeMessage` | 微信小程序专属 |
+| `checkLogin` | 依赖 `vk.navigate`、`uni.reLaunch` |
+| `getLocalFilePath` | APP 专属，依赖 `plus.io` |
+| `getLocale` / `setLocale` / `getLocaleList` / `getLocaleObject` | 依赖 `uni.getLocale` |
+| `objectAssignForVue` | Vue2 专属 |
+
+### 保留的浏览器端函数
+
+以下函数已改造为纯浏览器端实现，可在 Next.js 中使用：
+
+- `fileToBase64` - 使用 `FileReader` API
+- `base64ToFile` - 使用 `Blob` API
+- `base64toBlob` - 使用 `Uint8Array`
+- `blobToFile` - 使用 `URL.createObjectURL`
+
+---
+
+## 待办：国际化支持
+
+> **提醒**：如需在 Next.js 中使用语言相关功能，建议使用 `next-intl` 库替代原来的 `getLocale` 等函数。
 

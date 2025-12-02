@@ -223,9 +223,9 @@ export const getMenuTreeForSelectAction = wrapAction('sysQueryMenuTreeForSelect'
 
 	// 使用 mapTree 转换为 TreeSelect 格式
 	const menuItems = nb.pubfn.tree.mapTree(result.rows || [], (node) => ({
-		title: node.name,
-		value: node.id,
-		key: node.id,
+				title: node.name,
+				value: node.id,
+				key: node.id,
 	}));
 
 	const formattedTree = includeRootOption

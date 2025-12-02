@@ -3,6 +3,7 @@ import { checkBackendAccessAction, checkIsAdminAction } from '@/lib/auth/admin-a
 import { logAction } from '@/lib/logging/action-logger';
 import { validateWithConfig, runCustomValidators } from '@/lib/validation/auto-schema';
 import { selects } from '@/lib/database/selects';
+import nb from '@/lib/function';
 /**
  * 检测是否为 Prisma Decimal 类型
  * 使用 duck typing 检测，因为 instanceof 可能因为不同模块实例化而失效
@@ -24,12 +25,13 @@ function isDecimal(value) {
  * - BigInt -> number
  */
 function serializeRecord(record) {
-	if (!record || typeof record !== 'object') {
+	// 使用 nb.pubfn.isNull 判断空值
+	if (nb.pubfn.isNull(record) || !nb.pubfn.isObject(record)) {
 		return record;
 	}
 
 	// 处理数组
-	if (Array.isArray(record)) {
+	if (nb.pubfn.isArray(record)) {
 		return record.map(serializeRecord);
 	}
 
@@ -45,7 +47,7 @@ function serializeRecord(record) {
 
 	const serialized = {};
 	for (const [key, value] of Object.entries(record)) {
-		if (value === null || value === undefined) {
+		if (nb.pubfn.isNull(value)) {
 			serialized[key] = value;
 		} else if (isDecimal(value)) {
 			// Prisma Decimal -> number
@@ -56,7 +58,7 @@ function serializeRecord(record) {
 		} else if (value instanceof Date) {
 			// Date 保持为 Date 对象，Next.js 可以序列化
 			serialized[key] = value;
-		} else if (typeof value === 'object') {
+		} else if (nb.pubfn.isObject(value)) {
 			// 递归处理嵌套对象
 			serialized[key] = serializeRecord(value);
 		} else {
@@ -661,7 +663,8 @@ export class BaseDAO {
 	async batchUpdate(ids, data) {
 		await this.checkPermission();
 
-		if (!Array.isArray(ids) || ids.length === 0) {
+		// 使用 nb.pubfn.isNull 判断空数组
+		if (nb.pubfn.isNull(ids)) {
 			throw new Error('IDs array is required');
 		}
 
@@ -697,7 +700,8 @@ export class BaseDAO {
 	async batchDelete(ids) {
 		await this.checkPermission();
 
-		if (!Array.isArray(ids) || ids.length === 0) {
+		// 使用 nb.pubfn.isNull 判断空数组
+		if (nb.pubfn.isNull(ids)) {
 			throw new Error('IDs array is required');
 		}
 

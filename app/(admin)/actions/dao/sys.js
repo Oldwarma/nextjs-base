@@ -670,10 +670,10 @@ export async function getMenuTreeForSelect({ withLabel = true } = {}) {
 	const tree = nb.pubfn.tree.arrayToTree(allMenus, {
 		sortBy: [{ field: 'sort', order: 'asc' }, { field: 'name', order: 'asc' }],
 		transform: withLabel ? (node) => {
-			const badges = [];
-			if (node.enable === false) badges.push('已禁用');
-			if (node.hidden === true) badges.push('隐藏');
-			const badgeText = badges.length > 0 ? ` [${badges.join('/')}]` : '';
+		const badges = [];
+		if (node.enable === false) badges.push('已禁用');
+		if (node.hidden === true) badges.push('隐藏');
+		const badgeText = badges.length > 0 ? ` [${badges.join('/')}]` : '';
 			return { ...node, label: `${node.name}${badgeText}` };
 		} : undefined,
 	});

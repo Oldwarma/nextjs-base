@@ -226,9 +226,9 @@ export const getPermissionTreeForSelectAction = wrapAction('sysQueryPermissionTr
 
 	// 使用 mapTree 转换为 TreeSelect 格式
 	const formattedTree = nb.pubfn.tree.mapTree(tree || [], (node) => ({
-		title: node.name,
-		value: node.id,
-		key: node.id,
+				title: node.name,
+				value: node.id,
+				key: node.id,
 	}));
 
 	return {
