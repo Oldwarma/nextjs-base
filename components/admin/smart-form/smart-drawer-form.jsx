@@ -47,16 +47,24 @@ import DynamicFormFields from '../dynamic-form-fields';
 import { validateFieldsConfig } from '@/lib/crud/field-generator';
 
 /**
- * 清理表单数据中的空 array 项
+ * 清理表单数据中的空 array 项和非法值（如函数）
  */
 function cleanArrayFields(values) {
 	const cleaned = { ...values };
 	
 	Object.keys(cleaned).forEach(key => {
 		const value = cleaned[key];
+		
+		// 过滤掉函数类型的值（可能是配置中的动态函数被意外包含）
+		if (typeof value === 'function') {
+			delete cleaned[key];
+			return;
+		}
+		
 		if (Array.isArray(value)) {
 			cleaned[key] = value.filter(item => {
 				if (item === null || item === undefined) return false;
+				if (typeof item === 'function') return false;
 				if (typeof item === 'string') {
 					return item.trim().length > 0;
 				}

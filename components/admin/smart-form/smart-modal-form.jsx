@@ -45,16 +45,43 @@ import DynamicFormFields from '../dynamic-form-fields';
 import { validateFieldsConfig } from '@/lib/crud/field-generator';
 
 /**
- * 清理表单数据中的空 array 项
+ * 表单内容包装组件
+ * 
+ * ModalForm 会通过 React.cloneElement 向子元素传递额外的 props（如 fieldProps、autoFocus 等）
+ * 这个包装组件会吸收这些属性，只渲染 children，避免：
+ * 1. "React does not recognize the `fieldProps` prop on a DOM element" 错误
+ * 2. "Invalid prop `autoFocus` supplied to `React.Fragment`" 错误
+ * 
+ * 实现原理：
+ * - 这是一个 React 函数组件，不是 DOM 元素
+ * - 所有传递给它的 props（包括 fieldProps）都会被 React 正常处理
+ * - 我们只使用 children，忽略其他所有 props
+ * - 这样就不会有任何非标准属性被传递到 DOM 元素上
+ */
+const FormContentWrapper = React.memo(function FormContentWrapper(props) {
+	// 只取 children，完全忽略其他所有属性（包括 fieldProps、autoFocus 等）
+	return <>{props.children}</>;
+});
+
+/**
+ * 清理表单数据中的空 array 项和非法值（如函数）
  */
 function cleanArrayFields(values) {
 	const cleaned = { ...values };
 	
 	Object.keys(cleaned).forEach(key => {
 		const value = cleaned[key];
+		
+		// 过滤掉函数类型的值（可能是配置中的动态函数被意外包含）
+		if (typeof value === 'function') {
+			delete cleaned[key];
+			return;
+		}
+		
 		if (Array.isArray(value)) {
 			cleaned[key] = value.filter(item => {
 				if (item === null || item === undefined) return false;
+				if (typeof item === 'function') return false; // 过滤函数
 				if (typeof item === 'string') {
 					return item.trim().length > 0;
 				}
@@ -232,6 +259,13 @@ const SmartModalForm = forwardRef(function SmartModalForm({
 		...modalProps,
 	};
 	
+	// 过滤掉不应传递给 ModalForm 的属性
+	// fieldProps 是字段级别的属性，不应该传递给 ModalForm
+	const {
+		fieldProps: _fieldProps, // 移除 fieldProps，避免传递到 DOM
+		...safeFormProps
+	} = formProps;
+	
 	return (
 		<ModalForm
 			title={renderTitle()}
@@ -244,15 +278,22 @@ const SmartModalForm = forwardRef(function SmartModalForm({
 			grid={false}
 			modalProps={mergedModalProps}
 			trigger={trigger}
-			{...formProps}
+			{...safeFormProps}
 		>
-		<DynamicFormFields
-			fieldsConfig={fieldsConfig}
-			formInstance={formInstance}
-			isCreate={isCreate}
-			actions={actions}
-		/>
-			{children}
+			{/* 
+			 * 使用 FormContentWrapper 包装子组件
+			 * ModalForm 会通过 cloneElement 传递 fieldProps、autoFocus 等属性给直接子元素
+			 * FormContentWrapper 会吸收这些属性，避免传递到 DOM 或 Fragment
+			 */}
+			<FormContentWrapper>
+				<DynamicFormFields
+					fieldsConfig={fieldsConfig}
+					formInstance={formInstance}
+					isCreate={isCreate}
+					actions={actions}
+				/>
+				{children}
+			</FormContentWrapper>
 		</ModalForm>
 	);
 });

@@ -653,7 +653,7 @@ export default function SmartCrudPage({
 						...userPagination, // 用户配置覆盖默认值
 					}
 				)}
-				scroll={{ x: 1400, ...userScroll }}
+				scroll={{ x: 1400, y: 'calc(100vh - 400px)', ...userScroll }}
 				expandable={finalExpandable}
 				rowSelection={
 					batchActions.length > 0

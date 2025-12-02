@@ -13,12 +13,12 @@ const SmartCrudPage = dynamic(() => import('@/components/admin/smart-crud-page')
 
 // 分类数据
 const categoryOptions = [
-	{ label: '📱 Electronics', value: 'electronics' },
-	{ label: '👕 Clothing', value: 'clothing' },
-	{ label: '🍔 Food', value: 'food' },
-	{ label: '📚 Books', value: 'books' },
-	{ label: '⚽ Sports', value: 'sports' },
-	{ label: '📦 Other', value: 'other' },
+	{ label: 'Electronics', value: 'electronics' },
+	{ label: 'Clothing', value: 'clothing' },
+	{ label: 'Food', value: 'food' },
+	{ label: 'Books', value: 'books' },
+	{ label: 'Sports', value: 'sports' },
+	{ label: 'Other', value: 'other' },
 ];
 
 // 子分类数据（根据主分类联动）
@@ -55,53 +55,53 @@ const subCategoryMap = {
 
 // 状态选项
 const statusOptions = [
-	{ label: '📝 Draft', value: 'draft', color: 'default' },
-	{ label: '⏳ Pending', value: 'pending', color: 'processing' },
+	{ label: 'Draft', value: 'draft', color: 'default' },
+	{ label: 'Pending', value: 'pending', color: 'processing' },
 	{ label: 'Published', value: 'published', color: 'success' },
-	{ label: '📦 Archived', value: 'archived', color: 'warning' },
+	{ label: 'Archived', value: 'archived', color: 'warning' },
 ];
 
 // 优先级选项
 const priorityOptions = [
-	{ label: '🟢 Low', value: 'low', color: 'green' },
-	{ label: '🟡 Medium', value: 'medium', color: 'gold' },
-	{ label: '🟠 High', value: 'high', color: 'orange' },
-	{ label: '🔴 Urgent', value: 'urgent', color: 'red' },
+	{ label: 'Low', value: 'low', color: 'green' },
+	{ label: 'Medium', value: 'medium', color: 'gold' },
+	{ label: 'High', value: 'high', color: 'orange' },
+	{ label: 'Urgent', value: 'urgent', color: 'red' },
 ];
 
 // 联系方式类型
 const contactTypeOptions = [
-	{ label: '📧 Email', value: 'email' },
-	{ label: '📱 Phone', value: 'phone' },
-	{ label: '💬 WeChat', value: 'wechat' },
-	{ label: '🚫 None', value: 'none' },
+	{ label: 'Email', value: 'email' },
+	{ label: 'Phone', value: 'phone' },
+	{ label: 'WeChat', value: 'wechat' },
+	{ label: 'None', value: 'none' },
 ];
 
 // 功能特性
 const featureOptions = [
-	{ label: '💧 Waterproof', value: 'waterproof' },
-	{ label: '📶 Wireless', value: 'wireless' },
-	{ label: '🔋 Rechargeable', value: 'rechargeable' },
-	{ label: '🎒 Portable', value: 'portable' },
-	{ label: '🌍 Eco-Friendly', value: 'eco_friendly' },
-	{ label: '🏆 Premium', value: 'premium' },
+	{ label: 'Waterproof', value: 'waterproof' },
+	{ label: 'Wireless', value: 'wireless' },
+	{ label: 'Rechargeable', value: 'rechargeable' },
+	{ label: 'Portable', value: 'portable' },
+	{ label: 'Eco-Friendly', value: 'eco_friendly' },
+	{ label: 'Premium', value: 'premium' },
 ];
 
 // 标签选项
 const tagOptions = [
-	{ label: '🆕 New', value: 'new', color: 'green' },
-	{ label: '🔥 Hot', value: 'hot', color: 'red' },
-	{ label: '💰 Sale', value: 'sale', color: 'orange' },
-	{ label: '⭐ Featured', value: 'featured', color: 'gold' },
-	{ label: '🎁 Gift', value: 'gift', color: 'purple' },
-	{ label: '⏰ Limited', value: 'limited', color: 'blue' },
+	{ label: 'New', value: 'new', color: 'green' },
+	{ label: 'Hot', value: 'hot', color: 'red' },
+	{ label: 'Sale', value: 'sale', color: 'orange' },
+	{ label: 'Featured', value: 'featured', color: 'gold' },
+	{ label: 'Gift', value: 'gift', color: 'purple' },
+	{ label: 'Limited', value: 'limited', color: 'blue' },
 ];
 
 // 部门树形数据
 const departmentTree = [
 	{
 		value: 'engineering',
-		title: '🔧 Engineering',
+		title: 'Engineering',
 		children: [
 			{ value: 'frontend', title: 'Frontend Team' },
 			{ value: 'backend', title: 'Backend Team' },
@@ -111,7 +111,7 @@ const departmentTree = [
 	},
 	{
 		value: 'product',
-		title: '📊 Product',
+		title: 'Product',
 		children: [
 			{ value: 'design', title: 'Design Team' },
 			{ value: 'pm', title: 'Product Management' },
@@ -120,7 +120,7 @@ const departmentTree = [
 	},
 	{
 		value: 'marketing',
-		title: '📢 Marketing',
+		title: 'Marketing',
 		children: [
 			{ value: 'seo', title: 'SEO' },
 			{ value: 'content', title: 'Content' },
@@ -130,7 +130,7 @@ const departmentTree = [
 	},
 	{
 		value: 'sales',
-		title: '💼 Sales',
+		title: 'Sales',
 		children: [
 			{ value: 'b2b', title: 'B2B Sales' },
 			{ value: 'b2c', title: 'B2C Sales' },
@@ -143,7 +143,7 @@ const departmentTree = [
 const locationData = [
 	{
 		value: 'us',
-		label: '🇺🇸 United States',
+		label: 'United States',
 		children: [
 			{
 				value: 'ca',
@@ -175,7 +175,7 @@ const locationData = [
 	},
 	{
 		value: 'cn',
-		label: '🇨🇳 China',
+		label: 'China',
 		children: [
 			{
 				value: 'beijing',
@@ -207,7 +207,7 @@ const locationData = [
 	},
 	{
 		value: 'jp',
-		label: '🇯🇵 Japan',
+		label: 'Japan',
 		children: [
 			{
 				value: 'tokyo',
@@ -254,7 +254,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'basic-group',
-				title: '📋 Basic Information',
+				title: 'Basic Information',
 				type: 'group',
 				columns: [
 					{
@@ -300,7 +300,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'category-group',
-				title: '📁 Category (with Field Linkage)',
+				title: 'Category (with Field Linkage)',
 				type: 'group',
 				tips: '选择主分类后，子分类会自动更新选项',
 				columns: [
@@ -348,7 +348,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'contact-group',
-				title: '📞 Contact Information (with showRule)',
+				title: 'Contact Information (with showRule)',
 				type: 'group',
 				tips: '根据联系方式类型，显示不同的输入框',
 				columns: [
@@ -405,7 +405,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'price-group',
-				title: '💰 Price Information',
+				title: 'Price Information',
 				type: 'group',
 				columns: [
 					{
@@ -458,7 +458,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'attributes-group',
-				title: '🏷️ Attributes',
+				title: 'Attributes',
 				type: 'group',
 				columns: [
 					{
@@ -500,7 +500,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'org-group',
-				title: '🏢 Organization',
+				title: 'Organization',
 				type: 'group',
 				columns: [
 					{
@@ -531,7 +531,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'datetime-group',
-				title: '📅 Date & Time',
+				title: 'Date & Time',
 				type: 'group',
 				columns: [
 					{
@@ -570,7 +570,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'switches-group',
-				title: '🔘 Status Switches',
+				title: 'Status Switches',
 				type: 'group',
 				tips: '只有 Active 开启时，才能设置 VIP 和通知',
 				columns: [
@@ -628,7 +628,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'media-group',
-				title: '🖼️ Media Files',
+				title: 'Media Files',
 				type: 'group',
 				tips: 'Upload images and files. Supported formats: JPG, PNG, PDF, DOC.',
 				columns: [
@@ -681,7 +681,7 @@ export default function ExamplePermissionPage() {
 			// 文件上传分组
 			{
 				key: 'file-group',
-				title: '📎 File Attachments',
+				title: 'File Attachments',
 				type: 'group',
 				columns: [
 					// 按钮上传（支持排序）
@@ -724,7 +724,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'file-select-group',
-				title: '📂 File Select (From Library)',
+				title: 'File Select (From Library)',
 				type: 'group',
 				tips: 'Select files from the uploaded file library instead of uploading new ones.',
 				columns: [
@@ -792,7 +792,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'advanced-group',
-				title: '⚙️ Advanced Fields',
+				title: 'Advanced Fields',
 				type: 'group',
 				columns: [
 					{
@@ -805,6 +805,17 @@ export default function ExamplePermissionPage() {
 						},
 						table: {
 							width: 150,
+						},
+						col: { span: 8 },
+					},
+					{
+						key: 'progress',
+						title: 'Progress',
+						type: 'slider',
+						form: {
+							min: 0,
+							max: 5,
+							range: { draggableTrack: true },
 						},
 						col: { span: 8 },
 					},
@@ -830,7 +841,7 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'content-group',
-				title: '📝 Content',
+				title: 'Content',
 				type: 'group',
 				columns: [
 					{
@@ -864,13 +875,13 @@ export default function ExamplePermissionPage() {
 			// ============================================
 			{
 				key: 'data-group',
-				title: '📊 Data Fields',
+				title: 'Data Fields',
 				type: 'group',
 				columns: [
 					{
 						key: 'keywords',
 						title: 'Keywords',
-						type: 'array',
+						type: 'tag',
 						form: {
 							placeholder: 'Enter keywords',
 						},

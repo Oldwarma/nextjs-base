@@ -32,7 +32,21 @@ const { Title, Text } = Typography;
  * @param {Boolean} props.isCreate - 是否是创建表单
  * @param {Object} props.actions - Server Actions（用于 action 字符串加载数据）
  */
-export default function DynamicFormFields({ fieldsConfig, formInstance: propFormInstance, isCreate = false, actions = {} }) {
+export default function DynamicFormFields({ 
+	fieldsConfig, 
+	formInstance: propFormInstance, 
+	isCreate = false, 
+	actions = {},
+	// 过滤掉 ModalForm/ProForm 可能传递的额外属性，避免传递到 DOM
+	fieldProps: _fieldProps,
+	formItemProps: _formItemProps,
+	proFieldProps: _proFieldProps,
+	colProps: _colProps,
+	rowProps: _rowProps,
+	grid: _grid,
+	// 忽略其他未知属性
+	...restProps  // eslint-disable-line no-unused-vars
+}) {
 	// 从 Form context 获取 form instance
 	// Form.useFormInstance 在 antd 4.20+ 可用，在 ProForm 内部会自动提供 context
 	const contextFormInstance = Form.useFormInstance();
