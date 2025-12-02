@@ -1,9 +1,9 @@
-import { prisma, generateId } from '@/lib/database/prisma';
+import { prisma } from '@/lib/database/prisma';
+import nb from '@/lib/function';
 import { checkBackendAccessAction, checkIsAdminAction } from '@/lib/auth/admin-auth';
 import { logAction } from '@/lib/logging/action-logger';
 import { validateWithConfig, runCustomValidators } from '@/lib/validation/auto-schema';
 import { selects } from '@/lib/database/selects';
-import nb from '@/lib/function';
 /**
  * 检测是否为 Prisma Decimal 类型
  * 使用 duck typing 检测，因为 instanceof 可能因为不同模块实例化而失效
@@ -548,7 +548,7 @@ export class BaseDAO {
 		}
 
 		if (!filtered[this.config.primaryKey]) {
-			filtered[this.config.primaryKey] = generateId();
+			filtered[this.config.primaryKey] = nb.pubfn.uuid();
 		}
 
 		const result = await this.model.create({ data: filtered });

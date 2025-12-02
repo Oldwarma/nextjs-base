@@ -25,10 +25,14 @@ nb.pubfn.tree.arrayToTree(list);
 
 - [时间处理](#时间处理)
 - [数据校验](#数据校验)
+- [类型判断](#类型判断)
 - [对象操作](#对象操作)
 - [数组操作](#数组操作)
 - [树形结构](#树形结构)
 - [字符串处理](#字符串处理)
+- [URL处理](#url处理)
+- [编码转换](#编码转换)
+- [数学计算](#数学计算)
 - [函数工具](#函数工具)
 
 ---
@@ -237,11 +241,43 @@ const rules = {
 };
 ```
 
-### isArray / isObject - 类型判断
+---
+
+## 类型判断
+
+### isArray / isObject - 基础类型判断
 
 ```javascript
 nb.pubfn.isArray([1, 2, 3]);  // true
 nb.pubfn.isObject({ a: 1 });  // true
+```
+
+### isString / isNumber / isBoolean - 原始类型判断
+
+```javascript
+nb.pubfn.isString('hello');   // true
+nb.pubfn.isNumber(123);       // true
+nb.pubfn.isNumber(NaN);       // false
+nb.pubfn.isBoolean(true);     // true
+```
+
+### isFunction / isDate / isRegExp / isPromise - 高级类型判断
+
+```javascript
+nb.pubfn.isFunction(() => {});  // true
+nb.pubfn.isDate(new Date());    // true
+nb.pubfn.isRegExp(/test/);      // true
+nb.pubfn.isPromise(Promise.resolve());  // true
+```
+
+### getType - 获取精确类型
+
+```javascript
+nb.pubfn.getType([]);           // 'array'
+nb.pubfn.getType({});           // 'object'
+nb.pubfn.getType(null);         // 'null'
+nb.pubfn.getType(undefined);    // 'undefined'
+nb.pubfn.getType(new Date());   // 'date'
 ```
 
 ---
@@ -392,6 +428,85 @@ nb.pubfn.arr_concat(arr1, arr2, 'id');
 ```javascript
 nb.pubfn.checkArrayIntersection([1, 2, 3], [3, 4, 5]);  // true
 nb.pubfn.checkArrayIntersection([1, 2], [3, 4]);  // false
+```
+
+### arrayUnique - 数组去重
+
+```javascript
+nb.pubfn.arrayUnique([1, 2, 2, 3]);  // [1, 2, 3]
+nb.pubfn.arrayUnique([{id:1},{id:2},{id:1}], 'id');  // [{id:1},{id:2}]
+```
+
+### arraySort - 数组排序
+
+```javascript
+nb.pubfn.arraySort([3, 1, 2]);  // [1, 2, 3]
+nb.pubfn.arraySort([{age:30},{age:20}], 'age');  // [{age:20},{age:30}]
+nb.pubfn.arraySort([{age:30},{age:20}], 'age', 'desc');  // [{age:30},{age:20}]
+```
+
+### arrayDiff / arrayIntersect / arrayUnion - 集合运算
+
+```javascript
+// 差集：在 arr1 中但不在 arr2 中
+nb.pubfn.arrayDiff([1,2,3], [2,3,4]);  // [1]
+
+// 交集：同时存在于两个数组
+nb.pubfn.arrayIntersect([1,2,3], [2,3,4]);  // [2,3]
+
+// 并集：合并去重
+nb.pubfn.arrayUnion([1,2,3], [2,3,4]);  // [1,2,3,4]
+
+// 对象数组也支持
+nb.pubfn.arrayDiff([{id:1},{id:2}], [{id:2}], 'id');  // [{id:1}]
+```
+
+### groupBy - 数组分组
+
+```javascript
+const list = [
+  {type:'a', v:1},
+  {type:'b', v:2},
+  {type:'a', v:3}
+];
+nb.pubfn.groupBy(list, 'type');
+// { a: [{type:'a',v:1},{type:'a',v:3}], b: [{type:'b',v:2}] }
+```
+
+### sum / average / max / min - 统计函数
+
+```javascript
+nb.pubfn.sum([1, 2, 3]);  // 6
+nb.pubfn.sum([{v:1},{v:2}], 'v');  // 3
+
+nb.pubfn.average([1, 2, 3]);  // 2
+
+nb.pubfn.max([1, 2, 3]);  // 3
+nb.pubfn.max([{v:1},{v:3},{v:2}], 'v');  // {v:3}
+
+nb.pubfn.min([1, 2, 3]);  // 1
+```
+
+### shuffle / sample / sampleSize - 随机操作
+
+```javascript
+nb.pubfn.shuffle([1, 2, 3, 4, 5]);  // 随机打乱顺序
+nb.pubfn.sample([1, 2, 3, 4, 5]);   // 随机取一个
+nb.pubfn.sampleSize([1, 2, 3, 4, 5], 3);  // 随机取3个
+```
+
+### range - 生成数字数组
+
+```javascript
+nb.pubfn.range(1, 5);      // [1, 2, 3, 4, 5]
+nb.pubfn.range(0, 10, 2);  // [0, 2, 4, 6, 8, 10]
+```
+
+### splitArray - 分割数组
+
+```javascript
+nb.pubfn.splitArray([1,2,3,4,5,6,7,8,9], 3);
+// [[1,2,3], [4,5,6], [7,8,9]]
 ```
 
 ---
@@ -600,6 +715,144 @@ nb.pubfn.queryParams({ ids: [1, 2, 3] }, true, 'brackets');
 // '?ids[]=1&ids[]=2&ids[]=3'
 ```
 
+### trim / trimStart / trimEnd - 去除空格
+
+```javascript
+nb.pubfn.trim('  hello  ');       // 'hello'
+nb.pubfn.trimStart('  hello  ');  // 'hello  '
+nb.pubfn.trimEnd('  hello  ');    // '  hello'
+```
+
+### padStart / padEnd - 字符串填充
+
+```javascript
+nb.pubfn.padStart('5', 2, '0');    // '05'
+nb.pubfn.padStart('123', 5, '0');  // '00123'
+nb.pubfn.padEnd('5', 2, '0');      // '50'
+```
+
+### capitalize / uncapitalize - 首字母大小写
+
+```javascript
+nb.pubfn.capitalize('hello');    // 'Hello'
+nb.pubfn.uncapitalize('Hello');  // 'hello'
+```
+
+### truncate - 截断字符串
+
+```javascript
+nb.pubfn.truncate('hello world', 8);  // 'hello...'
+nb.pubfn.truncate('hello world', 8, '…');  // 'hello w…'
+```
+
+### escapeHtml / unescapeHtml - HTML 转义
+
+```javascript
+nb.pubfn.escapeHtml('<div>');      // '&lt;div&gt;'
+nb.pubfn.unescapeHtml('&lt;div&gt;');  // '<div>'
+```
+
+---
+
+## URL处理
+
+### parseQueryString - 解析 URL 参数
+
+```javascript
+nb.pubfn.parseQueryString('http://example.com?a=1&b=2');
+// { a: '1', b: '2' }
+```
+
+### getUrlParam - 获取指定参数
+
+```javascript
+nb.pubfn.getUrlParam('id', 'http://example.com?id=123');  // '123'
+```
+
+---
+
+## 编码转换
+
+### encodeBase64 / decodeBase64 - Base64 编解码
+
+```javascript
+nb.pubfn.encodeBase64('hello');     // 'aGVsbG8='
+nb.pubfn.decodeBase64('aGVsbG8=');  // 'hello'
+```
+
+### uuid / shortUuid - 生成 UUID
+
+```javascript
+nb.pubfn.uuid();       // 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+nb.pubfn.shortUuid();  // 'a1b2c3d4'（8位短UUID）
+```
+
+> **说明**：`nb.pubfn.uuid()` 使用 `crypto.randomUUID()`（Node.js 和现代浏览器都支持）。
+
+### parseJSON / stringifyJSON - 安全的 JSON 操作
+
+```javascript
+nb.pubfn.parseJSON('{"a":1}');      // { a: 1 }
+nb.pubfn.parseJSON('invalid', {});  // {}（解析失败返回默认值）
+
+nb.pubfn.stringifyJSON({ a: 1 });   // '{"a":1}'
+```
+
+---
+
+## 数学计算
+
+### formatMoney - 金额格式化（千分位）
+
+```javascript
+nb.pubfn.formatMoney(1234567.89);     // '1,234,567.89'
+nb.pubfn.formatMoney(1234567.89, 0);  // '1,234,568'
+nb.pubfn.formatMoney(-1234.5);        // '-1,234.50'
+```
+
+### priceFilter - 分转元
+
+```javascript
+nb.pubfn.priceFilter(100);   // '1.00'
+nb.pubfn.priceFilter(1234);  // '12.34'
+```
+
+### percentageFilter - 百分比显示
+
+```javascript
+nb.pubfn.percentageFilter(0.1);   // '10%'
+nb.pubfn.percentageFilter(0.1, false);  // 10
+```
+
+### discountFilter - 折扣显示
+
+```javascript
+nb.pubfn.discountFilter(0.7);  // '7 折'
+nb.pubfn.discountFilter(1);    // '原价'
+nb.pubfn.discountFilter(0);    // '免费'
+```
+
+### toDecimal - 保留小数
+
+```javascript
+nb.pubfn.toDecimal(1.56555, 2);  // 1.57
+```
+
+### calcSize - 单位进制换算
+
+```javascript
+nb.pubfn.calcSize(1536, ['B','KB','MB','GB'], 1024, 2);
+// { size: 1.5, type: 'KB', title: '1.5 KB' }
+```
+
+### compareVersion - 版本号比较
+
+```javascript
+nb.pubfn.compareVersion('1.2.3', '1.2.4');  // -1（v1 < v2）
+nb.pubfn.compareVersion('2.0.0', '1.9.9');  // 1（v1 > v2）
+nb.pubfn.compareVersion('1.0.0', '1.0.0');  // 0（相等）
+```
+
 ---
 
 ## 函数工具
@@ -639,6 +892,33 @@ const handleClick = () => {
     // 执行操作
   }, 1000);
 };
+```
+
+### batchRun - 并发执行
+
+```javascript
+const tasks = [
+  () => fetch('/api/1'),
+  () => fetch('/api/2'),
+  () => fetch('/api/3')
+];
+const results = await nb.pubfn.batchRun(tasks, 2);  // 最多同时执行2个
+// [{ success: true, data: ... }, { success: true, data: ... }, ...]
+```
+
+### merge - 深度合并对象
+
+```javascript
+nb.pubfn.merge({ a: { b: 1 } }, { a: { c: 2 } });
+// { a: { b: 1, c: 2 } }
+```
+
+### isEqual - 深度比较
+
+```javascript
+nb.pubfn.isEqual({ a: 1 }, { a: 1 });  // true
+nb.pubfn.isEqual([1, 2], [1, 2]);      // true
+nb.pubfn.isEqual({ a: 1 }, { a: 2 });  // false
 ```
 
 ---
@@ -694,7 +974,29 @@ const handleSearch = (keyword) => {
 
 以下是本项目中实际使用 `nb.pubfn` 的场景：
 
-### 1. 时间格式化（action-logger.js）
+### 1. UUID 生成（base.js / user.js / action-logger.js / upload-service.js）
+
+```javascript
+// 数据库记录 ID 生成
+const userId = nb.pubfn.uuid();
+
+// 创建记录时自动生成 ID
+if (!filtered[this.config.primaryKey]) {
+  filtered[this.config.primaryKey] = nb.pubfn.uuid();
+}
+
+// 上传文件记录
+await prisma.upload.create({
+  data: {
+    id: nb.pubfn.uuid(),
+    key,
+    url: uploadResult.url,
+    // ...
+  }
+});
+```
+
+### 2. 时间格式化（action-logger.js）
 
 ```javascript
 // 替代手写的时间格式化函数
@@ -708,7 +1010,7 @@ function formatDateTime(date) {
 }
 ```
 
-### 2. 空值判断（selects.js / base.js）
+### 3. 空值判断（selects.js / base.js）
 
 ```javascript
 // 替代 !whereJson || Object.keys(whereJson).length === 0
@@ -722,14 +1024,28 @@ if (nb.pubfn.isObject(value) && !nb.pubfn.isArray(value)) {
 }
 ```
 
-### 3. 数组提取（action-logger.js）
+### 4. 类型判断（selects.js / base.js）
+
+```javascript
+// 判断是否为数组
+if (nb.pubfn.isArray(value.in)) {
+  conditions.push(`${fullColumn} = ANY($${paramIndex})`);
+}
+
+// 判断是否为对象
+if (nb.pubfn.isObject(record)) {
+  // 序列化处理
+}
+```
+
+### 5. 数组提取（action-logger.js）
 
 ```javascript
 // 替代 oldestLogs.map((log) => log.id)
 const idsToDelete = nb.pubfn.arrayObjectGetArray(oldestLogs, 'id');
 ```
 
-### 4. 树形结构转换（sys.js / crud-action.menu.js）
+### 6. 树形结构转换（sys.js / crud-action.menu.js）
 
 ```javascript
 // 构建菜单树
@@ -746,7 +1062,7 @@ const selectTree = nb.pubfn.tree.mapTree(menuTree, (node) => ({
 }));
 ```
 
-### 5. 对象字段删除（selects.js）
+### 7. 对象字段删除（selects.js）
 
 ```javascript
 // 替代手动删除字段
@@ -755,47 +1071,99 @@ processedData = data.map(row => {
 });
 ```
 
----
-
-## 从 vk-unicloud 迁移说明
-
-如果你之前使用 vk-unicloud，以下是主要变更：
-
-| vk-unicloud | nb.pubfn | 说明 |
-|-------------|----------|------|
-| `vk.pubfn.xxx` | `nb.pubfn.xxx` | 命名空间变更 |
-| `_id` | `id` | 主键字段名（PostgreSQL） |
-| `parent_id` | `parentId` | 父级字段名（Prisma 驼峰命名） |
-| MongoDB ObjectId | String UUID | ID 类型变更 |
+### 8. 深拷贝对象
 
 ```javascript
-// vk-unicloud (MongoDB)
-vk.pubfn.getListItem(list, '_id', value);
-vk.pubfn.arrayToTree(list, { id: '_id', parent_id: 'parent_id' });
+// 表单数据复制，避免引用问题
+const formData = nb.pubfn.deepClone(originalData);
+```
 
-// nb.pubfn (PostgreSQL/Prisma)
-nb.pubfn.getListItem(list, 'id', value);
-nb.pubfn.tree.arrayToTree(list, { id: 'id', parentId: 'parentId' });
+### 9. 数组操作
+
+```javascript
+// 数组去重
+const uniqueIds = nb.pubfn.arrayUnique(allIds);
+
+// 数组差集 - 找出需要新增的
+const toAdd = nb.pubfn.arrayDiff(newIds, existingIds);
+
+// 数组交集 - 找出需要保留的
+const toKeep = nb.pubfn.arrayIntersect(newIds, existingIds);
+
+// 数组分组
+const groupedByType = nb.pubfn.groupBy(items, 'type');
+
+// 数组求和
+const totalAmount = nb.pubfn.sum(orders, 'amount');
+```
+
+### 10. 字符串处理
+
+```javascript
+// 隐藏手机号中间数字
+const maskedPhone = nb.pubfn.hidden(phone, 3, 4);  // 138****8000
+
+// 截断长文本
+const shortDesc = nb.pubfn.truncate(description, 100);
+
+// HTML 转义（防 XSS）
+const safeHtml = nb.pubfn.escapeHtml(userInput);
+```
+
+### 11. 金额处理
+
+```javascript
+// 分转元显示
+const displayPrice = nb.pubfn.priceFilter(priceInCents);
+
+// 金额千分位格式化
+const formattedAmount = nb.pubfn.formatMoney(amount);
+
+// 百分比显示
+const percentage = nb.pubfn.percentageFilter(ratio);
+```
+
+### 12. URL 参数处理
+
+```javascript
+// 构建查询参数
+const queryString = nb.pubfn.queryParams({ page: 1, size: 20 });
+
+// 解析 URL 参数
+const params = nb.pubfn.parseQueryString(url);
+
+// 获取单个参数
+const id = nb.pubfn.getUrlParam('id', url);
+```
+
+### 13. 版本号比较
+
+```javascript
+// 检查是否需要升级
+if (nb.pubfn.compareVersion(currentVersion, requiredVersion) < 0) {
+  console.log('需要升级');
+}
+```
+
+### 14. 深度比较
+
+```javascript
+// 检查数据是否有变化
+if (!nb.pubfn.isEqual(oldData, newData)) {
+  // 数据已修改，需要保存
+}
+```
+
+### 15. 并发控制
+
+```javascript
+// 批量请求，限制并发数
+const tasks = ids.map(id => () => fetchDetail(id));
+const results = await nb.pubfn.batchRun(tasks, 5);  // 最多5个并发
 ```
 
 ---
 
-## 已移除的 UniApp/小程序专属函数
-
-以下函数已从 `nb.pubfn` 中移除，因为它们依赖 UniApp/小程序环境：
-
-| 函数名 | 原因 |
-|--------|------|
-| `getListData` / `getListData2` | 依赖 `uni.vk`、`vk.callFunction` |
-| `getComponentsDynamicData` | 依赖 `uni.getStorageSync` |
-| `getPageFullPath` | 依赖 `getCurrentPages()` |
-| `getPlatform` | 依赖 UniApp 条件编译 `#ifdef` |
-| `getCurrentPage` / `getCurrentPageRoute` | 依赖 `getCurrentPages()` |
-| `requestSubscribeMessage` | 微信小程序专属 |
-| `checkLogin` | 依赖 `vk.navigate`、`uni.reLaunch` |
-| `getLocalFilePath` | APP 专属，依赖 `plus.io` |
-| `getLocale` / `setLocale` / `getLocaleList` / `getLocaleObject` | 依赖 `uni.getLocale` |
-| `objectAssignForVue` | Vue2 专属 |
 
 ### 保留的浏览器端函数
 

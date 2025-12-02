@@ -4,7 +4,8 @@
  * 使用 Prisma 直接操作 PostgreSQL
  */
 
-import { prisma, generateId } from '@/lib/database/prisma';
+import { prisma } from '@/lib/database/prisma';
+import nb from '@/lib/function';
 import { selects } from '@/lib/database/selects';
 
 /**
@@ -26,7 +27,7 @@ export async function createUser(userData) {
 	const { hashPassword } = await import('better-auth/crypto');
 	const hashedPassword = await hashPassword(password);
 
-	const userId = generateId();
+	const userId = nb.pubfn.uuid();
 
 	// 创建用户
 	const user = await prisma.user.create({
@@ -49,7 +50,7 @@ export async function createUser(userData) {
 	// 创建 credential account
 	await prisma.account.create({
 		data: {
-			id: generateId(),
+			id: nb.pubfn.uuid(),
 			userId: user.id,
 			accountId: email.toLowerCase(),
 			providerId: 'credential',
@@ -227,7 +228,7 @@ export async function resetUserPassword(userId, newPassword) {
 		// 创建新的 credential account（用户可能是通过 OAuth 注册的）
 		await prisma.account.create({
 			data: {
-				id: generateId(),
+				id: nb.pubfn.uuid(),
 				userId,
 				accountId: user.email,
 				providerId: 'credential',
