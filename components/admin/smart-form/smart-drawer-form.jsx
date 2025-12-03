@@ -48,6 +48,20 @@ import { validateFieldsConfig } from '@/lib/crud/field-generator';
 import nb from '@/lib/function';
 
 /**
+ * FormContentWrapper - 用于吸收 DrawerForm 传递的额外属性
+ * 
+ * DrawerForm 会通过 React.cloneElement 给直接子元素传递一些属性，
+ * 如 fieldProps、formItemProps、autoFocus 等。
+ * 如果这些属性传递给了 Fragment 或 DOM 元素，React 会报警告。
+ * 
+ * 这个组件作为中间层，接收并忽略这些属性，只渲染 children。
+ */
+const FormContentWrapper = React.memo(function FormContentWrapper(props) {
+	// 只取 children，完全忽略其他所有属性（包括 fieldProps、autoFocus 等）
+	return <>{props.children}</>;
+});
+
+/**
  * 清理表单数据中的空 array 项和非法值（如函数）
  */
 function cleanArrayFields(values) {
@@ -206,13 +220,20 @@ const SmartDrawerForm = forwardRef(function SmartDrawerForm({
 			submitter={submitter}
 			{...formProps}
 		>
-		<DynamicFormFields
-			fieldsConfig={fieldsConfig}
-			formInstance={formInstance}
-			isCreate={isCreate}
-			actions={actions}
-		/>
-			{children}
+			{/* 
+			 * 使用 FormContentWrapper 包装子组件
+			 * DrawerForm 会通过 cloneElement 传递 fieldProps、autoFocus 等属性给直接子元素
+			 * FormContentWrapper 会吸收这些属性，避免传递到 DOM 或 Fragment
+			 */}
+			<FormContentWrapper>
+				<DynamicFormFields
+					fieldsConfig={fieldsConfig}
+					formInstance={formInstance}
+					isCreate={isCreate}
+					actions={actions}
+				/>
+				{children}
+			</FormContentWrapper>
 		</DrawerForm>
 	);
 });

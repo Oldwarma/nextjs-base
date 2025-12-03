@@ -26,6 +26,11 @@ export default function MarkdownEditor({
 	placeholder = 'Enter markdown content...',
 	height = 400,
 	preview = 'live', // 'live' | 'edit' | 'preview'
+	// 过滤掉 ProForm 可能传递的额外属性
+	fieldProps: _fieldProps,
+	formItemProps: _formItemProps,
+	proFieldProps: _proFieldProps,
+	// 保留其他属性传递给 MDEditor
 	...props
 }) {
 	const [localValue, setLocalValue] = useState(value || '');
