@@ -1,33 +1,19 @@
 'use client';
 
+// React 19 兼容补丁 - 必须在最顶部导入
+import '@ant-design/v5-patch-for-react-19';
+
 import { ConfigProvider, App } from 'antd';
-import { useEffect } from 'react';
 
 // Ant Design 英文语言包
 import enUS from 'antd/locale/en_US';
 
 /**
  * Ant Design 配置提供者
- * 用于配置全局设置，包括禁用兼容性警告
+ * 用于配置全局设置，包括 React 19 兼容性
+ * 注意：不需要 StyleProvider，因为 @ant-design/nextjs-registry 已经处理了 SSR 样式注入
  */
 export default function AntdConfigProvider({ children }) {
-	useEffect(() => {
-		// 禁用 React 19 兼容性警告
-		if (typeof window !== 'undefined') {
-			const originalWarn = console.warn;
-			console.warn = (...args) => {
-				// 过滤掉 antd compatible 警告
-				if (
-					args[0]?.includes?.('antd v5 support React is 16 ~ 18') ||
-					args[0]?.includes?.('[antd: compatible]')
-				) {
-					return;
-				}
-				originalWarn.apply(console, args);
-			};
-		}
-	}, []);
-
 	return (
 		<ConfigProvider
 			locale={enUS}
