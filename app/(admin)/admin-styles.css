@@ -14,25 +14,35 @@
  * 美化滚动条
  * ============================================ */
 
-/* 全局滚动条样式 */
+/* 全局滚动条样式 - 更窄更优雅 */
 ::-webkit-scrollbar {
-	width: 8px;
-	height: 8px;
+	width: 6px;
+	height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-	background: #f1f1f1;
-	border-radius: 4px;
+	background: transparent;
+	border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-	background: #c1c1c1;
-	border-radius: 4px;
-	transition: background 0.2s;
+	background: rgba(0, 0, 0, 0.15);
+	border-radius: 3px;
+	transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: #a8a8a8;
+	background: rgba(0, 0, 0, 0.25);
+}
+
+::-webkit-scrollbar-corner {
+	background: transparent;
+}
+
+/* Firefox 全局滚动条 */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }
 
 /* 表单弹窗内的滚动条（更细更优雅）*/
@@ -150,6 +160,52 @@
 	padding: 16px 0;
 }
 
+/* ProTable 表格容器滚动条优化 */
+.ant-table-body,
+.ant-table-content {
+	/* 只在需要时显示滚动条 */
+	overflow: auto !important;
+	scrollbar-gutter: auto; /* 不预留滚动条空间 */
+}
+
+/* ProTable 表格区域滚动条样式 - 更窄更优雅 */
+.ant-table-body::-webkit-scrollbar,
+.ant-table-content::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+.ant-table-body::-webkit-scrollbar-track,
+.ant-table-content::-webkit-scrollbar-track {
+	background: transparent;
+	border-radius: 3px;
+}
+
+.ant-table-body::-webkit-scrollbar-thumb,
+.ant-table-content::-webkit-scrollbar-thumb {
+	background: rgba(0, 0, 0, 0.15);
+	border-radius: 3px;
+	transition: background 0.2s ease;
+}
+
+.ant-table-body::-webkit-scrollbar-thumb:hover,
+.ant-table-content::-webkit-scrollbar-thumb:hover {
+	background: rgba(0, 0, 0, 0.25);
+}
+
+/* 滚动条角落（横纵交汇处）*/
+.ant-table-body::-webkit-scrollbar-corner,
+.ant-table-content::-webkit-scrollbar-corner {
+	background: transparent;
+}
+
+/* Firefox 滚动条优化 */
+.ant-table-body,
+.ant-table-content {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
 /* ============================================
  * ProFormGroup 布局优化
  * ============================================ */
@@ -233,6 +289,12 @@
 	}
 	
 	::-webkit-scrollbar {
+		width: 4px;
+		height: 4px;
+	}
+	
+	.ant-table-body::-webkit-scrollbar,
+	.ant-table-content::-webkit-scrollbar {
 		width: 4px;
 		height: 4px;
 	}
