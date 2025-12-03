@@ -571,7 +571,7 @@ export default function UsersManagementPage() {
 				hideInTable: true,
 				form: false,
 				detail: {
-					render: (value) => value || 'Never',
+					render: (value) => nb.pubfn.timeFormat(value) || 'Never',
 				},
 			},
 

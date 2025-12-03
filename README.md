@@ -12,7 +12,7 @@ A full-stack SaaS platform with user authentication, RBAC permission system, and
 - 📁 **Asset Management**: File upload and management system
 
 ### Technical Stack
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Database**: PostgreSQL
 - **ORM**: Prisma
 - **Authentication**: Better Auth with Prisma Adapter
