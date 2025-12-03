@@ -29,6 +29,7 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
 import { uploadFile, uploadFiles, deleteFile, checkR2Config } from '@/lib/upload';
+import { checkUploadRateLimit } from '@/lib/upload/upload-guard';
 
 // ========== 日志配置 ==========
 
@@ -66,6 +67,19 @@ function formatFileSize(bytes) {
 	if (bytes < 1024) return `${bytes}B`;
 	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
 	return `${(bytes / 1024 / 1024).toFixed(2)}MB`;
+}
+
+function getClientIp(request) {
+	const forwardedFor = request.headers.get('x-forwarded-for');
+	if (forwardedFor) {
+		const parts = forwardedFor.split(',').map(p => p.trim()).filter(Boolean);
+		if (parts.length > 0) return parts[0];
+	}
+
+	const realIp = request.headers.get('x-real-ip');
+	if (realIp) return realIp;
+
+	return request.ip || '';
 }
 
 /**
@@ -124,8 +138,26 @@ export async function POST(request) {
 		}
 		
 		const userId = session.user.id;
+		const clientIp = getClientIp(request);
 		
-		// 2. 检查 R2 配置
+		// 2. 限流与封禁检查
+		const rateLimit = await checkUploadRateLimit({ userId, ip: clientIp });
+		if (!rateLimit.allowed) {
+			logParams = { userId, clientIp, error: rateLimit.message };
+			logUploadStart(action, logParams);
+			logUploadEnd(action, { error: rateLimit.message }, Date.now() - startTime, true);
+			return NextResponse.json(
+				{
+					success: false,
+					error: rateLimit.message,
+					bannedUntil: rateLimit.bannedUntil ? rateLimit.bannedUntil.toISOString() : undefined,
+					scope: rateLimit.scope,
+				},
+				{ status: rateLimit.status || 429 }
+			);
+		}
+		
+		// 3. 检查 R2 配置
 		const r2Config = checkR2Config();
 		if (!r2Config.configured) {
 			logParams = { userId, error: 'R2 not configured' };
@@ -137,7 +169,7 @@ export async function POST(request) {
 			);
 		}
 		
-		// 3. 解析 FormData
+		// 4. 解析 FormData
 		const formData = await request.formData();
 		const type = formData.get('type');
 		const directory = formData.get('directory');
@@ -154,7 +186,7 @@ export async function POST(request) {
 			);
 		}
 		
-		// 4. 获取文件
+		// 5. 获取文件
 		const files = formData.getAll('file');
 		const filesFromMultiple = formData.getAll('files');
 		const allFiles = [...files, ...filesFromMultiple].filter(f => f instanceof File);
@@ -173,6 +205,7 @@ export async function POST(request) {
 		action = `upload_${type}`;
 		logParams = {
 			userId,
+			clientIp,
 			type,
 			directory: directory || '(default)',
 			files: allFiles.map(f => ({ name: f.name, size: formatFileSize(f.size) })),

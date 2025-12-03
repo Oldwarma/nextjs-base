@@ -194,100 +194,21 @@ const FileCard = ({ file }) => {
 
 ## Server Actions
 
-### crud-action.assets.js
+### crud-action.assets.js（最新权限策略）
 
-基于 `createCrudActions` 创建标准 CRUD 操作：
+- 所有操作改为 `auth*`：仅需登录即可调用，无需 RBAC 权限。
+- **非 admin 自动限域**：列表/详情/更新/删除只能操作自己上传的文件；admin 可管理全部。
+- 删除/批量删除支持直接传字符串 `id` 或 `{ id }`，缺失 `id` 时返回错误提示（不抛异常）。
 
-```javascript
-'use server';
+导出方法概览：
 
-import { createCrudActions } from '@/lib/core/crud-helper';
-
-const crudActions = createCrudActions({
-  modelName: 'assets',
-  resourceType: 'asset',
-  primaryKey: 'id',  // 使用 UUID 作为主键
-  
-  fields: {
-    creatable: [],  // 素材通过上传接口创建，不支持手动创建
-    updatable: ['originalName', 'remark'],
-    searchable: ['originalName', 'type', 'mimeType'],
-  },
-  
-  query: {
-    defaultSort: { createdAt: 'desc' },
-    baseFilter: {},
-  },
-  
-  softDelete: false,  // 硬删除（同时删除 R2 文件）
-});
-
-// 导出标准操作
-export async function getList(params) {
-  return crudActions.getList(params);
-}
-
-export async function getDetail(id) {
-  return crudActions.getDetail(id);
-}
-
-export async function update(id, data) {
-  return crudActions.update(id, data);
-}
-```
-
-### 删除操作（特殊处理）
-
-删除文件需要同时删除 R2 存储中的文件：
-
-```javascript
-import { deleteFile } from '@/lib/upload/upload-service';
-import { wrapAdminAction } from '@/lib/core/action-wrapper';
-
-// 单个删除
-export const remove = wrapAdminAction('delete', 'assets', async (id, context) => {
-  const { userId } = context;
-  
-  // 获取文件信息
-  const detail = await crudActions.getDetail(id);
-  if (!detail.success || !detail.data) {
-    return { success: false, error: 'File not found' };
-  }
-  
-  // 删除 R2 文件和数据库记录
-  const result = await deleteFile(detail.data.url || detail.data.key, userId);
-  return result;
-});
-
-// 批量删除
-export const batchDelete = wrapAdminAction('batch_delete', 'assets', async ({ ids }, context) => {
-  const { userId } = context;
-  const errors = [];
-  let successCount = 0;
-  
-  for (const id of ids) {
-    try {
-      const detail = await crudActions.getDetail(id);
-      if (detail.success && detail.data) {
-        const result = await deleteFile(detail.data.url || detail.data.key, userId);
-        if (result.success) {
-          successCount++;
-        } else {
-          errors.push(`${detail.data.originalName}: ${result.error}`);
-        }
-      }
-    } catch (error) {
-      errors.push(`${id}: ${error.message}`);
-    }
-  }
-  
-  return {
-    success: errors.length === 0,
-    deletedCount: successCount,
-    errors: errors.length > 0 ? errors : undefined,
-  };
-});
-```
+| 方法 | 说明 | 权限 | 备注 |
+|------|------|------|------|
+| `authGetAssetList` | 获取素材列表 | 登录 | 非 admin 自动追加 `where.userId = 当前用户` |
+| `authGetAssetDetail` | 获取详情 | 登录 | 非 admin 仅能查看自己的文件 |
+| `authUpdateAsset` | 更新名称/备注 | 登录 | 非 admin 仅能更新自己的文件 |
+| `authDeleteAsset` | 删除单个 | 登录 | 权限校验后删除 R2 + 记录 |
+| `authBatchDeleteAsset` | 批量删除 | 登录 | 逐条校验归属，聚合错误信息 |
 
 ---
 
@@ -431,6 +352,42 @@ if (result.success) {
 }
 ```
 
+### 上传频率与封禁（新增）
+
+上传接口 `app/api/upload/route.js` 在上传前对用户/IP 做频率控制，并记录在表 `UploadGuard`。
+
+- 检查顺序：先验证登录 → 检查限流/封禁 → 再处理上传。
+- 触发限流或封禁时返回 429/403，响应包含 `error`、`bannedUntil`，前端可直接用 toast 提示。
+- 计数同时按 userId 与 IP 两个维度，任一命中都会阻断。
+
+环境变量
+
+| 变量 | 说明 | 默认值 |
+|------|------|------|
+| `UPLOAD_RATE_LIMIT_PER_MINUTE`（或 `UPLOAD_RATE_LIMIT`） | 单个窗口允许的最大上传次数；<=0 关闭限流 | 0 |
+| `UPLOAD_RATE_WINDOW_SECONDS` | 计数窗口长度（秒） | 60 |
+| `UPLOAD_RATE_BAN_DURATION` | 触发限流后的封禁时长；`0` 不封禁，`-1` 永久封禁，正整数=分钟数 | 0 |
+
+表结构（prisma 模型 `UploadGuard`，需迁移）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | String (UUID) | 主键 |
+| type | String | `user` / `ip` |
+| value | String | 用户ID或IP |
+| windowStart | DateTime | 窗口开始时间 |
+| count | Int | 窗口计数 |
+| bannedUntil | DateTime? | 封禁截止；9999-12-31 视为永久 |
+| banReason | String? | 预留 |
+| createdAt / updatedAt | DateTime | 时间戳 |
+
+迁移与生成
+
+```bash
+bunx prisma migrate dev --name add-upload-guard
+bunx prisma generate
+```
+
 ---
 
 ## 注意事项
@@ -493,4 +450,3 @@ R2_PUBLIC_URL=https://your-r2-domain.com
 ## 许可证
 
 MIT License
-

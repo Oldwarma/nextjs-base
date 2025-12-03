@@ -245,6 +245,23 @@ model Asset {
   @@map("assets")
 }
 
+/// 上传频率/封禁控制
+model UploadGuard {
+  id          String    @id @default(uuid())
+  type        String                                        // user/ip
+  value       String
+  windowStart DateTime  @map("window_start")
+  count       Int       @default(0)
+  bannedUntil DateTime? @map("banned_until")
+  banReason   String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([type, value])
+  @@index([bannedUntil])
+  @@map("upload_guard")
+}
+
 /// 操作日志表
 model ActionLog {
   id           String    @id @default(uuid())

@@ -239,7 +239,19 @@ export default function AssetsPage() {
 	/**
 	 * 上传文件
 	 */
-	const handleUpload = async (file) => {
+	const handleUpload = async (file, fileList) => {
+		if (fileList && fileList.length > 3) {
+			message.error('You can only upload up to 3 files at a time');
+			return Upload.LIST_IGNORE;
+		}
+
+		const isImageType = file.type?.startsWith('image/');
+		const limitMB = isImageType ? 2 : 10;
+		if (file.size > limitMB * 1024 * 1024) {
+			message.error(`File too large. ${isImageType ? 'Images' : 'Files'} must be <= ${limitMB}MB.`);
+			return Upload.LIST_IGNORE;
+		}
+
 		setUploading(true);
 		try {
 			const formData = new FormData();
