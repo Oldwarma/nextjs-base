@@ -177,6 +177,13 @@ if (!allowedActions.includes('sysGetPostList')) {
 // 6. 执行业务逻辑
 ```
 
+### 权限聚合与菜单继承
+
+- 用户权限 = 角色上显式配置的 `permission` **并集** 所有「继承菜单权限」角色的菜单关联权限。实现位置：`app/(admin)/actions/dao/sys.js#getUserPermissionIds`。
+- 继承逻辑：若角色 `inheritMenuPermissions === true`，则把该角色的 `menu` 中每个菜单的 `permission` 一起加入，最后去重。
+- Action 匹配：权限里的 `actions`（支持 `sysCreateExample*` 这类通配符）由 `checkUserHasActionPermission` 取出并匹配当前 Server Action。
+- 例：菜单“with permissions”关联权限“example write(no delete)”，该权限的 actions 包含 `sysCreateExample*`/`sysUpdateExample*`/`sysBatchUpdateExample*`/`sysActivateExample*`/`sysDeactivateExample*`。把此菜单授予角色并勾选「Inherit Menu Permissions」后，再把角色授予用户，用户最终就拥有上述动作权限。
+
 ### 菜单权限检查
 
 ```javascript
@@ -344,4 +351,3 @@ const visibleMenus = menus.filter(m => m.enable && !m.hidden)
 [← Server Actions 开发](../admin/SERVER_ACTIONS.md) · [菜单管理 →](./MENU_MANAGEMENT.md)
 
 </div>
-

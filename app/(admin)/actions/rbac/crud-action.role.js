@@ -89,18 +89,16 @@ async function computeAvailablePermissionIds(parentId) {
 async function assertPermissionWithinScope({ roleId, permissionIds, parentIdOverride, isParentChange = false }) {
 	const normalized = normalizePermissionIds(permissionIds);
 
-	const role = roleId
-		? await prisma.role.findUnique({ where: { id: roleId }, select: { parentId: true, name: true } })
-		: null;
+	const role = roleId ? await prisma.role.findUnique({ where: { id: roleId }, select: { parentId: true, name: true } }) : null;
 
 	const parentId = parentIdOverride !== undefined ? parentIdOverride : role?.parentId;
 
 	if (!parentId) return normalized;
 
 	// 获取父角色信息用于更好的错误提示
-	const parentRole = await prisma.role.findUnique({ 
-		where: { id: parentId }, 
-		select: { name: true, permission: true } 
+	const parentRole = await prisma.role.findUnique({
+		where: { id: parentId },
+		select: { name: true, permission: true },
 	});
 
 	const available = await computeAvailablePermissionIds(parentId);
@@ -111,14 +109,13 @@ async function assertPermissionWithinScope({ roleId, permissionIds, parentIdOver
 			if (isParentChange) {
 				throw new Error(
 					`Cannot set parent to "${parentRole?.name || parentId}": ` +
-					`this role already has ${normalized.length} permission(s), ` +
-					`but the target parent has no permissions. ` +
-					`Please remove permissions first or choose a parent with sufficient permissions.`
+						`this role already has ${normalized.length} permission(s), ` +
+						`but the target parent has no permissions. ` +
+						`Please remove permissions first or choose a parent with sufficient permissions.`
 				);
 			}
 			throw new Error(
-				`Parent role "${parentRole?.name || parentId}" has no permissions to grant. ` +
-				`Please assign permissions to the parent role first.`
+				`Parent role "${parentRole?.name || parentId}" has no permissions to grant. ` + `Please assign permissions to the parent role first.`
 			);
 		}
 		return normalized;
@@ -131,13 +128,13 @@ async function assertPermissionWithinScope({ roleId, permissionIds, parentIdOver
 		if (isParentChange) {
 			throw new Error(
 				`Cannot set parent to "${parentRole?.name || parentId}": ` +
-				`this role has ${invalid.length} permission(s) that exceed the parent's scope. ` +
-				`Please remove those permissions first or choose a parent with sufficient permissions.`
+					`this role has ${invalid.length} permission(s) that exceed the parent's scope. ` +
+					`Please remove those permissions first or choose a parent with sufficient permissions.`
 			);
 		}
 		throw new Error(
 			`${invalid.length} permission(s) exceed the scope of parent role "${parentRole?.name || parentId}". ` +
-			`Please select permissions within the parent's scope.`
+				`Please select permissions within the parent's scope.`
 		);
 	}
 
@@ -240,9 +237,7 @@ const roleConfig = {
 			// 权限变更或父级变更时，校验权限范围
 			const isParentChange = data.parentId !== undefined;
 			const targetPermissions =
-				data.permission !== undefined
-					? normalizePermissionIds(data.permission)
-					: normalizePermissionIds(existing.permission);
+				data.permission !== undefined ? normalizePermissionIds(data.permission) : normalizePermissionIds(existing.permission);
 
 			const validatedPermissions = await assertPermissionWithinScope({
 				roleId: id,
@@ -289,7 +284,7 @@ const roleConfig = {
 			for (const user of users) {
 				await prisma.user.update({
 					where: { id: user.id },
-					data: { roles: user.roles.filter(r => r !== id) },
+					data: { roles: user.roles.filter((r) => r !== id) },
 				});
 			}
 
@@ -351,115 +346,127 @@ const roleConfig = {
 const crudActions = createCrudActions(roleConfig);
 
 export const getRoleListAction = crudActions.getList;
-export const getRoleTreeAction = wrapAction('sysQueryRoleTree', async ({ pageIndex = 1, pageSize = 1000, whereJson = {}, sortJson = null } = {}, ctx) => {
-	// 有筛选时也返回树形数据
-	if (whereJson && Object.keys(whereJson).length > 0) {
-		const listResult = await crudActions._dao.getList({
-			pageIndex: 1,
-			pageSize: Math.max(pageSize, 1000),
-			whereJson,
-			sortJson,
-		});
+/**
+ * 获取角色树
+ * 不需要sys权限
+ */
+export const getRoleTreeAction = wrapAction(
+	'queryRoleTree',
+	async ({ pageIndex = 1, pageSize = 1000, whereJson = {}, sortJson = null } = {}, ctx) => {
+		// 有筛选时也返回树形数据
+		if (whereJson && Object.keys(whereJson).length > 0) {
+			const listResult = await crudActions._dao.getList({
+				pageIndex: 1,
+				pageSize: Math.max(pageSize, 1000),
+				whereJson,
+				sortJson,
+			});
 
-		if (!listResult.success) return listResult;
+			if (!listResult.success) return listResult;
+
+			return {
+				success: true,
+				data: nb.pubfn.tree.arrayToTree(listResult.data || [], {
+					sortBy: [{ field: 'name', order: 'asc' }],
+				}),
+				total: listResult.data?.length || 0,
+				pageIndex: 1,
+				pageSize: listResult.data?.length || 0,
+			};
+		}
+
+		const result = await sysDao.getRoleTree({
+			pageIndex,
+			pageSize,
+		});
 
 		return {
 			success: true,
-			data: nb.pubfn.tree.arrayToTree(listResult.data || [], {
-				sortBy: [{ field: 'name', order: 'asc' }],
-			}),
-			total: listResult.data?.length || 0,
-			pageIndex: 1,
-			pageSize: listResult.data?.length || 0,
+			data: result.rows || [],
+			total: result.total || 0,
+			pageIndex,
+			pageSize,
 		};
-	}
+	},
+	{ skipLog: false }
+);
 
-	const result = await sysDao.getRoleTree({
-		pageIndex,
-		pageSize,
-	});
+export const getRoleDetailAction = wrapAction(
+	'sysGetRoleDetail',
+	async (params, ctx) => {
+		const id = nb.pubfn.isString(params) ? params : params?.id;
+		if (!id) {
+			return { success: false, error: 'ID is required' };
+		}
 
-	return {
-		success: true,
-		data: result.rows || [],
-		total: result.total || 0,
-		pageIndex,
-		pageSize,
-	};
-}, { skipLog: false });
-
-export const getRoleDetailAction = wrapAction('sysGetRoleDetail', async (params, ctx) => {
-	const id = nb.pubfn.isString(params) ? params : params?.id;
-	if (!id) {
-		return { success: false, error: 'ID is required' };
-	}
-
-	const result = await crudActions._dao.getDetail(id, {
-		fieldJson: {
-			id: true,
-			name: true,
-			parent_id: true, // DB 列名
-			remark: true,
-			enable: true,
-			permission: true,
-			menu: true,
-			inheritMenuPermissions: true,
-		},
-		foreignDB: [
-			{
-				dbName: 'permissions',
-				localKey: 'permission',
-				foreignKey: 'id',
-				as: 'permissionList',
-				type: 'array',
-				fieldJson: { id: true, name: true, remark: true },
+		const result = await crudActions._dao.getDetail(id, {
+			fieldJson: {
+				id: true,
+				name: true,
+				parent_id: true, // DB 列名
+				remark: true,
+				enable: true,
+				permission: true,
+				menu: true,
+				inheritMenuPermissions: true,
 			},
-			{
-				dbName: 'menus',
-				localKey: 'menu',
-				foreignKey: 'id',
-				as: 'menuList',
-				type: 'array',
-				fieldJson: { id: true, name: true, url: true, remark: true },
+			foreignDB: [
+				{
+					dbName: 'permissions',
+					localKey: 'permission',
+					foreignKey: 'id',
+					as: 'permissionList',
+					type: 'array',
+					fieldJson: { id: true, name: true, remark: true },
+				},
+				{
+					dbName: 'menus',
+					localKey: 'menu',
+					foreignKey: 'id',
+					as: 'menuList',
+					type: 'array',
+					fieldJson: { id: true, name: true, url: true, remark: true },
+				},
+				{
+					dbName: 'roles',
+					localKey: 'parent_id',
+					foreignKey: 'id',
+					as: 'parentInfo',
+					type: 'one',
+					fieldJson: { id: true, name: true, parent_id: true, permission: true },
+				},
+			],
+		});
+
+		if (!result.success) {
+			return result;
+		}
+
+		const permissionScope = await sysDao.getRolePermissionScope(id);
+		const { ...rest } = result.data || {};
+
+		// 将数据库列名映射回驼峰，便于前端使用
+		if (rest.parent_id !== undefined) {
+			rest.parentId = rest.parent_id;
+			delete rest.parent_id;
+		}
+
+		if (rest.parentInfo && rest.parentInfo.parent_id !== undefined) {
+			rest.parentInfo.parentId = rest.parentInfo.parent_id;
+			delete rest.parentInfo.parent_id;
+		}
+
+		return {
+			...result,
+			data: {
+				...rest,
+				parentInfo: rest.parentInfo || null,
+				permissionScope,
 			},
-			{
-				dbName: 'roles',
-				localKey: 'parent_id',
-				foreignKey: 'id',
-				as: 'parentInfo',
-				type: 'one',
-				fieldJson: { id: true, name: true, parent_id: true, permission: true },
-			},
-		],
-	});
-
-	if (!result.success) {
-		return result;
-	}
-
-	const permissionScope = await sysDao.getRolePermissionScope(id);
-	const { ...rest } = result.data || {};
-
-	// 将数据库列名映射回驼峰，便于前端使用
-	if (rest.parent_id !== undefined) {
-		rest.parentId = rest.parent_id;
-		delete rest.parent_id;
-	}
-
-	if (rest.parentInfo && rest.parentInfo.parent_id !== undefined) {
-		rest.parentInfo.parentId = rest.parentInfo.parent_id;
-		delete rest.parentInfo.parent_id;
-	}
-
-	return {
-		...result,
-		data: {
-			...rest,
-			parentInfo: rest.parentInfo || null,
-			permissionScope,
-		},
-	};
-}, { skipLog: false });
+		};
+	},
+	{ skipLog: false }
+);
 
 export const createRoleAction = crudActions.create;
 export const updateRoleAction = crudActions.update;
@@ -469,82 +476,92 @@ export const batchDeleteRolesAction = crudActions.batchDelete;
 
 /**
  * 获取角色列表（用于选择器）
+ * 不需要sys权限
  */
-export const getRoleListForSelectAction = wrapAction('sysQueryRoleListForSelect', async ({ withLabel = false, asTree = false, includeDisabled = true } = {}, ctx) => {
-	const result = await crudActions._dao.getList({
-		pageIndex: 1,
-		pageSize: 1000,
-		whereJson: includeDisabled ? {} : { enable: true },
-	});
-
-	if (!result.success) {
-		return result;
-	}
-
-	let roles = (result.data || []).map((role) => ({
-		...role,
-		enable: role.enable !== false,
-	}));
-
-	if (withLabel) {
-		roles = roles.map((role) => {
-			const badges = [];
-
-			if (!role.enable) badges.push('[Disabled]');
-
-			const permCount = nb.pubfn.isArray(role.permission) ? role.permission.length : 0;
-			if (permCount > 0) badges.push(`${permCount} permissions`);
-
-			const menuCount = nb.pubfn.isArray(role.menu) ? role.menu.length : 0;
-			if (menuCount > 0) badges.push(`${menuCount} menus`);
-
-			const badgeStr = badges.length > 0 ? ` ${badges.join(' ')}` : '';
-
-			return {
-				...role,
-				label: `${role.name} ${nb.pubfn.isNotNull(badgeStr) && `(${badgeStr})`}`,
-				value: role.id,
-				key: role.id,
-			};
+export const getRoleListForSelectAction = wrapAction(
+	'queryRoleListForSelect',
+	async ({ withLabel = false, asTree = false, includeDisabled = true } = {}, ctx) => {
+		const result = await crudActions._dao.getList({
+			pageIndex: 1,
+			pageSize: 1000,
+			whereJson: includeDisabled ? {} : { enable: true },
 		});
-	}
 
-	if (asTree) {
+		if (!result.success) {
+			return result;
+		}
+
+		let roles = (result.data || []).map((role) => ({
+			...role,
+			enable: role.enable !== false,
+		}));
+
+		if (withLabel) {
+			roles = roles.map((role) => {
+				const badges = [];
+
+				if (!role.enable) badges.push('[Disabled]');
+
+				const permCount = nb.pubfn.isArray(role.permission) ? role.permission.length : 0;
+				if (permCount > 0) badges.push(`${permCount} permissions`);
+
+				const menuCount = nb.pubfn.isArray(role.menu) ? role.menu.length : 0;
+				if (menuCount > 0) badges.push(`${menuCount} menus`);
+
+				const badgeStr = badges.length > 0 ? ` ${badges.join(' ')}` : '';
+
+				return {
+					...role,
+					label: `${role.name} ${nb.pubfn.isNotNull(badgeStr) && `(${badgeStr})`}`,
+					value: role.id,
+					key: role.id,
+				};
+			});
+		}
+
+		if (asTree) {
+			return {
+				success: true,
+				data: nb.pubfn.tree.arrayToTree(roles, {
+					sortBy: [{ field: 'name', order: 'asc' }],
+				}),
+			};
+		}
+
 		return {
 			success: true,
-			data: nb.pubfn.tree.arrayToTree(roles, {
-				sortBy: [{ field: 'name', order: 'asc' }],
-			}),
+			data: roles,
 		};
-	}
-
-	return {
-		success: true,
-		data: roles,
-	};
-}, { skipLog: true });
+	},
+	{ skipLog: true }
+);
 
 /**
  * 获取角色树（用于 tree-select）
+ * 不需要sys权限
  */
-export const getRoleTreeForSelectAction = wrapAction('sysQueryRoleTreeForSelect', async ({ withLabel = false, includeDisabled = true } = {}, ctx) => {
-	const result = await sysDao.getRoleTree({
-		includeDisabled,
-	});
+export const getRoleTreeForSelectAction = wrapAction(
+	'queryRoleTreeForSelect',
+	async ({ withLabel = false, includeDisabled = true } = {}, ctx) => {
+		const result = await sysDao.getRoleTree({
+			includeDisabled,
+		});
 
-	const formattedTree = nb.pubfn.tree.mapTree(result.rows || [], (node) => ({
-		title: withLabel ? `${node.name} (${node.id})` : node.name,
-		value: node.id,
-		key: node.id,
-		disabled: node.enable === false,
-		children: node.children || [],
-	}));
+		const formattedTree = nb.pubfn.tree.mapTree(result.rows || [], (node) => ({
+			title: withLabel ? `${node.name} (${node.id})` : node.name,
+			value: node.id,
+			key: node.id,
+			disabled: node.enable === false,
+			children: node.children || [],
+		}));
 
-	return {
-		success: true,
-		data: formattedTree,
-	};
-}, { skipLog: true });
+		return {
+			success: true,
+			data: formattedTree,
+		};
+	},
+	{ skipLog: true }
+);
 
 /**
  * 分配权限给角色

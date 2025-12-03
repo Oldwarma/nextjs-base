@@ -259,27 +259,16 @@ export default function RolesManagementPage() {
 				const permIds = currentPerms.map((p) => String(nb.pubfn.isObject(p) ? p.id : p));
 				console.log('[Roles] Converted permission IDs:', permIds);
 				const scope = result.data?.permissionScope;
-				const normalizedScope =
-					scope === undefined
-						? null
-						: scope === null
-							? null
-							: (scope || []).map(String);
+				const normalizedScope = scope === undefined ? null : scope === null ? null : (scope || []).map(String);
 
 				setPermissionScope(normalizedScope);
 				setSelectedRole((prev) => ({
 					...prev,
 					parentInfo: result.data?.parentInfo || prev?.parentInfo,
 				}));
-				const scopedIds =
-					normalizedScope && Array.isArray(normalizedScope)
-						? permIds.filter((id) => normalizedScope.includes(id))
-						: permIds;
+				const scopedIds = normalizedScope && Array.isArray(normalizedScope) ? permIds.filter((id) => normalizedScope.includes(id)) : permIds;
 				setSelectedPermissions(
-					normalizeCheckedKeysToLeaves(
-						scopedIds,
-						scopedPermissionTree.length > 0 ? scopedPermissionTree : permissionTree
-					)
+					normalizeCheckedKeysToLeaves(scopedIds, scopedPermissionTree.length > 0 ? scopedPermissionTree : permissionTree)
 				);
 			} else {
 				message.error(result.error || 'Failed to load permissions');
@@ -299,9 +288,7 @@ export default function RolesManagementPage() {
 	const handlePermissionCheck = useCallback(
 		(checkedKeysValue, info) => {
 			const leafKeys = normalizeCheckedKeysToLeaves(checkedKeysValue, scopedPermissionTree, info);
-			const normalized = permissionScopeSet
-				? leafKeys.filter((key) => permissionScopeSet.has(String(key)))
-				: leafKeys;
+			const normalized = permissionScopeSet ? leafKeys.filter((key) => permissionScopeSet.has(String(key))) : leafKeys;
 
 			setSelectedPermissions(normalized);
 		},
@@ -323,9 +310,7 @@ export default function RolesManagementPage() {
 			// Get current menus and inheritMenuPermissions setting
 			const result = await roleActions.getRoleDetailAction(record.id);
 			if (result.success) {
-				setSelectedMenus(
-					normalizeCheckedKeysToLeaves(result.data?.menu || [], menuTree)
-				);
+				setSelectedMenus(normalizeCheckedKeysToLeaves(result.data?.menu || [], menuTree));
 				setInheritMenuPermissions(result.data?.inheritMenuPermissions || false);
 			} else {
 				message.error(result.error || 'Failed to load menus');
@@ -530,6 +515,17 @@ export default function RolesManagementPage() {
 				search: false,
 			},
 
+			// inheritMenuPermissions
+			{
+				key: 'inheritMenuPermissions',
+				title: 'Inherit Menu Permissions',
+				type: 'switch',
+				table: {
+					width: 100,
+				},
+				form: false,
+				search: false,
+			},
 			// Enable
 			{
 				key: 'enable',
@@ -673,8 +669,8 @@ export default function RolesManagementPage() {
 						{permissionScope !== null && (permissionScope?.length || 0) === 0
 							? 'Parent role has no permissions to grant'
 							: permissionTree.length === 0
-								? 'Loading permissions...'
-								: 'No permissions available'}
+							? 'Loading permissions...'
+							: 'No permissions available'}
 					</div>
 				)}
 			</Modal>
@@ -689,35 +685,40 @@ export default function RolesManagementPage() {
 				confirmLoading={menuLoading}
 			>
 				{/* 继承权限开关 */}
-				<div style={{ 
-					marginBottom: 16, 
-					padding: '12px 16px', 
-					background: inheritMenuPermissions ? '#e6f7ff' : '#f5f5f5', 
-					borderRadius: 8,
-					border: inheritMenuPermissions ? '1px solid #91d5ff' : '1px solid #d9d9d9',
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'space-between',
-					transition: 'all 0.3s'
-				}}>
+				<div
+					style={{
+						marginBottom: 16,
+						padding: '12px 16px',
+						background: inheritMenuPermissions ? '#e6f7ff' : '#f5f5f5',
+						borderRadius: 8,
+						border: inheritMenuPermissions ? '1px solid #91d5ff' : '1px solid #d9d9d9',
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'space-between',
+						transition: 'all 0.3s',
+					}}
+				>
 					<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 						<Switch
 							checked={inheritMenuPermissions}
 							onChange={setInheritMenuPermissions}
-							size="small"
+							size='small'
 						/>
-						<span style={{ fontWeight: 500, color: '#333' }}>
-							Inherit Menu Permissions
-						</span>
-						<Tooltip 
-							title="When enabled, users with this role will also inherit the permissions assigned to these menus. When disabled, menus only control page access without granting additional permissions."
-							placement="right"
+						<span style={{ fontWeight: 500, color: '#333' }}>Inherit Menu Permissions</span>
+						<Tooltip
+							title='When enabled, users with this role will also inherit the permissions assigned to these menus. When disabled, menus only control page access without granting additional permissions.'
+							placement='right'
 						>
 							<QuestionCircleOutlined style={{ color: '#999', cursor: 'help' }} />
 						</Tooltip>
 					</div>
 					{inheritMenuPermissions && (
-						<Tag color="blue" style={{ margin: 0 }}>Active</Tag>
+						<Tag
+							color='blue'
+							style={{ margin: 0 }}
+						>
+							Active
+						</Tag>
 					)}
 				</div>
 
