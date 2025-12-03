@@ -36,16 +36,130 @@ export default function MenusManagementPage() {
 	const [selectedPermissions, setSelectedPermissions] = useState([]);
 	const [permissionLoading, setPermissionLoading] = useState(false);
 
+	// 仅存叶子，避免新增子节点被父节点默认选中
+	const filterToLeafKeys = useCallback((treeData = []) => {
+		const leaves = new Set();
+		const walk = (nodes = []) => {
+			nodes.forEach((node) => {
+				const key = String(node.key ?? node.value ?? node.id);
+				if (node.children && node.children.length > 0) {
+					walk(node.children);
+				} else {
+					leaves.add(key);
+				}
+			});
+		};
+		walk(treeData);
+		return leaves;
+	}, []);
+
+	const normalizeCheckedKeysToLeaves = useCallback(
+		(checkedValue, treeData, info) => {
+			const leafSet = filterToLeafKeys(treeData);
+			const checkedArray = nb.pubfn.isArray(checkedValue) ? checkedValue : checkedValue?.checked || [];
+			if (!leafSet || leafSet.size === 0) return checkedArray;
+
+			if (info?.checkedNodes) {
+				return info.checkedNodes
+					.filter((node) => !node.children || node.children.length === 0)
+					.map((node) => String(node.key ?? node.value ?? node.id))
+					.filter((k) => leafSet.has(k));
+			}
+			return checkedArray.map(String).filter((k) => leafSet.has(k));
+		},
+		[filterToLeafKeys]
+	);
+
+	// 收集指定节点的所有叶子（用于手动级联）
+	const collectLeavesByKeys = useCallback((treeData = [], targetKeys = new Set()) => {
+		const leaves = [];
+		const walk = (nodes = []) => {
+			nodes.forEach((node) => {
+				const key = String(node.key ?? node.value ?? node.id);
+				const hasChildren = node.children && node.children.length > 0;
+				if (targetKeys.has(key)) {
+					if (hasChildren) {
+						const pushLeaves = (children = []) => {
+							children.forEach((child) => {
+								const childKey = String(child.key ?? child.value ?? child.id);
+								if (child.children && child.children.length > 0) {
+									pushLeaves(child.children);
+								} else {
+									leaves.push(childKey);
+								}
+							});
+						};
+						pushLeaves(node.children);
+					} else {
+						leaves.push(key);
+					}
+				} else if (hasChildren) {
+					walk(node.children);
+				}
+			});
+		};
+		walk(treeData);
+		return leaves;
+	}, []);
+
+	// 计算父节点半选/全选状态
+	const deriveCheckedState = useCallback((treeData = [], leafChecked = []) => {
+		const leafSet = new Set(leafChecked.map(String));
+		const parentChecked = new Set();
+		const parentHalf = new Set();
+
+		const walk = (node) => {
+			const key = String(node.key ?? node.value ?? node.id);
+			if (node.children && node.children.length > 0) {
+				let leafCount = 0;
+				let selectedLeafCount = 0;
+				node.children.forEach((child) => {
+					const { leafCount: lc, selectedLeafCount: sc } = walk(child);
+					leafCount += lc;
+					selectedLeafCount += sc;
+				});
+
+				if (leafCount > 0) {
+					if (selectedLeafCount === leafCount) {
+						parentChecked.add(key);
+					} else if (selectedLeafCount > 0) {
+						parentHalf.add(key);
+					}
+				}
+				return { leafCount, selectedLeafCount };
+			}
+
+			const selected = leafSet.has(key);
+			return { leafCount: 1, selectedLeafCount: selected ? 1 : 0 };
+		};
+
+		(treeData || []).forEach((node) => walk(node));
+
+		return {
+			checked: [...leafSet, ...parentChecked],
+			halfChecked: [...parentHalf],
+		};
+	}, []);
+
 	// Load permission tree
 	useEffect(() => {
 		const loadPermissionTree = async () => {
 			const result = await getPermissionTreeForSelectAction();
 			if (result.success) {
-				setPermissionTree(result.data || []);
+				const tree = result.data || [];
+				setPermissionTree(tree);
+				setSelectedPermissions((prev) => normalizeCheckedKeysToLeaves(prev, tree));
 			}
 		};
 		loadPermissionTree();
 	}, []);
+
+	// Tree 变化时，重新过滤已选为叶子集合
+	useEffect(() => {
+		if (permissionTree && permissionTree.length > 0) {
+			setSelectedPermissions((prev) => normalizeCheckedKeysToLeaves(prev, permissionTree));
+		}
+	}, [permissionTree, normalizeCheckedKeysToLeaves]);
 
 	// Handle assign permissions to menu
 	const handleAssignPermissions = useCallback(
@@ -59,7 +173,7 @@ export default function MenusManagementPage() {
 			if (result.success) {
 				const currentPerms = result.data?.permission || [];
 				const permIds = currentPerms.map((p) => String(nb.pubfn.isObject(p) ? p.id : p));
-				setSelectedPermissions(permIds);
+				setSelectedPermissions(normalizeCheckedKeysToLeaves(permIds, permissionTree));
 			} else {
 				message.error(result.error || 'Failed to load permissions');
 			}
@@ -427,12 +541,26 @@ export default function MenusManagementPage() {
 						what actions users can perform on specific pages.
 					</p>
 				</div>
-				{permissionTree.length > 0 ? (
+				{permissionLoading && permissionTree.length === 0 ? (
+					<div style={{ textAlign: 'left', padding: '20px 0' }}>Loading permissions...</div>
+				) : permissionTree.length > 0 ? (
 					<Tree
 						checkable
+						checkStrictly
 						treeData={permissionTree}
-						checkedKeys={selectedPermissions}
-						onCheck={(checkedKeys) => setSelectedPermissions(checkedKeys)}
+						checkedKeys={deriveCheckedState(permissionTree, selectedPermissions)}
+						onCheck={(checkedKeys, info) => {
+							const targetKey = String(info?.node?.key ?? info?.node?.value ?? info?.node?.id);
+							const affectedLeaves = collectLeavesByKeys(permissionTree, new Set([targetKey]));
+							const next = new Set(selectedPermissions);
+							if (info.checked) {
+								affectedLeaves.forEach((k) => next.add(k));
+							} else {
+								affectedLeaves.forEach((k) => next.delete(k));
+							}
+							setSelectedPermissions(Array.from(next));
+						}}
+						disabled={permissionLoading}
 						style={{ maxHeight: 400, overflowY: 'auto' }}
 					/>
 				) : (

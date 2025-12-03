@@ -50,6 +50,109 @@ export default function UsersManagementPage() {
 	const [roleLoading, setRoleLoading] = useState(false);
 	const [rolesLoaded, setRolesLoaded] = useState(false);
 
+	// 仅存叶子，防止父节点保存后新子节点被默认选中
+	const filterToLeafKeys = useCallback((treeData = []) => {
+		const leaves = new Set();
+		const walk = (nodes = []) => {
+			nodes.forEach((node) => {
+				const key = String(node.key ?? node.value ?? node.id);
+				if (node.children && node.children.length > 0) {
+					walk(node.children);
+				} else {
+					leaves.add(key);
+				}
+			});
+		};
+		walk(treeData);
+		return leaves;
+	}, []);
+
+	const normalizeCheckedKeysToLeaves = useCallback(
+		(checkedValue, treeData, info) => {
+			const leafSet = filterToLeafKeys(treeData);
+			const checkedArray = Array.isArray(checkedValue) ? checkedValue : checkedValue?.checked || [];
+			if (!leafSet || leafSet.size === 0) return checkedArray;
+
+			if (info?.checkedNodes) {
+				return info.checkedNodes
+					.filter((node) => !node.children || node.children.length === 0)
+					.map((node) => String(node.key ?? node.value ?? node.id))
+					.filter((k) => leafSet.has(k));
+			}
+			return checkedArray.map(String).filter((k) => leafSet.has(k));
+		},
+		[filterToLeafKeys]
+	);
+
+	const collectLeavesByKeys = useCallback((treeData = [], targetKeys = new Set()) => {
+		const leaves = [];
+		const walk = (nodes = []) => {
+			nodes.forEach((node) => {
+				const key = String(node.key ?? node.value ?? node.id);
+				const hasChildren = node.children && node.children.length > 0;
+				if (targetKeys.has(key)) {
+					if (hasChildren) {
+						const pushLeaves = (children = []) => {
+							children.forEach((child) => {
+								const childKey = String(child.key ?? child.value ?? child.id);
+								if (child.children && child.children.length > 0) {
+									pushLeaves(child.children);
+								} else {
+									leaves.push(childKey);
+								}
+							});
+						};
+						pushLeaves(node.children);
+					} else {
+						leaves.push(key);
+					}
+				} else if (hasChildren) {
+					walk(node.children);
+				}
+			});
+		};
+		walk(treeData);
+		return leaves;
+	}, []);
+
+	const deriveCheckedState = useCallback((treeData = [], leafChecked = []) => {
+		const leafSet = new Set(leafChecked.map(String));
+		const parentChecked = new Set();
+		const parentHalf = new Set();
+
+		const walk = (node) => {
+			const key = String(node.key ?? node.value ?? node.id);
+			if (node.children && node.children.length > 0) {
+				let leafCount = 0;
+				let selectedLeafCount = 0;
+				node.children.forEach((child) => {
+					const { leafCount: lc, selectedLeafCount: sc } = walk(child);
+					leafCount += lc;
+					selectedLeafCount += sc;
+				});
+
+				if (leafCount > 0) {
+					if (selectedLeafCount === leafCount) {
+						parentChecked.add(key);
+					} else if (selectedLeafCount > 0) {
+						parentHalf.add(key);
+					}
+				}
+				return { leafCount, selectedLeafCount };
+			}
+
+			const selected = leafSet.has(key);
+			return { leafCount: 1, selectedLeafCount: selected ? 1 : 0 };
+		};
+
+		(treeData || []).forEach((node) => walk(node));
+
+		return {
+			checked: [...leafSet, ...parentChecked],
+			halfChecked: [...parentHalf],
+		};
+	}, []);
+
 	// 搜索表单展开状态
 	const [searchExpanded, setSearchExpanded] = useState(false);
 
@@ -77,6 +180,7 @@ export default function UsersManagementPage() {
 
 				console.log('[Users] Tree data:', treeData);
 				setRoleTree(treeData);
+				setSelectedRoles((prev) => normalizeCheckedKeysToLeaves(prev, treeData));
 
 				const flattenRoles = (nodes = []) =>
 					nodes.reduce((acc, node) => {
@@ -927,14 +1031,26 @@ export default function UsersManagementPage() {
 				confirmLoading={roleLoading}
 				okButtonProps={{ disabled: !rolesLoaded || roleLoading }}
 			>
-				{!rolesLoaded || roleLoading ? (
-					<div style={{ textAlign: 'left' }}>{!rolesLoaded ? 'Loading available roles...' : 'Loading user roles...'}</div>
+				{(!rolesLoaded && roleTree.length === 0) ? (
+					<div style={{ textAlign: 'left' }}>Loading available roles...</div>
 				) : roleTree.length > 0 ? (
 					<Tree
 						checkable
+						checkStrictly
 						treeData={roleTree}
-						checkedKeys={selectedRoles}
-						onCheck={(checkedKeys) => setSelectedRoles(checkedKeys)}
+						checkedKeys={deriveCheckedState(roleTree, selectedRoles)}
+						onCheck={(checkedKeys, info) => {
+							const targetKey = String(info?.node?.key ?? info?.node?.value ?? info?.node?.id);
+							const affectedLeaves = collectLeavesByKeys(roleTree, new Set([targetKey]));
+							const next = new Set(selectedRoles);
+							if (info.checked) {
+								affectedLeaves.forEach((k) => next.add(k));
+							} else {
+								affectedLeaves.forEach((k) => next.delete(k));
+							}
+							setSelectedRoles(Array.from(next));
+						}}
+						disabled={roleLoading || !rolesLoaded}
 						style={{ maxHeight: 400, overflowY: 'auto' }}
 					/>
 				) : (
