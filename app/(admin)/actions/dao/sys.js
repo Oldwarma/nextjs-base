@@ -139,12 +139,15 @@ export async function getRoleList({ pageIndex = 1, pageSize = 20, filters = {} }
 
 	const [rows, total] = await Promise.all([
 		prisma.role.findMany({
-			where: filters,
+			where: {
+				...filters,
+				deletedAt: null,
+			},
 			orderBy: { name: 'asc' },
 			skip,
 			take: pageSize,
 		}),
-		prisma.role.count({ where: filters }),
+		prisma.role.count({ where: { ...filters, deletedAt: null } }),
 	]);
 
 	return {
@@ -158,6 +161,84 @@ export async function getRoleList({ pageIndex = 1, pageSize = 20, filters = {} }
 		hasNext: pageIndex < Math.ceil(total / pageSize),
 		hasPrev: pageIndex > 1,
 	};
+}
+
+/**
+ * 获取角色树形列表
+ */
+export async function getRoleTree({ pageIndex = 1, pageSize = 1000, filters = {}, includeDisabled = true } = {}) {
+	const where = {
+		...filters,
+		deletedAt: null,
+	};
+
+	if (!includeDisabled) {
+		where.enable = true;
+	}
+
+	const allRoles = await prisma.role.findMany({
+		where,
+		orderBy: [{ name: 'asc' }],
+	});
+
+	const rows = nb.pubfn.tree.arrayToTree(allRoles, {
+		sortBy: [{ field: 'name', order: 'asc' }],
+	});
+
+	return {
+		code: 0,
+		msg: 'ok',
+		rows,
+		total: allRoles.length,
+		pageIndex,
+		pageSize,
+	};
+}
+
+/**
+ * 计算角色可授予的权限范围（受父级链条限制）
+ * 如果没有父级，返回 null 表示不限制
+ */
+export async function getRolePermissionScope(roleId) {
+	if (!roleId) return null;
+
+	const current = await prisma.role.findUnique({
+		where: { id: roleId },
+		select: { parentId: true },
+	});
+
+	if (!current || !current.parentId) return null;
+
+	const visited = new Set();
+	let scopeSet = null;
+	let parentId = current.parentId;
+
+	while (parentId) {
+		// 防止循环引用
+		if (visited.has(parentId)) break;
+		visited.add(parentId);
+
+		const parent = await prisma.role.findUnique({
+			where: { id: parentId },
+			select: { id: true, parentId: true, permission: true, deletedAt: true },
+		});
+
+		if (!parent || parent.deletedAt) break;
+
+		const parentPermissions = nb.pubfn.isArray(parent.permission)
+			? parent.permission.map(String)
+			: [];
+
+		if (scopeSet === null) {
+			scopeSet = new Set(parentPermissions);
+		} else {
+			scopeSet = new Set([...scopeSet].filter((p) => parentPermissions.includes(p)));
+		}
+
+		parentId = parent.parentId;
+	}
+
+	return scopeSet ? Array.from(scopeSet) : null;
 }
 
 /**

@@ -128,6 +128,9 @@ model Verification {
 model Role {
   id                     String    @id @default(uuid())
   name                   String    @unique
+  parentId               String?   @map("parent_id")
+  parent                 Role?     @relation("RoleHierarchy", fields: [parentId], references: [id])
+  children               Role[]    @relation("RoleHierarchy")
   remark                 String?
   enable                 Boolean   @default(true)
   
@@ -141,6 +144,7 @@ model Role {
   updatedAt              DateTime  @updatedAt
   deletedAt              DateTime?                      // 软删除时间
   
+  @@index([parentId])
   @@index([name])
   @@index([enable])
   @@index([deletedAt])

@@ -18,9 +18,9 @@
 
 | 工具 | 版本要求 | 说明 |
 |:---|:---|:---|
-| Node.js | 18.17+ | 推荐使用 LTS 版本 |
+| Node.js | 20.9+ | 推荐使用 LTS 版本 |
 | PostgreSQL | 16+ | 或使用云数据库服务 |
-| pnpm/npm/yarn | 最新版 | 推荐使用 pnpm |
+| bun/pnpm/npm/yarn | 最新版 | **推荐使用 bun** |
 | Git | 最新版 | 版本控制 |
 
 ---
@@ -37,7 +37,10 @@ cd nextjs-base
 ### 2. 安装依赖
 
 ```bash
-# 使用 pnpm（推荐）
+# 使用 bun（推荐）
+bun install
+
+# 或使用 pnpm
 pnpm install
 
 # 或使用 npm
@@ -92,14 +95,20 @@ CREATE DATABASE nextjs_base;
 
 ```bash
 # 执行数据库迁移
-npx prisma migrate dev
+bunx prisma migrate dev
 
 # 生成 Prisma Client
-npx prisma generate
+bunx prisma generate
 
-# 初始化基础数据（可选）
-npm run db:init
+# 初始化基础数据（创建默认管理员、角色、权限、菜单）
+bun run db:init
 ```
+
+> **初始化脚本会创建**：
+> - 默认管理员账户：`admin@example.com` / `admin123`
+> - 默认角色：admin、editor、viewer
+> - 默认权限：系统管理相关权限
+> - 默认菜单：RBAC 和 System 菜单
 
 ---
 
@@ -108,7 +117,7 @@ npm run db:init
 ### 开发模式
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 访问 [http://localhost:3000](http://localhost:3000) 查看项目。
@@ -189,10 +198,10 @@ DATABASE_URL="postgresql://用户名:密码@主机:端口/数据库名?schema=pu
 
 ```bash
 # 重置数据库（会删除所有数据）
-npx prisma migrate reset
+bunx prisma migrate reset
 
 # 重新执行迁移
-npx prisma migrate dev
+bunx prisma migrate dev
 ```
 
 </details>
@@ -203,10 +212,10 @@ npx prisma migrate dev
 确保已执行初始化脚本：
 
 ```bash
-npm run db:init
+bun run db:init
 ```
 
-或手动在数据库中将用户的 `role` 设置为 `admin`。
+这会创建默认管理员账户 `admin@example.com`（密码 `admin123`）。
 
 </details>
 

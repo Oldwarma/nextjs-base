@@ -57,28 +57,38 @@ export default function UsersManagementPage() {
 	const loadAllRoles = useCallback(async () => {
 		try {
 			// 使用专门的选择器 Action，统一格式
-			const result = await getRoleListForSelectAction({ withLabel: true });
+			const result = await getRoleListForSelectAction({ withLabel: true, asTree: true });
 
 			if (result.success) {
 				const roles = result.data || [];
 				console.log('[Users] Loaded roles:', roles);
 				setAllRoles(roles);
 
-				// Convert to tree data for Tree component (角色绑定模态框)
-				const treeData = roles
-					.filter((role) => role && role.id) // 过滤无效数据
-					.map((role) => ({
-						title: String(role.label || role.name || 'Unknown'), // 确保是字符串
-						value: String(role.id), // 确保是字符串
-						key: String(role.id), // 确保是字符串
+				const toTreeData = (nodes = []) =>
+					(nodes || []).map((role) => ({
+						title: String(role.label || role.name || 'Unknown'),
+						value: String(role.id),
+						key: String(role.id),
 						disabled: !role.enable,
+						children: role.children ? toTreeData(role.children) : undefined,
 					}));
+
+				const treeData = toTreeData(roles);
 
 				console.log('[Users] Tree data:', treeData);
 				setRoleTree(treeData);
 
+				const flattenRoles = (nodes = []) =>
+					nodes.reduce((acc, node) => {
+						acc.push(node);
+						if (node.children && node.children.length > 0) {
+							acc.push(...flattenRoles(node.children));
+						}
+						return acc;
+					}, []);
+
 				// 为搜索表单准备选项数据（只包含启用的角色）
-				const searchOptions = roles
+				const searchOptions = flattenRoles(roles)
 					.filter((role) => role && role.id && role.enable)
 					.map((role) => ({
 						label: String(role.label || role.name || 'Unknown'),
