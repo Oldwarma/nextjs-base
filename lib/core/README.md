@@ -416,7 +416,7 @@ crud-helper.js
 - [BaseDAO 文档](../../docs/admin/BASE_DAO.md)
 - [Action Logger 文档](../../docs/admin/ACTION_LOGGER.md)
 - [Smart CRUD 指南](../../docs/admin/SMART_CRUD_GUIDE.md)
-- [模板化架构设计](../../docs/rbac/TEMPLATE_BASED_ARCHITECTURE.md)
+- [通用工具函数 nb.pubfn](../function/README.md)
 
 ---
 

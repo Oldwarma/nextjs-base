@@ -970,213 +970,88 @@ const handleSearch = (keyword) => {
 
 ---
 
-## 项目中的使用场景
+## 最佳实践
 
-以下是本项目中实际使用 `nb.pubfn` 的场景：
-
-### 1. UUID 生成（base.js / user.js / action-logger.js / upload-service.js）
+### 1. 类型判断优先使用 nb.pubfn
 
 ```javascript
-// 数据库记录 ID 生成
-const userId = nb.pubfn.uuid();
+// ✅ 推荐
+if (nb.pubfn.isArray(value)) { }
+if (nb.pubfn.isFunction(callback)) { }
+if (nb.pubfn.isString(name)) { }
 
-// 创建记录时自动生成 ID
-if (!filtered[this.config.primaryKey]) {
-  filtered[this.config.primaryKey] = nb.pubfn.uuid();
-}
-
-// 上传文件记录
-await prisma.upload.create({
-  data: {
-    id: nb.pubfn.uuid(),
-    key,
-    url: uploadResult.url,
-    // ...
-  }
-});
+// ❌ 不推荐
+if (Array.isArray(value)) { }
+if (typeof callback === 'function') { }
+if (typeof name === 'string') { }
 ```
 
-### 2. 时间格式化（action-logger.js）
+### 2. 空值检查使用 isNull
 
 ```javascript
-// 替代手写的时间格式化函数
-function formatTimePrefix(date) {
-  return nb.pubfn.timeFormat(date, 'hh:mm:ss.S');
+// ✅ 推荐 - 一次性检查 null/undefined/空字符串/空对象/空数组
+if (nb.pubfn.isNull(data)) {
+  return defaultValue;
 }
 
-function formatDateTime(date) {
-  if (nb.pubfn.isNull(date)) return 'N/A';
-  return nb.pubfn.timeFormat(date, 'yyyy-MM-dd hh:mm:ss');
-}
+// ❌ 不推荐 - 需要多个条件
+if (!data || Object.keys(data).length === 0) { }
 ```
 
-### 3. 空值判断（selects.js / base.js）
+### 3. ID 生成统一使用 uuid
 
 ```javascript
-// 替代 !whereJson || Object.keys(whereJson).length === 0
-if (nb.pubfn.isNull(whereJson)) {
-  return { clause: '', params: [], nextIndex: paramIndex };
-}
+// ✅ 推荐
+const id = nb.pubfn.uuid();
 
-// 替代 typeof value === 'object' && !Array.isArray(value)
-if (nb.pubfn.isObject(value) && !nb.pubfn.isArray(value)) {
-  // 处理对象类型
-}
+// ❌ 不推荐 - 使用其他方式生成
+import { v4 as uuidv4 } from 'uuid';
+const id = uuidv4();
 ```
 
-### 4. 类型判断（selects.js / base.js）
+### 4. 树形数据处理使用 tree 工具
 
 ```javascript
-// 判断是否为数组
-if (nb.pubfn.isArray(value.in)) {
-  conditions.push(`${fullColumn} = ANY($${paramIndex})`);
-}
+// ✅ 推荐 - 使用 tree 工具链
+const tree = nb.pubfn.tree.arrayToTree(list);
+const selectTree = nb.pubfn.tree.mapTree(tree, mapper);
+const node = nb.pubfn.tree.findInTree(tree, predicate);
 
-// 判断是否为对象
-if (nb.pubfn.isObject(record)) {
-  // 序列化处理
+// ❌ 不推荐 - 手写递归
+function buildTree(list, parentId = null) {
+  return list
+    .filter(item => item.parentId === parentId)
+    .map(item => ({ ...item, children: buildTree(list, item.id) }));
 }
 ```
 
-### 5. 数组提取（action-logger.js）
+### 5. 数组操作使用内置方法
 
 ```javascript
-// 替代 oldestLogs.map((log) => log.id)
-const idsToDelete = nb.pubfn.arrayObjectGetArray(oldestLogs, 'id');
-```
+// ✅ 推荐
+const ids = nb.pubfn.arrayObjectGetArray(list, 'id');
+const unique = nb.pubfn.arrayUnique(arr);
+const diff = nb.pubfn.arrayDiff(arr1, arr2);
 
-### 6. 树形结构转换（sys.js / crud-action.menu.js）
-
-```javascript
-// 构建菜单树
-const menuTree = nb.pubfn.tree.arrayToTree(allMenus, {
-  filter: (item) => item.enable && !item.hidden,
-  sortBy: [{ field: 'sort', order: 'asc' }],
-});
-
-// 转换为 TreeSelect 格式
-const selectTree = nb.pubfn.tree.mapTree(menuTree, (node) => ({
-  title: node.name,
-  value: node.id,
-  key: node.id,
-}));
-```
-
-### 7. 对象字段删除（selects.js）
-
-```javascript
-// 替代手动删除字段
-processedData = data.map(row => {
-  return nb.pubfn.deleteObjectKeys(row, excludeFields);
-});
-```
-
-### 8. 深拷贝对象
-
-```javascript
-// 表单数据复制，避免引用问题
-const formData = nb.pubfn.deepClone(originalData);
-```
-
-### 9. 数组操作
-
-```javascript
-// 数组去重
-const uniqueIds = nb.pubfn.arrayUnique(allIds);
-
-// 数组差集 - 找出需要新增的
-const toAdd = nb.pubfn.arrayDiff(newIds, existingIds);
-
-// 数组交集 - 找出需要保留的
-const toKeep = nb.pubfn.arrayIntersect(newIds, existingIds);
-
-// 数组分组
-const groupedByType = nb.pubfn.groupBy(items, 'type');
-
-// 数组求和
-const totalAmount = nb.pubfn.sum(orders, 'amount');
-```
-
-### 10. 字符串处理
-
-```javascript
-// 隐藏手机号中间数字
-const maskedPhone = nb.pubfn.hidden(phone, 3, 4);  // 138****8000
-
-// 截断长文本
-const shortDesc = nb.pubfn.truncate(description, 100);
-
-// HTML 转义（防 XSS）
-const safeHtml = nb.pubfn.escapeHtml(userInput);
-```
-
-### 11. 金额处理
-
-```javascript
-// 分转元显示
-const displayPrice = nb.pubfn.priceFilter(priceInCents);
-
-// 金额千分位格式化
-const formattedAmount = nb.pubfn.formatMoney(amount);
-
-// 百分比显示
-const percentage = nb.pubfn.percentageFilter(ratio);
-```
-
-### 12. URL 参数处理
-
-```javascript
-// 构建查询参数
-const queryString = nb.pubfn.queryParams({ page: 1, size: 20 });
-
-// 解析 URL 参数
-const params = nb.pubfn.parseQueryString(url);
-
-// 获取单个参数
-const id = nb.pubfn.getUrlParam('id', url);
-```
-
-### 13. 版本号比较
-
-```javascript
-// 检查是否需要升级
-if (nb.pubfn.compareVersion(currentVersion, requiredVersion) < 0) {
-  console.log('需要升级');
-}
-```
-
-### 14. 深度比较
-
-```javascript
-// 检查数据是否有变化
-if (!nb.pubfn.isEqual(oldData, newData)) {
-  // 数据已修改，需要保存
-}
-```
-
-### 15. 并发控制
-
-```javascript
-// 批量请求，限制并发数
-const tasks = ids.map(id => () => fetchDetail(id));
-const results = await nb.pubfn.batchRun(tasks, 5);  // 最多5个并发
+// ❌ 不推荐
+const ids = list.map(item => item.id);
+const unique = [...new Set(arr)];
 ```
 
 ---
 
+## 浏览器端函数
 
-### 保留的浏览器端函数
+以下函数已改造为纯浏览器端实现，可在 Next.js 客户端组件中使用：
 
-以下函数已改造为纯浏览器端实现，可在 Next.js 中使用：
-
-- `fileToBase64` - 使用 `FileReader` API
-- `base64ToFile` - 使用 `Blob` API
-- `base64toBlob` - 使用 `Uint8Array`
-- `blobToFile` - 使用 `URL.createObjectURL`
+- `fileToBase64` - 文件转 Base64
+- `base64ToFile` - Base64 转文件
+- `base64toBlob` - Base64 转 Blob
+- `blobToFile` - Blob 转文件
 
 ---
 
-## 待办：国际化支持
+## 国际化支持
 
 > **提醒**：如需在 Next.js 中使用语言相关功能，建议使用 `next-intl` 库替代原来的 `getLocale` 等函数。
 

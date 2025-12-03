@@ -9,6 +9,8 @@ Prisma ORM 连接管理和统一数据库 API。
 | `prisma.js` | Prisma Client 单例 - 连接池管理 |
 | `selects.js` | 万能连表查询工具 - 支持数组字段关联 |
 
+> **注意**：UUID 生成已统一使用 `nb.pubfn.uuid()`，详见 [lib/function/README.md](../function/README.md)
+
 ## 🎯 万能连表查询 selects
 
 参考 [vk-unicloud selects](https://vkdoc.fsq.pub/client/uniCloud/db/selects.html) 设计，解决 Prisma 对数组字段关联支持不足的问题。
@@ -211,10 +213,11 @@ const user = await selectOne({
 
 ### 注意事项
 
-1. **表名映射**：可以使用 Model 名称（如 `user`）或数据库表名（如 `users`）
-2. **软删除**：自动过滤 `deletedAt IS NOT NULL` 的记录
-3. **性能**：使用 PostgreSQL 子查询，一次 SQL 完成连表
-4. **字段选择**：`fieldJson` 可以指定只返回需要的字段
+1. **表名**：使用数据库实际表名（如 `users`、`roles`）
+2. **字段名**：使用数据库实际列名（如 `user_id`、`created_at`）
+3. **软删除**：自动过滤 `deletedAt IS NOT NULL` 的记录
+4. **性能**：使用 PostgreSQL 子查询，一次 SQL 完成连表
+5. **字段选择**：`fieldJson` 可以指定只返回需要的字段
 
 ---
 

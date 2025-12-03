@@ -41,7 +41,18 @@ import { FIELD_TYPE_REGISTRY } from '@/lib/crud/field-types';
 
 ## 🔗 依赖关系
 
-这些工具纯函数，仅依赖：
+这些工具依赖：
 - Ant Design Pro Components
 - React
+- `nb.pubfn` 工具函数（类型判断等）
+
+```javascript
+import nb from '@/lib/function';
+
+// 内部使用示例
+if (nb.pubfn.isFunction(options)) { ... }
+if (nb.pubfn.isArray(value)) { ... }
+```
+
+详见 [lib/function/README.md](../function/README.md)
 

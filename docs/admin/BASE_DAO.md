@@ -90,7 +90,7 @@ export const userCrudConfig = {
 ```javascript
 'use server';
 
-import { createCrudActions } from '@/@/(admin)/actions/dao/base';
+import { createCrudActions } from '@/app/(admin)/actions/dao/base';
 import { userCrudConfig } from '@/configs/user-crud.config';
 
 // 创建 CRUD Actions
@@ -319,10 +319,12 @@ validation: {
 在创建记录前执行，可以修改数据：
 
 ```javascript
+import nb from '@/lib/function';
+
 hooks: {
 	beforeCreate: async (data) => {
-		// 自动生成 ID
-		data.id = generateId();
+		// 自动生成 ID（使用统一的 uuid 方法）
+		data.id = nb.pubfn.uuid();
 		
 		// 加密密码
 		if (data.password) {
@@ -599,7 +601,7 @@ softDelete: false, // 启用硬删除
 #### 构造函数
 
 ```javascript
-import { BaseDAO } from '@/@/(admin)/actions/dao/base';
+import { BaseDAO } from '@/app/(admin)/actions/dao/base';
 
 const dao = new BaseDAO(config);
 ```
@@ -742,7 +744,7 @@ const dao = new BaseDAO(config);
 **使用方式**：
 
 ```javascript
-import { createCrudActions } from '@/@/(admin)/actions/dao/base';
+import { createCrudActions } from '@/app/(admin)/actions/dao/base';
 
 const crudActions = createCrudActions(config);
 
@@ -1264,10 +1266,12 @@ validation: {
 
 **示例**：
 ```javascript
+import nb from '@/lib/function';
+
 hooks: {
 	// beforeCreate 做简单的数据准备
 	beforeCreate: async (data) => {
-		data.id = generateId();
+		data.id = nb.pubfn.uuid();
 		data.status = 'active';
 		return data;
 	},
@@ -1489,7 +1493,7 @@ BaseDAO 不强制替换所有现有代码，可以混合使用：
 ```javascript
 'use server';
 
-import { createCrudActions } from '@/@/(admin)/actions/dao/base';
+import { createCrudActions } from '@/app/(admin)/actions/dao/base';
 import { userCrudConfig } from '@/configs/user-crud.config';
 import { getUserStatistics } from '@/lib/user-profile';
 

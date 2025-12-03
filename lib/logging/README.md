@@ -212,11 +212,13 @@ logActionToConsole(
 
 ### 数据库日志结构
 
-日志会异步写入 `action_logs` 表
+日志会异步写入 `action_logs` 表，ID 使用 `nb.pubfn.uuid()` 生成：
 
 ```javascript
+import nb from '@/lib/function';
+
 {
-  id: 'log_xxx',
+  id: nb.pubfn.uuid(),    // 使用统一的 UUID 生成方法
   userId: 'user123',
   action: 'query',
   resourceType: 'menu',
@@ -259,5 +261,6 @@ await logUsage({
 ## 相关文件
 
 - `lib/core/action-wrapper.js` - 自动调用 `logAction`
-- `app/(admin)/actions/dao/base.js` - BaseDAO 使用 `logActionToConsole`
+- `app/(admin)/actions/dao/base.js` - BaseDAO 使用日志记录
 - `lib/business/init-user.js` - 业务日志示例
+- `lib/function/README.md` - `nb.pubfn` 工具函数文档

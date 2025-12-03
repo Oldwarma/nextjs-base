@@ -16,6 +16,12 @@ lib/
 │
 ├── database/            # 🗄️ 数据库访问
 │   ├── prisma.js        # Prisma Client 单例
+│   ├── selects.js       # 万能连表查询工具
+│   └── README.md
+│
+├── function/            # 🛠️ 通用工具函数（nb.pubfn）
+│   ├── index.js         # 工具函数入口（类型判断、数组、字符串、时间等）
+│   ├── treeUtil.js      # 树形结构工具
 │   └── README.md
 │
 ├── logging/             # 📝 日志系统
@@ -37,12 +43,17 @@ lib/
 │   ├── search-transformer.js  # 搜索转换器
 │   └── README.md
 │
+├── core/                # 🎯 核心库
+│   ├── action-wrapper.js # Action 包装器
+│   ├── crud-helper.js    # CRUD 辅助类
+│   └── README.md
+│
 ├── validation/          # 数据验证
 │   ├── auto-schema.js   # 自动 Schema 转换（validation → Zod）
 │   ├── index.js         # 导出入口
 │   └── README.md
 │
-└── utils.js             # 🔧 通用工具函数
+└── utils.js             # 🔧 通用工具函数（旧，建议使用 function/）
 ```
 
 ## 🎯 快速导航
@@ -66,8 +77,30 @@ import { authClient } from '@/lib/auth/auth-client';
 // Prisma Client（推荐）
 import { prisma } from '@/lib/database/prisma';
 
-// 高层级 API（兼容层）
-import { selects, add, updateOne, remove } from '@/lib/database/db-api';
+// 万能连表查询
+import { selects, selectOne } from '@/lib/database/selects';
+```
+
+### 通用工具函数
+
+```javascript
+// 推荐：使用 nb.pubfn 工具集
+import nb from '@/lib/function';
+
+// 类型判断
+nb.pubfn.isArray(value);
+nb.pubfn.isFunction(callback);
+nb.pubfn.isNull(data);
+
+// UUID 生成
+const id = nb.pubfn.uuid();
+
+// 时间格式化
+nb.pubfn.timeFormat(date, 'yyyy-MM-dd');
+
+// 树形结构
+nb.pubfn.tree.arrayToTree(list);
+nb.pubfn.tree.findInTree(tree, predicate);
 ```
 
 ### 日志记录
@@ -127,9 +160,11 @@ import { z } from '@/lib/validation';
 
 - [🔐 认证与权限 (auth/)](./auth/README.md)
 - [🗄️ 数据库访问 (database/)](./database/README.md)
+- [🛠️ 通用工具函数 (function/)](./function/README.md)
 - [📝 日志系统 (logging/)](./logging/README.md)
 - [💼 业务逻辑 (business/)](./business/README.md)
 - [🎨 CRUD 工具 (crud/)](./crud/README.md)
+- [🎯 核心库 (core/)](./core/README.md)
 - [数据验证 (validation/)](./validation/README.md)
 
 ## 🔗 依赖关系图

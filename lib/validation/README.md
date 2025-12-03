@@ -254,6 +254,21 @@ lib/validation/
 └── README.md        # 本文档
 ```
 
+## 与 nb.pubfn 配合使用
+
+验证模块内部使用 `nb.pubfn` 进行类型判断：
+
+```javascript
+import nb from '@/lib/function';
+
+// 类型判断
+if (!nb.pubfn.isObject(validation)) { ... }
+if (nb.pubfn.isFunction(validator)) { ... }
+if (nb.pubfn.isArray(rule.enum)) { ... }
+```
+
+详见 [lib/function/README.md](../function/README.md)
+
 ## 与旧版本的兼容性
 
 本模块完全兼容旧的 `validation` 配置格式，无需修改现有代码。
