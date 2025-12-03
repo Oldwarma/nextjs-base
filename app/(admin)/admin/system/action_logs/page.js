@@ -14,13 +14,14 @@ import nb from '@/lib/function';
 
 // Server Actions
 import { getActionLogListAction as getList } from '@/app/(admin)/actions/system/admin-action-logs';
+import { getActionLogDetailAction as getDetail } from '@/app/(admin)/actions/system/admin-action-logs';
 // ⚠️ 注意：不导入 getDetail，直接使用表格数据（已包含连表的 userInfo）
 
 export default function ActionLogsPage() {
 	// 字段配置
 	const fieldsConfig = [
 		// ID
-		{
+		{	
 			key: 'id',
 			title: 'ID',
 			type: 'text',
@@ -283,6 +284,7 @@ export default function ActionLogsPage() {
 			fieldsConfig={fieldsConfig}
 			actions={{
 				getList,
+				getDetail,
 				// 不提供 getDetail，直接使用表格数据（已包含连表的 userInfo）
 			}}
 			enableCreate={false}

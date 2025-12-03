@@ -480,8 +480,13 @@ export class BaseDAO {
 				whereJson.deletedAt = null;
 			}
 
+			const tableName = this.config.tableName;
+			if (!tableName) {
+				throw new Error(`tableName is required for selects query. Model: ${this.config.modelName}`);
+			}
+
 			const record = await selectOne({
-				dbName: this.config.modelName,
+				dbName: tableName,
 				whereJson,
 				foreignDB,
 				fieldJson,
@@ -814,6 +819,9 @@ export function createCrudActions(config) {
 	const dao = new BaseDAO(config);
 	const resourceType = config.modelName;
 
+	// 获取配置中的默认 foreignDB
+	const defaultForeignDB = config.query?.foreignDB || [];
+
 	return {
 		getList: async (params) => {
 			const startTime = Date.now();
@@ -846,12 +854,15 @@ export function createCrudActions(config) {
 			}
 		},
 
+		// 获取详情（自动使用配置中的 foreignDB 进行连表查询）
 		getDetail: async (id) => {
 			const startTime = Date.now();
 			const userId = await dao.getCurrentUserId();
 
 			try {
-				const result = await dao.getDetail(id);
+				const result = await dao.getDetail(id, {
+					foreignDB: defaultForeignDB,
+				});
 				await logAction({
 					userId,
 					action: 'query',
