@@ -5,44 +5,34 @@ import { headers } from 'next/headers';
 import prisma from '@/lib/database/prisma';
 
 /**
- * 更新用户最后登录时间
+ * 初始化/更新用户登录状态（积分 + 最后登录时间）
  */
-async function updateLastLogin(userId) {
-	try {
-		await prisma.user.update({
-			where: { id: userId },
-			data: { lastLoginAt: new Date() },
-		});
-	} catch (error) {
-		console.error('Failed to update last login:', error);
-	}
-}
+async function initializeUserOnLogin(userId) {
+	if (!userId) return;
 
-/**
- * 初始化新用户（确保用户有默认积分等）
- */
-async function initializeNewUser(userId) {
 	try {
 		const user = await prisma.user.findUnique({
 			where: { id: userId },
 			select: { credits: true },
 		});
-		
-		// 如果用户已存在且有积分，跳过初始化
-		if (user && user.credits > 0) {
-			return;
+
+		if (!user) return;
+
+		const updateData = {
+			lastLoginAt: new Date(),
+		};
+
+		// 仅在没有积分时补充初始积分
+		if (!user.credits || user.credits <= 0) {
+			updateData.credits = 100;
 		}
-		
-		// 给新用户初始积分
+
 		await prisma.user.update({
 			where: { id: userId },
-			data: {
-				credits: 100, // 初始积分
-				lastLoginAt: new Date(),
-			},
+			data: updateData,
 		});
 	} catch (error) {
-		console.error('Failed to initialize new user:', error);
+		console.error('Failed to initialize user on login:', error);
 	}
 }
 
@@ -79,9 +69,9 @@ export async function signInWithEmailAction(credentials) {
 			};
 		}
 
-		// 更新最后登录时间
-		if (result.user && result.user.id) {
-			await updateLastLogin(result.user.id);
+		// 更新最后登录时间 & 初始积分
+		if (result.user?.id) {
+			await initializeUserOnLogin(result.user.id);
 		}
 
 		return {
@@ -140,8 +130,8 @@ export async function signUpWithEmailAction(credentials) {
 		}
 
 		// 初始化新用户数据
-		if (result.user && result.user.id) {
-			await initializeNewUser(result.user.id);
+		if (result.user?.id) {
+			await initializeUserOnLogin(result.user.id);
 		}
 
 		return {
@@ -275,7 +265,7 @@ export async function checkAndInitUserAction() {
 		}
 
 		// 初始化用户数据
-		await initializeNewUser(session.user.id);
+		await initializeUserOnLogin(session.user.id);
 
 		return {
 			success: true,
@@ -289,5 +279,4 @@ export async function checkAndInitUserAction() {
 		};
 	}
 }
-
 

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,38 +10,46 @@ import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSeparator } from 
 import { Input } from '@/components/ui/input';
 import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
-import { signInWithEmailAction, checkAndInitUserAction } from '@/app/(client)/actions/auth';
+import { checkAndInitUserAction } from '@/app/(client)/actions/auth';
 import { authClient } from '@/lib/auth/auth-client';
 
 export function LoginForm({ className, callbackUrl, ...props }) {
 	const t = useTranslations();
+	const locale = useLocale();
 	const router = useRouter();
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState('');
+	const hasHandledSessionRef = useRef(false);
 	const { data: session } = authClient.useSession();
+
+	// 格式化跳转路径，默认加上当前语言前缀
+	const formatRedirectPath = useCallback(
+		(target) => {
+			if (!target || typeof target !== 'string') return null;
+			if (!target.startsWith('/')) return null;
+
+			if (target === `/${locale}` || target.startsWith(`/${locale}/`)) {
+				return target;
+			}
+			return `/${locale}${target}`;
+		},
+		[locale]
+	);
 
 	// 获取登录后的重定向地址，默认为 dashboard
 	const getRedirectUrl = useCallback(() => {
-		if (callbackUrl) {
-			// 验证 callbackUrl 是否安全（同源检查）
-			try {
-				// 如果是相对路径，直接使用
-				if (callbackUrl.startsWith('/')) {
-					return callbackUrl;
-				}
-			} catch (err) {
-				console.error('Invalid callbackUrl:', err);
-			}
-		}
-		return '/dashboard';
-	}, [callbackUrl]);
+		const safeCallback = formatRedirectPath(callbackUrl);
+		if (safeCallback) return safeCallback;
+		return `/${locale}/dashboard`;
+	}, [callbackUrl, formatRedirectPath, locale]);
 
 	// 检查是否有 session（三方登录回调后）并初始化用户
 	useEffect(() => {
-		if (session) {
+		if (session && !hasHandledSessionRef.current) {
 			const initUser = async () => {
 				// 有 session，初始化用户并跳转
 				await checkAndInitUserAction();
+				hasHandledSessionRef.current = true;
 				router.push(getRedirectUrl());
 			};
 			initUser();
@@ -72,14 +80,16 @@ export function LoginForm({ className, callbackUrl, ...props }) {
 		}
 
 		try {
-			const result = await signInWithEmailAction({ email, password });
+			const result = await authClient.signIn.email({ email, password });
 
-			if (result.success) {
-				// 登录成功，跳转到 callbackUrl 或 dashboard
-				router.push(getRedirectUrl());
-			} else {
-				setError(result.error || t('auth.loginFailed'));
+			if (result?.error) {
+				setError(result.error.message || t('auth.loginFailed'));
+				return;
 			}
+
+			await checkAndInitUserAction();
+			hasHandledSessionRef.current = true;
+			router.push(getRedirectUrl());
 		} catch (err) {
 			console.error('Login error:', err);
 			setError(t('auth.loginFailed'));
