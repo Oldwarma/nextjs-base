@@ -395,11 +395,42 @@ export const getRoleDetailAction = wrapAction('sysGetRoleDetail', async (params,
 	}
 
 	const result = await crudActions._dao.getDetail(id, {
-		include: {
-			parent: {
-				select: { id: true, name: true, permission: true, parentId: true },
-			},
+		fieldJson: {
+			id: true,
+			name: true,
+			parent_id: true, // DB 列名
+			remark: true,
+			enable: true,
+			permission: true,
+			menu: true,
+			inheritMenuPermissions: true,
 		},
+		foreignDB: [
+			{
+				dbName: 'permissions',
+				localKey: 'permission',
+				foreignKey: 'id',
+				as: 'permissionList',
+				type: 'array',
+				fieldJson: { id: true, name: true, remark: true },
+			},
+			{
+				dbName: 'menus',
+				localKey: 'menu',
+				foreignKey: 'id',
+				as: 'menuList',
+				type: 'array',
+				fieldJson: { id: true, name: true, url: true, remark: true },
+			},
+			{
+				dbName: 'roles',
+				localKey: 'parent_id',
+				foreignKey: 'id',
+				as: 'parentInfo',
+				type: 'one',
+				fieldJson: { id: true, name: true, parent_id: true, permission: true },
+			},
+		],
 	});
 
 	if (!result.success) {
@@ -407,13 +438,24 @@ export const getRoleDetailAction = wrapAction('sysGetRoleDetail', async (params,
 	}
 
 	const permissionScope = await sysDao.getRolePermissionScope(id);
-	const { parent, ...rest } = result.data || {};
+	const { ...rest } = result.data || {};
+
+	// 将数据库列名映射回驼峰，便于前端使用
+	if (rest.parent_id !== undefined) {
+		rest.parentId = rest.parent_id;
+		delete rest.parent_id;
+	}
+
+	if (rest.parentInfo && rest.parentInfo.parent_id !== undefined) {
+		rest.parentInfo.parentId = rest.parentInfo.parent_id;
+		delete rest.parentInfo.parent_id;
+	}
 
 	return {
 		...result,
 		data: {
 			...rest,
-			parentInfo: parent || rest.parentInfo || null,
+			parentInfo: rest.parentInfo || null,
 			permissionScope,
 		},
 	};
@@ -448,20 +490,19 @@ export const getRoleListForSelectAction = wrapAction('sysQueryRoleListForSelect'
 		roles = roles.map((role) => {
 			const badges = [];
 
-			if (!role.enable) badges.push('[已禁用]');
+			if (!role.enable) badges.push('[Disabled]');
 
 			const permCount = nb.pubfn.isArray(role.permission) ? role.permission.length : 0;
-			if (permCount > 0) badges.push(`${permCount}权限`);
+			if (permCount > 0) badges.push(`${permCount} permissions`);
 
 			const menuCount = nb.pubfn.isArray(role.menu) ? role.menu.length : 0;
-			if (menuCount > 0) badges.push(`${menuCount}菜单`);
+			if (menuCount > 0) badges.push(`${menuCount} menus`);
 
 			const badgeStr = badges.length > 0 ? ` ${badges.join(' ')}` : '';
-			const remarkStr = role.remark ? ` - ${role.remark}` : '';
 
 			return {
 				...role,
-				label: `${role.name} (${role.id})${badgeStr}${remarkStr}`,
+				label: `${role.name} ${nb.pubfn.isNotNull(badgeStr) && `(${badgeStr})`}`,
 				value: role.id,
 				key: role.id,
 			};
