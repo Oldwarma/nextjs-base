@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Tag, Button, Modal, Tree, App, Space, Switch, Tooltip, Alert } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, KeyOutlined, MenuOutlined, QuestionCircleOutlined } from '@ant-design/icons';
@@ -29,7 +29,7 @@ import { getMenuTreeForSelectAction } from '@/app/(admin)/actions/rbac/crud-acti
 
 export default function RolesManagementPage() {
 	const { message } = App.useApp();
-	const [refreshTrigger, setRefreshTrigger] = useState(0);
+	const tableApiRef = useRef(null);
 
 	// Permission assignment modal
 	const [permissionModalVisible, setPermissionModalVisible] = useState(false);
@@ -220,7 +220,7 @@ export default function RolesManagementPage() {
 		if (result.success) {
 			message.success('Permissions assigned successfully');
 			handlePermissionModalClose();
-			setRefreshTrigger((prev) => prev + 1);
+			tableApiRef.current?.refresh();
 		} else {
 			message.error(result.error || 'Failed to assign permissions');
 		}
@@ -243,7 +243,7 @@ export default function RolesManagementPage() {
 		if (result.success) {
 			message.success('Menus assigned successfully');
 			setMenuModalVisible(false);
-			setRefreshTrigger((prev) => prev + 1);
+			tableApiRef.current?.refresh();
 		} else {
 			message.error(result.error || 'Failed to assign menus');
 		}
@@ -497,7 +497,7 @@ export default function RolesManagementPage() {
 					width: 600,
 				}}
 				customRowActions={customRowActions}
-				refreshTrigger={refreshTrigger}
+				tableApiRef={tableApiRef}
 				enableCreate={true}
 				enableDetail={true}
 				enableEdit={true}

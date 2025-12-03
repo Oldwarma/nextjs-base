@@ -17,7 +17,7 @@
 
 'use client';
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { ProTable, DrawerForm, createIntl } from '@ant-design/pro-components';
 import { Button, Space, Dropdown, Popconfirm, Descriptions, App } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, MoreOutlined } from '@ant-design/icons';
@@ -71,6 +71,8 @@ const enUSProIntl = createIntl('en_US', enUSIntl);
  * @param {Array} customRowActions - 自定义行操作按钮配置
  * @param {Object} baseQuery - 基础查询条件 (强制应用)
  * @param {Function} onSearchExpandChange - 搜索表单展开状态变化回调
+ * @param {Object} tableApiRef - 可选：传入 ref，组件会暴露表格控制方法（refresh/reset/search 等）
+ * @param {any} refreshTrigger - 可选：外部传入的变化值，每次变化都会触发刷新
  */
 export default function SmartCrudPage({
 	fieldsConfig,
@@ -96,6 +98,8 @@ export default function SmartCrudPage({
 	enableDelete = true,
 	enableIndexColumn = false, // 是否显示序号列
 	baseQuery = {},
+	tableApiRef,
+	refreshTrigger,
 }) {
 	// 使用 Ant Design App hooks
 	const { message: messageApi, modal: modalApi } = App.useApp();
@@ -119,13 +123,60 @@ export default function SmartCrudPage({
 	const [searchExpanded, setSearchExpanded] = useState(false); // 搜索表单展开状态
 	const [isTreeData, setIsTreeData] = useState(false); // 树形数据标识
 	const actionRef = useRef();
-	
-	// 当 actionRef 准备好时，通知父组件
-	useMemo(() => {
-		if (onActionRefReady && actionRef.current) {
-			onActionRefReady(actionRef);
+	const formRef = useRef();
+
+	// 表格控制 API（暴露给父组件使用）
+	const refresh = useCallback(() => actionRef.current?.reload(), []);
+	const reloadAndRest = useCallback(
+		() => actionRef.current?.reloadAndRest?.() ?? actionRef.current?.reload(),
+		[]
+	);
+	const resetSearch = useCallback(() => formRef.current?.resetFields?.(), []);
+	const submitSearch = useCallback(() => formRef.current?.submit?.(), []);
+	const getSelectedRows = useCallback(() => selectedRowKeys, [selectedRowKeys]);
+	const setSelectedRowsPublic = useCallback((keys = []) => setSelectedRowKeys(keys), []);
+	const getCurrentRow = useCallback(() => currentRow, [currentRow]);
+
+	const tableApi = useMemo(
+		() => ({
+			refresh,
+			reload: refresh,
+			reloadAndRest,
+			resetSearch,
+			submitSearch,
+			getSelectedRows,
+			setSelectedRows: setSelectedRowsPublic,
+			getCurrentRow,
+			actionRef,
+		}),
+		[
+			refresh,
+			reloadAndRest,
+			resetSearch,
+			submitSearch,
+			getSelectedRows,
+			setSelectedRowsPublic,
+			getCurrentRow,
+			actionRef,
+		]
+	);
+
+	// 当 actionRef 或 API 准备好时，暴露给外部
+	useEffect(() => {
+		if (!actionRef.current) return;
+		if (tableApiRef) {
+			tableApiRef.current = tableApi;
 		}
-	}, [onActionRefReady, actionRef]);
+		if (onActionRefReady) {
+			onActionRefReady(actionRef, tableApi);
+		}
+	}, [actionRef, tableApiRef, tableApi, onActionRefReady]);
+
+	// 兼容 refreshTrigger：变化即刷新
+	useEffect(() => {
+		if (refreshTrigger === undefined) return;
+		refresh();
+	}, [refreshTrigger, refresh]);
 
 	// 自动生成表格列（根据搜索表单展开状态）
 	const tableColumns = useMemo(() => {
@@ -690,6 +741,7 @@ export default function SmartCrudPage({
 				intl={enUSProIntl}
 				columns={processedColumns}
 				actionRef={actionRef}
+				formRef={formRef}
 				// 如果提供了 dataSource，使用静态数据模式；否则使用 request 模式
 				{...(dataSource ? { dataSource } : { request })}
 				loading={loading} // 加载状态

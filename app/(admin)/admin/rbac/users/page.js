@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Avatar, Modal, Tree, Tag, Space, Button, Form, Input, Select, InputNumber, Switch, App } from 'antd';
 import { UserOutlined, TeamOutlined, PlusOutlined, KeyOutlined, StopOutlined } from '@ant-design/icons';
@@ -25,7 +25,7 @@ const { Option } = Select;
 
 export default function UsersManagementPage() {
 	const { message: messageApi } = App.useApp();
-	const [refreshTrigger, setRefreshTrigger] = useState(0);
+	const tableApiRef = useRef(null);
 
 	// Create user modal
 	const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -178,7 +178,7 @@ export default function UsersManagementPage() {
 			if (result.success) {
 				messageApi.success('Roles assigned successfully');
 				setRoleModalVisible(false);
-				setRefreshTrigger((prev) => prev + 1);
+				tableApiRef.current?.refresh();
 			} else {
 				messageApi.error(result.error || 'Failed to assign roles');
 			}
@@ -199,7 +199,7 @@ export default function UsersManagementPage() {
 				messageApi.success('User created successfully');
 				setCreateModalVisible(false);
 				createForm.resetFields();
-				setRefreshTrigger((prev) => prev + 1);
+				tableApiRef.current?.refresh();
 			} else {
 				messageApi.error(result.error || 'Failed to create user');
 			}
@@ -254,7 +254,7 @@ export default function UsersManagementPage() {
 
 			if (result.success) {
 				messageApi.success(isBanned ? 'User unbanned successfully' : 'User banned successfully');
-				setRefreshTrigger((prev) => prev + 1);
+				tableApiRef.current?.refresh();
 			} else {
 				messageApi.error(result.error || `Failed to ${isBanned ? 'unban' : 'ban'} user`);
 			}
@@ -792,8 +792,8 @@ export default function UsersManagementPage() {
 				formProps={{
 					width: 600,
 				}}
-				// 刷新触发器
-				refreshTrigger={refreshTrigger}
+				// 暴露表格 API（用于自定义弹窗后刷新）
+				tableApiRef={tableApiRef}
 			/>
 
 			{/* Create User Modal */}

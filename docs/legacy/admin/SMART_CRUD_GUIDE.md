@@ -472,6 +472,12 @@ query: {
 }
 ```
 
+- **写在 query 里还是单独传？最佳实践**
+	- 推荐：把“列表也会用到的关联”写在 `query.foreignDB`，`getList`/`getDetail` 自动复用（例如角色列表需要父角色名称、权限/菜单 label）。
+	- 性能：如果关联数据很重（大数组/大对象），可以仅在详情调用时传 `foreignDB` 覆盖默认，列表调用时传 `foreignDB: null` 或精简 `fieldJson`。
+	- 列名：`localKey`/`fieldJson` 使用数据库真实列名（如 `parent_id`），返回后可在 `transforms.output` 把列名映射回驼峰。
+	- 覆盖：调用 `getList`/`getDetail` 传入 `foreignDB` 会覆盖 `query.foreignDB`；传 `null` 可显式关闭默认连表。
+
 ---
 
 ## 字段配置详解
@@ -786,7 +792,44 @@ const customRowActions = [
 <SmartCrudPage customRowActions={customRowActions} />
 ```
 
-### 场景 5：批量操作
+### 场景 5：自定义弹窗保存后主动刷新表格
+
+SmartCrudPage 提供 `tableApiRef` 供父组件控制表格（类似 vk-unicloud 的 `refresh/search/resetForm`）。
+
+```javascript
+import { useRef } from 'react';
+import SmartCrudPage from '@/components/admin/smart-crud-page';
+
+export default function Page() {
+  const tableApiRef = useRef(null);
+
+  const handleCustomSave = async () => {
+    const result = await doSomething();
+    if (result.success) {
+      tableApiRef.current?.refresh();        // 只刷新
+      // tableApiRef.current?.reloadAndRest(); // 刷新并重置分页
+      // tableApiRef.current?.resetSearch();   // 重置搜索表单
+      // tableApiRef.current?.submitSearch();  // 重新提交搜索表单
+    }
+  };
+
+  return (
+    <SmartCrudPage
+      tableApiRef={tableApiRef}
+      // ...
+    />
+  );
+}
+```
+
+可用方法：
+- `refresh()` / `reload()`：刷新当前表格
+- `reloadAndRest()`：重置分页后刷新
+- `resetSearch()` / `submitSearch()`：控制搜索表单
+- `getSelectedRows()` / `setSelectedRows(keys)`：读取或设置选中项
+- `getCurrentRow()`：获取当前编辑/查看的行
+
+### 场景 6：批量操作
 
 ```javascript
 const batchActions = [

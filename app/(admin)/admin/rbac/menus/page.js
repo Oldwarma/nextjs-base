@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Tag, Modal, Tree, App, Space } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, EyeOutlined, EyeInvisibleOutlined, KeyOutlined } from '@ant-design/icons';
 import SmartCrudPage from '@/components/admin/smart-crud-page';
@@ -27,7 +27,7 @@ import { getPermissionTreeForSelectAction } from '@/app/(admin)/actions/rbac/cru
 
 export default function MenusManagementPage() {
 	const { message } = App.useApp();
-	const [refreshTrigger, setRefreshTrigger] = useState(0);
+	const tableApiRef = useRef(null);
 
 	// Permission assignment modal
 	const [permissionModalVisible, setPermissionModalVisible] = useState(false);
@@ -83,7 +83,7 @@ export default function MenusManagementPage() {
 		if (result.success) {
 			message.success('Permissions assigned successfully');
 			setPermissionModalVisible(false);
-			setRefreshTrigger((prev) => prev + 1);
+			tableApiRef.current?.refresh();
 		} else {
 			message.error(result.error || 'Failed to assign permissions');
 		}
@@ -408,7 +408,7 @@ export default function MenusManagementPage() {
 					width: 800,
 				}}
 				customRowActions={customRowActions}
-				refreshTrigger={refreshTrigger}
+				tableApiRef={tableApiRef}
 			/>
 
 			{/* Permission Assignment Modal */}
