@@ -82,8 +82,8 @@
 		"loginFailed": "登录失败，请重试",
 		"login": "登录",
 		"orContinueWith": "或使用以下方式继续",
-		"continueWithGoogle": "使用 Google 登录",
-		"continueWithGithub": "使用 GitHub 登录",
+		"continueWithGoogle": "Google",
+		"continueWithGithub": "GitHub",
 		"autoCreateAccount": "首次登录将自动创建账户",
 		"termsAndPrivacy": "登录即表示您同意我们的{terms}和{privacy}"
 	},

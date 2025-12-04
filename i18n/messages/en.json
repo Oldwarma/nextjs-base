@@ -82,8 +82,8 @@
 		"loginFailed": "Login failed, please try again",
 		"login": "Login",
 		"orContinueWith": "Or continue with",
-		"continueWithGoogle": "Continue with Google",
-		"continueWithGithub": "Continue with GitHub",
+		"continueWithGoogle": "Google",
+		"continueWithGithub": "GitHub",
 		"autoCreateAccount": "Automatically create an account if you first time login",
 		"termsAndPrivacy": "By signing in, you agree to our {terms} and {privacy}"
 	},
