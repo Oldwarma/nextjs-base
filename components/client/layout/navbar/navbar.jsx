@@ -3,7 +3,7 @@
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetClose, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import Logo from '@/components/common/logo';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -85,12 +85,14 @@ export default function Navbar() {
 							<RiMenuFill className="size-5" />
 						</Button>
 					</SheetTrigger>
-					<SheetContent side="right" className="bg-background/95 backdrop-blur-xl border-l border-zinc-200/80 dark:border-zinc-800/80">
-						<div className="flex items-center justify-between pr-12">
+					<SheetContent side="right" className="bg-background/95 backdrop-blur-xl border-l border-zinc-200/80 dark:border-zinc-800/80 px-4 pt-4 pb-6">
+						<SheetHeader className="sr-only">
+							<SheetTitle>Navigation Menu</SheetTitle>
+						</SheetHeader>
+						<div className="flex items-center justify-between pr-10">
 							<Link href="/" className="flex items-center gap-2">
-								<Logo className="h-6 w-auto" />
+								<Logo className="h-7 w-auto" />
 							</Link>
-							<AnimatedThemeToggler duration={600} className="size-9 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer" />
 						</div>
 						<div className="flex flex-col gap-2 pt-4">
 							{navItems.map((item) => (
