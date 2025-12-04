@@ -23,8 +23,8 @@ export async function generateMetadata({ params }) {
 	const { locale } = await params;
 
 	return {
-		title: 'NextJS Base - AI Image Generation',
-		description: 'AI-powered image generation platform',
+		title: 'NextJS Base - Configuration Driven Framework',
+		description: 'Build enterprise admin systems in minutes with Next.js 16 and Prisma.',
 		alternates: {
 			canonical: `/${locale}`,
 			languages: {
@@ -52,11 +52,11 @@ export default async function LocaleLayout({ children, params }) {
 				<ThemeProvider
 					attribute='class'
 					defaultTheme='dark'
-					enableSystem={false}
+					enableSystem
 					disableTransitionOnChange
 				>
 				<NextIntlClientProvider messages={messages}>
-						<div className='min-h-svh dark:dark:bg-[#0f0f12]'>{children}</div>
+						<div className='min-h-svh bg-background text-foreground'>{children}</div>
 						<Toaster />
 				</NextIntlClientProvider>
 				</ThemeProvider>

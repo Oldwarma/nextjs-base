@@ -1,18 +1,15 @@
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
-import Image from 'next/image';
+import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
+import Logo from '@/components/common/logo';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
 import {
-	RiHome3Line,
 	RiHome3Fill,
-	RiImageCircleAiLine,
-	RiImageCircleAiFill,
-	RiVideoAiLine,
-	RiVideoAiFill,
-	RiVoiceAiLine,
-	RiVoiceAiFill,
+	RiBook2Fill,
+	RiDashboardFill,
+	RiGithubFill
 } from 'react-icons/ri';
+
 export default function Navbar() {
 	const t = useTranslations();
 	const navItems = [
@@ -22,52 +19,44 @@ export default function Navbar() {
 			label: t('nav.home'),
 		},
 		{
-			href: '/generate/image',
-			iconFilled: RiImageCircleAiFill,
-			label: t('nav.image'),
+			href: '/docs',
+			iconFilled: RiBook2Fill,
+			label: t('nav.docs'),
 		},
 		{
-			href: '/generate/video',
-			iconFilled: RiVideoAiFill,
-			label: t('nav.video'),
-		},
-		{
-			href: '/generate/audio',
-			iconFilled: RiVoiceAiFill,
-			label: t('nav.audio'),
+			href: '/admin',
+			iconFilled: RiDashboardFill,
+			label: t('nav.admin'),
 		},
 	];
+
 	return (
-		<nav className='fixed top-10 left-1/2 -translate-x-1/2 w-3xl h-14 mx-auto z-50 flex items-center justify-between dark:bg-[#0f0f12]/5 backdrop-blur-sm shadow-xs border border-white/10 p-2 rounded-full'>
+		<nav className='fixed top-6 left-1/2 -translate-x-1/2 w-[90%] max-w-4xl h-14 mx-auto z-50 flex items-center justify-between bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl shadow-lg shadow-black/5 dark:shadow-black/10 border border-zinc-200 dark:border-zinc-500/50 px-2 rounded-full'>
 			<Link
-				className='ml-4'
+				className='ml-4 flex items-center'
 				href='/'
 			>
-				<Image
-					src='/logo.png'
-					alt='NextJS Base Logo'
-					width={32}
-					height={32}
-				/>
+				<Logo className="h-6 w-auto" />
 			</Link>
-			<div className='w-1/2 flex items-center justify-between gap-2'>
+			
+			<div className='flex items-center justify-center gap-6'>
 				{navItems.map((item) => (
 					<Link
 						key={item.href}
 						href={item.href}
+						className="flex items-center gap-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
 					>
-						<span className={`text-zinc-400 hover:text-white transition-colors ${item.href === '/' && 'text-white!'}`}>{item.label}</span>
+						{item.label}
 					</Link>
 				))}
 			</div>
-			<div className='flex items-center justify-center gap-2'>
+
+			<div className='w-1/5 flex items-center justify-end gap-2 pr-4'>
 				<LanguageSwitcher
-					iconClassName='text-zinc-400 hover:text-white transition-all'
+					iconClassName='text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all'
 					side='bottom'
 				/>
-				<Button className='flex items-center justify-center group bg-white h-full rounded-full'>
-					<span className='text-zinc-500 group-hover:text-zinc-300 transition-colors'>{t('nav.getstarted')}</span>
-				</Button>
+				<AnimatedThemeToggler duration={600} className="size-8 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer" />
 			</div>
 		</nav>
 	);

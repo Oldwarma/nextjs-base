@@ -2,7 +2,7 @@ import { getRequestConfig } from 'next-intl/server';
 import { cookies } from 'next/headers';
 
 // 支持的语言列表
-export const locales = ['en', 'zh', 'ja'];
+export const locales = ['en', 'zh'];
 
 // 默认语言
 export const defaultLocale = 'en';

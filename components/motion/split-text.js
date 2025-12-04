@@ -26,6 +26,7 @@ const SplitText = ({
 	const ref = useRef(null);
 	const animationCompletedRef = useRef(false);
 	const [fontsLoaded, setFontsLoaded] = useState(false);
+	const [isReady, setIsReady] = useState(false);
 
 	useEffect(() => {
 		if (document.fonts.status === 'loaded') {
@@ -66,41 +67,43 @@ const SplitText = ({
 				if (!targets) targets = self.chars || self.words || self.lines;
 			};
 
-			const splitInstance = new GSAPSplitText(el, {
-				type: splitType,
-				smartWrap: true,
-				autoSplit: splitType === 'lines',
-				linesClass: 'split-line',
-				wordsClass: 'split-word',
-				charsClass: 'split-char',
-				reduceWhiteSpace: false,
-				onSplit: (self) => {
-					assignTargets(self);
-					return gsap.fromTo(
-						targets,
-						{ ...from },
-						{
-							...to,
-							duration,
-							ease,
-							stagger: delay / 1000,
-							scrollTrigger: {
-								trigger: el,
-								start,
-								once: true,
-								fastScrollEnd: true,
-								anticipatePin: 0.4,
-							},
-							onComplete: () => {
-								animationCompletedRef.current = true;
-								onLetterAnimationComplete?.();
-							},
-							willChange: 'transform, opacity',
-							force3D: true,
-						}
-					);
-				},
-			});
+		const splitInstance = new GSAPSplitText(el, {
+			type: splitType,
+			smartWrap: true,
+			autoSplit: splitType === 'lines',
+			linesClass: 'split-line',
+			wordsClass: 'split-word',
+			charsClass: 'split-char',
+			reduceWhiteSpace: false,
+			onSplit: (self) => {
+				assignTargets(self);
+				// 标记动画已准备好
+				setIsReady(true);
+				return gsap.fromTo(
+					targets,
+					{ ...from },
+					{
+						...to,
+						duration,
+						ease,
+						stagger: delay / 1000,
+						scrollTrigger: {
+							trigger: el,
+							start,
+							once: true,
+							fastScrollEnd: true,
+							anticipatePin: 0.4,
+						},
+						onComplete: () => {
+							animationCompletedRef.current = true;
+							onLetterAnimationComplete?.();
+						},
+						willChange: 'transform, opacity',
+						force3D: true,
+					}
+				);
+			},
+		});
 			el._rbsplitInstance = splitInstance;
 
 			return () => {
@@ -133,13 +136,19 @@ const SplitText = ({
 		}
 	);
 
+	// 处理换行符：将 \n 转换为 <br> 标签（用于 dangerouslySetInnerHTML）
+	const processedText = text.replace(/\n/g, '<br>');
+
 	const renderTag = () => {
 		const style = {
 			textAlign,
 			wordWrap: 'break-word',
 			willChange: 'transform, opacity',
+			// 在动画准备好之前隐藏，防止闪烁
+			visibility: isReady ? 'visible' : 'hidden',
 		};
 		const classes = `split-parent overflow-hidden inline-block whitespace-normal ${className}`;
+		const htmlContent = { __html: processedText };
 		switch (tag) {
 			case 'h1':
 				return (
@@ -147,9 +156,8 @@ const SplitText = ({
 						ref={ref}
 						style={style}
 						className={classes}
-					>
-						{text}
-					</h1>
+						dangerouslySetInnerHTML={htmlContent}
+					/>
 				);
 			case 'h2':
 				return (
@@ -157,9 +165,8 @@ const SplitText = ({
 						ref={ref}
 						style={style}
 						className={classes}
-					>
-						{text}
-					</h2>
+						dangerouslySetInnerHTML={htmlContent}
+					/>
 				);
 			case 'h3':
 				return (
@@ -167,9 +174,8 @@ const SplitText = ({
 						ref={ref}
 						style={style}
 						className={classes}
-					>
-						{text}
-					</h3>
+						dangerouslySetInnerHTML={htmlContent}
+					/>
 				);
 			case 'h4':
 				return (
@@ -177,9 +183,8 @@ const SplitText = ({
 						ref={ref}
 						style={style}
 						className={classes}
-					>
-						{text}
-					</h4>
+						dangerouslySetInnerHTML={htmlContent}
+					/>
 				);
 			case 'h5':
 				return (
@@ -187,9 +192,8 @@ const SplitText = ({
 						ref={ref}
 						style={style}
 						className={classes}
-					>
-						{text}
-					</h5>
+						dangerouslySetInnerHTML={htmlContent}
+					/>
 				);
 			case 'h6':
 				return (
@@ -197,9 +201,8 @@ const SplitText = ({
 						ref={ref}
 						style={style}
 						className={classes}
-					>
-						{text}
-					</h6>
+						dangerouslySetInnerHTML={htmlContent}
+					/>
 				);
 			default:
 				return (
@@ -207,9 +210,8 @@ const SplitText = ({
 						ref={ref}
 						style={style}
 						className={classes}
-					>
-						{text}
-					</p>
+						dangerouslySetInnerHTML={htmlContent}
+					/>
 				);
 		}
 	};

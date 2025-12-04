@@ -1,235 +1,68 @@
 {
 	"home": {
-		"title": "Generate All, Powered by AI",
-		"description": "Create stunning images, videos, and audio with AI"
+		"title": "Make your Admin System\nin Minutes",
+		"description": "Configuration-driven Full-stack Development Framework",
+		"getStarted": "Get Started",
+		"documentation": "Documentation",
+		"viewOnGithub": "View on GitHub",
+		"features": {
+			"title": "Everything You Need",
+			"subtitle": "A complete toolkit for building modern, scalable, and secure admin applications.",
+			"speed": {
+				"title": "Rapid Development",
+				"desc": "Create CRUD pages in 1-3 minutes instead of 4-8 hours."
+			},
+			"code": {
+				"title": "Less Code",
+				"desc": "100-200 lines of configuration vs 1000 lines of boilerplate."
+			},
+			"auth": {
+				"title": "Built-in RBAC",
+				"desc": "Secure permission system integrated out of the box."
+			},
+			"form": {
+				"title": "Smart Forms",
+				"desc": "Auto-generated forms based on field configuration."
+			},
+			"logs": {
+				"title": "Action Logging",
+				"desc": "Automatic recording of user operations and changes."
+			},
+			"stack": {
+				"title": "Modern Stack",
+				"desc": "Next.js 16, Prisma, PostgreSQL, Ant Design 5, Better Auth."
+			}
+		},
+		"showcase": {
+			"title": "Write Less, Do More",
+			"subtitle": "Stop writing repetitive boilerplate code. Define your data model and let the framework handle the UI, validation, and database operations."
+		},
+		"cta": {
+			"title": "Ready to Accelerate?",
+			"subtitle": "Join developers building faster, more secure, and maintainable admin systems.",
+			"start": "Start Building Now"
+		},
+		"stats": {
+			"efficiency": "Efficiency Up",
+			"codeReduction": "Code Reduction",
+			"security": "Enterprise Security"
+		}
 	},
 	"nav": {
 		"home": "Home",
-		"image": "Image",
-		"video": "Video",
-		"audio": "Audio",
-		"generate": "Generate",
-		"dashboard": "Dashboard",
-		"credits": "Credits",
-		"packages": "Packages",
-		"profile": "Profile",
-		"admin": "Admin",
+		"docs": "Docs",
+		"admin": "Admin Demo",
 		"login": "Login",
-		"logout": "Logout",
-		"signup": "Sign Up",
+		"api": "API Reference",
+		"discord": "Discord",
+		"twitter": "Twitter",
+		"github": "GitHub",
 		"getstarted": "Get Started"
 	},
-	"common": {
-		"loading": "Loading...",
-		"save": "Save",
-		"cancel": "Cancel",
-		"delete": "Delete",
-		"edit": "Edit",
-		"confirm": "Confirm",
-		"close": "Close",
-		"back": "Back",
-		"next": "Next",
-		"previous": "Previous",
-		"search": "Search",
-		"filter": "Filter",
-		"sort": "Sort",
-		"submit": "Submit",
-		"ok": "OK",
-		"yes": "Yes",
-		"no": "No"
-	},
-	"generate": {
-		"title": "Generate Image",
-		"subtitle": "Create AI-powered images from text",
-		"prompt": "Prompt",
-		"promptPlaceholder": "Describe the image you want to generate...",
-		"promptHelper": "Be as descriptive as possible for better results",
-		"size": "Image Size",
-		"model": "Model",
-		"standard": "Standard",
-		"hd": "HD",
-		"premium": "Premium",
-		"generate": "Generate",
-		"generating": "Generating your image...",
-		"generatingProgress": "This may take a few moments...",
-		"download": "Download",
-		"downloadImage": "Download Image",
-		"regenerate": "Regenerate",
-		"newGeneration": "New Generation",
-		"creditsUsed": "Credits used: {amount}",
-		"creditsRemaining": "Remaining: {amount} credits",
-		"success": "Image generated successfully!",
-		"history": "Generation History",
-		"viewHistory": "View History"
-	},
-	"credits": {
-		"title": "My Credits",
-		"current": "{amount} Credits",
-		"available": "Available Credits",
-		"totalEarned": "Total Earned",
-		"totalUsed": "Total Used",
-		"purchase": "Purchase Credits",
-		"purchaseMore": "Purchase More",
-		"history": "Transaction History",
-		"historyTitle": "Credit History",
-		"type": "Type",
-		"amount": "Amount",
-		"date": "Date",
-		"reason": "Reason",
-		"balance": "Balance",
-		"noHistory": "No transaction history yet",
-		"types": {
-			"earn": "Earned",
-			"spend": "Spent",
-			"refund": "Refunded",
-			"expire": "Expired"
-		},
-		"reasons": {
-			"purchase_package": "Package Purchase",
-			"text_to_image": "Text to Image",
-			"image_to_image": "Image to Image",
-			"upscale": "Image Upscale",
-			"remove_background": "Background Removal",
-			"admin_adjustment": "Admin Adjustment",
-			"promotion": "Promotion",
-			"refund": "Refund"
-		}
-	},
-	"packages": {
-		"title": "Choose Your Plan",
-		"subtitle": "Select the perfect plan for your needs",
-		"current": "Current Plan",
-		"popular": "Popular",
-		"buyNow": "Buy Now",
-		"choosePlan": "Choose Plan",
-		"viewDetails": "View Details",
-		"credits": "{amount} Credits",
-		"validDays": "Valid for {days} days",
-		"price": "${price}",
-		"pricePerMonth": "${price}/month",
-		"features": "Features",
-		"myPackages": "My Packages",
-		"packageHistory": "Package History",
-		"purchased": "Purchased",
-		"expires": "Expires",
-		"status": "Status",
-		"active": "Active",
-		"expired": "Expired",
-		"cancelled": "Cancelled"
-	},
-	"profile": {
-		"title": "My Profile",
-		"subtitle": "Manage your account settings",
-		"personalInfo": "Personal Information",
-		"name": "Name",
-		"email": "Email",
-		"username": "Username",
-		"avatar": "Avatar",
-		"changeAvatar": "Change Avatar",
-		"updateProfile": "Update Profile",
-		"updateSuccess": "Profile updated successfully",
-		"statistics": "Statistics",
-		"memberSince": "Member since",
-		"lastLogin": "Last login",
-		"totalGenerations": "Total generations",
-		"successRate": "Success rate"
-	},
-	"auth": {
-		"login": "Login",
-		"signup": "Sign Up",
-		"logout": "Logout",
-		"email": "Email",
-		"password": "Password",
-		"confirmPassword": "Confirm Password",
-		"rememberMe": "Remember me",
-		"forgotPassword": "Forgot password?",
-		"noAccount": "Don't have an account?",
-		"hasAccount": "Already have an account?",
-		"signupNow": "Sign up now",
-		"loginNow": "Login now",
-		"or": "or",
-		"continueWithGoogle": "Google",
-		"continueWithGithub": "GitHub",
-		"emailPlaceholder": "m@example.com",
-		"passwordPlaceholder": "Enter your password",
-		"namePlaceholder": "Enter your name",
-		"usernamePlaceholder": "Enter your username",
-		"welcomeBack": "Welcome back",
-		"welcomeBackSubtitle": "Login to your account",
-		"orContinueWith": "Or continue with",
-		"autoCreateAccount": "If you don't have an account, it will be automatically created.",
-		"termsAndPrivacy": "By clicking continue, you agree to our Terms of Service and Privacy Policy.",
-		"loginSuccess": "Login successful!",
-		"loginFailed": "Login failed. Please check your credentials.",
-		"signupSuccess": "Account created successfully!",
-		"signupFailed": "Registration failed. Please try again.",
-		"invalidCredentials": "Invalid email or password",
-		"emailRequired": "Email is required",
-		"passwordRequired": "Password is required"
-	},
-	"dashboard": {
-		"title": "Dashboard",
-		"welcome": "Welcome back, {name}!",
-		"overview": "Overview",
-		"quickActions": "Quick Actions",
-		"generateImage": "Generate Image",
-		"purchaseCredits": "Purchase Credits",
-		"viewHistory": "View History",
-		"recentActivity": "Recent Activity",
-		"statistics": "Statistics"
-	},
-	"admin": {
-		"title": "Admin Panel",
-		"users": "Users",
-		"packages": "Packages",
-		"credits": "Credits",
-		"usage": "Usage",
-		"statistics": "Statistics",
-		"settings": "Settings",
-		"userManagement": "User Management",
-		"packageManagement": "Package Management",
-		"creditManagement": "Credit Management",
-		"usageLogs": "Usage Logs",
-		"totalUsers": "Total Users",
-		"totalRevenue": "Total Revenue",
-		"totalGenerations": "Total Generations"
-	},
-	"errors": {
-		"unauthorized": "Please login to continue",
-		"forbidden": "You don't have permission to access this resource",
-		"notFound": "Page not found",
-		"serverError": "Server error, please try again later",
-		"networkError": "Network error, please check your connection",
-		"invalidInput": "Invalid input, please check your data",
-		"insufficientCredits": "Insufficient credits. Please purchase more.",
-		"generationFailed": "Failed to generate image. Please try again.",
-		"updateFailed": "Failed to update. Please try again.",
-		"deleteFailed": "Failed to delete. Please try again.",
-		"uploadFailed": "Failed to upload. Please try again.",
-		"loginRequired": "Login required to perform this action",
-		"sessionExpired": "Your session has expired. Please login again."
-	},
-	"validation": {
-		"required": "This field is required",
-		"invalidEmail": "Invalid email address",
-		"passwordTooShort": "Password must be at least 8 characters",
-		"passwordMismatch": "Passwords do not match",
-		"invalidUsername": "Username must be 3-20 characters and contain only letters, numbers, and underscores",
-		"usernameTaken": "Username is already taken",
-		"emailTaken": "Email is already registered",
-		"invalidUrl": "Invalid URL format",
-		"tooLong": "Input is too long (max {max} characters)",
-		"tooShort": "Input is too short (min {min} characters)",
-		"invalidFormat": "Invalid format"
-	},
-	"success": {
-		"saved": "Saved successfully",
-		"updated": "Updated successfully",
-		"deleted": "Deleted successfully",
-		"created": "Created successfully",
-		"purchased": "Purchased successfully",
-		"sent": "Sent successfully",
-		"uploaded": "Uploaded successfully"
+	"footer": {
+		"description": "Configuration-driven Full-stack Development Framework {name}, build enterprise-grade admin systems in minutes",
+		"resources": "Resources",
+		"community": "Community",
+		"copyright": "Copyright {year} {name}"
 	}
 }
-

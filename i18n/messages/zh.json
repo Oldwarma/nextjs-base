@@ -1,235 +1,68 @@
 {
 	"home": {
-		"title": "Generate All, Powered by AI",
-		"description": "使用 AI 创建精美图片、视频、音频"
+		"title": "快速构建企业级管理系统",
+		"description": "配置驱动的全栈开发框架",
+		"getStarted": "开始使用",
+		"documentation": "阅读文档",
+		"viewOnGithub": "GitHub 仓库",
+		"features": {
+			"title": "你需要的一切",
+			"subtitle": "一个完整的工具包，用于构建现代、可扩展和安全的管理应用程序。",
+			"speed": {
+				"title": "极速开发",
+				"desc": "1-3 分钟完成 CRUD 页面开发，而非 4-8 小时。"
+			},
+			"code": {
+				"title": "极简代码",
+				"desc": "100-200 行配置代码代替 1000 行样板代码。"
+			},
+			"auth": {
+				"title": "内置 RBAC",
+				"desc": "开箱即用的安全权限管理系统。"
+			},
+			"form": {
+				"title": "智能表单",
+				"desc": "基于字段配置自动生成表单。"
+			},
+			"logs": {
+				"title": "操作日志",
+				"desc": "自动记录用户操作和数据变更。"
+			},
+			"stack": {
+				"title": "现代技术栈",
+				"desc": "Next.js 16, Prisma, PostgreSQL, Ant Design 5, Better Auth。"
+			}
+		},
+		"showcase": {
+			"title": "少写代码，多做实事",
+			"subtitle": "停止编写重复的样板代码。定义数据模型，让框架自动处理 UI、验证和数据库操作。"
+		},
+		"cta": {
+			"title": "准备好加速开发了吗？",
+			"subtitle": "加入那些正在构建更快、更安全、更易维护的管理系统的开发者行列。",
+			"start": "立即开始"
+		},
+		"stats": {
+			"efficiency": "效率提升",
+			"codeReduction": "代码减少",
+			"security": "企业级安全"
+		}
 	},
 	"nav": {
 		"home": "首页",
-		"image": "图片",
-		"video": "视频",
-		"audio": "音频",
-		"generate": "生成",
-		"dashboard": "仪表盘",
-		"credits": "积分",
-		"packages": "套餐",
-		"profile": "个人资料",
-		"admin": "管理后台",
+		"api": "API 参考",
+		"discord": "Discord",
+		"twitter": "Twitter",
+		"docs": "文档",
+		"admin": "后台演示",
 		"login": "登录",
-		"logout": "退出",
-		"signup": "注册",
+		"github": "GitHub",
 		"getstarted": "开始使用"
 	},
-	"common": {
-		"loading": "加载中...",
-		"save": "保存",
-		"cancel": "取消",
-		"delete": "删除",
-		"edit": "编辑",
-		"confirm": "确认",
-		"close": "关闭",
-		"back": "返回",
-		"next": "下一步",
-		"previous": "上一步",
-		"search": "搜索",
-		"filter": "筛选",
-		"sort": "排序",
-		"submit": "提交",
-		"ok": "确定",
-		"yes": "是",
-		"no": "否"
-	},
-	"generate": {
-		"title": "生成图片",
-		"subtitle": "从文本创建 AI 驱动的图片",
-		"prompt": "提示词",
-		"promptPlaceholder": "描述你想生成的图片...",
-		"promptHelper": "尽可能详细地描述以获得更好的效果",
-		"size": "图片尺寸",
-		"model": "模型",
-		"standard": "标准",
-		"hd": "高清",
-		"premium": "专业",
-		"generate": "生成",
-		"generating": "正在生成图片...",
-		"generatingProgress": "这可能需要几分钟...",
-		"download": "下载",
-		"downloadImage": "下载图片",
-		"regenerate": "重新生成",
-		"newGeneration": "新生成",
-		"creditsUsed": "已使用积分：{amount}",
-		"creditsRemaining": "剩余：{amount} 积分",
-		"success": "图片生成成功！",
-		"history": "生成历史",
-		"viewHistory": "查看历史"
-	},
-	"credits": {
-		"title": "我的积分",
-		"current": "{amount} 积分",
-		"available": "可用积分",
-		"totalEarned": "累计获得",
-		"totalUsed": "累计使用",
-		"purchase": "购买积分",
-		"purchaseMore": "购买更多",
-		"history": "交易记录",
-		"historyTitle": "积分历史",
-		"type": "类型",
-		"amount": "数量",
-		"date": "日期",
-		"reason": "原因",
-		"balance": "余额",
-		"noHistory": "暂无交易记录",
-		"types": {
-			"earn": "获得",
-			"spend": "消费",
-			"refund": "退款",
-			"expire": "过期"
-		},
-		"reasons": {
-			"purchase_package": "购买套餐",
-			"text_to_image": "文生图",
-			"image_to_image": "图生图",
-			"upscale": "图片放大",
-			"remove_background": "背景移除",
-			"admin_adjustment": "管理员调整",
-			"promotion": "促销活动",
-			"refund": "退款"
-		}
-	},
-	"packages": {
-		"title": "选择您的套餐",
-		"subtitle": "选择最适合您需求的套餐",
-		"current": "当前套餐",
-		"popular": "热门",
-		"buyNow": "立即购买",
-		"choosePlan": "选择套餐",
-		"viewDetails": "查看详情",
-		"credits": "{amount} 积分",
-		"validDays": "有效期 {days} 天",
-		"price": "¥{price}",
-		"pricePerMonth": "¥{price}/月",
-		"features": "功能特性",
-		"myPackages": "我的套餐",
-		"packageHistory": "套餐历史",
-		"purchased": "购买时间",
-		"expires": "过期时间",
-		"status": "状态",
-		"active": "激活",
-		"expired": "已过期",
-		"cancelled": "已取消"
-	},
-	"profile": {
-		"title": "个人资料",
-		"subtitle": "管理您的账户设置",
-		"personalInfo": "个人信息",
-		"name": "姓名",
-		"email": "邮箱",
-		"username": "用户名",
-		"avatar": "头像",
-		"changeAvatar": "更换头像",
-		"updateProfile": "更新资料",
-		"updateSuccess": "资料更新成功",
-		"statistics": "统计信息",
-		"memberSince": "注册时间",
-		"lastLogin": "最后登录",
-		"totalGenerations": "总生成次数",
-		"successRate": "成功率"
-	},
-	"auth": {
-		"login": "登录",
-		"signup": "注册",
-		"logout": "退出登录",
-		"email": "邮箱",
-		"password": "密码",
-		"confirmPassword": "确认密码",
-		"rememberMe": "记住我",
-		"forgotPassword": "忘记密码？",
-		"noAccount": "还没有账号？",
-		"hasAccount": "已有账号？",
-		"signupNow": "立即注册",
-		"loginNow": "立即登录",
-		"or": "或",
-		"continueWithGoogle": "Google",
-		"continueWithGithub": "GitHub",
-		"emailPlaceholder": "m@example.com",
-		"passwordPlaceholder": "请输入密码",
-		"namePlaceholder": "请输入姓名",
-		"usernamePlaceholder": "请输入用户名",
-		"welcomeBack": "欢迎回来",
-		"welcomeBackSubtitle": "登录您的账号",
-		"orContinueWith": "或使用以下方式继续",
-		"autoCreateAccount": "如果您还没有账号，将自动为您创建。",
-		"termsAndPrivacy": "点击继续即表示您同意我们的服务条款和隐私政策。",
-		"loginSuccess": "登录成功！",
-		"loginFailed": "登录失败，请检查您的凭据。",
-		"signupSuccess": "账号创建成功！",
-		"signupFailed": "注册失败，请重试。",
-		"invalidCredentials": "邮箱或密码错误",
-		"emailRequired": "邮箱不能为空",
-		"passwordRequired": "密码不能为空"
-	},
-	"dashboard": {
-		"title": "仪表盘",
-		"welcome": "欢迎回来，{name}！",
-		"overview": "概览",
-		"quickActions": "快捷操作",
-		"generateImage": "生成图片",
-		"purchaseCredits": "购买积分",
-		"viewHistory": "查看历史",
-		"recentActivity": "最近活动",
-		"statistics": "统计信息"
-	},
-	"admin": {
-		"title": "管理后台",
-		"users": "用户",
-		"packages": "套餐",
-		"credits": "积分",
-		"usage": "使用记录",
-		"statistics": "统计",
-		"settings": "设置",
-		"userManagement": "用户管理",
-		"packageManagement": "套餐管理",
-		"creditManagement": "积分管理",
-		"usageLogs": "使用日志",
-		"totalUsers": "总用户数",
-		"totalRevenue": "总收入",
-		"totalGenerations": "总生成次数"
-	},
-	"errors": {
-		"unauthorized": "请先登录",
-		"forbidden": "您没有权限访问此资源",
-		"notFound": "页面未找到",
-		"serverError": "服务器错误，请稍后重试",
-		"networkError": "网络错误，请检查网络连接",
-		"invalidInput": "输入无效，请检查您的数据",
-		"insufficientCredits": "积分不足，请购买更多积分",
-		"generationFailed": "图片生成失败，请重试",
-		"updateFailed": "更新失败，请重试",
-		"deleteFailed": "删除失败，请重试",
-		"uploadFailed": "上传失败，请重试",
-		"loginRequired": "需要登录才能执行此操作",
-		"sessionExpired": "会话已过期，请重新登录"
-	},
-	"validation": {
-		"required": "此字段为必填项",
-		"invalidEmail": "邮箱地址无效",
-		"passwordTooShort": "密码至少需要 8 个字符",
-		"passwordMismatch": "两次输入的密码不一致",
-		"invalidUsername": "用户名必须是 3-20 个字符，只能包含字母、数字和下划线",
-		"usernameTaken": "用户名已被占用",
-		"emailTaken": "邮箱已被注册",
-		"invalidUrl": "URL 格式无效",
-		"tooLong": "输入过长（最多 {max} 个字符）",
-		"tooShort": "输入过短（至少 {min} 个字符）",
-		"invalidFormat": "格式无效"
-	},
-	"success": {
-		"saved": "保存成功",
-		"updated": "更新成功",
-		"deleted": "删除成功",
-		"created": "创建成功",
-		"purchased": "购买成功",
-		"sent": "发送成功",
-		"uploaded": "上传成功"
+	"footer": {
+		"description": "配置驱动的全栈开发框架 {name}，快速构建企业级管理系统",
+		"resources": "资源",
+		"community": "社区",
+		"copyright": "版权所有 {year} {name}"
 	}
 }
-

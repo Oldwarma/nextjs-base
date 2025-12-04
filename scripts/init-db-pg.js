@@ -1,9 +1,16 @@
 /**
  * PostgreSQL 数据库初始化脚本
  * 使用 Prisma 进行数据库迁移和初始数据插入
+ * 
+ * 创建内容：
+ * - 默认管理员账户 (admin@example.com / admin123)
+ * - 默认角色 (admin, editor, viewer)
+ * - 默认权限
+ * - 默认菜单
  */
 
-import { prisma } from '../lib/database/postgresql.js';
+import { prisma } from '../lib/database/prisma.js';
+import bcrypt from 'bcryptjs';
 
 async function initDatabase() {
 	console.log('Starting PostgreSQL database initialization...');
@@ -16,18 +23,24 @@ async function initDatabase() {
 
 		// 2. 插入默认角色
 		console.log('Creating default roles...');
+		let adminRole;
 		const existingRoles = await prisma.role.count();
 		if (existingRoles === 0) {
+			// 创建 admin 角色并获取 ID
+			adminRole = await prisma.role.create({
+				data: {
+					name: 'admin',
+					remark: 'Super administrator with full access',
+					enable: true,
+					permission: [],
+					menu: [],
+					inheritMenuPermissions: true,
+				},
+			});
+			
+			// 创建其他角色
 			await prisma.role.createMany({
 				data: [
-					{
-						name: 'admin',
-						remark: 'Super administrator with full access',
-						enable: true,
-						permission: [],
-						menu: [],
-						inheritMenuPermissions: true,
-					},
 					{
 						name: 'editor',
 						remark: 'Content editor with limited access',
@@ -48,10 +61,55 @@ async function initDatabase() {
 			});
 			console.log('Default roles created successfully');
 		} else {
+			// 获取已存在的 admin 角色
+			adminRole = await prisma.role.findFirst({ where: { name: 'admin' } });
 			console.log('Roles already exist, skipping...');
 		}
+		
+		// 3. 创建默认管理员账户
+		console.log('Creating default admin user...');
+		const existingAdmin = await prisma.user.findFirst({
+			where: { email: 'admin@example.com' }
+		});
+		
+		if (!existingAdmin) {
+			// 加密密码
+			const hashedPassword = await bcrypt.hash('admin123', 10);
+			
+			await prisma.user.create({
+				data: {
+					email: 'admin@example.com',
+					name: 'Administrator',
+					emailVerified: true,
+					role: 'admin',
+					isBackendAllowed: true,
+					roles: adminRole ? [adminRole.id] : [],
+					banned: false,
+				},
+			});
+			
+			// 创建账户记录（用于密码登录）
+			const user = await prisma.user.findFirst({ where: { email: 'admin@example.com' } });
+			if (user) {
+				await prisma.account.create({
+					data: {
+						userId: user.id,
+						accountId: user.id,
+						providerId: 'credential',
+						password: hashedPassword,
+					},
+				});
+			}
+			
+			console.log('Default admin user created:');
+			console.log('  Email: admin@example.com');
+			console.log('  Password: admin123');
+			console.log('  ⚠️  Please change the password after first login!');
+		} else {
+			console.log('Admin user already exists, skipping...');
+		}
 
-		// 3. 插入默认权限（树形结构）
+		// 4. 插入默认权限（树形结构）
 		console.log('Creating default permissions...');
 		const existingPermissions = await prisma.permission.count();
 		if (existingPermissions === 0) {
@@ -123,7 +181,7 @@ async function initDatabase() {
 			console.log('Permissions already exist, skipping...');
 		}
 
-		// 4. 插入默认菜单（树形结构）
+		// 5. 插入默认菜单（树形结构）
 		console.log('Creating default menus...');
 		const existingMenus = await prisma.menu.count();
 		if (existingMenus === 0) {
@@ -236,4 +294,3 @@ initDatabase().then(() => {
 	console.log('Done!');
 	process.exit(0);
 });
-
