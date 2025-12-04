@@ -45,7 +45,7 @@ export default function Navbar() {
 	];
 
 	return (
-		<nav className='fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 w-[94%] sm:w-[90%] max-w-5xl h-14 mx-auto z-50 flex items-center justify-between bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl shadow-lg shadow-black/5 dark:shadow-black/10 border border-zinc-200 dark:border-zinc-500/50 px-3 sm:px-4 rounded-2xl'>
+		<nav className='fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 w-[94%] sm:w-[90%] max-w-5xl h-14 mx-auto z-50 flex items-center justify-between bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl shadow-lg shadow-black/5 dark:shadow-black/10 border border-zinc-200 dark:border-zinc-500/50 px-3 sm:px-4 rounded-full'>
 			<Link
 				className='ml-1 sm:ml-2 flex items-center'
 				href='/'
