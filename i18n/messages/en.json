@@ -50,6 +50,8 @@
 	},
 	"nav": {
 		"home": "Home",
+		"codeShowcase": "Code",
+		"features": "Features",
 		"docs": "Docs",
 		"admin": "Admin Demo",
 		"login": "Login",

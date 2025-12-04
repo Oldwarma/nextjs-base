@@ -19,6 +19,16 @@ export default function Navbar() {
 			label: t('nav.home'),
 		},
 		{
+			href: '#code-showcase',
+			iconFilled: RiHome3Fill,
+			label: t('nav.codeShowcase'),
+		},
+		{
+			href: '#features',
+			iconFilled: RiHome3Fill,
+			label: t('nav.features'),
+		},
+		{
 			href: '/docs',
 			iconFilled: RiBook2Fill,
 			label: t('nav.docs'),

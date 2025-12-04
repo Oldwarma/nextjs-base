@@ -89,7 +89,7 @@ export default function CodeShowcase() {
 	const isDark = resolvedTheme === 'dark';
 
 	return (
-		<section className='py-24 relative overflow-hidden bg-zinc-100 dark:bg-zinc-950'>
+		<section id='code-showcase' className='py-24 relative overflow-hidden bg-zinc-100 dark:bg-zinc-950'>
 			<div className='container mx-auto px-4'>
 				<SectionHeader
 					title={t('title')}
