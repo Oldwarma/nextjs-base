@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-v0.1.0-blue.svg)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
 ![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -144,21 +144,14 @@ docs/
 
 ## 🔄 版本历史
 
-### v3.0.0 (2025-12)
+### v0.1.0 (2025-12)
 
-**🎉 重大更新：PostgreSQL 迁移**
+**开源首发版本**
 
-- ✅ 从 MongoDB 迁移到 PostgreSQL
-- ✅ 使用 Prisma 作为 ORM
-- ✅ 重构 BaseDAO 支持 Prisma
-- ✅ 新增 selects 连表查询
-- ✅ 优化权限系统设计
-- ✅ 完善文档体系
-
-### v2.x
-
-- MongoDB + Mongoose 版本
-- 已归档至 `docs/legacy/`
+- 🎉 首个开源发布，版本号 `v0.1.0`
+- 🧭 提供 Landing Page + Admin Demo 供快速体验
+- 👥 内置示例角色与账号，开箱即用探索 RBAC
+- 🗂️ 早期闭源阶段的文档与实现已归档至 `docs/legacy/`
 
 ---
 

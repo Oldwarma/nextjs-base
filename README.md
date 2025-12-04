@@ -2,6 +2,10 @@
 
 A full-stack SaaS platform with user authentication, RBAC permission system, and admin management.
 
+## Version
+
+v0.1.0 — first open-source release with a simple landing page + admin demo and built-in sample roles/users for quick exploration. Version is tracked in `package.json` and mirrored in `VERSION.md`.
+
 ## Features
 
 ### Core Functionality

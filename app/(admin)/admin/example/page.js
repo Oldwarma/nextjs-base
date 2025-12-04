@@ -574,7 +574,7 @@ export default function ExamplePage() {
 				satisfaction: Math.floor(Math.random() * 100),
 				brandColor: '#1890ff',
 				icon: ['HomeOutlined', 'UserOutlined', 'SettingOutlined', 'StarOutlined', 'HeartOutlined', 'SearchOutlined'][Math.floor(Math.random() * 6)],
-				metadata: JSON.stringify({ version: '1.0', author: 'Admin' }),
+				metadata: JSON.stringify({ version: 'v0.1.0', author: 'Admin' }),
 				keywords: ['keyword1', 'keyword2', 'keyword3'],
 			}));
 
@@ -635,4 +635,3 @@ export default function ExamplePage() {
 		/>
 	);
 }
-
