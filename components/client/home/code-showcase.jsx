@@ -89,8 +89,8 @@ export default function CodeShowcase() {
 	const isDark = resolvedTheme === 'dark';
 
 	return (
-		<section id='code-showcase' className='py-24 relative overflow-hidden bg-zinc-100 dark:bg-zinc-950'>
-			<div className='container mx-auto px-4'>
+		<section id='code-showcase' className='py-16 sm:py-20 lg:py-24 relative overflow-hidden bg-zinc-100 dark:bg-zinc-950'>
+			<div className='container mx-auto px-4 md:px-6'>
 				<SectionHeader
 					title={t('title')}
 					subtitle={t('subtitle')}
@@ -101,14 +101,14 @@ export default function CodeShowcase() {
 					{/* Glow Background */}
 					<div
 						aria-hidden
-						className='absolute -inset-x-20 top-50 bottom-0 z-0 w-full opacity-60 blur-3xl pointer-events-none'
+						className='absolute -inset-x-20 top-50 bottom-0 z-0 w-full opacity-60 blur-3xl pointer-events-none hidden sm:block'
 						style={{
 							background:
 								'radial-gradient(ellipse 60% 50% at 30% 30%, rgba(59,130,246,0.25), transparent), radial-gradient(ellipse 50% 40% at 70% 20%, rgba(139,92,246,0.2), transparent), radial-gradient(ellipse 60% 50% at 50% 90%, rgba(45,212,191,0.2), transparent)',
 						}}
 					/>
 					{/* Tab Buttons - Outside the card */}
-					<div className='relative z-10 flex justify-center gap-2 mb-6'>
+					<div className='relative z-10 flex justify-center gap-2 mb-6 flex-wrap sm:flex-nowrap'>
 						<button
 							onClick={() => setActiveTab('preview')}
 							className={`px-5 py-2.5 text-sm rounded-full transition-all flex items-center gap-2 border ${
@@ -145,11 +145,13 @@ export default function CodeShowcase() {
 					</div>
 
 					{/* Stacked Cards Container */}
-					<div className='relative z-10 h-[520px]'>
+					<div className='relative z-10 lg:h-[520px] space-y-6 lg:space-y-0'>
 						{/* Code Editor Card */}
 						<div
-							className={`absolute inset-0 rounded-2xl overflow-hidden shadow-2xl border border-zinc-300 dark:border-zinc-800 bg-[#f8f8f8] dark:bg-[#1e1e1e] transition-all duration-500 ease-out ${
-								activeTab === 'preview' ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
+							className={`rounded-2xl overflow-hidden shadow-2xl border border-zinc-300 dark:border-zinc-800 bg-[#f8f8f8] dark:bg-[#1e1e1e] transition-all duration-500 ease-out ${
+								activeTab === 'preview'
+									? 'hidden lg:block lg:opacity-0 lg:scale-95 lg:pointer-events-none lg:absolute lg:inset-0'
+									: 'block lg:opacity-100 lg:scale-100 lg:absolute lg:inset-0'
 							}`}
 						>
 							{/* Window Header */}
@@ -169,7 +171,7 @@ export default function CodeShowcase() {
 							</div>
 
 							{/* Code Content */}
-							<div className='relative h-[calc(100%-48px)]'>
+							<div className='relative h-[420px] sm:h-[480px] lg:h-[calc(100%-48px)] overflow-hidden'>
 								<SyntaxHighlighter
 									language='javascript'
 									style={isDark ? atomDark : oneLight}
@@ -180,6 +182,7 @@ export default function CodeShowcase() {
 										fontSize: '0.875rem',
 										lineHeight: '1.6',
 										height: '100%',
+										overflow: 'auto',
 									}}
 									showLineNumbers={true}
 									wrapLines={true}
@@ -203,8 +206,10 @@ export default function CodeShowcase() {
 
 						{/* Preview Card */}
 						<div
-							className={`absolute inset-0 rounded-2xl overflow-hidden shadow-2xl border border-zinc-300 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 transition-all duration-500 ease-out ${
-								activeTab === 'preview' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+							className={`rounded-2xl overflow-hidden shadow-2xl border border-zinc-300 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 transition-all duration-500 ease-out ${
+								activeTab === 'preview'
+									? 'block lg:opacity-100 lg:scale-100 lg:absolute lg:inset-0'
+									: 'hidden lg:block lg:opacity-0 lg:scale-95 lg:pointer-events-none lg:absolute lg:inset-0'
 							}`}
 						>
 							{/* Browser Chrome */}
@@ -215,14 +220,14 @@ export default function CodeShowcase() {
 									<div className='w-3 h-3 rounded-full bg-[#27c93f]' />
 								</div>
 								<div className='flex-1 mx-4'>
-									<div className='bg-zinc-300 dark:bg-zinc-700 rounded-md px-4 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 font-mono max-w-md mx-auto text-center'>
+									<div className='bg-zinc-300 dark:bg-zinc-700 rounded-md px-4 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 font-mono max-w-md mx-auto text-center w-full whitespace-nowrap overflow-hidden text-ellipsis'>
 										https://admin-demo.nextjsbase.com/example/data-table
 									</div>
 								</div>
 							</div>
 
 							{/* Screenshot Area */}
-							<div className='relative h-[calc(100%-48px)] bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center'>
+							<div className='relative h-[420px] sm:h-[480px] lg:h-[calc(100%-48px)] bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center'>
 								{/* Placeholder - Replace with actual screenshot */}
 								{/* <div className='text-center text-zinc-500'>
 									<Monitor size={64} className='mx-auto mb-4 opacity-30' />
@@ -239,6 +244,7 @@ export default function CodeShowcase() {
 									alt='Admin Panel Preview'
 									fill
 									className='object-cover object-top'
+									sizes="(max-width: 768px) 100vw, 800px"
 								/>
 
 								{/* Badge */}

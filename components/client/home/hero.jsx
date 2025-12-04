@@ -107,7 +107,7 @@ export default function Hero() {
 					{/* Glow behind text */}
 					<div className='absolute -inset-x-20 -inset-y-10 bg-linear-to-r from-primary/20 via-purple-500/20 to-blue-500/20 blur-3xl opacity-30 rounded-full' />
 					<motion.h1
-						className='text-6xl md:text-7xl tracking-tighter leading-tight font-medium text-zinc-900 dark:text-white text-center drop-shadow-2xl relative'
+						className='text-5xl md:text-7xl tracking-tighter leading-tight font-medium text-zinc-900 dark:text-white text-center drop-shadow-2xl relative'
 						initial={{ opacity: 0, y: 60 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.8, ease: [0.25, 0.4, 0.25, 1] }}
@@ -136,10 +136,10 @@ export default function Hero() {
 				</p>
 
 				{/* Buttons */}
-				<div className='flex flex-col sm:flex-row items-center gap-6 mt-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-700 fill-mode-backwards'>
+				<div className='flex flex-row flex-wrap items-center justify-center gap-6 mt-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-700 fill-mode-backwards'>
 					<Button
 						size='lg'
-						className='h-14 px-8 text-lg rounded-full shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-105 transition-all duration-300'
+						className='md:h-14 md:px-8 md:text-lg rounded-full md:shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-105 transition-all duration-300'
 						asChild
 					>
 						<Link href='https://admin-demo.nextjsbase.com/admin'>
@@ -150,7 +150,7 @@ export default function Hero() {
 					<Button
 						size='lg'
 						variant='outline'
-						className='h-14 px-8 text-lg rounded-full bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100/80 dark:hover:bg-zinc-800/80 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-105 transition-all duration-300'
+						className='md:h-14 md:px-8 md:text-lg rounded-full bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100/80 dark:hover:bg-zinc-800/80 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-105 transition-all duration-300'
 						asChild
 					>
 						<Link href='/docs'>
@@ -161,7 +161,7 @@ export default function Hero() {
 					<Button
 						size='lg'
 						variant='ghost'
-						className='h-14 px-8 text-lg rounded-full ring-1 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-transparent'
+						className='md:h-14 md:px-8 md:text-lg rounded-full ring-1 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-transparent'
 						asChild
 					>
 						<Link
