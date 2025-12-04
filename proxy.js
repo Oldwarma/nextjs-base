@@ -202,8 +202,8 @@ export default async function proxy(request) {
 
 export const config = {
 	matcher: [
-		// API 路由
-		'/api/:path*',
+		// API 路由（排除上传接口，避免锁定 multipart body）
+		'/api/((?!upload).*)',
 		// 多语言路由（排除 api、admin、静态文件等）
 		'/((?!admin|_next|_vercel|.*\\..*).*)',
 		'/',
