@@ -589,7 +589,7 @@ Twitter 看到 → GitHub Star → 试用 → 买插件
 
 #### 1. Next.js 生态增长 ⭐⭐⭐⭐⭐
 
-**Next.js 15 发布**:
+**Next.js 16 发布**:
 - 新特性 (Turbopack, PPR)
 - App Router 成为主流
 - 开发者迁移
@@ -822,7 +822,7 @@ Twitter 看到 → GitHub Star → 试用 → 买插件
 - 产品已打磨 (Q1 完成)
 - 文档已完善
 - 社区准备就绪
-- Next.js 15 已稳定
+- Next.js 16 已稳定
 
 **风险**:
 - ⚠️ 可能被抄袭

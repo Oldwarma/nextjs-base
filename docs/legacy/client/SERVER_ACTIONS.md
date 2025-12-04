@@ -2,7 +2,7 @@
 
 ## 概述
 
-本项目使用 Next.js 15 的 Server Actions 替代传统的 API 路由，提供更好的性能和开发体验。Server Actions 直接在服务器端执行，无需额外的 API 端点。
+本项目使用 Next.js 16 的 Server Actions 替代传统的 API 路由，提供更好的性能和开发体验。Server Actions 直接在服务器端执行，无需额外的 API 端点。
 
 ## 优势
 

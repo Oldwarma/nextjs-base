@@ -23,7 +23,7 @@
 
 ## 📌 核心定位
 
-NextJS Base 是一个基于 Next.js 15 + PostgreSQL 的**配置驱动型管理后台开发框架**。
+NextJS Base 是一个基于 Next.js 16 + PostgreSQL 的**配置驱动型管理后台开发框架**。
 
 **一句话定位**: 
 > NextJS Base 是 Next.js 生态的 Django Admin
@@ -46,7 +46,7 @@ NextJS Base 是一个基于 Next.js 15 + PostgreSQL 的**配置驱动型管理�
 
 | 维度 | VK-UniCloud | NextJS Base |
 |------|-------------|------------------|
-| **技术栈** | UniCloud (云函数) | Next.js 15 (App Router) |
+| **技术栈** | UniCloud (云函数) | Next.js 16 (App Router) |
 | **目标平台** | 微信小程序、H5、App | Web 应用 (全栈) |
 | **开发模式** | Serverless | 传统 Server |
 | **核心特性** | 统一支付、Redis、云存储 | Smart CRUD、RBAC、DB API |
@@ -546,7 +546,7 @@ export const getUserListAction = crud.getList;
 #### Strengths (优势)
 
 1. **技术栈现代化** ✅
-   - Next.js 15 (最新 App Router)
+   - Next.js 16 (最新 App Router)
    - React 19
    - Better Auth (现代认证方案)
    
@@ -591,7 +591,7 @@ export const getUserListAction = crud.getList;
 #### Opportunities (机会)
 
 1. **Next.js 生态增长** 📈
-   - Next.js 15 刚发布
+   - Next.js 16 刚发布
    - App Router 逐渐成为主流
    
 2. **独立开发者增多** 📈
@@ -1384,7 +1384,7 @@ Admin UI: SmartCRUD (配置)        → 3天
 
 | 技术 | NextJS Base | Strapi | Supabase | Shipfast |
 |------|--------|--------|----------|----------|
-| **前端** | Next.js 15 | React Admin | 自选 | Next.js |
+| **前端** | Next.js 16 | React Admin | 自选 | Next.js |
 | **后端** | Next.js Server Actions | Koa.js | PostgreSQL | Next.js API |
 | **数据库** | PostgreSQL | SQLite/PostgreSQL | PostgreSQL | 自选 |
 | **认证** | Better Auth | 内置 | 内置 | NextAuth |

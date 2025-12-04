@@ -33,7 +33,7 @@ NextJS Base 是一个**配置驱动**的全栈开发框架，专为快速构建�
 
 | 层级 | 技术 | 说明 |
 |:---|:---|:---|
-| 框架 | Next.js 15 | App Router + Server Actions |
+| 框架 | Next.js 16 | App Router + Server Actions |
 | 数据库 | PostgreSQL 16+ | 关系型数据库 |
 | ORM | Prisma | 类型安全的数据库客户端 |
 | 认证 | Better Auth | 现代化认证解决方案 |

@@ -206,7 +206,7 @@ Admin Framework  ← NextJS Base 在这里
 - ❌ 生态不成熟 (无插件市场)
 
 **机会 (Opportunities)**:
-- 📈 Next.js 15 刚发布 (生态增长)
+- 📈 Next.js 16 刚发布 (生态增长)
 - 📈 独立开发者增多 (远程工作)
 - 📈 SaaS 创业热 (每个 SaaS 需要管理后台)
 - 🤖 AI 辅助开发 (配置化适合 AI)
@@ -290,7 +290,7 @@ Admin Framework  ← NextJS Base 在这里
 
 - **开发效率**: 配置驱动，大幅减少重复代码
 - **企业级特性**: 内置 RBAC 权限系统
-- **现代技术栈**: 基于 Next.js 15 + React 19
+- **现代技术栈**: 基于 Next.js 16 + React 19
 - **AI 友好**: 配置化适合 AI 辅助开发
 
 ### 3. 适用场景 🎯

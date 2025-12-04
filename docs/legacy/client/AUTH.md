@@ -8,7 +8,7 @@
 
 - **认证框架**: better-auth v1.x
 - **数据库**: PostgreSQL (via Prisma)
-- **前端**: Next.js 15 App Router + React
+- **前端**: Next.js 16 App Router + React
 - **Session 管理**: Cookie-based sessions
 - **密码加密**: bcrypt (由 better-auth 内置处理)
 
