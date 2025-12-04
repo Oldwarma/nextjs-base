@@ -199,6 +199,66 @@
 	background: transparent;
 }
 
+/* ============================================
+ * 字体统一 - 菜单 & ProTable
+ * 保持深浅主题字号一致
+ * ============================================ */
+
+.ant-pro-sider-menu .ant-menu-title-content,
+.ant-pro-sider-menu .ant-menu-item,
+.ant-pro-sider-menu .ant-menu-submenu-title {
+	font-size: 14px !important;
+	line-height: 20px !important;
+}
+
+.ant-pro-sider .ant-menu-root,
+.ant-pro-sider .ant-menu-item,
+.ant-pro-sider .ant-menu-submenu-title {
+	font-size: 14px !important;
+	line-height: 20px !important;
+}
+
+.ant-pro-table .ant-table {
+	font-size: 14px !important;
+}
+
+.ant-pro-table .ant-table-thead > tr > th,
+.ant-pro-table .ant-table-tbody > tr > td {
+	font-size: 14px !important;
+	line-height: 20px !important;
+}
+
+.ant-pro-global-header-header-actions {
+	gap: 8px !important;
+}
+
+.admin-theme-toggle {
+	width: 32px !important;
+	height: 32px !important;
+	padding: 0 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	font-size: 16px !important;
+}
+
+/* 背景色随主题切换，用于全局 loading 和页面容器 */
+.admin-loading-bg {
+	background: #f6f6f6;
+}
+
+.dark .admin-loading-bg {
+	background: #0d0d0d;
+}
+
+.admin-page-bg {
+	background: #f6f6f6;
+}
+
+.dark .admin-page-bg {
+	background: #0d0d0d;
+}
+
 /* Firefox 滚动条优化 */
 .ant-table-body,
 .ant-table-content {
@@ -298,4 +358,12 @@
 		width: 4px;
 		height: 4px;
 	}
+}
+
+/* ============================================
+ * 头像样式优化
+ * ============================================ */
+.ant-pro-global-header-header-actions-avatar {
+	padding-inline-start: 0!important;
+	padding-inline-end: 0!important;
 }
