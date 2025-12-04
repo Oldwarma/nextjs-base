@@ -73,7 +73,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │  前端处理：                                                        │
 │  1. 检查 result.success                                           │
-│  2. router.push('/dashboard') 跳转到仪表盘                        │
+│  2. router.push('/admin') 跳转到仪表盘                        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -126,7 +126,7 @@
                       │
                       ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  前端跳转到 /dashboard                                            │
+│  前端跳转到 /admin                                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -141,7 +141,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │  调用 authClient.signIn.social()                                  │
 │  - provider: 'google' 或 'github'                                 │
-│  - callbackURL: '/dashboard'                                      │
+│  - callbackURL: '/admin'                                      │
 └─────────────────────┬───────────────────────────────────────────┘
                       │
                       ▼
@@ -195,7 +195,7 @@
                       │
                       ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  前端跳转到 /dashboard                                            │
+│  前端跳转到 /admin                                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -581,7 +581,7 @@ const result = await signInWithEmailAction({
 
 if (result.success) {
 	// 登录成功
-	router.push('/dashboard');
+	router.push('/admin');
 } else {
 	// 显示错误
 	console.error(result.error);
@@ -601,7 +601,7 @@ const result = await signUpWithEmailAction({
 
 if (result.success) {
 	// 注册成功
-	router.push('/dashboard');
+	router.push('/admin');
 } else {
 	// 显示错误
 	console.error(result.error);
@@ -644,13 +644,13 @@ import { authClient } from '@/lib/auth-client';
 // Google 登录
 await authClient.signIn.social({
 	provider: 'google',
-	callbackURL: '/dashboard'
+	callbackURL: '/admin'
 });
 
 // GitHub 登录
 await authClient.signIn.social({
 	provider: 'github',
-	callbackURL: '/dashboard'
+	callbackURL: '/admin'
 });
 
 // 获取会话
@@ -685,7 +685,7 @@ export function LoginForm() {
 		});
 
 		if (result.success) {
-			router.push('/dashboard');
+			router.push('/admin');
 		}
 		setIsLoading(false);
 	};
@@ -694,7 +694,7 @@ export function LoginForm() {
 	const handleGoogleLogin = async () => {
 		await authClient.signIn.social({
 			provider: 'google',
-			callbackURL: '/dashboard'
+			callbackURL: '/admin'
 		});
 	};
 

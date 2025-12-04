@@ -12,6 +12,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 import { checkAndInitUserAction } from '@/app/(client)/actions/auth';
 import { authClient } from '@/lib/auth/auth-client';
+import Link from 'next/link';
 
 export function LoginForm({ className, callbackUrl, ...props }) {
 	const t = useTranslations();
@@ -36,11 +37,11 @@ export function LoginForm({ className, callbackUrl, ...props }) {
 		[locale]
 	);
 
-	// 获取登录后的重定向地址，默认为 dashboard
+	// 获取登录后的重定向地址，默认为 admin
 	const getRedirectUrl = useCallback(() => {
 		const safeCallback = formatRedirectPath(callbackUrl);
 		if (safeCallback) return safeCallback;
-		return `/${locale}/dashboard`;
+		return `/admin`;
 	}, [callbackUrl, formatRedirectPath, locale]);
 
 	// 检查是否有 session（三方登录回调后）并初始化用户
@@ -228,19 +229,9 @@ export function LoginForm({ className, callbackUrl, ...props }) {
 						</form>
 					</CardContent>
 				</Card>
-				
-				{/* Register Link */}
-				<div className='mt-4 text-center'>
-					<a
-						href='/register'
-						className='text-sm text-white/70 hover:text-white underline'
-					>
-						Don't have an account? Register here
-					</a>
-				</div>
 			</div>
 			<FieldDescription className='px-6 text-center text-white/50'>
-				{t('auth.termsAndPrivacy')}
+				{t('auth.termsAndPrivacy', { terms: 'terms', privacy: 'privacy' })}
 			</FieldDescription>
 		</div>
 	);

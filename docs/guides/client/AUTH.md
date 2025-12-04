@@ -131,7 +131,7 @@ export default function LoginPage() {
       if (result.error) {
         setError(result.error.message)
       } else {
-        router.push('/dashboard')
+        router.push('/admin')
       }
     } catch (err) {
       setError('登录失败，请重试')
