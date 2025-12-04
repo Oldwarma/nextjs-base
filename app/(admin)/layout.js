@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import AdminLayout from '@/components/admin/admin-layout';
 import AntdConfigProvider from '@/components/admin/antd-config-provider';
+import { ThemeProvider } from '@/components/common/theme-provider';
 import '../globals.css';
 import './admin-styles.css';
 
@@ -32,14 +33,21 @@ export default async function AdminLayoutRoot({ children }) {
 	return (
 		<html lang='en' suppressHydrationWarning>
 			<body className={`${poppins.variable} antialiased`}>
-				<AntdRegistry>
-					<AntdConfigProvider>
-						<AdminLayout user={session?.user}>
-							{children}
-						</AdminLayout>
-					</AntdConfigProvider>
-				</AntdRegistry>
-				<Toaster />
+				<ThemeProvider
+					attribute='class'
+					defaultTheme='light'
+					enableSystem
+					disableTransitionOnChange
+				>
+					<AntdRegistry>
+						<AntdConfigProvider>
+							<AdminLayout user={session?.user}>
+								{children}
+							</AdminLayout>
+						</AntdConfigProvider>
+					</AntdRegistry>
+					<Toaster />
+				</ThemeProvider>
 			</body>
 		</html>
 	);

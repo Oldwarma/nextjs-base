@@ -19,6 +19,7 @@ import {
 	Space,
 	Checkbox,
 	Tooltip,
+	theme,
 } from 'antd';
 import { CheckCard } from '@ant-design/pro-components';
 import {
@@ -120,6 +121,7 @@ const FILE_TYPE_OPTIONS = [
 // ============================================
 export default function AssetsPage() {
 	const { message } = App.useApp();
+	const { token } = theme.useToken();
 	const [isPending, startTransition] = useTransition();
 	const [uploading, setUploading] = useState(false);
 
@@ -371,7 +373,7 @@ export default function AssetsPage() {
 						alignItems: 'center',
 						justifyContent: 'center',
 						overflow: 'hidden',
-						background: '#f5f5f5',
+						background: token.colorFillSecondary,
 					}}
 				>
 					<img
@@ -395,7 +397,7 @@ export default function AssetsPage() {
 					display: 'flex',
 					alignItems: 'center',
 					justifyContent: 'center',
-					background: '#f5f5f5',
+					background: token.colorFillSecondary,
 				}}
 			>
 				{getFileIcon(file.mimeType, 40)}
@@ -411,17 +413,17 @@ export default function AssetsPage() {
 		const fileId = getFileId(file);
 		const isSelected = selectedIds.includes(fileId);
 
-		return (
-			<div
-				style={{
-					position: 'relative',
-					border: isSelected ? '2px solid #1890ff' : '1px solid #d9d9d9',
-					borderRadius: 8,
-					overflow: 'hidden',
-					background: isSelected ? '#e6f7ff' : '#fff',
-					cursor: 'pointer',
-					transition: 'all 0.2s',
-				}}
+			return (
+				<div
+					style={{
+						position: 'relative',
+						border: isSelected ? `2px solid ${token.colorPrimary}` : `1px solid ${token.colorBorder}`,
+						borderRadius: 8,
+						overflow: 'hidden',
+						background: isSelected ? token.colorPrimaryBg : token.colorBgContainer,
+						cursor: 'pointer',
+						transition: 'all 0.2s',
+					}}
 				onClick={() => handleSelect(fileId)}
 				onMouseEnter={() => setIsHovered(true)}
 				onMouseLeave={() => setIsHovered(false)}
@@ -442,7 +444,7 @@ export default function AssetsPage() {
 				<div
 					style={{
 						padding: '8px 12px',
-						borderTop: '1px solid #f0f0f0',
+						borderTop: `1px solid ${token.colorSplit}`,
 					}}
 				>
 					<Tooltip title={file.originalName}>
@@ -461,7 +463,7 @@ export default function AssetsPage() {
 					<div
 						style={{
 							fontSize: 11,
-							color: '#999',
+							color: token.colorTextSecondary,
 							display: 'flex',
 							justifyContent: 'space-between',
 						}}
@@ -484,35 +486,47 @@ export default function AssetsPage() {
 					}}
 					onClick={(e) => e.stopPropagation()}
 				>
-					{isImage(file) && (
-						<Tooltip title='Preview'>
+						{isImage(file) && (
+							<Tooltip title='Preview'>
+								<Button
+									type='text'
+									size='small'
+									icon={<EyeOutlined />}
+									style={{
+										background: token.colorBgElevated,
+										color: token.colorText,
+										border: `1px solid ${token.colorBorderSecondary}`,
+									}}
+									onClick={() => setPreviewFile(file)}
+								/>
+							</Tooltip>
+						)}
+						<Tooltip title='Details'>
 							<Button
 								type='text'
 								size='small'
-								icon={<EyeOutlined />}
-								style={{ background: 'rgba(255,255,255,0.9)' }}
-								onClick={() => setPreviewFile(file)}
+								icon={<FileOutlined />}
+								style={{
+									background: token.colorBgElevated,
+									color: token.colorText,
+									border: `1px solid ${token.colorBorderSecondary}`,
+								}}
+								onClick={() => setDetailFile(file)}
 							/>
 						</Tooltip>
-					)}
-					<Tooltip title='Details'>
-						<Button
-							type='text'
-							size='small'
-							icon={<FileOutlined />}
-							style={{ background: 'rgba(255,255,255,0.9)' }}
-							onClick={() => setDetailFile(file)}
-						/>
-					</Tooltip>
-					<Tooltip title='Copy URL'>
-						<Button
-							type='text'
-							size='small'
-							icon={<CopyOutlined />}
-							style={{ background: 'rgba(255,255,255,0.9)' }}
-							onClick={() => handleCopyUrl(file.url)}
-						/>
-					</Tooltip>
+						<Tooltip title='Copy URL'>
+							<Button
+								type='text'
+								size='small'
+								icon={<CopyOutlined />}
+								style={{
+									background: token.colorBgElevated,
+									color: token.colorText,
+									border: `1px solid ${token.colorBorderSecondary}`,
+								}}
+								onClick={() => handleCopyUrl(file.url)}
+							/>
+						</Tooltip>
 					<Popconfirm
 						title='Delete this file?'
 						description='This will permanently delete the file from storage.'
@@ -527,7 +541,10 @@ export default function AssetsPage() {
 								size='small'
 								danger
 								icon={<DeleteOutlined />}
-								style={{ background: 'rgba(255,255,255,0.9)' }}
+								style={{
+									background: token.colorBgElevated,
+									border: `1px solid ${token.colorBorderSecondary}`,
+								}}
 							/>
 						</Tooltip>
 					</Popconfirm>
@@ -633,14 +650,14 @@ export default function AssetsPage() {
 					/>
 
 					{/* 统计信息 */}
-					<span style={{ color: '#999' }}>Total: {total} files</span>
+					<span style={{ color: token.colorTextSecondary }}>Total: {total} files</span>
 				</div>
 
 				{/* 文件列表 */}
 				<div
 					style={{
 						minHeight: 300,
-						border: '1px solid #f0f0f0',
+						border: `1px solid ${token.colorBorderSecondary}`,
 						borderRadius: 8,
 						padding: 16,
 					}}

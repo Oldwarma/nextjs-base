@@ -50,6 +50,8 @@
 	},
 	"nav": {
 		"home": "Home",
+		"codeShowcase": "Code",
+		"features": "Features",
 		"docs": "Docs",
 		"admin": "Admin Demo",
 		"login": "Login",
@@ -64,5 +66,39 @@
 		"resources": "Resources",
 		"community": "Community",
 		"copyright": "Copyright {year} {name}"
+	},
+	"auth": {
+		"welcomeBack": "Welcome Back",
+		"welcomeBackSubtitle": "Sign in to your account to continue",
+		"emailOrUsername": "Email or Username",
+		"emailOrUsernamePlaceholder": "Enter your email or username",
+		"email": "Email",
+		"emailPlaceholder": "Enter your email",
+		"password": "Password",
+		"passwordPlaceholder": "Enter your password",
+		"rememberMe": "Remember Me",
+		"forgotPassword": "Forgot Password",
+		"identifierRequired": "Please enter your email or username",
+		"loginFailed": "Login failed, please try again",
+		"login": "Login",
+		"orContinueWith": "Or continue with",
+		"continueWithGoogle": "Google",
+		"continueWithGithub": "GitHub",
+		"autoCreateAccount": "Automatically create an account if you first time login",
+		"termsAndPrivacy": "By signing in, you agree to our {terms} and {privacy}"
+	},
+	"common": {
+		"loading": "Loading...",
+		"error": "Error",
+		"success": "Success",
+		"warning": "Warning",
+		"info": "Info"
+	},
+	"validation": {
+		"emailRequired": "Email is required",
+		"passwordRequired": "Password is required",
+		"emailInvalid": "Invalid email address",
+		"passwordMinLength": "Password must be at least 8 characters long",
+		"passwordMaxLength": "Password must be less than 128 characters long"
 	}
 }

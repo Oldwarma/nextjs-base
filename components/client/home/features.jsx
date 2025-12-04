@@ -60,7 +60,7 @@ export default function Features() {
 	const t = useTranslations('home.features');
 
 	return (
-		<section className='container mx-auto px-4 py-24'>
+		<section id='features' className='container mx-auto px-4 py-24'>
 			<SectionHeader
 				title={t('title')}
 				subtitle={t('subtitle')}

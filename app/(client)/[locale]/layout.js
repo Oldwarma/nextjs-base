@@ -48,11 +48,18 @@ export default async function LocaleLayout({ children, params }) {
 
 	return (
 		<html lang={locale} suppressHydrationWarning>
+			<head>
+				<script
+					defer
+					src="https://analytics.inwind.cn/script.js"
+					data-website-id="becc0d16-6df0-4791-b34d-84b9fdae18ec"
+				/>
+			</head>
 			<body className={`${poppins.variable} antialiased`}>
 				<ThemeProvider
 					attribute='class'
 					defaultTheme='dark'
-					enableSystem
+					enableSystem={false}
 					disableTransitionOnChange
 				>
 				<NextIntlClientProvider messages={messages}>

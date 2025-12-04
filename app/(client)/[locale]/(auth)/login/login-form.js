@@ -12,6 +12,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 import { checkAndInitUserAction } from '@/app/(client)/actions/auth';
 import { authClient } from '@/lib/auth/auth-client';
+import Link from 'next/link';
 
 export function LoginForm({ className, callbackUrl, ...props }) {
 	const t = useTranslations();
@@ -36,11 +37,11 @@ export function LoginForm({ className, callbackUrl, ...props }) {
 		[locale]
 	);
 
-	// 获取登录后的重定向地址，默认为 dashboard
+	// 获取登录后的重定向地址，默认为 admin
 	const getRedirectUrl = useCallback(() => {
 		const safeCallback = formatRedirectPath(callbackUrl);
 		if (safeCallback) return safeCallback;
-		return `/${locale}/dashboard`;
+		return `/admin`;
 	}, [callbackUrl, formatRedirectPath, locale]);
 
 	// 检查是否有 session（三方登录回调后）并初始化用户
@@ -56,31 +57,35 @@ export function LoginForm({ className, callbackUrl, ...props }) {
 		}
 	}, [session, router, getRedirectUrl]);
 
-	// 邮箱密码登录（仅用于已有账号）
+	const isEmailIdentifier = (value) => value.includes('@');
+
+	// 邮箱或用户名密码登录
 	const handleEmailLogin = async (e) => {
 		e.preventDefault();
 		setIsLoading(true);
 		setError('');
 
 		const formData = new FormData(e.target);
-		const email = formData.get('email');
+		const identifier = formData.get('identifier')?.trim();
 		const password = formData.get('password');
 
 		// 验证输入
-		if (!email) {
-			setError(t('auth.emailRequired'));
+		if (!identifier) {
+			setError(t('auth.identifierRequired'));
 			setIsLoading(false);
 			return;
 		}
 
 		if (!password) {
-			setError(t('auth.passwordRequired'));
+			setError(t('validation.passwordRequired'));
 			setIsLoading(false);
 			return;
 		}
 
 		try {
-			const result = await authClient.signIn.email({ email, password });
+			const result = isEmailIdentifier(identifier)
+				? await authClient.signIn.email({ email: identifier, password })
+				: await authClient.signIn.username({ username: identifier, password });
 
 			if (result?.error) {
 				setError(result.error.message || t('auth.loginFailed'));
@@ -166,12 +171,12 @@ export function LoginForm({ className, callbackUrl, ...props }) {
 								)}
 
 								<Field>
-									<FieldLabel htmlFor='email'>{t('auth.email')}</FieldLabel>
+									<FieldLabel htmlFor='identifier'>{t('auth.emailOrUsername')}</FieldLabel>
 									<Input
-										id='email'
-										name='email'
-										type='email'
-										placeholder={t('auth.emailPlaceholder')}
+										id='identifier'
+										name='identifier'
+										type='text'
+										placeholder={t('auth.emailOrUsernamePlaceholder')}
 										required
 										disabled={isLoading}
 									/>
@@ -228,19 +233,9 @@ export function LoginForm({ className, callbackUrl, ...props }) {
 						</form>
 					</CardContent>
 				</Card>
-				
-				{/* Register Link */}
-				<div className='mt-4 text-center'>
-					<a
-						href='/register'
-						className='text-sm text-white/70 hover:text-white underline'
-					>
-						Don't have an account? Register here
-					</a>
-				</div>
 			</div>
 			<FieldDescription className='px-6 text-center text-white/50'>
-				{t('auth.termsAndPrivacy')}
+				{t('auth.termsAndPrivacy', { terms: 'terms', privacy: 'privacy' })}
 			</FieldDescription>
 		</div>
 	);

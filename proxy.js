@@ -101,6 +101,11 @@ export default async function proxy(request) {
 
 	// API 路由处理
 	if (pathname.startsWith('/api/')) {
+		// 上传接口需要读取原始流，避免在中间件里锁定 body
+		if (pathname.startsWith('/api/upload')) {
+			return NextResponse.next();
+		}
+
 		const level = getApiPermissionLevel(pathname);
 
 		// 跳过（better-auth 路由）或公开 API
@@ -197,8 +202,8 @@ export default async function proxy(request) {
 
 export const config = {
 	matcher: [
-		// API 路由
-		'/api/:path*',
+		// API 路由（排除上传接口，避免锁定 multipart body）
+		'/api/((?!upload).*)',
 		// 多语言路由（排除 api、admin、静态文件等）
 		'/((?!admin|_next|_vercel|.*\\..*).*)',
 		'/',

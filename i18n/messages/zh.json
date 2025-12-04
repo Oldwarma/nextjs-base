@@ -50,6 +50,8 @@
 	},
 	"nav": {
 		"home": "首页",
+		"codeShowcase": "代码",
+		"features": "特性",
 		"api": "API 参考",
 		"discord": "Discord",
 		"twitter": "Twitter",
@@ -64,5 +66,39 @@
 		"resources": "资源",
 		"community": "社区",
 		"copyright": "版权所有 {year} {name}"
+	},
+	"auth": {
+		"welcomeBack": "欢迎回来",
+		"welcomeBackSubtitle": "登录您的账户以继续",
+		"emailOrUsername": "邮箱或用户名",
+		"emailOrUsernamePlaceholder": "请输入邮箱或用户名",
+		"email": "邮箱",
+		"emailPlaceholder": "请输入邮箱",
+		"password": "密码",
+		"passwordPlaceholder": "请输入密码",
+		"rememberMe": "记住我",
+		"forgotPassword": "忘记密码",
+		"identifierRequired": "请输入邮箱或用户名",
+		"loginFailed": "登录失败，请重试",
+		"login": "登录",
+		"orContinueWith": "或使用以下方式继续",
+		"continueWithGoogle": "Google",
+		"continueWithGithub": "GitHub",
+		"autoCreateAccount": "首次登录将自动创建账户",
+		"termsAndPrivacy": "登录即表示您同意我们的{terms}和{privacy}"
+	},
+	"common": {
+		"loading": "加载中...",
+		"error": "错误",
+		"success": "成功",
+		"warning": "警告",
+		"info": "提示"
+	},
+	"validation": {
+		"emailRequired": "请输入邮箱",
+		"passwordRequired": "请输入密码",
+		"emailInvalid": "邮箱格式不正确",
+		"passwordMinLength": "密码长度至少为 8 个字符",
+		"passwordMaxLength": "密码长度不能超过 128 个字符"
 	}
 }

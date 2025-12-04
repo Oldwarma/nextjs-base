@@ -8,13 +8,15 @@ import { RightOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LockOutlined } fro
 // 动态导入 ProLayout，只在客户端渲染，避免 hydration 不匹配
 const ProLayout = dynamic(() => import('@ant-design/pro-components').then((mod) => mod.ProLayout), { ssr: false });
 import * as Icons from '@ant-design/icons';
-import { UserOutlined, HomeOutlined, LogoutOutlined, LinkOutlined } from '@ant-design/icons';
+import { UserOutlined, HomeOutlined, LogoutOutlined, LinkOutlined, SunOutlined, MoonOutlined } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { signOutAction } from '@/app/(client)/actions/auth';
 import { getUserAccessibleMenusAction } from '@/app/(admin)/actions/rbac/user-permissions';
 import PageAccessGuard from './page-access-guard';
 import { authClient } from '@/lib/auth/auth-client';
+import { useTheme } from 'next-themes';
+import Logo from '@/components/common/logo';
 
 /**
  * 管理后台布局组件 - 使用 Pro Components
@@ -29,6 +31,12 @@ export default function AdminLayout({ children, user }) {
 	const [passwordForm] = Form.useForm();
 	const [passwordLoading, setPasswordLoading] = useState(false);
 	const router = useRouter();
+	const { resolvedTheme, theme, systemTheme, setTheme } = useTheme();
+	const effectiveTheme =
+		resolvedTheme ||
+		(theme === 'system' ? systemTheme : theme) ||
+		'light';
+	const isDarkMode = effectiveTheme === 'dark';
 
 	// 加载菜单数据 - 使用 RBAC 权限过滤
 	useEffect(() => {
@@ -192,6 +200,8 @@ export default function AdminLayout({ children, user }) {
 	// 根据当前路径生成面包屑
 	const breadcrumbItems = useMemo(() => {
 		const items = [];
+		const breadcrumbLinkColor = isDarkMode ? '#94a3b8' : '#8c8c8c';
+		const breadcrumbActiveColor = isDarkMode ? '#e5e7eb' : '#262626';
 
 		// 如果不是首页，显示 Dashboard 链接
 		if (currentPathname && currentPathname !== '/admin') {
@@ -200,7 +210,7 @@ export default function AdminLayout({ children, user }) {
 					<Link
 						href='/admin'
 						style={{
-							color: '#8c8c8c',
+							color: breadcrumbLinkColor,
 							fontSize: '14px',
 							transition: 'color 0.2s ease',
 							textDecoration: 'none',
@@ -209,7 +219,7 @@ export default function AdminLayout({ children, user }) {
 							e.currentTarget.style.color = '#1890ff';
 						}}
 						onMouseLeave={(e) => {
-							e.currentTarget.style.color = '#8c8c8c';
+							e.currentTarget.style.color = breadcrumbLinkColor;
 						}}
 					>
 						Dashboard
@@ -228,7 +238,7 @@ export default function AdminLayout({ children, user }) {
 					title: (
 						<span
 							style={{
-								color: '#262626',
+								color: breadcrumbActiveColor,
 								fontSize: '14px',
 								fontWeight: 500,
 							}}
@@ -241,18 +251,49 @@ export default function AdminLayout({ children, user }) {
 		}
 
 		return items;
-	}, [currentPathname, menuData, findMenuByPath]);
+	}, [currentPathname, findMenuByPath, isDarkMode, menuData]);
+
+	const proLayoutTokens = useMemo(
+		() => ({
+			header: {
+				colorBgHeader: isDarkMode ? '#1c1c1c' : '#ffffff',
+				colorHeaderTitle: isDarkMode ? '#f6f6f6' : '#0d0d0d',
+				colorTextMenu: isDarkMode ? '#e5e7eb' : '#595959',
+				colorTextMenuSelected: '#1890ff',
+				colorBgMenuItemSelected: isDarkMode ? 'rgba(24,125,220,0.2)' : 'rgba(24,125,220,0.08)',
+				boxShadowHeader: isDarkMode ? '0 2px 12px rgba(0,0,0,0.35)' : '0 2px 12px rgba(0,0,0,0.08)',
+				heightLayoutHeader: 56,
+			},
+			sider: {
+				colorMenuBackground: isDarkMode ? '#0d0d0d' : '#ffffff',
+				colorTextMenu: isDarkMode ? '#f6f6f6' : '#595959',
+				colorTextMenuSelected: '#1890ff',
+				colorBgMenuItemSelected: isDarkMode ? 'rgba(24,125,220,0.25)' : 'rgba(24,125,220,0.08)',
+				colorBgMenuItemHover: isDarkMode ? '#1c1c1c' : '#f6f6f6',
+			},
+			pageContainer: {
+				paddingBlockPageContainerContent: 24,
+				paddingInlinePageContainerContent: 24,
+				colorBgPageContainer: isDarkMode ? '#0d0d0d' : '#f6f6f6',
+			},
+		}),
+		[isDarkMode],
+	);
+
+	const toggleTheme = () => {
+		setTheme(isDarkMode ? 'light' : 'dark');
+	};
 
 	// 如果菜单正在加载，显示加载指示器
 	if (menuLoading) {
 		return (
 			<div
+				className='admin-loading-bg'
 				style={{
 					display: 'flex',
 					justifyContent: 'center',
 					alignItems: 'center',
 					height: '100vh',
-					background: '#f5f5f5',
 				}}
 			>
 				<Spin
@@ -270,7 +311,7 @@ export default function AdminLayout({ children, user }) {
 		<>
 			<ProLayout
 				title='NextJS Base Admin'
-				logo='/logo.png'
+				logo={<Logo showText={false} />}
 				layout='mix'
 				splitMenus={false}
 				route={route}
@@ -282,7 +323,7 @@ export default function AdminLayout({ children, user }) {
 				fixSiderbar
 				fixedHeader
 				contentWidth='Fluid'
-				navTheme='light'
+				navTheme={isDarkMode ? 'realDark' : 'light'}
 				colorPrimary='#1890ff'
 				menuItemRender={(item, dom) => {
 					// item.path 已经是数据库中的 url 字段（在 convertMenuToRoute 中设置）
@@ -319,14 +360,48 @@ export default function AdminLayout({ children, user }) {
 							menu={{ items: userMenuItems }}
 							placement='bottomRight'
 						>
-							<div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+							<div
+								style={{
+									cursor: 'pointer',
+									display: 'flex',
+									alignItems: 'center',
+									gap: 8,
+									fontSize: 14,
+									lineHeight: '20px',
+									color: isDarkMode ? '#f6f6f6' : '#0d0d0d',
+								}}
+							>
 								{dom}
 								{/* <span style={{ fontWeight: 500 }}>{user?.name || 'Admin'}</span> */}
 							</div>
 						</Dropdown>
 					),
 				}}
-				actionsRender={() => []}
+				actionsRender={() => [
+					<Button
+						key='theme-toggle'
+						type='text'
+						className='admin-theme-toggle'
+						aria-label='Toggle theme'
+						onClick={toggleTheme}
+						icon={
+							<span
+								style={{
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									width: 16,
+									height: 16,
+								}}
+							>
+								{isDarkMode ? <SunOutlined /> : <MoonOutlined />}
+							</span>
+						}
+						style={{
+							color: isDarkMode ? '#f6f6f6' : '#0d0d0d',
+						}}
+					/>,
+				]}
 				headerTitleRender={(logo, title) => (
 					<div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
 						<Link
@@ -348,7 +423,7 @@ export default function AdminLayout({ children, user }) {
 							onClick={() => setCollapsed(!collapsed)}
 							style={{
 								marginLeft: 16,
-								color: '#595959',
+								color: isDarkMode ? '#f6f6f6' : '#0d0d0d',
 								fontSize: '16px',
 								display: 'flex',
 								alignItems: 'center',
@@ -364,7 +439,7 @@ export default function AdminLayout({ children, user }) {
 									style={{
 										width: 1,
 										height: 16,
-										background: '#e8e8e8',
+										background: isDarkMode ? '#1f2937' : '#e8e8e8',
 										margin: '0 16px',
 										flexShrink: 0,
 									}}
@@ -374,7 +449,7 @@ export default function AdminLayout({ children, user }) {
 									separator={
 										<span
 											style={{
-												color: '#d9d9d9',
+												color: isDarkMode ? '#94a3b8' : '#d9d9d9',
 												margin: '0px',
 												fontSize: '8px',
 											}}
@@ -388,38 +463,18 @@ export default function AdminLayout({ children, user }) {
 								/>
 							</>
 						)}
+						<div style={{ marginLeft: 'auto' }} />
 					</div>
 				)}
 				menuProps={{
 					style: { paddingTop: 8 },
 				}}
-				token={{
-					header: {
-						colorBgHeader: '#fff',
-						colorHeaderTitle: '#000',
-						colorTextMenu: '#595959',
-						colorTextMenuSelected: '#1890ff',
-						colorBgMenuItemSelected: '#e6f4ff',
-						heightLayoutHeader: 56,
-					},
-					sider: {
-						colorMenuBackground: '#fff',
-						colorTextMenu: '#595959',
-						colorTextMenuSelected: '#1890ff',
-						colorBgMenuItemSelected: '#e6f4ff',
-						colorBgMenuItemHover: '#f5f5f5',
-					},
-					pageContainer: {
-						paddingBlockPageContainerContent: 24,
-						paddingInlinePageContainerContent: 24,
-						colorBgPageContainer: '#f5f5f5',
-					},
-				}}
+				token={proLayoutTokens}
 				style={{
 					height: '100vh',
 				}}
 			>
-				<div style={{ minHeight: '100%', background: '#f5f5f5' }}>
+				<div className='admin-page-bg' style={{ minHeight: '100%' }}>
 					<PageAccessGuard>{children}</PageAccessGuard>
 				</div>
 			</ProLayout>
@@ -449,7 +504,10 @@ export default function AdminLayout({ children, user }) {
 						<Input
 							value={user?.name || 'admin'}
 							disabled
-							style={{ backgroundColor: '#f5f5f5' }}
+							style={{
+								backgroundColor: isDarkMode ? '#1c1c1c' : '#f6f6f6',
+								color: isDarkMode ? '#f6f6f6' : undefined,
+							}}
 						/>
 					</Form.Item>
 

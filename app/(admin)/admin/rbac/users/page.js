@@ -319,7 +319,10 @@ export default function UsersManagementPage() {
 	const handleResetPassword = async (values) => {
 		setPasswordLoading(true);
 		try {
-			const result = await userActions.resetUserPasswordAction(selectedUserId, values.password);
+			const result = await userActions.resetUserPasswordAction({
+				userId: selectedUserId,
+				newPassword: values.password,
+			});
 			if (result.success) {
 				messageApi.success('Password reset successfully');
 				setPasswordModalVisible(false);
@@ -350,10 +353,13 @@ export default function UsersManagementPage() {
 			let result;
 			if (isBanned) {
 				// 解封用户
-				result = await userActions.unbanUserAction(userId);
+				result = await userActions.unbanUserAction({ userId });
 			} else {
 				// 封禁用户
-				result = await userActions.banUserAction(userId, 'Banned by administrator');
+				result = await userActions.banUserAction({
+					userId,
+					banReason: 'Banned by administrator',
+				});
 			}
 
 			if (result.success) {
