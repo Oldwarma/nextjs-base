@@ -142,7 +142,7 @@ export default function Hero() {
 						className='h-14 px-8 text-lg rounded-full shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-105 transition-all duration-300'
 						asChild
 					>
-						<Link href='https://admin-demo.nextjs-base.com/admin'>
+						<Link href='https://admin-demo.nextjsbase.com/admin'>
 							{t('getStarted')}
 							<ArrowRight className='h-5 w-5' />
 						</Link>

@@ -57,31 +57,35 @@ export function LoginForm({ className, callbackUrl, ...props }) {
 		}
 	}, [session, router, getRedirectUrl]);
 
-	// 邮箱密码登录（仅用于已有账号）
+	const isEmailIdentifier = (value) => value.includes('@');
+
+	// 邮箱或用户名密码登录
 	const handleEmailLogin = async (e) => {
 		e.preventDefault();
 		setIsLoading(true);
 		setError('');
 
 		const formData = new FormData(e.target);
-		const email = formData.get('email');
+		const identifier = formData.get('identifier')?.trim();
 		const password = formData.get('password');
 
 		// 验证输入
-		if (!email) {
-			setError(t('auth.emailRequired'));
+		if (!identifier) {
+			setError(t('auth.identifierRequired'));
 			setIsLoading(false);
 			return;
 		}
 
 		if (!password) {
-			setError(t('auth.passwordRequired'));
+			setError(t('validation.passwordRequired'));
 			setIsLoading(false);
 			return;
 		}
 
 		try {
-			const result = await authClient.signIn.email({ email, password });
+			const result = isEmailIdentifier(identifier)
+				? await authClient.signIn.email({ email: identifier, password })
+				: await authClient.signIn.username({ username: identifier, password });
 
 			if (result?.error) {
 				setError(result.error.message || t('auth.loginFailed'));
@@ -167,12 +171,12 @@ export function LoginForm({ className, callbackUrl, ...props }) {
 								)}
 
 								<Field>
-									<FieldLabel htmlFor='email'>{t('auth.email')}</FieldLabel>
+									<FieldLabel htmlFor='identifier'>{t('auth.emailOrUsername')}</FieldLabel>
 									<Input
-										id='email'
-										name='email'
-										type='email'
-										placeholder={t('auth.emailPlaceholder')}
+										id='identifier'
+										name='identifier'
+										type='text'
+										placeholder={t('auth.emailOrUsernamePlaceholder')}
 										required
 										disabled={isLoading}
 									/>
