@@ -26,9 +26,16 @@ export const ADMIN_PAGES = [
 	'/admin/system/settings',
 	'/admin/system/usage',
 	'/admin/system/action_logs',
+	'/admin/system/login_logs',
+	'/admin/system/assets',
+
+	// CMS
+	'/admin/cms/post',
 
 	// 示例页面
 	'/admin/example',
+	'/admin/example/data-table/data-table-basic',
+	'/admin/example/data-table/data-table-permission',
 	'/admin/examples/protected-page-example',
 ];
 
@@ -64,4 +71,3 @@ export function isKnownPage(pathname) {
 	// 3. 未匹配到任何已知页面
 	return false;
 }
-

@@ -19,7 +19,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Result, Button, Spin } from 'antd';
 import { LockOutlined, HomeOutlined } from '@ant-design/icons';
 import { checkPageAccessAction } from '@/app/(admin)/actions/rbac/user-permissions';
-import { isKnownPage } from '@/config/admin-pages';
 
 export default function PageAccessGuard({ children }) {
 	const pathname = usePathname();
@@ -28,43 +27,22 @@ export default function PageAccessGuard({ children }) {
 		loading: true,
 		hasAccess: false,
 		isChecking: true,
-		pageExists: false,
 	});
 
 	useEffect(() => {
 		const checkAccess = async () => {
-			// 🔍 第一步：检查页面是否存在
-			const pageExists = isKnownPage(pathname);
-
-			console.log('🔒 [PageAccessGuard] Step 1 - Check page existence');
-			console.log('🔒 [PageAccessGuard] Pathname:', pathname);
-			console.log('🔒 [PageAccessGuard] Page exists:', pageExists);
-
-			// 如果页面不存在，直接放行，让 Next.js 的 404 机制处理
-			if (!pageExists) {
-				console.log('🔒 [PageAccessGuard] Unknown page, skip permission check, let 404 handle it');
-				setAccessState({
-					loading: false,
-					hasAccess: true, // 放行
-					isChecking: false,
-					pageExists: false,
-				});
-				return;
-			}
-
 			// Dashboard 首页和个人资料页始终允许访问
 			if (pathname === '/admin' || pathname === '/admin/profile') {
 				setAccessState({
 					loading: false,
 					hasAccess: true,
 					isChecking: false,
-					pageExists: true,
 				});
 				return;
 			}
 
-			// 🔐 第二步：对已知存在的页面进行权限检查
-			console.log('🔒 [PageAccessGuard] Step 2 - Check permission for known page');
+			// 🔐 对所有 admin 子页面进行权限检查（默认拒绝）
+			console.log('🔒 [PageAccessGuard] Check permission for page:', pathname);
 			try {
 				const result = await checkPageAccessAction(pathname);
 				console.log('🔒 [PageAccessGuard] Permission check result:', result);
@@ -76,7 +54,6 @@ export default function PageAccessGuard({ children }) {
 						loading: false,
 						hasAccess,
 						isChecking: false,
-						pageExists: true,
 					});
 				} else {
 					// 检查失败，为了安全起见，拒绝访问
@@ -85,7 +62,6 @@ export default function PageAccessGuard({ children }) {
 						loading: false,
 						hasAccess: false,
 						isChecking: false,
-						pageExists: true,
 					});
 				}
 			} catch (error) {
@@ -94,7 +70,6 @@ export default function PageAccessGuard({ children }) {
 					loading: false,
 					hasAccess: false,
 					isChecking: false,
-					pageExists: true,
 				});
 			}
 		};
@@ -107,8 +82,8 @@ export default function PageAccessGuard({ children }) {
 		return <></>;
 	}
 
-	// 无权限访问（仅对已知存在的页面显示 403）
-	if (!accessState.hasAccess && accessState.pageExists) {
+	// 无权限访问
+	if (!accessState.hasAccess) {
 		return (
 			<div
 				style={{
