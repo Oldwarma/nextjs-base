@@ -35,10 +35,9 @@ import { checkUploadRateLimit } from '@/lib/upload/upload-guard';
 
 /**
  * 上传日志开关
- * 设置为 true 开启日志输出，false 关闭
- * 仅在开发环境生效
+ * 设置为 1 开启日志输出，0 关闭
  */
-const UPLOAD_LOG_ENABLED = false;
+const UPLOAD_LOG_ENABLED = process.env.UPLOAD_LOG_ENABLED === 1 || process.env.NODE_ENV !== 'production';
 
 // ========== 日志工具函数 ==========
 
@@ -57,7 +56,7 @@ function formatTimePrefix(date) {
  * 检查是否应该输出日志
  */
 function shouldLog() {
-	return UPLOAD_LOG_ENABLED && process.env.NODE_ENV === 'development';
+	return UPLOAD_LOG_ENABLED;
 }
 
 /**
@@ -170,7 +169,24 @@ export async function POST(request) {
 		}
 		
 		// 4. 解析 FormData
-		const formData = await request.formData();
+		let formData;
+		try {
+			formData = await request.formData();
+		} catch (parseError) {
+			logUploadStart(action, { userId, clientIp, error: 'formData parse failed', contentType: request.headers.get('content-type') });
+			console.error('[Upload] formData parse failed', {
+				message: parseError.message,
+				stack: parseError.stack,
+				contentType: request.headers.get('content-type'),
+				contentLength: request.headers.get('content-length'),
+				userAgent: request.headers.get('user-agent'),
+			});
+			logUploadEnd(action, { error: 'Failed to parse body as FormData' }, Date.now() - startTime, true);
+			return NextResponse.json(
+				{ success: false, error: 'Failed to parse body as FormData' },
+				{ status: 400 }
+			);
+		}
 		const type = formData.get('type');
 		const directory = formData.get('directory');
 		
