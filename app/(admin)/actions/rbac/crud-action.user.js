@@ -179,8 +179,11 @@ export async function getUserDetailAction(userId) {
 
 /**
  * 更新用户信息
+ * 兼容两种调用方式：
+ * 1. updateUserAction({ id, ...fields }) - SmartCrudPage 调用方式
+ * 2. updateUserAction(userId, updateData) - 传统调用方式
  */
-export async function updateUserAction(userId, updateData) {
+export async function updateUserAction(userIdOrData, updateData) {
 	const backendCheck = await checkBackendAccessAction();
 	if (!backendCheck.hasAccess) {
 		return {
@@ -190,6 +193,21 @@ export async function updateUserAction(userId, updateData) {
 	}
 
 	try {
+		// 兼容两种调用方式
+		let userId;
+		let data;
+		
+		if (typeof userIdOrData === 'object' && userIdOrData !== null) {
+			// SmartCrudPage 调用方式: updateUserAction({ id, ...fields })
+			const { id, ...rest } = userIdOrData;
+			userId = id;
+			data = rest;
+		} else {
+			// 传统调用方式: updateUserAction(userId, updateData)
+			userId = userIdOrData;
+			data = updateData || {};
+		}
+
 		if (!userId) {
 			return {
 				success: false,
@@ -197,12 +215,24 @@ export async function updateUserAction(userId, updateData) {
 			};
 		}
 
+		// 过滤掉不允许通过 API 更新的字段
+		const { id: _, createdAt, updatedAt, password, ...allowedFields } = data;
+
+		// 检查是否有数据需要更新
+		if (Object.keys(allowedFields).length === 0) {
+			return {
+				success: false,
+				error: 'No data to update',
+			};
+		}
+
 		// 使用 Better Auth Admin Plugin 的 updateUser API
+		// body 格式: { userId: string, data: { ...fields } }
 		const updatedUser = await auth.api.adminUpdateUser({
 			headers: await headers(),
 			body: {
 				userId,
-				data: updateData,
+				data: allowedFields,
 			},
 		});
 

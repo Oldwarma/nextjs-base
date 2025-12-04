@@ -466,7 +466,7 @@ export default function UsersManagementPage() {
 				type: 'text',
 				table: false, // 已经在 name 列中显示
 				form: {
-					required: false,
+					required: true,
 					placeholder: 'username',
 					rules: [
 						{
@@ -490,7 +490,7 @@ export default function UsersManagementPage() {
 					{ label: 'User', value: 'user', color: 'default' },
 				],
 				table: {
-					width: 100,
+					width: 80,
 				},
 				form: {
 					required: true,
@@ -507,7 +507,7 @@ export default function UsersManagementPage() {
 				title: 'Backend Access',
 				type: 'switch',
 				table: {
-					width: 140,
+					width: 120,
 				},
 				form: {
 					required: true,
@@ -528,12 +528,7 @@ export default function UsersManagementPage() {
 				title: 'RBAC Roles',
 				type: 'select',
 				options: roleOptions,
-				form: {
-					fieldProps: {
-						mode: 'multiple',
-					},
-					placeholder: 'Select roles',
-				},
+				form: false,
 				table: {
 					width: 100,
 					ellipsis: true,
@@ -616,20 +611,7 @@ export default function UsersManagementPage() {
 				key: 'credits',
 				title: 'Credits',
 				type: 'number',
-				table: {
-					width: 100,
-					sorter: true,
-					render: (credits) => (
-						<span
-							style={{
-								fontWeight: 500,
-								color: credits > 0 ? '#52c41a' : '#999',
-							}}
-						>
-							{credits || 0}
-						</span>
-					),
-				},
+				table: false,
 				form: {
 					disabled: true,
 					tooltip: 'Credits can only be adjusted through Credits Management',
