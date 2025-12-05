@@ -7,9 +7,18 @@
  * 运行方式：bun run db:seed
  */
 
-import { PrismaClient } from '../lib/generated/prisma/index.js';
+import { PrismaClient } from '../lib/generated/prisma/client.js';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const prisma = new PrismaClient();
+// 使用 @prisma/adapter-pg 驱动适配器
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+	console.error('❌ DATABASE_URL environment variable is not set');
+	process.exit(1);
+}
+
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ adapter });
 
 // ============================================
 // 权限数据 (Permissions)

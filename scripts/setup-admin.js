@@ -11,6 +11,19 @@
 
 import { createInterface } from 'readline';
 import { v4 as uuidv4 } from 'uuid';
+import { PrismaClient } from '../lib/generated/prisma/client.js';
+import { PrismaPg } from '@prisma/adapter-pg';
+
+// 创建 Prisma 客户端
+function createPrisma() {
+	const connectionString = process.env.DATABASE_URL;
+	if (!connectionString) {
+		console.error('❌ DATABASE_URL environment variable is not set');
+		process.exit(1);
+	}
+	const adapter = new PrismaPg({ connectionString });
+	return new PrismaClient({ adapter });
+}
 
 // 读取用户输入
 function prompt(question) {
@@ -44,11 +57,11 @@ async function setupAdmin() {
 	console.log('The admin has full access to the backend without needing RBAC roles.\n');
 
 	try {
-		// 动态导入
-		const { PrismaClient } = await import('../lib/generated/prisma/index.js');
+		// 动态导入 hashPassword
 		const { hashPassword } = await import('better-auth/crypto');
 		
-		const prisma = new PrismaClient();
+		// 创建 Prisma 客户端
+		const prisma = createPrisma();
 
 		try {
 			// 检查数据库连接
