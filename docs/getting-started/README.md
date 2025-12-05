@@ -4,7 +4,7 @@
 
 **10 分钟快速上手 NextJS Base**
 
-[环境准备](#-环境准备) · [一键初始化](#-一键初始化) · [下一步](#-下一步)
+[获取项目](#-获取项目) · [环境配置](#-环境配置) · [一键初始化](#-一键初始化) · [下一步](#-下一步)
 
 </div>
 
@@ -19,22 +19,68 @@
 | 工具 | 版本要求 | 说明 |
 |:---|:---|:---|
 | Node.js | 20.9+ | 推荐使用 LTS 版本 |
-| PostgreSQL | 16+ | 或使用云数据库服务 |
+| PostgreSQL | 16+ | 或使用云数据库服务（如 Supabase、Neon） |
 | bun/pnpm/npm/yarn | 最新版 | **推荐使用 bun** |
 | Git | 最新版 | 版本控制 |
+| GitHub 账号 | - | 用于 Fork 项目 |
 
 ---
 
-## 🔧 环境准备
+## 🍴 获取项目
 
-### 1. 克隆项目
+### 方式一：Fork 项目（推荐）
+
+> **推荐使用 Fork**：这样你可以保留自己的修改，同时方便接收上游更新。
+
+1. 访问 [NextJS Base GitHub 仓库](https://github.com/huglemon/nextjs-base)
+2. 点击右上角的 **Fork** 按钮
+3. 选择你的 GitHub 账号作为目标
+4. Fork 完成后，克隆你自己的仓库：
 
 ```bash
-git clone https://github.com/your-repo/nextjs-base.git
+# 替换 your-username 为你的 GitHub 用户名
+git clone https://github.com/your-username/nextjs-base.git my-project
+cd my-project
+```
+
+5. （可选）添加上游仓库以便同步更新：
+
+```bash
+git remote add upstream https://github.com/huglemon/nextjs-base.git
+
+# 之后同步上游更新
+git fetch upstream
+git merge upstream/develop
+```
+
+### 方式二：使用模板创建
+
+如果你想完全独立，不保留与原仓库的关联：
+
+1. 访问 [NextJS Base GitHub 仓库](https://github.com/huglemon/nextjs-base)
+2. 点击 **Use this template** → **Create a new repository**
+3. 填写你的仓库名称，点击创建
+4. 克隆新创建的仓库：
+
+```bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+```
+
+### 方式三：直接克隆（仅用于体验）
+
+> ⚠️ **注意**：直接克隆无法推送修改到原仓库，仅适合快速体验。
+
+```bash
+git clone https://github.com/huglemon/nextjs-base.git
 cd nextjs-base
 ```
 
-### 2. 安装依赖
+---
+
+## 🔧 环境配置
+
+### 1. 安装依赖
 
 ```bash
 # 使用 bun（推荐）
@@ -50,7 +96,7 @@ npm install
 yarn install
 ```
 
-### 3. 配置环境变量
+### 2. 配置环境变量
 
 复制环境变量模板：
 
@@ -62,13 +108,13 @@ cp .env.example .env.local
 
 ```env
 # 数据库连接（必须）
-DATABASE_URL="postgresql://username:password@localhost:5432/nextjs_base?schema=public"
+DATABASE_URL="postgresql://username:password@localhost:5432/your_database?schema=public"
 
 # Better Auth 配置（必须）
 BETTER_AUTH_SECRET="your-secret-key-at-least-32-characters"
 BETTER_AUTH_URL="http://localhost:3000"
 
-# 文件上传（可选）
+# 文件上传（可选，用于素材管理功能）
 R2_ACCOUNT_ID="your-account-id"
 R2_ACCESS_KEY_ID="your-access-key"
 R2_SECRET_ACCESS_KEY="your-secret-key"
@@ -76,26 +122,38 @@ R2_BUCKET_NAME="your-bucket"
 R2_PUBLIC_URL="https://your-bucket.r2.cloudflarestorage.com"
 ```
 
-### 4. 创建数据库
+### 3. 准备数据库
 
-确保 PostgreSQL 已启动，然后创建数据库：
+#### 本地 PostgreSQL
 
 ```bash
 # 登录 PostgreSQL
 psql -U postgres
 
 # 创建数据库
-CREATE DATABASE nextjs_base;
+CREATE DATABASE your_database;
 
 # 退出
 \q
 ```
 
+#### 使用云数据库（推荐）
+
+推荐使用以下云数据库服务，无需本地安装：
+
+| 服务 | 说明 | 免费额度 |
+|:---|:---|:---|
+| [Supabase](https://supabase.com) | 开源 Firebase 替代品 | 500MB |
+| [Neon](https://neon.tech) | Serverless PostgreSQL | 512MB |
+| [Vercel Postgres](https://vercel.com/storage/postgres) | Vercel 原生集成 | 256MB |
+
+创建数据库后，将连接字符串填入 `.env.local` 的 `DATABASE_URL`。
+
 ---
 
 ## 🚀 一键初始化
 
-### 方式一：一键初始化（推荐）
+### 执行初始化
 
 只需执行一个命令，完成所有初始化工作：
 
@@ -105,7 +163,7 @@ bun run init
 
 这个命令会自动完成：
 
-1. ✅ 检查数据库连接
+1. ✅ 加载 `.env.local` 环境变量
 2. ✅ 生成 Prisma Client
 3. ✅ 创建数据库表结构
 4. ✅ 导入种子数据（RBAC 权限、菜单、示例数据）
@@ -113,12 +171,11 @@ bun run init
 
 ```
 ╔═══════════════════════════════════════════════════════════╗
-║                                                           ║
 ║           NextJS Base Admin - Initialization              ║
-║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
 [1/4] Checking environment...
+   ✓ Loaded environment from .env.local
    ✓ DATABASE_URL found
 
 [2/4] Setting up database schema...
@@ -141,7 +198,7 @@ bun run init
 ╚═══════════════════════════════════════════════════════════╝
 ```
 
-### 方式二：非交互式初始化
+### 非交互式初始化（CI/CD）
 
 如果你想跳过交互式输入，可以通过环境变量预设管理员信息：
 
@@ -149,7 +206,7 @@ bun run init
 ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=your-password ADMIN_NAME=Administrator bun run init
 ```
 
-### 方式三：分步执行
+### 分步执行
 
 如果你想更细粒度地控制初始化过程：
 
@@ -169,11 +226,32 @@ bun run db:admin
 
 ---
 
+## 🎉 启动项目
+
+### 开发模式
+
+```bash
+bun run dev
+```
+
+### 访问应用
+
+| 页面 | 地址 |
+|:---|:---|
+| 前台首页 | [http://localhost:3000](http://localhost:3000) |
+| 后台管理 | [http://localhost:3000/admin](http://localhost:3000/admin) |
+
+使用你在初始化时创建的管理员账号登录后台。
+
+> ⚠️ **安全提示**：请使用强密码，并在生产环境中定期更换！
+
+---
+
 ## 👤 超级管理员说明
 
 ### 什么是超级管理员？
 
-超级管理员是系统中最高权限的用户，具有以下特点：
+超级管理员是系统中最高权限的用户：
 
 | 属性 | 值 | 说明 |
 |:---|:---|:---|
@@ -181,7 +259,7 @@ bun run db:admin
 | `roles` | `[]` | 不需要 RBAC 角色 |
 | `isBackendAllowed` | `true` | 允许访问后台 |
 
-> **重要**：`role` 是 Better Auth 的内置字段，`admin` 代表超级管理员，拥有所有权限，不需要通过 RBAC 分配角色。
+> **重要**：`role: 'admin'` 拥有所有权限，不需要通过 RBAC 分配角色。
 
 ### 用户类型对比
 
@@ -195,7 +273,7 @@ bun run db:admin
 
 ## 📦 种子数据说明
 
-初始化脚本会导入以下预设数据：
+初始化脚本会导入以下预设数据（使用固定 ID，所有安装的系统数据一致）：
 
 ### RBAC 数据
 
@@ -209,75 +287,16 @@ bun run db:admin
 
 | 角色名 | 说明 |
 |:---|:---|
-| `Admin Roles` | 管理员角色分类（父级） |
-| `Super Admin` | 全量权限（子角色） |
-| `Demo - Readonly` | 全局只读（子角色） |
-| `Admin - RBAC Ops (No Delete)` | RBAC 可写但无删除（子角色） |
-| `Demo - RBAC Readonly + Example Write` | 演示角色（子角色） |
-| `User Roles` | 用户角色分类（父级） |
-| `Guest` | 默认访客（子角色） |
-| `VIP Basic` | 付费用户占位（子角色） |
+| `Super Admin` | 全量权限 |
+| `Demo - Readonly` | 全局只读 |
+| `Admin - RBAC Ops (No Delete)` | RBAC 可写但无删除 |
+| `Demo - RBAC Readonly + Example Write` | 演示角色 |
 
 ### 示例数据
 
 | 类型 | 数量 | 说明 |
 |:---|:---:|:---|
 | Example Data | 3 | SmartCrudPage 演示数据 |
-
-> **提示**：所有种子数据使用固定 ID，确保所有安装的系统数据一致，内置页面可直接使用。
-
----
-
-## 🚀 项目启动
-
-### 开发模式
-
-```bash
-bun run dev
-```
-
-访问 [http://localhost:3000](http://localhost:3000) 查看项目。
-
-### 访问后台管理
-
-1. 访问 [http://localhost:3000/admin](http://localhost:3000/admin)
-2. 使用你在初始化时创建的管理员账号登录
-
-> ⚠️ **安全提示**：请使用强密码，并在生产环境中定期更换！
-
----
-
-## 📁 项目结构预览
-
-```
-nextjs-base/
-├── app/                    # Next.js App Router
-│   ├── (admin)/           # 后台管理
-│   │   ├── admin/         # 页面目录
-│   │   └── actions/       # Server Actions
-│   ├── (client)/          # 前台页面
-│   └── api/               # API 路由
-│
-├── components/            # React 组件
-│   ├── admin/             # 后台组件
-│   └── client/            # 前台组件
-│
-├── lib/                   # 核心库
-│   ├── core/              # 核心功能
-│   ├── database/          # 数据库
-│   └── function/          # 工具函数
-│
-├── prisma/                # Prisma
-│   ├── schema.prisma      # 数据库 Schema
-│   └── seed.js            # 种子数据
-│
-├── scripts/               # 脚本
-│   ├── init.js            # 一键初始化
-│   └── setup-admin.js     # 创建管理员
-│
-└── templates/             # 开发模板
-    └── crud/              # CRUD 模板
-```
 
 ---
 
@@ -308,6 +327,25 @@ DATABASE_URL="postgresql://用户名:密码@主机:端口/数据库名?schema=pu
 - 用户名和密码正确
 - 数据库已创建
 - 端口号正确（默认 5432）
+
+</details>
+
+<details>
+<summary><strong>初始化脚本报错 "DATABASE_URL not found"</strong></summary>
+
+确保 `.env.local` 文件存在且格式正确：
+
+```bash
+# 检查文件是否存在
+ls -la .env.local
+
+# 检查内容
+cat .env.local
+```
+
+注意：
+- 环境变量不要有多余的空格
+- 如果值包含特殊字符，用双引号包裹
 
 </details>
 
