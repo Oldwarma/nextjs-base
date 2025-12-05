@@ -4,7 +4,7 @@
 
 **10 分钟快速上手 NextJS Base**
 
-[环境准备](#-环境准备) · [项目启动](#-项目启动) · [下一步](#-下一步)
+[环境准备](#-环境准备) · [一键初始化](#-一键初始化) · [下一步](#-下一步)
 
 </div>
 
@@ -61,10 +61,10 @@ cp .env.example .env.local
 编辑 `.env.local` 文件：
 
 ```env
-# 数据库连接
+# 数据库连接（必须）
 DATABASE_URL="postgresql://username:password@localhost:5432/nextjs_base?schema=public"
 
-# Better Auth 配置
+# Better Auth 配置（必须）
 BETTER_AUTH_SECRET="your-secret-key-at-least-32-characters"
 BETTER_AUTH_URL="http://localhost:3000"
 
@@ -76,7 +76,7 @@ R2_BUCKET_NAME="your-bucket"
 R2_PUBLIC_URL="https://your-bucket.r2.cloudflarestorage.com"
 ```
 
-### 4. 配置数据库
+### 4. 创建数据库
 
 确保 PostgreSQL 已启动，然后创建数据库：
 
@@ -91,24 +91,140 @@ CREATE DATABASE nextjs_base;
 \q
 ```
 
-### 5. 初始化数据库
+---
+
+## 🚀 一键初始化
+
+### 方式一：一键初始化（推荐）
+
+只需执行一个命令，完成所有初始化工作：
 
 ```bash
-# 执行数据库迁移
-bunx prisma migrate dev
-
-# 生成 Prisma Client
-bunx prisma generate
-
-# 初始化基础数据（创建默认管理员、角色、权限、菜单）
-bun run db:init
+bun run init
 ```
 
-> **初始化脚本会创建**：
-> - 默认管理员账户：`admin@example.com` / `admin123`
-> - 默认角色：admin、editor、viewer
-> - 默认权限：系统管理相关权限
-> - 默认菜单：RBAC 和 System 菜单
+这个命令会自动完成：
+
+1. ✅ 检查数据库连接
+2. ✅ 生成 Prisma Client
+3. ✅ 创建数据库表结构
+4. ✅ 导入种子数据（RBAC 权限、菜单、示例数据）
+5. ✅ 创建超级管理员账户（交互式输入邮箱和密码）
+
+```
+╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║           NextJS Base Admin - Initialization              ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+
+[1/4] Checking environment...
+   ✓ DATABASE_URL found
+
+[2/4] Setting up database schema...
+   ✓ Prisma Client generated
+   ✓ Database schema created
+
+[3/4] Importing seed data...
+   ✓ 43 permissions created
+   ✓ 17 menus created
+   ✓ 8 roles created
+   ✓ 3 example records created
+
+[4/4] Creating super admin account...
+   Admin Email: your-email@example.com
+   Admin Password: ********
+   ✓ Super admin created
+
+╔═══════════════════════════════════════════════════════════╗
+║           ✅ Initialization Completed!                    ║
+╚═══════════════════════════════════════════════════════════╝
+```
+
+### 方式二：非交互式初始化
+
+如果你想跳过交互式输入，可以通过环境变量预设管理员信息：
+
+```bash
+ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=your-password ADMIN_NAME=Administrator bun run init
+```
+
+### 方式三：分步执行
+
+如果你想更细粒度地控制初始化过程：
+
+```bash
+# 1. 生成 Prisma Client
+bun run db:generate
+
+# 2. 创建数据库表结构
+bun run db:push
+
+# 3. 导入种子数据（RBAC + Example）
+bun run db:seed
+
+# 4. 创建超级管理员
+bun run db:admin
+```
+
+---
+
+## 👤 超级管理员说明
+
+### 什么是超级管理员？
+
+超级管理员是系统中最高权限的用户，具有以下特点：
+
+| 属性 | 值 | 说明 |
+|:---|:---|:---|
+| `role` | `admin` | Better Auth 的 admin 角色 |
+| `roles` | `[]` | 不需要 RBAC 角色 |
+| `isBackendAllowed` | `true` | 允许访问后台 |
+
+> **重要**：`role` 是 Better Auth 的内置字段，`admin` 代表超级管理员，拥有所有权限，不需要通过 RBAC 分配角色。
+
+### 用户类型对比
+
+| 类型 | role | roles | isBackendAllowed | 说明 |
+|:---|:---|:---|:---|:---|
+| 普通用户 | `user` | `[]` | `false` | 只能访问前台 |
+| 后台用户 | `user` | `['role_id']` | `true` | 需要分配 RBAC 角色 |
+| **超级管理员** | `admin` | `[]` | `true` | 拥有所有权限 |
+
+---
+
+## 📦 种子数据说明
+
+初始化脚本会导入以下预设数据：
+
+### RBAC 数据
+
+| 类型 | 数量 | 说明 |
+|:---|:---:|:---|
+| 权限 (Permissions) | 43 | 包含 CRUD、RBAC、系统管理等权限 |
+| 菜单 (Menus) | 17 | Dashboard、Example、RBAC、System、Links |
+| 角色 (Roles) | 8 | Admin Roles、User Roles 及其子角色 |
+
+### 预设角色
+
+| 角色名 | 说明 |
+|:---|:---|
+| `Admin Roles` | 管理员角色分类（父级） |
+| `Super Admin` | 全量权限（子角色） |
+| `Demo - Readonly` | 全局只读（子角色） |
+| `Admin - RBAC Ops (No Delete)` | RBAC 可写但无删除（子角色） |
+| `Demo - RBAC Readonly + Example Write` | 演示角色（子角色） |
+| `User Roles` | 用户角色分类（父级） |
+| `Guest` | 默认访客（子角色） |
+| `VIP Basic` | 付费用户占位（子角色） |
+
+### 示例数据
+
+| 类型 | 数量 | 说明 |
+|:---|:---:|:---|
+| Example Data | 3 | SmartCrudPage 演示数据 |
+
+> **提示**：所有种子数据使用固定 ID，确保所有安装的系统数据一致，内置页面可直接使用。
 
 ---
 
@@ -125,11 +241,9 @@ bun run dev
 ### 访问后台管理
 
 1. 访问 [http://localhost:3000/admin](http://localhost:3000/admin)
-2. 使用初始管理员账号登录：
-   - 邮箱：`admin@example.com`
-   - 密码：`admin123`
+2. 使用你在初始化时创建的管理员账号登录
 
-> ⚠️ **安全提示**：首次登录后请立即修改默认密码！
+> ⚠️ **安全提示**：请使用强密码，并在生产环境中定期更换！
 
 ---
 
@@ -153,8 +267,13 @@ nextjs-base/
 │   ├── database/          # 数据库
 │   └── function/          # 工具函数
 │
-├── prisma/                # Prisma Schema
-│   └── schema.prisma
+├── prisma/                # Prisma
+│   ├── schema.prisma      # 数据库 Schema
+│   └── seed.js            # 种子数据
+│
+├── scripts/               # 脚本
+│   ├── init.js            # 一键初始化
+│   └── setup-admin.js     # 创建管理员
 │
 └── templates/             # 开发模板
     └── crud/              # CRUD 模板
@@ -170,7 +289,8 @@ nextjs-base/
 - [ ] 可以访问前台首页
 - [ ] 可以访问后台登录页
 - [ ] 可以使用管理员账号登录
-- [ ] 后台菜单正常显示
+- [ ] 后台菜单正常显示（Dashboard、Example、User & Permission、System、Links）
+- [ ] 可以访问 Example > Data Table > Basic 页面
 
 ### 常见问题
 
@@ -200,8 +320,8 @@ DATABASE_URL="postgresql://用户名:密码@主机:端口/数据库名?schema=pu
 # 重置数据库（会删除所有数据）
 bunx prisma migrate reset
 
-# 重新执行迁移
-bunx prisma migrate dev
+# 重新执行初始化
+bun run init
 ```
 
 </details>
@@ -209,13 +329,28 @@ bunx prisma migrate dev
 <details>
 <summary><strong>登录后台提示无权限</strong></summary>
 
-确保已执行初始化脚本：
+确保你的账户是超级管理员（`role: 'admin'`），或者被分配了正确的 RBAC 角色。
+
+可以通过 Prisma Studio 检查用户数据：
 
 ```bash
-bun run db:init
+bun run db:studio
 ```
 
-这会创建默认管理员账户 `admin@example.com`（密码 `admin123`）。
+</details>
+
+<details>
+<summary><strong>如何添加更多管理员？</strong></summary>
+
+方式一：通过命令行
+
+```bash
+bun run db:admin
+```
+
+方式二：通过后台管理界面
+
+登录后台 → User & Permission → Users → 创建用户 → 设置 `role: admin`
 
 </details>
 
@@ -234,9 +369,24 @@ bun run db:init
 
 ---
 
+## 📜 可用命令
+
+| 命令 | 说明 |
+|:---|:---|
+| `bun run init` | 一键初始化（推荐） |
+| `bun run dev` | 启动开发服务器 |
+| `bun run build` | 构建生产版本 |
+| `bun run db:generate` | 生成 Prisma Client |
+| `bun run db:push` | 推送 Schema 到数据库 |
+| `bun run db:migrate` | 执行数据库迁移 |
+| `bun run db:studio` | 打开 Prisma Studio |
+| `bun run db:seed` | 导入种子数据 |
+| `bun run db:admin` | 创建超级管理员 |
+
+---
+
 <div align="center">
 
 [← 返回文档中心](../README.md) · [创建第一个页面 →](./FIRST_PAGE.md)
 
 </div>
-
