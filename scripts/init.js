@@ -18,6 +18,54 @@
 
 import { execSync, spawn } from 'child_process';
 import { createInterface } from 'readline';
+import { readFileSync, existsSync } from 'fs';
+import { resolve } from 'path';
+
+// 加载 .env 文件
+function loadEnv() {
+	const envFiles = ['.env.local', '.env'];
+	
+	for (const envFile of envFiles) {
+		const envPath = resolve(process.cwd(), envFile);
+		if (existsSync(envPath)) {
+			try {
+				const content = readFileSync(envPath, 'utf-8');
+				const lines = content.split('\n');
+				
+				for (const line of lines) {
+					const trimmed = line.trim();
+					// 跳过空行和注释
+					if (!trimmed || trimmed.startsWith('#')) continue;
+					
+					const eqIndex = trimmed.indexOf('=');
+					if (eqIndex > 0) {
+						const key = trimmed.substring(0, eqIndex).trim();
+						let value = trimmed.substring(eqIndex + 1).trim();
+						
+						// 移除引号
+						if ((value.startsWith('"') && value.endsWith('"')) ||
+						    (value.startsWith("'") && value.endsWith("'"))) {
+							value = value.slice(1, -1);
+						}
+						
+						// 只设置未定义的环境变量
+						if (!process.env[key]) {
+							process.env[key] = value;
+						}
+					}
+				}
+				console.log(`   ✓ Loaded environment from ${envFile}`);
+				return true;
+			} catch (e) {
+				// 忽略读取错误
+			}
+		}
+	}
+	return false;
+}
+
+// 在脚本开始时加载环境变量
+loadEnv();
 
 // 颜色输出
 const colors = {
