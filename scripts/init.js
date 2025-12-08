@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * 一键初始化脚本
+ * 一键初始化脚本 (优化版本)
  * 
  * 执行顺序：
- * 1. 检查数据库连接
- * 2. 推送 Prisma Schema（创建表结构）
+ * 1. 环境检查（Node.js版本、数据库连接等）
+ * 2. 生成 Prisma Client 并推送 Schema
  * 3. 导入种子数据（RBAC + Example）
  * 4. 创建超级管理员
  * 
@@ -14,16 +14,50 @@
  *   ADMIN_EMAIL    - 管理员邮箱
  *   ADMIN_PASSWORD - 管理员密码
  *   ADMIN_NAME     - 管理员名称
+ * 
+ * 安全特性：
+ * - 环境变量名称白名单验证
+ * - 数据库连接测试
+ * - 详细的错误日志
+ * - 包管理器自动检测
  */
 
 import { execSync, spawn } from 'child_process';
 import { createInterface } from 'readline';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import { PrismaClient } from '@prisma/client';
 
-// 加载 .env 文件
+// 环境变量名称白名单（安全性考虑）
+const ALLOWED_ENV_VARS = new Set([
+	'DATABASE_URL',
+	'BETTER_AUTH_SECRET',
+	'BETTER_AUTH_URL',
+	'NEXT_PUBLIC_BETTER_AUTH_URL',
+	'GOOGLE_CLIENT_ID',
+	'GOOGLE_CLIENT_SECRET',
+	'GITHUB_CLIENT_ID',
+	'GITHUB_CLIENT_SECRET',
+	'R2_ACCOUNT_ID',
+	'R2_ACCESS_KEY_ID',
+	'R2_SECRET_ACCESS_KEY',
+	'R2_BUCKET_NAME',
+	'R2_PUBLIC_URL',
+	'NODE_ENV',
+	'ADMIN_EMAIL',
+	'ADMIN_PASSWORD',
+	'ADMIN_NAME'
+]);
+
+// 验证环境变量名称是否在白名单中
+function isValidEnvVar(name) {
+	return ALLOWED_ENV_VARS.has(name);
+}
+
+// 加载 .env 文件（优化版本）
 function loadEnv() {
 	const envFiles = ['.env.local', '.env'];
+	let loaded = false;
 	
 	for (const envFile of envFiles) {
 		const envPath = resolve(process.cwd(), envFile);
@@ -31,6 +65,7 @@ function loadEnv() {
 			try {
 				const content = readFileSync(envPath, 'utf-8');
 				const lines = content.split('\n');
+				let loadedCount = 0;
 				
 				for (const line of lines) {
 					const trimmed = line.trim();
@@ -48,20 +83,32 @@ function loadEnv() {
 							value = value.slice(1, -1);
 						}
 						
+						// 安全检查：只允许白名单中的环境变量
+						if (!isValidEnvVar(key)) {
+							log(`   ⚠️  Skipping unknown env var: ${key}`, 'yellow');
+							continue;
+						}
+						
 						// 只设置未定义的环境变量
 						if (!process.env[key]) {
 							process.env[key] = value;
+							loadedCount++;
 						}
 					}
 				}
-				console.log(`   ✓ Loaded environment from ${envFile}`);
-				return true;
+				
+				if (loadedCount > 0) {
+					log(`   ✓ Loaded ${loadedCount} environment variables from ${envFile}`, 'green');
+					loaded = true;
+				}
+				return loaded;
 			} catch (e) {
-				// 忽略读取错误
+				log(`   ❌ Failed to read ${envFile}: ${e.message}`, 'red');
+				// 继续尝试下一个文件
 			}
 		}
 	}
-	return false;
+	return loaded;
 }
 
 // 在脚本开始时加载环境变量
@@ -132,6 +179,94 @@ function runScript(scriptPath) {
 	});
 }
 
+// 检测可用的包管理器
+function detectPackageManager() {
+	const managers = ['bun', 'pnpm', 'yarn', 'npm'];
+	
+	for (const manager of managers) {
+		try {
+			execSync(`${manager} --version`, { stdio: 'pipe' });
+			log(`   ✓ Detected package manager: ${manager}`, 'green');
+			return manager;
+		} catch (e) {
+			// 继续尝试下一个
+		}
+	}
+	
+	throw new Error('No supported package manager found. Please install bun, pnpm, yarn, or npm.');
+}
+
+// 测试数据库连接
+async function testDatabaseConnection() {
+	if (!process.env.DATABASE_URL) {
+		return { success: false, error: 'DATABASE_URL not found' };
+	}
+	
+	try {
+		log('   Testing database connection...', 'yellow');
+		const prisma = new PrismaClient({
+			datasources: {
+				db: {
+					url: process.env.DATABASE_URL
+				}
+			}
+		});
+		
+		// 简单的连接测试
+		await prisma.$queryRaw`SELECT 1`;
+		await prisma.$disconnect();
+		
+		log('   ✓ Database connection successful', 'green');
+		return { success: true };
+	} catch (error) {
+		log(`   ❌ Database connection failed: ${error.message}`, 'red');
+		return { success: false, error: error.message };
+	}
+}
+
+// 检查 Node.js 版本
+function checkNodeVersion() {
+	const nodeVersion = process.version;
+	const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0]);
+	const minVersion = 20;
+	
+	if (majorVersion < minVersion) {
+		log(`   ❌ Node.js version ${nodeVersion} is too old. Minimum required: v${minVersion}`, 'red');
+		return false;
+	}
+	
+	log(`   ✓ Node.js version: ${nodeVersion}`, 'green');
+	return true;
+}
+
+// 检查系统环境
+async function checkEnvironment() {
+	log('   Checking system environment...', 'yellow');
+	
+	const checks = [
+		{ name: 'Node.js Version', check: checkNodeVersion },
+		{ name: 'Database Connection', check: testDatabaseConnection },
+		{ name: 'Package Manager', check: detectPackageManager }
+	];
+	
+	let allPassed = true;
+	
+	for (const { name, check } of checks) {
+		try {
+			const result = await check();
+			if (result === false || (result && result.success === false)) {
+				log(`   ❌ ${name} check failed`, 'red');
+				allPassed = false;
+			}
+		} catch (error) {
+			log(`   ❌ ${name} check failed: ${error.message}`, 'red');
+			allPassed = false;
+		}
+	}
+	
+	return allPassed;
+}
+
 async function init() {
 	console.log('\n');
 	log('╔═══════════════════════════════════════════════════════════╗', 'cyan');
@@ -144,33 +279,42 @@ async function init() {
 	const totalSteps = 4;
 
 	try {
-		// Step 1: 检查环境
+		// Step 1: 环境检查（优化版本）
 		logStep(1, totalSteps, 'Checking environment...');
 		
-		// 检查 DATABASE_URL
-		if (!process.env.DATABASE_URL) {
-			log('   ⚠️  DATABASE_URL not found in environment', 'yellow');
-			log('   Please make sure your .env file contains DATABASE_URL', 'yellow');
-			const proceed = await prompt('   Continue anyway? (yes/no): ');
+		// 执行全面的环境检查
+		const envChecksPassed = await checkEnvironment();
+		
+		if (!envChecksPassed) {
+			log('   ❌ Some environment checks failed', 'red');
+			const proceed = await prompt('   Continue anyway? Some features may not work properly. (yes/no): ');
 			if (proceed.toLowerCase() !== 'yes' && proceed.toLowerCase() !== 'y') {
-				log('\n❌ Initialization cancelled.', 'red');
+				log('\n❌ Initialization cancelled due to environment issues.', 'red');
 				process.exit(1);
 			}
 		} else {
-			log('   ✓ DATABASE_URL found', 'green');
+			log('   ✓ All environment checks passed', 'green');
+		}
+		
+		// 检测并使用包管理器
+		let packageManager;
+		try {
+			packageManager = detectPackageManager();
+		} catch (error) {
+			throw new Error(`Package manager detection failed: ${error.message}`);
 		}
 
 		// Step 2: 生成 Prisma Client 并推送 Schema
 		logStep(2, totalSteps, 'Setting up database schema...');
 		
 		log('\n   Generating Prisma Client...', 'yellow');
-		if (!runCommand('bunx prisma generate', 'Generate Prisma Client')) {
+		if (!runCommand(`${packageManager}x prisma generate`, 'Generate Prisma Client')) {
 			throw new Error('Failed to generate Prisma Client');
 		}
 		log('   ✓ Prisma Client generated', 'green');
 
 		log('\n   Pushing schema to database...', 'yellow');
-		if (!runCommand('bunx prisma db push', 'Push schema to database')) {
+		if (!runCommand(`${packageManager}x prisma db push`, 'Push schema to database')) {
 			throw new Error('Failed to push schema');
 		}
 		log('   ✓ Database schema created', 'green');
