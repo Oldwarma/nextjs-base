@@ -1,210 +1,177 @@
-# NextJS Base - Full-Stack Admin Platform
+# NextJS Base
 
-A full-stack SaaS platform with user authentication, RBAC permission system, and admin management.
+<div align="center">
 
-## Version
+**A production-ready full-stack admin platform built with Next.js**
 
-v0.1.0 — first open-source release with a simple landing page + admin demo and built-in sample roles/users for quick exploration. Version is tracked in `package.json` and mirrored in `VERSION.md`.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node.js Version](https://img.shields.io/badge/Node.js-20.9+-green.svg)](https://nodejs.org)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org)
 
-## Features
+[English](README.md) · [中文](README.zh-CN.md) · [Documentation](./docs)· [Website](https://nextjsbase.com)
+ · [Demo](https://admin-demo.nextjsbase.com)
 
-### Core Functionality
-- 👤 **Multi-Auth Support**: Email/Password, Google OAuth, GitHub OAuth (Better Auth)
-- 🔐 **RBAC System**: Role-based access control with permissions and menus
-- 👨‍💼 **Admin Dashboard**: User management, role configuration, menu management
-- 📊 **Action Logging**: Detailed logs for all admin operations
-- 📁 **Asset Management**: File upload and management system
+</div>
 
-### Technical Stack
-- **Framework**: Next.js 16 (App Router)
-- **Database**: PostgreSQL
-- **ORM**: Prisma
-- **Authentication**: Better Auth with Prisma Adapter
-- **UI**: Ant Design + ProComponents
-- **Language**: JavaScript (ES6+)
-- **i18n**: next-intl (English, Chinese, Japanese)
+---
 
-## Project Structure
+## ✨ Features
 
-```
-nextjs-base/
-├── app/                    # Next.js App Router
-│   ├── (client)/          # Frontend (multi-language support)
-│   │   ├── [locale]/      # Dynamic language routes (en, zh, ja)
-│   │   └── actions/       # Client-side Server Actions
-│   └── (admin)/           # Admin panel (English only)
-│       ├── admin/         # Admin pages
-│       └── actions/       # Admin Server Actions
-├── lib/                    # Core libraries
-│   ├── auth/              # Authentication
-│   ├── database/          # Database (Prisma)
-│   ├── core/              # Core utilities
-│   └── logging/           # Action logging
-├── prisma/                # Prisma schema and migrations
-│   └── schema.prisma      # Database schema
-├── components/            # React components
-├── docs/                  # Documentation
-└── README.md             # This file
-```
+- 🔐 **Authentication** - Email/password + OAuth (Google, GitHub) via Better Auth
+- 👥 **RBAC System** - Role-based access control with permissions and menus
+- 📊 **Admin Dashboard** - Configuration-driven CRUD with SmartCrudPage
+- 📝 **Action Logging** - Comprehensive audit trail for all operations
+- 📁 **Asset Management** - File upload and manage with Cloudflare R2 support
+- 🌐 **i18n Ready** - Multi-language support via next-intl
+- 🎨 **Modern UI** - Ant Design + ProComponents
 
-## Getting Started
+## 🛠️ Tech Stack
+
+| Category | Technology |
+|:---|:---|
+| Framework | Next.js 16 (App Router) |
+| Database | PostgreSQL + Prisma |
+| Authentication | Better Auth |
+| UI Components | Ant Design, ProComponents |
+| Styling | Tailwind CSS |
+| Language | JavaScript (ES6+) |
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ or Bun
-- PostgreSQL 14+
-- (Optional) Google/GitHub OAuth credentials
+
+- Node.js 20.9+
+- PostgreSQL 16+
+- bun (recommended) / pnpm / npm / yarn
 
 ### Installation
 
-1. Clone the repository:
 ```bash
-git clone <repository-url>
+# Clone the repository
+git clone https://github.com/huglemon/nextjs-base.git
 cd nextjs-base
-```
 
-2. Install dependencies:
-```bash
-npm install
-# or
+# Install dependencies
 bun install
-```
 
-3. Configure environment variables:
-```bash
-cp .env.example .env
-```
+# Configure environment
+cp .env.example .env.local
 
-Edit `.env`:
-```env
-# PostgreSQL Database
-DATABASE_URL="postgresql://postgres:password@localhost:5432/nextjs_base?schema=public"
+# Initialize database and create admin
+bun run init
 
-# Better Auth
-BETTER_AUTH_SECRET="your-secret-key-at-least-32-characters"
-NEXT_PUBLIC_BETTER_AUTH_URL="http://localhost:3000"
-
-# OAuth (optional)
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
-GITHUB_CLIENT_ID=""
-GITHUB_CLIENT_SECRET=""
-```
-
-4. Initialize the database:
-```bash
-# Generate Prisma Client (需要先配置 DATABASE_URL)
-npx prisma generate
-
-# Push schema to database
-npx prisma db push
-```
-
-> **注意**: Prisma 7 需要在 `.env` 文件中配置 `DATABASE_URL`（不是 `.env.local`）。
-
-5. Run the development server:
-```bash
-npm run dev
-# or
-bun dev
+# Start development server
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the application.
 
-## Database Schema
-
-### Core Tables
-
-| Table | Description |
-|-------|-------------|
-| `user` | User accounts (Better Auth) |
-| `account` | OAuth accounts |
-| `session` | User sessions |
-| `role` | RBAC roles |
-| `permission` | RBAC permissions |
-| `menu` | Admin menu items |
-| `action_log` | Admin action logs |
-| `asset` | Uploaded files |
-
-See [prisma/schema.prisma](./prisma/schema.prisma) for detailed schema.
-
-## Core Modules
-
-### 1. Authentication (`lib/auth/auth.js`)
-- Better Auth with Prisma Adapter
-- Multi-provider authentication (Email, Google, GitHub)
-- Session management with custom fields
-- Admin plugin for user management
-
-### 2. RBAC System
-- **Roles**: Define user roles with permissions and menus
-- **Permissions**: Granular permission control
-- **Menus**: Dynamic admin menu based on user roles
-
-### 3. Admin Dashboard
-- **SmartCrudPage**: Generic CRUD page component
-- **BaseDAO**: Data access object with hooks and validation
-- **Action Logger**: Automatic logging of admin operations
-
-## Development
-
-### Prisma Commands
-
-```bash
-# Generate Prisma Client
-npx prisma generate
-
-# Push schema to database (dev)
-npx prisma db push
-
-# Create migration (production)
-npx prisma migrate dev --name <name>
-
-# Apply migrations (production)
-npx prisma migrate deploy
-
-# Open Prisma Studio
-npx prisma studio
-```
-
-### Code Style
-- Use ES6+ features
-- Follow functional programming principles
-- Add JSDoc comments for functions
-- Use camelCase for JavaScript, snake_case for database columns
-
-### Database Operations
-- Use Prisma Client directly
-- Handle pagination with `skip` and `take`
-- Use transactions for complex operations
-
-## Deployment
-
 ### Environment Variables
+
 ```env
-NODE_ENV=production
-DATABASE_URL="postgresql://..."
-BETTER_AUTH_SECRET="..."
+# Database (Required)
+DATABASE_URL="postgresql://user:password@localhost:5432/nextjs_base"
+
+# Better Auth (Required)
+BETTER_AUTH_SECRET="your-secret-key-at-least-32-characters"
+BETTER_AUTH_URL="http://localhost:3000"
+
+# OAuth (Optional)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
+
+# Cloudflare R2 (Optional - for file uploads)
+R2_ACCOUNT_ID=""
+R2_ACCESS_KEY_ID=""
+R2_SECRET_ACCESS_KEY=""
+R2_BUCKET_NAME=""
+R2_PUBLIC_URL=""
 ```
 
-### Database
-```bash
-# Run migrations
-npx prisma migrate deploy
+## 📁 Project Structure
 
-# Generate client
-npx prisma generate
+```
+nextjs-base/
+├── app/
+│   ├── (admin)/           # Admin panel
+│   │   ├── admin/         # Admin pages
+│   │   └── actions/       # Server Actions
+│   ├── (client)/          # Frontend with i18n
+│   │   └── [locale]/      # Language routes
+│   └── api/               # API routes
+├── components/
+│   ├── admin/             # Admin components (SmartCrudPage, SmartForm)
+│   └── ui/                # Base UI components
+├── lib/
+│   ├── auth/              # Authentication
+│   ├── core/              # Core utilities (wrapAction, createCrudActions)
+│   └── database/          # Prisma client
+├── prisma/
+│   └── schema.prisma      # Database schema
+└── docs/                  # Documentation
 ```
 
-## Documentation
+## 📖 Documentation
 
-- [PostgreSQL + Prisma 配置指南](./docs/database/POSTGRESQL_SETUP.md)
-- [RBAC 系统文档](./docs/rbac/README.md)
-- [Smart CRUD 开发指南](./docs/admin/SMART_CRUD_GUIDE.md)
+- [Getting Started](https://nextjsbase.com/en/docs/getting-started)
+- [Architecture Overview](https://nextjsbase.com/en/docs/architecture/OVERVIEW)
+- [SmartCrudPage Guide](https://nextjsbase.com/en/docs/admin/guides/SMART_CRUD)
+- [RBAC Configuration](https://nextjsbase.com/en/docs/admin/rbac/CONFIGURATION)
+- [API Reference](https://nextjsbase.com/en/docs/api)
 
-## License
+## 🤝 Contributing
 
-MIT License
+We welcome contributions! Please see our [Contributing Guide](https://nextjsbase.com/en/docs/contributing) for details.
+
+### Quick Links
+
+- [How to Submit a PR](https://nextjsbase.com/en/docs/contributing/PULL_REQUEST)
+- [How to Report an Issue](https://nextjsbase.com/en/docs/contributing/ISSUE)
+
+### Development Workflow
+
+1. Fork the repository
+2. Create a branch from `develop`: `git checkout -b feature/your-feature`
+3. Make your changes
+4. Submit a Pull Request to `develop`
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 💬 Community
+
+Join our community for discussions, questions, and updates!
+
+<div align="center">
+
+[![Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/channels/1449297468654227583/)
+
+**[Join our Discord Server](https://discord.com/channels/1449297468654227583/)**
+
+</div>
+
+<div align="center">
+<img src="https://nextjsbase.com/images/wx_qrcode.png" alt="WeChat QR Code" width="200" />
+
+*Scan to add me on WeChat, then I'll invite you to the group*
+</div>
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org) - The React Framework
+- [Prisma](https://prisma.io) - Next-generation ORM
+- [Better Auth](https://better-auth.com) - Authentication library
+- [Ant Design](https://ant.design) - UI component library
 
 ---
 
-Built with ❤️ using Next.js, PostgreSQL, and Prisma
+<div align="center">
+
+**[⬆ Back to Top](#nextjs-base)**
+
+Built with ❤️ by [huglemon](https://github.com/huglemon)
+
+</div>

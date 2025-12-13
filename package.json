@@ -2,6 +2,7 @@
   "name": "nextjs-base",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "engines": {
     "node": ">=20.9.0"
   },
@@ -14,7 +15,9 @@
     "db:push": "bunx prisma db push",
     "db:migrate": "bunx prisma migrate dev",
     "db:studio": "bunx prisma studio",
-    "db:init": "node scripts/init-db-pg.js"
+    "db:seed": "node prisma/seed.js",
+    "db:admin": "node scripts/setup-admin.js",
+    "init": "node scripts/init.js"
   },
   "dependencies": {
     "@ant-design/charts": "^2.6.6",
