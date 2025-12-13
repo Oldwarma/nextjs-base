@@ -436,5 +436,5 @@ const result = await prisma.$transaction(async (tx) => {
 ## 📖 相关文档
 
 - [Prisma 官方文档](https://www.prisma.io/docs)
-- [PostgreSQL 配置指南](../../docs/database/POSTGRESQL_SETUP.md)
+- [数据库实践指南](https://nextjsbase.com/zh/docs/admin/database/PRISMA_GUIDE)
 - [vk-unicloud selects 参考](https://vkdoc.fsq.pub/client/uniCloud/db/selects.html)

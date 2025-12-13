@@ -61,14 +61,13 @@ await authClient.signIn.social({ provider: 'google' });
 
 ## 📖 相关文档
 
-- [管理后台认证文档](../../docs/admin/AUTH.md)
-- [RBAC 系统文档](../../docs/admin/RBAC_SYSTEM.md)
-- [前端认证文档](../../docs/client/AUTH.md)
-- [Better Auth UUID 集成](../../docs/rbac/BETTER_AUTH_UUID_INTEGRATION.md)
+- [管理后台认证文档](https://nextjsbase.com/zh/docs/admin/client/AUTH)
+- [RBAC 系统文档](https://nextjsbase.com/zh/docs/admin/rbac/CONFIGURATION)
+- [前端认证文档](https://nextjsbase.com/zh/docs/admin/client/AUTH)
+- Better Auth UUID 集成（文档待补充）
 
 ## 🔗 依赖关系
 
 - Better Auth
 - Prisma (通过 `lib/database/prisma`)
 - Next.js (headers, cookies)
-
