@@ -36,8 +36,8 @@ import { FIELD_TYPE_REGISTRY } from '@/lib/crud/field-types';
 
 ## 📖 相关文档
 
-- [Smart CRUD 使用指南](../../docs/admin/SMART_CRUD_GUIDE.md)
-- [字段配置规范](../../docs/development/SMART_CRUD_GUIDE.md)
+- [Smart CRUD 使用指南](https://nextjsbase.com/zh/docs/admin/guides/SMART_CRUD)
+- [字段配置规范](https://nextjsbase.com/zh/docs/api/FIELDS_CONFIG)
 
 ## 🔗 依赖关系
 
@@ -55,4 +55,3 @@ if (nb.pubfn.isArray(value)) { ... }
 ```
 
 详见 [lib/function/README.md](../function/README.md)
-

@@ -170,6 +170,6 @@ const allPermissionIds = await getUserPermissionIds(userId);
 
 ## 相关文档
 
-- [权限命名约定指南](../../../docs/rbac/PERMISSION_NAMING_CONVENTION.md)
-- [RBAC 快速参考](../../../docs/rbac/RBAC_QUICK_REFERENCE.md)
-- [RBAC 系统文档索引](../../../docs/rbac/README.md)
+- [权限命名约定指南](https://nextjsbase.com/zh/docs/architecture/PERMISSION_MODEL)
+- [RBAC 快速参考](https://nextjsbase.com/zh/docs/admin/rbac/CONFIGURATION)
+- [RBAC 系统文档索引](https://nextjsbase.com/zh/docs/admin/rbac)

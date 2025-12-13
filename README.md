@@ -8,7 +8,7 @@
 [![Node.js Version](https://img.shields.io/badge/Node.js-20.9+-green.svg)](https://nodejs.org)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org)
 
-[English](README.md) · [中文](README.zh-CN.md) · [Documentation](./docs)· [Website](https://nextjsbase.com)
+[English](README.md) · [中文](README.zh-CN.md) · [Documentation](https://nextjsbase.com/docs)· [Website](https://nextjsbase.com)
  · [Demo](https://admin-demo.nextjsbase.com)
 
 </div>
