@@ -26,7 +26,8 @@ import { execSync, spawn } from 'child_process';
 import { createInterface } from 'readline';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
-import { PrismaClient } from '@prisma/client';
+
+import { PrismaClient } from '../lib/generated/prisma/client.js';
 
 // 环境变量名称白名单（安全性考虑）
 const ALLOWED_ENV_VARS = new Set([

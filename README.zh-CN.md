@@ -57,6 +57,9 @@ bun install
 # 配置环境变量
 cp .env.example .env.local
 
+#目录
+bunx prisma generate
+
 # 初始化数据库并创建管理员
 bun run init
 
