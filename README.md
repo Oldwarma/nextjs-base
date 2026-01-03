@@ -147,15 +147,9 @@ Join our community for discussions, questions, and updates!
 
 <div align="center">
 
-[![Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/channels/1449297468654227583/)
-
-**[Join our Discord Server](https://discord.com/channels/1449297468654227583/)**
-
 </div>
 
 <div align="center">
-<img src="https://nextjsbase.com/images/wx_qrcode.png" alt="WeChat QR Code" width="200" />
-
 *Scan to add me on WeChat, then I'll invite you to the group*
 </div>
 
