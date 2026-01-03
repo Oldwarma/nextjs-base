@@ -59,7 +59,7 @@ async function setupAdmin() {
 	try {
 		// 动态导入 hashPassword
 		const { hashPassword } = await import('better-auth/crypto');
-		
+
 		// 创建 Prisma 客户端
 		const prisma = createPrisma();
 

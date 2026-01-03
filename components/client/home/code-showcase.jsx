@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { FileJson, FileCode, Monitor, Code2 } from 'lucide-react';
@@ -8,6 +8,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import Image from 'next/image';
 import SectionHeader from './section-header';
+
 
 const TRADITIONAL_CODE = `// Traditional Way - 500+ lines of code
 const UserPage = () => {
@@ -88,6 +89,15 @@ export default function CodeShowcase() {
 	const [activeTab, setActiveTab] = useState('base'); // 'base', 'traditional', 'preview'
 	const isDark = resolvedTheme === 'dark';
 
+
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
+	if (!mounted) {
+		return null;
+	}
 	return (
 		<section id='code-showcase' className='py-16 sm:py-20 lg:py-24 relative overflow-hidden bg-zinc-100 dark:bg-zinc-950'>
 			<div className='container mx-auto px-4 md:px-6'>
@@ -111,33 +121,30 @@ export default function CodeShowcase() {
 					<div className='relative z-10 flex justify-center gap-2 mb-6 flex-wrap sm:flex-nowrap'>
 						<button
 							onClick={() => setActiveTab('preview')}
-							className={`px-5 py-2.5 text-sm rounded-full transition-all flex items-center gap-2 border ${
-								activeTab === 'preview'
-									? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30 font-medium'
-									: 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 bg-white/50 dark:bg-zinc-900/50'
-							}`}
+							className={`px-5 py-2.5 text-sm rounded-full transition-all flex items-center gap-2 border ${activeTab === 'preview'
+								? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30 font-medium'
+								: 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 bg-white/50 dark:bg-zinc-900/50'
+								}`}
 						>
 							<Monitor size={16} />
 							Live Preview
 						</button>
 						<button
 							onClick={() => setActiveTab('base')}
-							className={`px-5 py-2.5 text-sm rounded-full transition-all flex items-center gap-2 border ${
-								activeTab === 'base'
-									? 'bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30 font-medium'
-									: 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 bg-white/50 dark:bg-zinc-900/50'
-							}`}
+							className={`px-5 py-2.5 text-sm rounded-full transition-all flex items-center gap-2 border ${activeTab === 'base'
+								? 'bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30 font-medium'
+								: 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 bg-white/50 dark:bg-zinc-900/50'
+								}`}
 						>
 							<FileJson size={16} />
 							NextJS Base
 						</button>
 						<button
 							onClick={() => setActiveTab('traditional')}
-							className={`px-5 py-2.5 text-sm rounded-full transition-all flex items-center gap-2 border ${
-								activeTab === 'traditional'
-									? 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30 font-medium'
-									: 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 bg-white/50 dark:bg-zinc-900/50'
-							}`}
+							className={`px-5 py-2.5 text-sm rounded-full transition-all flex items-center gap-2 border ${activeTab === 'traditional'
+								? 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30 font-medium'
+								: 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 bg-white/50 dark:bg-zinc-900/50'
+								}`}
 						>
 							<FileCode size={16} />
 							Traditional
@@ -148,11 +155,10 @@ export default function CodeShowcase() {
 					<div className='relative z-10 lg:h-[520px] space-y-6 lg:space-y-0'>
 						{/* Code Editor Card */}
 						<div
-							className={`rounded-2xl overflow-hidden shadow-2xl border border-zinc-300 dark:border-zinc-800 bg-[#f8f8f8] dark:bg-[#1e1e1e] transition-all duration-500 ease-out ${
-								activeTab === 'preview'
-									? 'hidden lg:block lg:opacity-0 lg:scale-95 lg:pointer-events-none lg:absolute lg:inset-0'
-									: 'block lg:opacity-100 lg:scale-100 lg:absolute lg:inset-0'
-							}`}
+							className={`rounded-2xl overflow-hidden shadow-2xl border border-zinc-300 dark:border-zinc-800 bg-[#f8f8f8] dark:bg-[#1e1e1e] transition-all duration-500 ease-out ${activeTab === 'preview'
+								? 'hidden lg:block lg:opacity-0 lg:scale-95 lg:pointer-events-none lg:absolute lg:inset-0'
+								: 'block lg:opacity-100 lg:scale-100 lg:absolute lg:inset-0'
+								}`}
 						>
 							{/* Window Header */}
 							<div className='flex items-center justify-between px-4 py-3 bg-zinc-200 dark:bg-[#252526] border-b border-zinc-300 dark:border-white/5'>
@@ -206,11 +212,10 @@ export default function CodeShowcase() {
 
 						{/* Preview Card */}
 						<div
-							className={`rounded-2xl overflow-hidden shadow-2xl border border-zinc-300 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 transition-all duration-500 ease-out ${
-								activeTab === 'preview'
-									? 'block lg:opacity-100 lg:scale-100 lg:absolute lg:inset-0'
-									: 'hidden lg:block lg:opacity-0 lg:scale-95 lg:pointer-events-none lg:absolute lg:inset-0'
-							}`}
+							className={`rounded-2xl overflow-hidden shadow-2xl border border-zinc-300 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 transition-all duration-500 ease-out ${activeTab === 'preview'
+								? 'block lg:opacity-100 lg:scale-100 lg:absolute lg:inset-0'
+								: 'hidden lg:block lg:opacity-0 lg:scale-95 lg:pointer-events-none lg:absolute lg:inset-0'
+								}`}
 						>
 							{/* Browser Chrome */}
 							<div className='flex items-center gap-2 px-4 py-2 bg-zinc-200 dark:bg-zinc-800 border-b border-zinc-300 dark:border-zinc-700'>

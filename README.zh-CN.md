@@ -57,9 +57,11 @@ bun install
 # 配置环境变量
 cp .env.example .env.local
 
-#目录
+# 安装 Prisma CLI（开发依赖）
+bun add -d prisma
+bun add @prisma/client
 bunx prisma generate
-
+bunx prisma generate --no-engine
 # 初始化数据库并创建管理员
 bun run init
 
